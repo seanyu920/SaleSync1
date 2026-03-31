@@ -1,0 +1,84 @@
+﻿@model List<SaleSync.Models.InventoryItems>
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Inventory</title>
+    <link rel="stylesheet" href="~/css/Inventory.css" />
+</head>
+<body>
+    <div class="inventory-page">
+        <h1 class="page-title">Inventory</h1>
+
+        <div class="top-nav">
+            <a href="/Admin/Dashboard" class="nav-btn">Analytics</a>
+            <a href="/Admin/Inventory" class="nav-btn active">Inventory</a>
+            <a href="/Admin/ManageAccounts" class="nav-btn">Manage Accounts</a>
+        </div>
+
+        <div class="form-card">
+            <h2>Add Inventory Item</h2>
+
+            <form method="post" action="/Admin/AddInventory" class="inventory-form">
+                <input type="text" name="ItemCategory" placeholder="Item Category" required />
+                <input type="text" name="ItemName" placeholder="Item Name" required />
+                <input type="text" name="ItemID" placeholder="Item ID" required />
+                <input type="number" step="0.01" name="PurchasePrice" placeholder="Purchase Price" required />
+                <input type="number" name="Quantity" placeholder="Quantity" required />
+                <input type="text" name="StockSupplier" placeholder="Stock Supplier" required />
+                <input type="date" name="DateAcquired" required />
+                <input type="date" name="ExpirationDate" required />
+
+                <button type="submit" class="add-btn">Add Item</button>
+            </form>
+        </div>
+
+        <div class="table-card">
+            <table class="inventory-table">
+                <thead>
+                    <tr>
+                        <th>Item Category</th>
+                        <th>Item Name</th>
+                        <th>Item ID</th>
+                        <th>Purchase Price</th>
+                        <th>Quantity</th>
+                        <th>Stock Supplier</th>
+                        <th>Date Acquired</th>
+                        <th>Expiration Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Count > 0)
+                    {
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.ItemCategory</td>
+                                <td>@item.ItemName</td>
+                                <td>@item.ItemID</td>
+                                <td>@item.PurchasePrice.ToString("0.00")</td>
+                                <td>@item.Quantity</td>
+                                <td>@item.StockSupplier</td>
+                                <td>@item.DateAcquired</td>
+                                <td>@item.ExpirationDate</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="8">No inventory items added yet.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

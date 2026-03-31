@@ -1,0 +1,73 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="~/css/AdminDashboard.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="dashboard-page">
+        <h1 class="dashboard-title">Admin Dashboard</h1>
+
+        <div class="top-nav">
+            <a href="/Admin/Dashboard" class="nav-btn active">Analytics</a>
+            <a href="/Admin/Inventory" class="nav-btn">Inventory</a>
+            <a href="/Admin/ManageAccounts" class="nav-btn">Manage Accounts</a>
+        </div>
+
+        <div class="success-message">
+            Successfully logged in!
+        </div>
+
+        <div class="chart-card">
+            <h2 class="chart-title">Sales Analytics</h2>
+            <canvas id="salesChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const ctx = document.getElementById('salesChart').getContext('2d');
+
+        new Chart(ctx, {
+        type: 'bar',
+        data: {
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        datasets: [{
+        label: 'Sales',
+        data: [12, 19, 8, 15, 22, 17, 25],
+        borderWidth: 1,
+        backgroundColor: [
+        '#8d6e63',
+        '#a1887f',
+        '#bcaaa4',
+        '#8d6e63',
+        '#a1887f',
+        '#bcaaa4',
+        '#8d6e63'
+        ]
+        }]
+        },
+        options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+        legend: {
+        display: true
+        }
+        },
+        scales: {
+        y: {
+        beginAtZero: true
+        }
+        }
+        }
+        });
+    </script>
+</body>
+</html>
