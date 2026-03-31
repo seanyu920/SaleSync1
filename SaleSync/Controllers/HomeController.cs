@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using SaleSync.Models;
 using System.Diagnostics;
+using Microsoft.AspNetCore.Http;
 
 namespace SaleSync.Controllers
 {
@@ -45,18 +46,19 @@ namespace SaleSync.Controllers
         [HttpPost]
         public IActionResult Login(string username, string password)
         {
-            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
+            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
 
                 string query = @"
-            SELECT user_id, full_name, username
-            FROM users
-            WHERE username = @Username
-              AND password_hash = @Password
-              AND status = 'active'";
+            SELECT u.user_id, u.full_name, u.username, r.role_name
+            FROM users u
+            INNER JOIN roles r ON u.role_id = r.role_id
+            WHERE u.username = @Username
+              AND u.password_hash = @Password
+              AND u.status = 'active'";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
@@ -67,17 +69,26 @@ namespace SaleSync.Controllers
                     {
                         if (reader.Read())
                         {
+                            string role = reader["role_name"].ToString();
+
                             HttpContext.Session.SetString("UserName", reader["username"].ToString());
                             HttpContext.Session.SetString("FullName", reader["full_name"].ToString());
+                            HttpContext.Session.SetString("Role", role);
 
-                            return RedirectToAction("Dashboard", "Admin");
+                            if (role == "Admin")
+                                return RedirectToAction("Dashboard", "Admin");
+
+                            if (role == "Manager")
+                                return RedirectToAction("Dashboard", "Manager");
+
+                            if (role == "Cashier")
+                                return RedirectToAction("Dashboard", "Cashier");
                         }
                     }
                 }
             }
 
-            ViewBag.Message = "Invalid email or password.";
-            ViewBag.Success = false;
+            ViewBag.Message = "Invalid username or password.";
             return View("Index");
         }
 

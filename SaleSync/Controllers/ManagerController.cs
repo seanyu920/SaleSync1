@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SaleSync.Models;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Http;
 
 namespace SaleSync.Controllers
 {
@@ -10,6 +11,11 @@ namespace SaleSync.Controllers
 
         public IActionResult Dashboard()
         {
+            var role = HttpContext.Session.GetString("Role");
+
+            if (string.IsNullOrEmpty(role) || role != "Manager")
+                return RedirectToAction("Index", "Home");
+
             return View("ManagerDashboard");
         }
 
