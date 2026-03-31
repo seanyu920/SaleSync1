@@ -17,9 +17,18 @@
         <h1 class="page-title">Inventory</h1>
 
         <div class="top-nav">
-            <a href="/Admin/Dashboard" class="nav-btn">Analytics</a>
-            <a href="/Admin/Inventory" class="nav-btn active">Inventory</a>
-            <a href="/Admin/ManageAccounts" class="nav-btn">Manage Accounts</a>
+            <a href="@Url.Action("Dashboard", ViewContext.RouteData.Values["controller"].ToString())" class="nav-btn">
+                Analytics
+            </a>
+
+            <a href="@Url.Action("Inventory", ViewContext.RouteData.Values["controller"].ToString())" class="nav-btn active">
+                Inventory
+            </a>
+
+            @if (ViewContext.RouteData.Values["controller"].ToString() == "Admin")
+            {
+                <a href="/Admin/ManageAccounts" class="nav-btn">Manage Accounts</a>
+            }
         </div>
 
         <div class="form-card">
