@@ -1,0 +1,206 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cashier</title>
+    <link rel="stylesheet" href="~/css/CashierDashboard.css" />
+</head>
+<body>
+
+    <h1>Cashier</h1>
+
+    <!-- NAV -->
+    <button onclick="showMenu()">Menu</button>
+    <button onclick="showCart()">Cart</button>
+
+    <hr />
+
+    <!-- MENU -->
+    <div id="menuSection">
+
+        <h2>Menu</h2>
+
+        <p><strong>Milk Tea</strong></p>
+
+        <!-- SIZE -->
+        <label>
+            <input type="radio" name="size" value="Medium" data-price="75" />
+            Medium - ₱75
+        </label><br />
+
+        <label>
+            <input type="radio" name="size" value="Large" data-price="95" />
+            Large - ₱95
+        </label><br /><br />
+
+        <!-- QUANTITY -->
+        <button type="button" onclick="decreaseQty()">-</button>
+        <input id="qty" value="1" readonly style="width:40px; text-align:center;" />
+        <button type="button" onclick="increaseQty()">+</button>
+
+        <br /><br />
+
+        <button type="button" onclick="addToCart()">Add to Cart</button>
+
+    </div>
+
+    <!-- CART / RECEIPT -->
+    <div id="cartSection" style="display:none;">
+
+        <h2>Receipt</h2>
+
+        <div id="receiptList">
+            <p>No items yet</p>
+        </div>
+
+        <hr />
+
+        <h3>Total: <span id="total">₱0.00</span></h3>
+
+        <br />
+
+        <!-- REMOVE ITEM BUTTON -->
+        <button type="button" onclick="removeSelectedItem()">Remove Item</button>
+
+        <!-- CHECKOUT BUTTON -->
+        <button type="button" onclick="checkoutOrder()">Checkout</button>
+
+    </div>
+
+    <script>
+            // cart storage
+            let cart = [];
+
+            // selected item index in receipt
+            let selectedReceiptIndex = -1;
+
+            // switch to menu
+            function showMenu() {
+                document.getElementById("menuSection").style.display = "block";
+                document.getElementById("cartSection").style.display = "none";
+            }
+
+            // switch to cart
+            function showCart() {
+                document.getElementById("menuSection").style.display = "none";
+                document.getElementById("cartSection").style.display = "block";
+            }
+
+            // quantity increase
+            function increaseQty() {
+                let q = document.getElementById("qty");
+                q.value = parseInt(q.value) + 1;
+            }
+
+            // quantity decrease
+            function decreaseQty() {
+                let q = document.getElementById("qty");
+                if (parseInt(q.value) > 1) {
+                    q.value = parseInt(q.value) - 1;
+                }
+            }
+
+            // add to cart
+            function addToCart() {
+                let selected = document.querySelector('input[name="size"]:checked');
+
+                if (!selected) {
+                    alert("Select size first");
+                    return;
+                }
+
+                let qty = parseInt(document.getElementById("qty").value);
+                let price = parseFloat(selected.getAttribute("data-price"));
+
+                cart.push({
+                    name: "Milk Tea",
+                    size: selected.value,
+                    qty: qty,
+                    price: price
+                });
+
+                document.getElementById("qty").value = 1;
+                renderReceipt();
+            }
+
+            // render receipt
+            function renderReceipt() {
+                let receipt = document.getElementById("receiptList");
+                let totalEl = document.getElementById("total");
+
+                if (cart.length === 0) {
+                    receipt.innerHTML = "<p>No items yet</p>";
+                    totalEl.textContent = "₱0.00";
+                    selectedReceiptIndex = -1;
+                    return;
+                }
+
+                let html = "";
+                let total = 0;
+
+                cart.forEach((item, index) => {
+                    let subtotal = item.qty * item.price;
+                    total += subtotal;
+
+                    html += `
+                        <div
+                            onclick="selectReceiptItem(${index})"
+                            style="
+                                border: 1px solid ${selectedReceiptIndex === index ? '#000' : '#ccc'};
+                                background-color: ${selectedReceiptIndex === index ? '#f0f0f0' : '#fff'};
+                                padding: 10px;
+                                margin-bottom: 10px;
+                                cursor: pointer;
+                            ">
+                            <p>
+                                ${item.name} (${item.size}) <br/>
+                                Qty: ${item.qty} <br/>
+                                ₱${item.price} x ${item.qty} = ₱${subtotal}
+                            </p>
+                        </div>
+                    `;
+                });
+
+                receipt.innerHTML = html;
+                totalEl.textContent = "₱" + total.toFixed(2);
+            }
+
+            // select receipt item
+            function selectReceiptItem(index) {
+                selectedReceiptIndex = index;
+                renderReceipt();
+            }
+
+            // remove selected item
+            function removeSelectedItem() {
+                if (selectedReceiptIndex === -1) {
+                    alert("Select an item in the receipt first");
+                    return;
+                }
+
+                cart.splice(selectedReceiptIndex, 1);
+                selectedReceiptIndex = -1;
+                renderReceipt();
+            }
+
+            // checkout
+            function checkoutOrder() {
+                if (cart.length === 0) {
+                    alert("No items in cart");
+                    return;
+                }
+
+                alert("Checkout successful!");
+
+                cart = [];
+                selectedReceiptIndex = -1;
+                renderReceipt();
+                showMenu();
+            }
+    </script>
+
+</body>
+</html>
