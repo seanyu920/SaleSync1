@@ -1,0 +1,40 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manage Accounts</title>
+    <link rel="stylesheet" href="~/css/Inventory.css" asp-append-version="true" />
+</head>
+<body>
+
+    <div class="inventory-container">
+        <h1 class="page-title">Manage Accounts</h1>
+
+        <!-- NAV -->
+        <div class="top-nav">
+            <a href="/Admin/Dashboard" class="nav-btn">Analytics</a>
+            <a href="/Admin/Inventory" class="nav-btn">Inventory</a>
+            <a href="/Admin/ManageAccounts" class="nav-btn active">Manage Accounts</a>
+        </div>
+
+        <!-- FORM ONLY -->
+        <div class="form-card" style="max-width:600px; margin:auto;">
+            <form class="add-form" style="grid-template-columns: 1fr;">
+            
+                <input placeholder="Username" />
+                <input placeholder="Email" />
+                <input placeholder="Password" type="password" />
+                <input placeholder="Role (Admin/User)" />
+
+                <button type="button" class="add-btn">Save Account</button>
+
+            </form>
+        </div>
+
+    </div>
+
+</body>
+</html>
