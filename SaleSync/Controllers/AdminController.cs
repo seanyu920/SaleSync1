@@ -10,6 +10,13 @@ namespace SaleSync.Controllers
 
         public IActionResult Dashboard()
         {
+            var userName = HttpContext.Session.GetString("UserName");
+
+            if (string.IsNullOrEmpty(userName))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
             return View("AdminDashboard");
         }
 

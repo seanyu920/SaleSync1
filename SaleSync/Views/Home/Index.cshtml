@@ -22,41 +22,33 @@
             <h1 class="title">SaleSync</h1>
             <p class="subtitle">Log in to your account</p>
 
-            <div class="form-group">
-                <label for="username">Username</label>
-                <div class="input-wrap">
-                    <input type="text" id="username" placeholder="Enter username here" />
-                    <span class="field-icon">👤</span>
+            <form asp-controller="Home" asp-action="Login" method="post">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <div class="input-wrap">
+                        <input type="text" id="username" name="username" placeholder="Enter username here" />
+                        <span class="field-icon">👤</span>
+                    </div>
                 </div>
-            </div>
 
-            <div class="form-group">
-                <label for="password">Password</label>
-                <div class="input-wrap">
-                    <input type="password" id="password" placeholder="Enter password here" />
-                    <span class="field-icon">🔒</span>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-wrap">
+                        <input type="password" id="password" name="password" placeholder="Enter password here" />
+                        <span class="field-icon">🔒</span>
+                    </div>
                 </div>
-            </div>
 
-            <button class="login-button" onclick="loginUser()">Login</button>
-
-            <button class="forgot-button">Forgot Password?</button>
-        </div>
-    </div>
-
-    <script>
-            function loginUser() {
-                var username = document.getElementById("username").value;
-                var password = document.getElementById("password").value;
-
-                if (username.trim() === "" || password.trim() === "") {
-                    alert("Please enter username and password.");
-                    return;
+                @if (ViewBag.Message != null)
+                {
+                    <p style="color:red; margin-bottom:10px;">@ViewBag.Message</p>
                 }
 
-                alert("Successfully logged in!");
-                window.location.href = "/Admin/Dashboard";
-            }
-    </script>
+                <button type="submit" class="login-button">Login</button>
+            </form>
+
+            <button class="forgot-button" type="button">Forgot Password?</button>
+        </div>
+    </div>
 </body>
 </html>
