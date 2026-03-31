@@ -21,5 +21,26 @@ namespace SaleSync.Controllers
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
+
+        public IActionResult AdminDashboard()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult Login(string email, string password)
+        {
+            // SIMPLE LOGIN (hardcoded)
+            if (email == "admin@mail.com" && password == "1234")
+            {
+                ViewBag.Message = "Login successful!";
+                ViewBag.Success = true;
+                return View("Index");
+            }
+
+            // WRONG LOGIN
+            ViewBag.Message = "Invalid email or password.";
+            return View("Index");
+        }
     }
 }

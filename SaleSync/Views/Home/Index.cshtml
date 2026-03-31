@@ -1,8 +1,62 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    Layout = null;
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SyncSale Login</title>
+    <link rel="stylesheet" href="~/css/LogInPage.css" />
+</head>
+<body>
+    <div class="page">
+        <div class="left-panel">
+            <img src="~/images/syncsale-logo.png" alt="SyncSale Logo" class="brand-logo" />
+        </div>
+
+        <div class="login-card">
+            <div class="user-icon">👤</div>
+
+            <h1 class="title">SaleSync</h1>
+            <p class="subtitle">Log in to your account</p>
+
+            <div class="form-group">
+                <label for="username">Username</label>
+                <div class="input-wrap">
+                    <input type="text" id="username" placeholder="Enter username here" />
+                    <span class="field-icon">👤</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="input-wrap">
+                    <input type="password" id="password" placeholder="Enter password here" />
+                    <span class="field-icon">🔒</span>
+                </div>
+            </div>
+
+            <button class="login-button" onclick="loginUser()">Login</button>
+
+            <button class="forgot-button">Forgot Password?</button>
+        </div>
+    </div>
+
+    <script>
+            function loginUser() {
+                var username = document.getElementById("username").value;
+                var password = document.getElementById("password").value;
+
+                if (username.trim() === "" || password.trim() === "") {
+                    alert("Please enter username and password.");
+                    return;
+                }
+
+                alert("Successfully logged in!");
+                window.location.href = "/Admin/Dashboard";
+            }
+    </script>
+</body>
+</html>
