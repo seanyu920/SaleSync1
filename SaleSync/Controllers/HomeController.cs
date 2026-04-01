@@ -46,7 +46,7 @@ namespace SaleSync.Controllers
         [HttpPost]
         public IActionResult Login(string username, string password)
         {
-            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
