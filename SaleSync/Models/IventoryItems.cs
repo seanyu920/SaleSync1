@@ -8,6 +8,7 @@
         public decimal PurchasePrice { get; set; }
         public int Quantity { get; set; }
         public string StockSupplier { get; set; }
+        public string StockLevel { get; set; }
         public string DateAcquired { get; set; }
         public string ExpirationDate { get; set; }
     }

@@ -31,15 +31,26 @@
             }
         </div>
 
+        <!-- ACTION BUTTONS -->
+        <div class="action-bar">
+            <button type="submit" form="inventoryForm" class="btn add-btn">Add</button>
+            <button type="button" onclick="updateItem()" class="btn edit-btn">Update</button>
+            <button type="button" onclick="deleteItem()" class="btn delete-btn">Delete</button>
+        </div>
+
         <div class="form-card">
             <h2>Add Inventory Item</h2>
 
-            <form method="post" action="/Admin/AddInventory" class="inventory-form">
+            <form id="inventoryForm" method="post" action="/Admin/AddInventory" class="inventory-form">
                 <input type="text" name="ItemCategory" placeholder="Item Category" required />
                 <input type="text" name="ItemName" placeholder="Item Name" required />
                 <input type="text" name="ItemID" placeholder="Item ID" required />
                 <input type="number" step="0.01" name="PurchasePrice" placeholder="Purchase Price" required />
                 <input type="number" name="Quantity" placeholder="Quantity" required />
+
+                <!-- STOCK LEVEL -->
+                <input type="text" name="StockLevel" placeholder="Stock Level" required />
+
                 <input type="text" name="StockSupplier" placeholder="Stock Supplier" required />
                 <input type="date" name="DateAcquired" required />
                 <input type="date" name="ExpirationDate" required />
@@ -52,11 +63,13 @@
             <table class="inventory-table">
                 <thead>
                     <tr>
+                        <th>Select</th>
                         <th>Item Category</th>
                         <th>Item Name</th>
                         <th>Item ID</th>
                         <th>Purchase Price</th>
                         <th>Quantity</th>
+                        <th>Stock Level</th>
                         <th>Stock Supplier</th>
                         <th>Date Acquired</th>
                         <th>Expiration Date</th>
@@ -68,11 +81,15 @@
                         @foreach (var item in Model)
                         {
                             <tr>
+                                <td>
+                                    <input type="radio" name="selectedItem" value="@item.ItemID" />
+                                </td>
                                 <td>@item.ItemCategory</td>
                                 <td>@item.ItemName</td>
                                 <td>@item.ItemID</td>
                                 <td>@item.PurchasePrice.ToString("0.00")</td>
                                 <td>@item.Quantity</td>
+                                <td>@item.StockLevel</td>
                                 <td>@item.StockSupplier</td>
                                 <td>@item.DateAcquired</td>
                                 <td>@item.ExpirationDate</td>
@@ -82,12 +99,49 @@
                     else
                     {
                         <tr>
-                            <td colspan="8">No inventory items added yet.</td>
+                            <td colspan="10">No inventory items added yet.</td>
                         </tr>
                     }
                 </tbody>
             </table>
         </div>
     </div>
+
+    <!-- DELETE FORM -->
+    <form id="deleteForm" method="post" action="/Admin/DeleteInventory">
+        <input type="hidden" name="id" id="deleteId" />
+    </form>
+
+    <script>
+            function getSelectedId() {
+                const selected = document.querySelector('input[name="selectedItem"]:checked');
+                if (!selected) {
+                    alert("Select an item first.");
+                    return null;
+                }
+                return selected.value;
+            }
+
+            function updateItem() {
+                const id = getSelectedId();
+                if (!id) return;
+
+                // comment: this opens your update/edit action
+                window.location.href = "/Admin/EditInventory?id=" + id;
+            }
+
+            function deleteItem() {
+                const id = getSelectedId();
+                if (!id) return;
+
+                if (!confirm("Delete this inventory item?")) return;
+
+                document.getElementById("deleteId").value = id;
+                document.getElementById("deleteForm").submit();
+            }
+    </script>
+    <form method="get" action="/Admin/Logout">
+        <button type="submit">Logout</button>
+    </form>
 </body>
 </html>
