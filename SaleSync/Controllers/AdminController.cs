@@ -1,59 +1,209 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Data.SqlClient;
 using SaleSync.Models;
 using System.Collections.Generic;
-using Microsoft.AspNetCore.Http;
 
 namespace SaleSync.Controllers
 {
     public class AdminController : Controller
     {
-        private static List<InventoryItems> inventoryItems = new List<InventoryItems>();
+        private readonly IConfiguration _configuration;
+
+        public AdminController(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
+        private bool IsAdmin()
+        {
+            var role = HttpContext.Session.GetString("Role");
+            return role == "Admin";
+        }
 
         public IActionResult Dashboard()
         {
-            var role = HttpContext.Session.GetString("Role");
-
-            if (string.IsNullOrEmpty(role) || role != "Admin")
+            if (!IsAdmin())
                 return RedirectToAction("Index", "Home");
 
             return View("AdminDashboard");
         }
 
         [HttpGet]
-        public IActionResult Inventory()
+        public IActionResult ManageAccounts()
         {
-            var role = HttpContext.Session.GetString("Role");
-
-            if (role != "Admin")
+            if (!IsAdmin())
                 return RedirectToAction("Index", "Home");
 
-            return View(inventoryItems);
+            List<UserAccount> accounts = new List<UserAccount>();
+            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+
+                string query = @"
+                    SELECT 
+                        u.user_id,
+                        u.full_name,
+                        u.username,
+                        u.email,
+                        u.password_hash,
+                        u.status,
+                        r.role_name
+                    FROM users u
+                    INNER JOIN roles r ON u.role_id = r.role_id
+                    ORDER BY u.user_id";
+
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        accounts.Add(new UserAccount
+                        {
+                            UserId = Convert.ToInt32(reader["user_id"]),
+                            FullName = reader["full_name"]?.ToString() ?? "",
+                            Username = reader["username"]?.ToString() ?? "",
+                            Email = reader["email"]?.ToString() ?? "",
+                            Password = reader["password_hash"]?.ToString() ?? "",
+                            Role = reader["role_name"]?.ToString() ?? "",
+                            Status = reader["status"]?.ToString() ?? ""
+                        });
+                    }
+                }
+            }
+
+            return View(accounts);
         }
 
         [HttpPost]
-        public IActionResult AddInventory(InventoryItems item)
+        public IActionResult SaveAccount(UserAccount model)
         {
-            var role = HttpContext.Session.GetString("Role");
-
-            if (role != "Admin")
+            if (!IsAdmin())
                 return RedirectToAction("Index", "Home");
 
-            if (item != null)
+            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                inventoryItems.Add(item);
+                conn.Open();
+
+                string getRoleQuery = "SELECT role_id FROM roles WHERE role_name = @Role";
+                int roleId;
+
+                using (SqlCommand roleCmd = new SqlCommand(getRoleQuery, conn))
+                {
+                    roleCmd.Parameters.AddWithValue("@Role", model.Role);
+                    object result = roleCmd.ExecuteScalar();
+
+                    if (result == null)
+                    {
+                        TempData["Error"] = "Invalid role selected.";
+                        return RedirectToAction("ManageAccounts");
+                    }
+
+                    roleId = Convert.ToInt32(result);
+                }
+
+                string insertQuery = @"
+                    INSERT INTO users (full_name, username, email, password_hash, role_id, status)
+                    VALUES (@FullName, @Username, @Email, @Password, @RoleId, 'active')";
+
+                using (SqlCommand cmd = new SqlCommand(insertQuery, conn))
+                {
+                    cmd.Parameters.AddWithValue("@FullName", model.FullName);
+                    cmd.Parameters.AddWithValue("@Username", model.Username);
+                    cmd.Parameters.AddWithValue("@Email", model.Email);
+                    cmd.Parameters.AddWithValue("@Password", model.Password);
+                    cmd.Parameters.AddWithValue("@RoleId", roleId);
+
+                    cmd.ExecuteNonQuery();
+                }
             }
 
-            return RedirectToAction("Inventory");
+            TempData["Success"] = "Account saved successfully.";
+            return RedirectToAction("ManageAccounts");
         }
 
-        public IActionResult ManageAccounts()
+        [HttpPost]
+        public IActionResult UpdateAccount(UserAccount model)
         {
-            var role = HttpContext.Session.GetString("Role");
-
-            if (role != "Admin")
+            if (!IsAdmin())
                 return RedirectToAction("Index", "Home");
 
-            return View();
+            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+
+                string getRoleQuery = "SELECT role_id FROM roles WHERE role_name = @Role";
+                int roleId;
+
+                using (SqlCommand roleCmd = new SqlCommand(getRoleQuery, conn))
+                {
+                    roleCmd.Parameters.AddWithValue("@Role", model.Role);
+                    object result = roleCmd.ExecuteScalar();
+
+                    if (result == null)
+                    {
+                        TempData["Error"] = "Invalid role selected.";
+                        return RedirectToAction("ManageAccounts");
+                    }
+
+                    roleId = Convert.ToInt32(result);
+                }
+
+                string updateQuery = @"
+                    UPDATE users
+                    SET full_name = @FullName,
+                        username = @Username,
+                        email = @Email,
+                        password_hash = @Password,
+                        role_id = @RoleId
+                    WHERE user_id = @UserId";
+
+                using (SqlCommand cmd = new SqlCommand(updateQuery, conn))
+                {
+                    cmd.Parameters.AddWithValue("@FullName", model.FullName);
+                    cmd.Parameters.AddWithValue("@Username", model.Username);
+                    cmd.Parameters.AddWithValue("@Email", model.Email);
+                    cmd.Parameters.AddWithValue("@Password", model.Password);
+                    cmd.Parameters.AddWithValue("@RoleId", roleId);
+                    cmd.Parameters.AddWithValue("@UserId", model.UserId);
+
+                    cmd.ExecuteNonQuery();
+                }
+            }
+
+            TempData["Success"] = "Account updated successfully.";
+            return RedirectToAction("ManageAccounts");
+        }
+
+        [HttpPost]
+        public IActionResult DeleteAccount(int userId)
+        {
+            if (!IsAdmin())
+                return RedirectToAction("Index", "Home");
+
+            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+
+                string deleteQuery = "DELETE FROM users WHERE user_id = @UserId";
+
+                using (SqlCommand cmd = new SqlCommand(deleteQuery, conn))
+                {
+                    cmd.Parameters.AddWithValue("@UserId", userId);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+
+            TempData["Success"] = "Account deleted successfully.";
+            return RedirectToAction("ManageAccounts");
         }
     }
 }

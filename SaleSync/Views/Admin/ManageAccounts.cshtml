@@ -1,4 +1,5 @@
-﻿@{
+﻿@model List<SaleSync.Models.UserAccount>
+@{
     Layout = null;
 }
 
@@ -9,7 +10,6 @@
     <link rel="stylesheet" href="~/css/Inventory.css" asp-append-version="true" />
 </head>
 <body>
-
     <div class="inventory-container">
         <h1 class="page-title">Manage Accounts</h1>
 
@@ -17,32 +17,32 @@
         <div class="top-nav">
             <a href="/Admin/Dashboard" class="nav-btn">Analytics</a>
             <a href="/Admin/Inventory" class="nav-btn">Inventory</a>
-            
         </div>
 
         <!-- FORM ONLY -->
         <div class="form-card" style="max-width:600px; margin:auto;">
-            <form class="add-form" style="grid-template-columns: 1fr;">
-                
-                <input placeholder="Full Name"/>
-                <input placeholder="Username" />
-                <input placeholder="Email" />
-                <input placeholder="Password" type="password" />
-                <select name="Role" required>
+            <form id="accountForm" method="post" class="add-form" style="grid-template-columns: 1fr;">
+                <input type="hidden" id="UserId" name="UserId" />
+
+                <input id="FullName" name="FullName" placeholder="Full Name" required />
+                <input id="Username" name="Username" placeholder="Username" required />
+                <input id="Email" name="Email" type="email" placeholder="Email" required />
+                <input id="Password" name="Password" type="password" placeholder="Password" required />
+
+                <select id="Role" name="Role" required>
                     <option value="">Select Role</option>
                     <option value="Admin">Admin</option>
                     <option value="Manager">Manager</option>
                     <option value="Cashier">Cashier</option>
                 </select>
 
-                <button type="button" class="add-btn">Save Account</button>
-
+                <button type="submit" formaction="/Admin/SaveAccount" class="add-btn">Save Account</button>
             </form>
         </div>
 
         <div class="action-bar">
-            <button class="btn update-btn">Update</button>
-            <button class="btn delete-btn">Delete</button>
+            <button type="submit" form="accountForm" formaction="/Admin/UpdateAccount" class="btn update-btn">Update</button>
+            <button type="submit" form="accountForm" formaction="/Admin/DeleteAccount" class="btn delete-btn" onclick="return prepareDelete();">Delete</button>
         </div>
 
         <!-- TABLE -->
@@ -57,14 +57,14 @@
                         <th>Role</th>
                     </tr>
                 </thead>
-
                 <tbody>
                     @if (Model != null && Model.Count > 0)
                     {
                         foreach (var user in Model)
                         {
-                            <tr>
-                                <td>@user.Name</td>
+                            <tr style="cursor:pointer;"
+                                onclick="selectUser('@user.UserId', '@user.FullName', '@user.Username', '@user.Email', '@user.Password', '@user.Role')">
+                                <td>@user.FullName</td>
                                 <td>@user.Username</td>
                                 <td>@user.Email</td>
                                 <td>@user.Password</td>
@@ -81,10 +81,30 @@
                 </tbody>
             </table>
         </div>
-
     </div>
-    <form method="get" action="/Admin/Logout">
+
+    <form method="post" action="/Home/Logout">
         <button type="submit">Logout</button>
     </form>
+
+    <script>
+            function selectUser(userId, fullName, username, email, password, role) {
+                document.getElementById('UserId').value = userId;
+                document.getElementById('FullName').value = fullName;
+                document.getElementById('Username').value = username;
+                document.getElementById('Email').value = email;
+                document.getElementById('Password').value = password;
+                document.getElementById('Role').value = role;
+            }
+
+            function prepareDelete() {
+                const userId = document.getElementById('UserId').value;
+                if (!userId) {
+                    alert('Please select an account first.');
+                    return false;
+                }
+                return confirm('Are you sure you want to delete this account?');
+            }
+    </script>
 </body>
 </html>
