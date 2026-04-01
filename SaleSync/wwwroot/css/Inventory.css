@@ -115,3 +115,77 @@ body {
     .inventory-table tr:nth-child(even) td {
         background: #f3efec;
     }
+.action-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.btn {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    color: white;
+}
+
+.edit-btn {
+    background: #5c6bc0;
+}
+
+    .edit-btn:hover {
+        background: #3f51b5;
+    }
+
+.delete-btn {
+    background: #c94c4c;
+}
+
+    .delete-btn:hover {
+        background: #a63d3d;
+    }
+
+/* BUTTON CONTAINER */
+.action-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+/* GENERAL BUTTON */
+.btn {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    color: white;
+}
+
+/* LOGOUT */
+.logout-btn {
+    background: #c94c4c;
+}
+
+    .logout-btn:hover {
+        background: #a63d3d;
+    }
+
+/* UPDATE */
+.update-btn {
+    background: #5c6bc0;
+}
+
+    .update-btn:hover {
+        background: #3f51b5;
+    }
+
+/* DELETE */
+.delete-btn {
+    background: #c94c4c;
+}
+
+    .delete-btn:hover {
+        background: #a63d3d;
+    }
