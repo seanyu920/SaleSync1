@@ -1,6 +1,4 @@
-﻿@model List<SaleSync.Models.InventoryItems>
-
-@{
+﻿@{
     Layout = null;
 }
 
@@ -13,150 +11,130 @@
     <link rel="stylesheet" href="~/css/Inventory.css" />
 </head>
 <body>
-    <div class="inventory-page">
-        <h1 class="page-title">Inventory</h1>
+    <div class="dashboard-container">
 
-        <div class="top-nav">
-            <a href="@Url.Action("Dashboard", ViewContext.RouteData.Values["controller"].ToString())" class="nav-btn">
-                Analytics
-            </a>
+        <aside class="sidebar">
+            <div>
+                <div class="logo-section">
+                    <img src="~/images/syncsale-logo.png" class="logo-img" />
+                </div>
 
-            <a href="@Url.Action("Inventory", ViewContext.RouteData.Values["controller"].ToString())" class="nav-btn active">
-                Inventory
-            </a>
+                <div class="profile-section">
+                    <div class="profile-circle">👤</div>
+                    <h2 class="admin-name">Admin</h2>
+                </div>
 
-            @if (ViewContext.RouteData.Values["controller"].ToString() == "Admin")
-            {
-                <a href="/Admin/ManageAccounts" class="nav-btn">Manage Accounts</a>
-            }
-        </div>
+                <nav class="sidebar-menu">
+                    <a asp-controller="Admin" asp-action="Dashboard" class="menu-btn">Analysis</a>
+                    <a asp-controller="Admin" asp-action="Inventory" class="menu-btn active">Inventory</a>
+                </nav>
+            </div>
 
-        <!-- ACTION BUTTONS -->
-        <div class="action-bar">
-            <button type="submit" form="inventoryForm" class="btn add-btn">Add</button>
-            <button type="submit" form="inventoryForm" formaction="/Admin/UpdateInventory" class="btn edit-btn">Update</button>
-            <button type="button" onclick="deleteItem()" class="btn delete-btn">Delete</button>
-        </div>
+            <div class="logout-section">
+                <a asp-controller="Home" asp-action="Index" class="menu-btn">Log Out</a>
+            </div>
+        </aside>
 
-        <div class="form-card">
-            <h2>Add Inventory Item</h2>
+        <main class="main-content">
+            <div class="top-bar">
+                <a asp-controller="Admin" asp-action="ManageAccounts" class="accounts-btn">Accounts</a>
+            </div>
 
-            <form id="inventoryForm" method="post" action="/Admin/AddInventory" class="inventory-form">
-                <input type="text" name="ItemCategory" placeholder="Item Category" required />
-                <input type="text" name="ItemName" placeholder="Item Name" required />
-                <input type="text" name="ItemID" placeholder="Item ID" required />
-                <input type="number" step="0.01" name="PurchasePrice" placeholder="Purchase Price" required />
-                <input type="number" name="Quantity" placeholder="Quantity" required />
-                <input type="hidden" name="ProductId" id="ProductId" />
-                <input type="text" name="StockSupplier" placeholder="Stock Supplier" required />
-                <input type="date" name="DateAcquired" required />
-                <input type="date" name="ExpirationDate" required />
+            <div class="inventory-content">
 
-                <button type="submit" class="add-btn">Add Item</button>
-            </form>
-        </div>
+                <!-- Buttons -->
+                <div class="action-buttons">
+                    <button class="action-btn add-btn">Add</button>
+                    <button class="action-btn update-btn">Update</button>
+                    <button class="action-btn delete-btn">Delete</button>
+                </div>
 
-        <div class="table-card">
-            <table class="inventory-table">
-                <thead>
-                    <tr>
-                        <th>Select</th>
-                        <th>Item Category</th>
-                        <th>Item Name</th>
-                        <th>Item ID</th>
-                        <th>Purchase Price</th>
-                        <th>Quantity</th>
-                        <th>Stock Level</th>
-                        <th>Stock Supplier</th>
-                        <th>Date Acquired</th>
-                        <th>Expiration Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (Model != null && Model.Count > 0)
-                    {
-                        @foreach (var item in Model)
-                        {
-                            <tr>
-                                <td>
-                                    <input type="radio"
-                                           name="selectedItem"
-                                           value="@item.ItemID"
-                                           onclick="fillForm(
-                                    '@item.ProductId',
-                                    '@item.ItemCategory',
-                                    '@item.ItemName',
-                                    '@item.ItemID',
-                                    '@item.PurchasePrice',
-                                    '@item.Quantity',
-                                    '@item.StockSupplier',
-                                    '@item.DateAcquired',
-                                    '@item.ExpirationDate'
-                                    )" />
-                                </td>
-                                <td>@item.ItemCategory</td>
-                                <td>@item.ItemName</td>
-                                <td>@item.ItemID</td>
-                                <td>@item.PurchasePrice.ToString("0.00")</td>
-                                <td>@item.Quantity</td>
-                                <td>@item.StockLevel</td>
-                                <td>@item.StockSupplier</td>
-                                <td>@item.DateAcquired</td>
-                                <td>@item.ExpirationDate</td>
-                            </tr>
-                        }
-                    }
-                    else
-                    {
-                        <tr>
-                            <td colspan="10">No inventory items added yet.</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+                <!-- Form -->
+                <div class="form-card">
+                    <h1 class="form-title">Add Inventory Item</h1>
+
+                    <div class="form-grid">
+                        <input type="text" placeholder="Item Category" />
+                        <input type="text" placeholder="Item Name" />
+                        <input type="text" placeholder="Item ID" />
+                        <input type="text" placeholder="Purchase Price" />
+
+                        <input type="text" placeholder="Quantity" />
+                        <input type="text" placeholder="Stock Supplier" />
+                        <input type="date" />
+                        <input type="date" />
+                    </div>
+
+                    <button class="submit-btn">Add Item</button>
+                </div>
+
+                <!-- Table -->
+                <div class="table-card">
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Select</th>
+                                    <th>Item Category</th>
+                                    <th>Item Name</th>
+                                    <th>Item ID</th>
+                                    <th>Purchase Price</th>
+                                    <th>Quantity</th>
+                                    <th>Stock Level</th>
+                                    <th>Stock Supplier</th>
+                                    <th>Date Acquired</th>
+                                    <th>Expiration Date</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                @if (Model != null && Model.Count > 0)
+                                {
+                                    @foreach (var item in Model)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <input type="radio"
+                                                       name="selectedItem"
+                                                       value="@item.ItemID"
+                                                       onclick="fillForm(
+                                                '@item.ProductId',
+                                                '@item.ItemCategory',
+                                                '@item.ItemName',
+                                                '@item.ItemID',
+                                                '@item.PurchasePrice',
+                                                '@item.Quantity',
+                                                '@item.StockSupplier',
+                                                '@item.DateAcquired',
+                                                '@item.ExpirationDate'
+                                                )" />
+                                            </td>
+                                            <td>@item.ItemCategory</td>
+                                            <td>@item.ItemName</td>
+                                            <td>@item.ItemID</td>
+                                            <td>@item.PurchasePrice.ToString("0.00")</td>
+                                            <td>@item.Quantity</td>
+                                            <td>@item.StockLevel</td>
+                                            <td>@item.StockSupplier</td>
+                                            <td>@item.DateAcquired</td>
+                                            <td>@item.ExpirationDate</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="10">No inventory items added yet.</td>
+                                    </tr>
+                                }
+                            </tbody>
+
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </main>
     </div>
-
-    <!-- DELETE FORM -->
-    <form id="deleteForm" method="post" action="/Admin/DeleteInventory">
-        <input type="hidden" name="id" id="deleteId" />
-    </form>
-
-        <script>
-                function getSelectedId() {
-                    const selected = document.querySelector('input[name="selectedItem"]:checked');
-                    if (!selected) {
-                        alert("Select an item first.");
-                        return null;
-                    }
-                    return selected.value;
-                }
-
-                function fillForm(productId, itemCategory, itemName, itemID, purchasePrice, quantity, stockSupplier, dateAcquired, expirationDate) {
-                    document.getElementById("ProductId").value = productId;
-
-                    document.querySelector('input[name="ItemCategory"]').value = itemCategory;
-                    document.querySelector('input[name="ItemName"]').value = itemName;
-                    document.querySelector('input[name="ItemID"]').value = itemID;
-                    document.querySelector('input[name="PurchasePrice"]').value = purchasePrice;
-                    document.querySelector('input[name="Quantity"]').value = quantity;
-                    document.querySelector('input[name="StockSupplier"]').value = stockSupplier;
-                    document.querySelector('input[name="DateAcquired"]').value = dateAcquired;
-                    document.querySelector('input[name="ExpirationDate"]').value = expirationDate;
-                }
-
-                function deleteItem() {
-                    const id = getSelectedId();
-                    if (!id) return;
-
-                    if (!confirm("Delete this inventory item?")) return;
-
-                    document.getElementById("deleteId").value = id;
-                    document.getElementById("deleteForm").submit();
-                }
-        </script>
-    <form method="post" action="/Home/Logout">
-        <button type="submit">Logout</button>
-    </form>
 </body>
 </html>
