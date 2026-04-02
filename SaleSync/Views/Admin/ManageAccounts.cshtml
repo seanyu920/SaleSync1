@@ -4,88 +4,116 @@
 }
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Manage Accounts</title>
-    <link rel="stylesheet" href="~/css/Inventory.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/ManageAccounts.css" asp-append-version="true" />
 </head>
 <body>
-    <div class="inventory-container">
-        <h1 class="page-title">Manage Accounts</h1>
+    <div class="dashboard-container">
 
-        <!-- NAV -->
-        <div class="top-nav">
-            <a href="/Admin/Dashboard" class="nav-btn">Analytics</a>
-            <a href="/Admin/Inventory" class="nav-btn">Inventory</a>
-        </div>
+        <aside class="sidebar">
+            <div>
+                <div class="logo-section">
+                    <img src="~/images/syncsale-logo.png" alt="SyncSale Logo" class="logo-img" />
+                </div>
 
-        <!-- FORM ONLY -->
-        <div class="form-card" style="max-width:600px; margin:auto;">
-            <form id="accountForm" method="post" class="add-form" style="grid-template-columns: 1fr;">
-                <input type="hidden" id="UserId" name="UserId" />
+                <div class="profile-section">
+                    <div class="profile-circle">👤</div>
+                    <h2 class="admin-name">Admin</h2>
+                </div>
 
-                <input id="FullName" name="FullName" placeholder="Full Name" required />
-                <input id="Username" name="Username" placeholder="Username" required />
-                <input id="Email" name="Email" type="email" placeholder="Email" required />
-                <input id="Password" name="Password" type="password" placeholder="Password" required />
+                <nav class="sidebar-menu">
+                    <a asp-controller="Admin" asp-action="Dashboard" class="menu-btn">Analysis</a>
+                    <a asp-controller="Admin" asp-action="Inventory" class="menu-btn">Inventory</a>
+                    <a asp-controller="Admin" asp-action="ManageAccounts" class="menu-btn active">Accounts</a>
+                </nav>
+            </div>
 
-                <select id="Role" name="Role" required>
-                    <option value="">Select Role</option>
-                    <option value="Admin">Admin</option>
-                    <option value="Manager">Manager</option>
-                    <option value="Cashier">Cashier</option>
-                </select>
+            <div class="logout-section">
+                <form method="post" action="/Home/Logout">
+                    <button type="submit" class="menu-btn logout-btn">Log Out</button>
+                </form>
+            </div>
+        </aside>
 
-                <button type="submit" formaction="/Admin/SaveAccount" class="add-btn">Save Account</button>
-            </form>
-        </div>
+        <main class="main-content">
+            <div class="top-bar">
+                <a asp-controller="Admin" asp-action="ManageAccounts" class="accounts-btn">Accounts</a>
+            </div>
 
-        <div class="action-bar">
-            <button type="submit" form="accountForm" formaction="/Admin/UpdateAccount" class="btn update-btn">Update</button>
-            <button type="submit" form="accountForm" formaction="/Admin/DeleteAccount" class="btn delete-btn" onclick="return prepareDelete();">Delete</button>
-        </div>
+            <div class="accounts-content">
+                <div class="action-bar">
+                    <button type="submit" form="accountForm" formaction="/Admin/UpdateAccount" class="btn update-btn">Update</button>
+                    <button type="submit" form="accountForm" formaction="/Admin/DeleteAccount" class="btn delete-btn" onclick="return prepareDelete();">Delete</button>
+                </div>
 
-        <!-- TABLE -->
-        <div class="table-card" style="max-width:1100px; margin:auto;">
-            <table class="inventory-table">
-                <thead>
-                    <tr>
-                        <th>Full Name</th>
-                        <th>Username</th>
-                        <th>Email</th>
-                        <th>Password</th>
-                        <th>Role</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (Model != null && Model.Count > 0)
-                    {
-                        foreach (var user in Model)
-                        {
-                            <tr style="cursor:pointer;"
-                                onclick="selectUser('@user.UserId', '@user.FullName', '@user.Username', '@user.Email', '@user.Password', '@user.Role')">
-                                <td>@user.FullName</td>
-                                <td>@user.Username</td>
-                                <td>@user.Email</td>
-                                <td>@user.Password</td>
-                                <td>@user.Role</td>
-                            </tr>
-                        }
-                    }
-                    else
-                    {
-                        <tr>
-                            <td colspan="5">No accounts found.</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+                <div class="form-card">
+                    <h1 class="form-title">Manage Accounts</h1>
+
+                    <form id="accountForm" method="post" class="account-form">
+                        <input type="hidden" id="UserId" name="UserId" />
+
+                        <div class="form-grid">
+                            <input id="FullName" name="FullName" type="text" placeholder="Full Name" required />
+                            <input id="Username" name="Username" type="text" placeholder="Username" required />
+                            <input id="Email" name="Email" type="email" placeholder="Email" required />
+                            <input id="Password" name="Password" type="password" placeholder="Password" required />
+
+                            <select id="Role" name="Role" required>
+                                <option value="">Select Role</option>
+                                <option value="Admin">Admin</option>
+                                <option value="Manager">Manager</option>
+                                <option value="Cashier">Cashier</option>
+                            </select>
+
+                            <button type="submit" formaction="/Admin/SaveAccount" class="save-btn">Save Account</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="table-card">
+                    <div class="table-wrap">
+                        <table class="accounts-table">
+                            <thead>
+                                <tr>
+                                    <th>Full Name</th>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Password</th>
+                                    <th>Role</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model != null && Model.Count > 0)
+                                {
+                                    foreach (var user in Model)
+                                    {
+                                        <tr class="clickable-row"
+                                            onclick="selectUser('@user.UserId', '@user.FullName', '@user.Username', '@user.Email', '@user.Password', '@user.Role')">
+                                            <td>@user.FullName</td>
+                                            <td>@user.Username</td>
+                                            <td>@user.Email</td>
+                                            <td>@user.Password</td>
+                                            <td>@user.Role</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="5">No accounts found.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
-
-    <form method="post" action="/Home/Logout">
-        <button type="submit">Logout</button>
-    </form>
 
     <script>
             function selectUser(userId, fullName, username, email, password, role) {
