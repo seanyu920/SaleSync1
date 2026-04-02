@@ -97,5 +97,10 @@ namespace SaleSync.Controllers
             HttpContext.Session.Clear();
             return RedirectToAction("Index");
         }
+        [HttpGet]
+        public IActionResult Login()
+        {
+            return View();
+        }
     }
 }
