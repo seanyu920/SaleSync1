@@ -34,7 +34,7 @@
         <!-- ACTION BUTTONS -->
         <div class="action-bar">
             <button type="submit" form="inventoryForm" class="btn add-btn">Add</button>
-            <button type="button" onclick="updateItem()" class="btn edit-btn">Update</button>
+            <button type="submit" form="inventoryForm" formaction="/Admin/UpdateInventory" class="btn edit-btn">Update</button>
             <button type="button" onclick="deleteItem()" class="btn delete-btn">Delete</button>
         </div>
 
@@ -47,9 +47,7 @@
                 <input type="text" name="ItemID" placeholder="Item ID" required />
                 <input type="number" step="0.01" name="PurchasePrice" placeholder="Purchase Price" required />
                 <input type="number" name="Quantity" placeholder="Quantity" required />
-
-
-
+                <input type="hidden" name="ProductId" id="ProductId" />
                 <input type="text" name="StockSupplier" placeholder="Stock Supplier" required />
                 <input type="date" name="DateAcquired" required />
                 <input type="date" name="ExpirationDate" required />
@@ -81,14 +79,27 @@
                         {
                             <tr>
                                 <td>
-                                    <input type="radio" name="selectedItem" value="@item.ItemID" />
+                                    <input type="radio"
+                                           name="selectedItem"
+                                           value="@item.ItemID"
+                                           onclick="fillForm(
+                                    '@item.ProductId',
+                                    '@item.ItemCategory',
+                                    '@item.ItemName',
+                                    '@item.ItemID',
+                                    '@item.PurchasePrice',
+                                    '@item.Quantity',
+                                    '@item.StockSupplier',
+                                    '@item.DateAcquired',
+                                    '@item.ExpirationDate'
+                                    )" />
                                 </td>
                                 <td>@item.ItemCategory</td>
                                 <td>@item.ItemName</td>
                                 <td>@item.ItemID</td>
                                 <td>@item.PurchasePrice.ToString("0.00")</td>
                                 <td>@item.Quantity</td>
-
+                                <td>@item.StockLevel</td>
                                 <td>@item.StockSupplier</td>
                                 <td>@item.DateAcquired</td>
                                 <td>@item.ExpirationDate</td>
@@ -111,35 +122,40 @@
         <input type="hidden" name="id" id="deleteId" />
     </form>
 
-    <script>
-            function getSelectedId() {
-                const selected = document.querySelector('input[name="selectedItem"]:checked');
-                if (!selected) {
-                    alert("Select an item first.");
-                    return null;
+        <script>
+                function getSelectedId() {
+                    const selected = document.querySelector('input[name="selectedItem"]:checked');
+                    if (!selected) {
+                        alert("Select an item first.");
+                        return null;
+                    }
+                    return selected.value;
                 }
-                return selected.value;
-            }
 
-            function updateItem() {
-                const id = getSelectedId();
-                if (!id) return;
+                function fillForm(productId, itemCategory, itemName, itemID, purchasePrice, quantity, stockSupplier, dateAcquired, expirationDate) {
+                    document.getElementById("ProductId").value = productId;
 
-                // comment: this opens your update/edit action
-                window.location.href = "/Admin/EditInventory?id=" + id;
-            }
+                    document.querySelector('input[name="ItemCategory"]').value = itemCategory;
+                    document.querySelector('input[name="ItemName"]').value = itemName;
+                    document.querySelector('input[name="ItemID"]').value = itemID;
+                    document.querySelector('input[name="PurchasePrice"]').value = purchasePrice;
+                    document.querySelector('input[name="Quantity"]').value = quantity;
+                    document.querySelector('input[name="StockSupplier"]').value = stockSupplier;
+                    document.querySelector('input[name="DateAcquired"]').value = dateAcquired;
+                    document.querySelector('input[name="ExpirationDate"]').value = expirationDate;
+                }
 
-            function deleteItem() {
-                const id = getSelectedId();
-                if (!id) return;
+                function deleteItem() {
+                    const id = getSelectedId();
+                    if (!id) return;
 
-                if (!confirm("Delete this inventory item?")) return;
+                    if (!confirm("Delete this inventory item?")) return;
 
-                document.getElementById("deleteId").value = id;
-                document.getElementById("deleteForm").submit();
-            }
-    </script>
-    <form method="get" action="/Admin/Logout">
+                    document.getElementById("deleteId").value = id;
+                    document.getElementById("deleteForm").submit();
+                }
+        </script>
+    <form method="post" action="/Home/Logout">
         <button type="submit">Logout</button>
     </form>
 </body>
