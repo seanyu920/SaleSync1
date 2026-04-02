@@ -40,7 +40,7 @@ namespace SaleSync.Controllers
                 return RedirectToAction("Index", "Home");
 
             List<InventoryItems> items = new List<InventoryItems>();
-            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
@@ -94,7 +94,7 @@ namespace SaleSync.Controllers
             if (!IsAdmin())
                 return RedirectToAction("Index", "Home");
 
-            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
@@ -131,7 +131,7 @@ namespace SaleSync.Controllers
             if (!IsAdmin())
                 return RedirectToAction("Index", "Home");
 
-            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
             InventoryItems item = new InventoryItems();
 
             using (SqlConnection conn = new SqlConnection(connectionString))
@@ -186,7 +186,7 @@ namespace SaleSync.Controllers
             if (!IsAdmin())
                 return RedirectToAction("Index", "Home");
 
-            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
@@ -231,7 +231,7 @@ namespace SaleSync.Controllers
             if (!IsAdmin())
                 return RedirectToAction("Index", "Home");
 
-            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
@@ -292,7 +292,7 @@ namespace SaleSync.Controllers
             if (!IsAdmin())
                 return RedirectToAction("Index", "Home");
 
-            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
@@ -361,7 +361,7 @@ namespace SaleSync.Controllers
             if (!IsAdmin())
                 return RedirectToAction("Index", "Home");
 
-            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
@@ -417,7 +417,7 @@ namespace SaleSync.Controllers
             if (!IsAdmin())
                 return RedirectToAction("Index", "Home");
 
-            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
@@ -435,6 +435,52 @@ namespace SaleSync.Controllers
             TempData["Success"] = "Account deleted successfully.";
             return RedirectToAction("ManageAccounts");
         }
+        [HttpGet]
+        public IActionResult ManageAccounts()
+        {
+            if (!IsAdmin())
+                return RedirectToAction("Index", "Home");
 
+            List<UserAccount> accounts = new List<UserAccount>();
+            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+
+                string query = @"
+     SELECT 
+         u.user_id,
+         u.full_name,
+         u.username,
+         u.email,
+         u.password_hash,
+         u.status,
+         r.role_name
+     FROM users u
+     INNER JOIN roles r ON u.role_id = r.role_id
+     ORDER BY u.user_id";
+
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        accounts.Add(new UserAccount
+                        {
+                            UserId = Convert.ToInt32(reader["user_id"]),
+                            FullName = reader["full_name"]?.ToString() ?? "",
+                            Username = reader["username"]?.ToString() ?? "",
+                            Email = reader["email"]?.ToString() ?? "",
+                            Password = reader["password_hash"]?.ToString() ?? "",
+                            Role = reader["role_name"]?.ToString() ?? "",
+                            Status = reader["status"]?.ToString() ?? ""
+                        });
+                    }
+                }
+            }
+
+            return View(accounts);
+        }
     }
 }

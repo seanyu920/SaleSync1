@@ -12,23 +12,83 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <div class="dashboard-page">
-        <h1 class="dashboard-title">Admin Dashboard</h1>
+    <div class="dashboard-container">
 
-        <div class="top-nav">
-            <a href="/Admin/Dashboard" class="nav-btn active">Analytics</a>
-            <a href="/Admin/Inventory" class="nav-btn">Inventory</a>
-            <a href="/Admin/ManageAccounts" class="nav-btn">Manage Accounts</a>
-        </div>
+        <aside class="sidebar">
+            <div>
+                <div class="logo-section">
+                    <img src="~/images/syncsale-logo.png" alt="SyncSale Logo" class="logo-img" />
+                </div>
 
-        <div class="success-message">
-            Successfully logged in!
-        </div>
+                <div class="profile-section">
+                    <div class="profile-circle">👤</div>
+                    <h2 class="admin-name">Admin</h2>
+                </div>
 
-        <div class="chart-card">
-            <h2 class="chart-title">Sales Analytics</h2>
-            <canvas id="salesChart"></canvas>
-        </div>
+                <nav class="sidebar-menu">
+                    <a asp-controller="Admin" asp-action="Dashboard" class="menu-btn active">Analysis</a>
+                    <a asp-controller="Admin" asp-action="Inventory" class="menu-btn">Inventory</a>
+                </nav>
+            </div>
+
+            <div class="logout-section">
+                <a asp-controller="Home" asp-action="Index" class="menu-btn logout-btn">Log Out</a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="top-bar">
+                <a asp-controller="Admin" asp-action="ManageAccounts" class="accounts-btn">Accounts</a>
+            </div>
+
+            <div class="content-area">
+                <div class="success-message">
+                    Successfully logged in!
+                </div>
+
+                <div class="chart-card">
+                    <h2 class="chart-title">Sales Analytics</h2>
+                    <canvas id="salesChart"></canvas>
+                </div>
+
+                <div class="extra-widgets">
+                    <div class="payment-card">
+                        <h2 class="widget-title">Payment Methods</h2>
+                        <div class="pie-chart-container">
+                            <canvas id="paymentChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="best-selling-card">
+                        <h2 class="widget-title">Best Selling Items</h2>
+
+                        <div class="items-list">
+                            <div class="item-row">
+                                <span class="item-name">Coca-Cola 1.5L</span>
+                                <span class="item-sold">120 sold</span>
+                            </div>
+                            <div class="item-row">
+                                <span class="item-name">Pancit Canton</span>
+                                <span class="item-sold">98 sold</span>
+                            </div>
+                            <div class="item-row">
+                                <span class="item-name">Bear Brand Milk</span>
+                                <span class="item-sold">85 sold</span>
+                            </div>
+                            <div class="item-row">
+                                <span class="item-name">Gardenia Bread</span>
+                                <span class="item-sold">73 sold</span>
+                            </div>
+                            <div class="item-row">
+                                <span class="item-name">Nescafe 3-in-1</span>
+                                <span class="item-sold">64 sold</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
     </div>
 
     <script>
@@ -68,9 +128,33 @@
         }
         }
         });
+
+        const paymentCtx = document.getElementById('paymentChart').getContext('2d');
+
+        new Chart(paymentCtx, {
+        type: 'pie',
+        data: {
+        labels: ['Cash', 'GCash', 'Card'],
+        datasets: [{
+        data: [50, 30, 20],
+        backgroundColor: [
+        '#8d6e63',
+        '#a1887f',
+        '#bcaaa4'
+        ],
+        borderColor: '#ffffff',
+        borderWidth: 2
+        }]
+        },
+        options: {
+        responsive: true,
+        plugins: {
+        legend: {
+        position: 'bottom'
+        }
+        }
+        }
+        });
     </script>
-    <form method="get" action="/Admin/Logout">
-        <button type="submit">Logout</button>
-    </form>
 </body>
 </html>
