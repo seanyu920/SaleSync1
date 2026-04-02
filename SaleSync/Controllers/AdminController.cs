@@ -21,7 +21,7 @@ namespace SaleSync.Controllers
             return role == "Admin";
         }
 
-        // ================= DASHBOARD =================
+        //DASH NAV
         public IActionResult Dashboard()
         {
             if (!IsAdmin())
@@ -30,7 +30,7 @@ namespace SaleSync.Controllers
             return View("AdminDashboard");
         }
 
-        // ================= INVENTORY (RESTORED) =================
+        //INVENTORY FUNCTION
         private static List<InventoryItems> inventoryItems = new List<InventoryItems>();
 
         [HttpGet]
@@ -39,7 +39,53 @@ namespace SaleSync.Controllers
             if (!IsAdmin())
                 return RedirectToAction("Index", "Home");
 
-            return View(inventoryItems);
+            List<InventoryItems> items = new List<InventoryItems>();
+            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+
+                string query = @"
+            SELECT 
+                p.product_id,
+                c.category_name,
+                p.product_name,
+                p.sku,
+                p.cost_price,
+                p.stock_quantity,
+                p.description
+            FROM dbo.products p
+            INNER JOIN dbo.categories c ON p.category_id = c.category_id
+            ORDER BY p.product_id";
+
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        string description = reader["description"]?.ToString() ?? "";
+
+                        items.Add(new InventoryItems
+                        {
+                            ProductId = Convert.ToInt32(reader["product_id"]),
+                            ItemCategory = reader["category_name"]?.ToString() ?? "",
+                            ItemName = reader["product_name"]?.ToString() ?? "",
+                            ItemID = reader["sku"]?.ToString() ?? "",
+                            PurchasePrice = reader["cost_price"] == DBNull.Value ? 0 : Convert.ToDecimal(reader["cost_price"]),
+                            Quantity = reader["stock_quantity"] == DBNull.Value ? 0 : Convert.ToInt32(reader["stock_quantity"]),
+                            StockLevel = reader["stock_quantity"] == DBNull.Value ? "In Stock"
+                                        : Convert.ToInt32(reader["stock_quantity"]) <= 10 ? "Low Stock"
+                                        : "In Stock",
+                            StockSupplier = ExtractValue(description, "Supplier:"),
+                            DateAcquired = ExtractValue(description, "Date Acquired:"),
+                            ExpirationDate = ExtractValue(description, "Expiration Date:")
+                        });
+                    }
+                }
+            }
+
+            return View(items);
         }
 
         [HttpPost]
@@ -48,71 +94,205 @@ namespace SaleSync.Controllers
             if (!IsAdmin())
                 return RedirectToAction("Index", "Home");
 
-            if (item != null)
+            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                inventoryItems.Add(item);
+                conn.Open();
+
+                int categoryId = GetCategoryId(item.ItemCategory, conn);
+
+                string insertQuery = @"
+            INSERT INTO dbo.products
+            (category_id, supplier_id, product_name, barcode, sku, description, cost_price, selling_price, stock_quantity, reorder_level, unit)
+            VALUES
+            (@CategoryId, NULL, @ProductName, @Barcode, @SKU, @Description, @CostPrice, 0, @StockQuantity, 10, NULL)";
+
+                using (SqlCommand cmd = new SqlCommand(insertQuery, conn))
+                {
+                    cmd.Parameters.AddWithValue("@CategoryId", categoryId);
+                    cmd.Parameters.AddWithValue("@ProductName", item.ItemName);
+                    cmd.Parameters.AddWithValue("@Barcode", item.ItemID);
+                    cmd.Parameters.AddWithValue("@SKU", item.ItemID);
+                    cmd.Parameters.AddWithValue("@Description", $"Supplier: {item.StockSupplier}; Date Acquired: {item.DateAcquired}; Expiration Date: {item.ExpirationDate}");
+                    cmd.Parameters.AddWithValue("@CostPrice", item.PurchasePrice);
+                    cmd.Parameters.AddWithValue("@StockQuantity", item.Quantity);
+
+                    cmd.ExecuteNonQuery();
+                }
             }
 
             return RedirectToAction("Inventory");
         }
 
-        // ================= MANAGE ACCOUNTS =================
         [HttpGet]
-        public IActionResult ManageAccounts()
+        public IActionResult EditInventory(string id)
         {
             if (!IsAdmin())
                 return RedirectToAction("Index", "Home");
 
-            List<UserAccount> accounts = new List<UserAccount>();
-            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
+            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+            InventoryItems item = new InventoryItems();
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
 
                 string query = @"
-                    SELECT 
-                        u.user_id,
-                        u.full_name,
-                        u.username,
-                        u.email,
-                        u.password_hash,
-                        u.status,
-                        r.role_name
-                    FROM users u
-                    INNER JOIN roles r ON u.role_id = r.role_id
-                    ORDER BY u.user_id";
+            SELECT TOP 1
+                p.product_id,
+                c.category_name,
+                p.product_name,
+                p.sku,
+                p.cost_price,
+                p.stock_quantity,
+                p.description
+            FROM dbo.products p
+            INNER JOIN dbo.categories c ON p.category_id = c.category_id
+            WHERE p.sku = @Id OR p.barcode = @Id";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
-                using (SqlDataReader reader = cmd.ExecuteReader())
                 {
-                    while (reader.Read())
+                    cmd.Parameters.AddWithValue("@Id", id);
+
+                    using (SqlDataReader reader = cmd.ExecuteReader())
                     {
-                        accounts.Add(new UserAccount
+                        if (reader.Read())
                         {
-                            UserId = Convert.ToInt32(reader["user_id"]),
-                            FullName = reader["full_name"]?.ToString() ?? "",
-                            Username = reader["username"]?.ToString() ?? "",
-                            Email = reader["email"]?.ToString() ?? "",
-                            Password = reader["password_hash"]?.ToString() ?? "",
-                            Role = reader["role_name"]?.ToString() ?? "",
-                            Status = reader["status"]?.ToString() ?? ""
-                        });
+                            string desc = reader["description"]?.ToString() ?? "";
+
+                            item.ProductId = Convert.ToInt32(reader["product_id"]);
+                            item.ItemCategory = reader["category_name"]?.ToString() ?? "";
+                            item.ItemName = reader["product_name"]?.ToString() ?? "";
+                            item.ItemID = reader["sku"]?.ToString() ?? "";
+                            item.PurchasePrice = reader["cost_price"] == DBNull.Value ? 0 : Convert.ToDecimal(reader["cost_price"]);
+                            item.Quantity = reader["stock_quantity"] == DBNull.Value ? 0 : Convert.ToInt32(reader["stock_quantity"]);
+                            item.StockLevel = item.Quantity <= 10 ? "Low Stock" : "In Stock";
+
+                            item.StockSupplier = ExtractValue(desc, "Supplier:");
+                            item.DateAcquired = ExtractValue(desc, "Date Acquired:");
+                            item.ExpirationDate = ExtractValue(desc, "Expiration Date:");
+                        }
                     }
                 }
             }
 
-            return View(accounts);
+            return View("EditInventory", item);
         }
 
-        // ================= SAVE ACCOUNT =================
+        [HttpPost]
+        public IActionResult UpdateInventory(InventoryItems item)
+        {
+            if (!IsAdmin())
+                return RedirectToAction("Index", "Home");
+
+            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+
+                int categoryId = GetCategoryId(item.ItemCategory, conn);
+
+                string updateQuery = @"
+            UPDATE dbo.products
+            SET category_id = @CategoryId,
+                product_name = @ProductName,
+                barcode = @Barcode,
+                sku = @SKU,
+                description = @Description,
+                cost_price = @CostPrice,
+                stock_quantity = @StockQuantity
+            WHERE product_id = @ProductId";
+
+                using (SqlCommand cmd = new SqlCommand(updateQuery, conn))
+                {
+                    cmd.Parameters.AddWithValue("@CategoryId", categoryId);
+                    cmd.Parameters.AddWithValue("@ProductName", item.ItemName);
+                    cmd.Parameters.AddWithValue("@Barcode", item.ItemID);
+                    cmd.Parameters.AddWithValue("@SKU", item.ItemID);
+                    cmd.Parameters.AddWithValue("@Description", $"Supplier: {item.StockSupplier}; Date Acquired: {item.DateAcquired}; Expiration Date: {item.ExpirationDate}");
+                    cmd.Parameters.AddWithValue("@CostPrice", item.PurchasePrice);
+                    cmd.Parameters.AddWithValue("@StockQuantity", item.Quantity);
+                    cmd.Parameters.AddWithValue("@ProductId", item.ProductId);
+
+                    cmd.ExecuteNonQuery();
+                }
+            }
+
+            return RedirectToAction("Inventory");
+        }
+
+
+
+        [HttpPost]
+        public IActionResult DeleteInventory(string id)
+        {
+            if (!IsAdmin())
+                return RedirectToAction("Index", "Home");
+
+            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+
+                string deleteQuery = "DELETE FROM dbo.products WHERE sku = @Id OR barcode = @Id";
+
+                using (SqlCommand cmd = new SqlCommand(deleteQuery, conn))
+                {
+                    cmd.Parameters.AddWithValue("@Id", id);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+
+            return RedirectToAction("Inventory");
+        }
+
+        private int GetCategoryId(string categoryName, SqlConnection conn)
+        {
+            string query = "SELECT category_id FROM dbo.categories WHERE category_name = @CategoryName";
+
+            using (SqlCommand cmd = new SqlCommand(query, conn))
+            {
+                cmd.Parameters.AddWithValue("@CategoryName", categoryName);
+                object result = cmd.ExecuteScalar();
+
+                if (result != null)
+                    return Convert.ToInt32(result);
+            }
+
+            string insertQuery = "INSERT INTO dbo.categories (category_name) VALUES (@CategoryName); SELECT SCOPE_IDENTITY();";
+
+            using (SqlCommand cmd = new SqlCommand(insertQuery, conn))
+            {
+                cmd.Parameters.AddWithValue("@CategoryName", categoryName);
+                return Convert.ToInt32(cmd.ExecuteScalar());
+            }
+        }
+
+        private string ExtractValue(string description, string key)
+        {
+            if (string.IsNullOrEmpty(description) || !description.Contains(key))
+                return "";
+
+            int start = description.IndexOf(key) + key.Length;
+            int end = description.IndexOf(";", start);
+
+            if (end == -1)
+                end = description.Length;
+
+            return description.Substring(start, end - start).Trim();
+        }
+
+        //SAVE
         [HttpPost]
         public IActionResult SaveAccount(UserAccount model)
         {
             if (!IsAdmin())
                 return RedirectToAction("Index", "Home");
 
-            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
+            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
@@ -174,14 +354,14 @@ namespace SaleSync.Controllers
             return RedirectToAction("ManageAccounts");
         }
 
-        // ================= UPDATE ACCOUNT =================
+        //UPDATE ACC
         [HttpPost]
         public IActionResult UpdateAccount(UserAccount model)
         {
             if (!IsAdmin())
                 return RedirectToAction("Index", "Home");
 
-            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
+            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
@@ -230,14 +410,14 @@ namespace SaleSync.Controllers
             return RedirectToAction("ManageAccounts");
         }
 
-        // ================= DELETE ACCOUNT =================
+        //DELETE ACC
         [HttpPost]
         public IActionResult DeleteAccount(int userId)
         {
             if (!IsAdmin())
                 return RedirectToAction("Index", "Home");
 
-            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
+            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
@@ -255,5 +435,6 @@ namespace SaleSync.Controllers
             TempData["Success"] = "Account deleted successfully.";
             return RedirectToAction("ManageAccounts");
         }
+
     }
 }
