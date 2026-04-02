@@ -21,6 +21,7 @@ namespace SaleSync.Controllers
             return role == "Admin";
         }
 
+        // ================= DASHBOARD =================
         public IActionResult Dashboard()
         {
             if (!IsAdmin())
@@ -29,6 +30,33 @@ namespace SaleSync.Controllers
             return View("AdminDashboard");
         }
 
+        // ================= INVENTORY (RESTORED) =================
+        private static List<InventoryItems> inventoryItems = new List<InventoryItems>();
+
+        [HttpGet]
+        public IActionResult Inventory()
+        {
+            if (!IsAdmin())
+                return RedirectToAction("Index", "Home");
+
+            return View(inventoryItems);
+        }
+
+        [HttpPost]
+        public IActionResult AddInventory(InventoryItems item)
+        {
+            if (!IsAdmin())
+                return RedirectToAction("Index", "Home");
+
+            if (item != null)
+            {
+                inventoryItems.Add(item);
+            }
+
+            return RedirectToAction("Inventory");
+        }
+
+        // ================= MANAGE ACCOUNTS =================
         [HttpGet]
         public IActionResult ManageAccounts()
         {
@@ -36,7 +64,7 @@ namespace SaleSync.Controllers
                 return RedirectToAction("Index", "Home");
 
             List<UserAccount> accounts = new List<UserAccount>();
-            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
@@ -77,18 +105,37 @@ namespace SaleSync.Controllers
             return View(accounts);
         }
 
+        // ================= SAVE ACCOUNT =================
         [HttpPost]
         public IActionResult SaveAccount(UserAccount model)
         {
             if (!IsAdmin())
                 return RedirectToAction("Index", "Home");
 
-            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
 
+                // CHECK DUPLICATE
+                string checkQuery = "SELECT COUNT(*) FROM users WHERE email = @Email OR username = @Username";
+
+                using (SqlCommand checkCmd = new SqlCommand(checkQuery, conn))
+                {
+                    checkCmd.Parameters.AddWithValue("@Email", model.Email);
+                    checkCmd.Parameters.AddWithValue("@Username", model.Username);
+
+                    int exists = (int)checkCmd.ExecuteScalar();
+
+                    if (exists > 0)
+                    {
+                        TempData["Error"] = "Account already exists. Use Update instead.";
+                        return RedirectToAction("ManageAccounts");
+                    }
+                }
+
+                // GET ROLE ID
                 string getRoleQuery = "SELECT role_id FROM roles WHERE role_name = @Role";
                 int roleId;
 
@@ -106,6 +153,7 @@ namespace SaleSync.Controllers
                     roleId = Convert.ToInt32(result);
                 }
 
+                // INSERT
                 string insertQuery = @"
                     INSERT INTO users (full_name, username, email, password_hash, role_id, status)
                     VALUES (@FullName, @Username, @Email, @Password, @RoleId, 'active')";
@@ -126,13 +174,14 @@ namespace SaleSync.Controllers
             return RedirectToAction("ManageAccounts");
         }
 
+        // ================= UPDATE ACCOUNT =================
         [HttpPost]
         public IActionResult UpdateAccount(UserAccount model)
         {
             if (!IsAdmin())
                 return RedirectToAction("Index", "Home");
 
-            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
@@ -181,13 +230,14 @@ namespace SaleSync.Controllers
             return RedirectToAction("ManageAccounts");
         }
 
+        // ================= DELETE ACCOUNT =================
         [HttpPost]
         public IActionResult DeleteAccount(int userId)
         {
             if (!IsAdmin())
                 return RedirectToAction("Index", "Home");
 
-            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
