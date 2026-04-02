@@ -1,0 +1,54 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SyncSale Login</title>
+    <link rel="stylesheet" href="~/css/LogInPage.css" />
+</head>
+<body>
+    <div class="page">
+        <div class="left-panel">
+            <img src="~/images/syncsale-logo.png" alt="SyncSale Logo" class="brand-logo" />
+        </div>
+
+        <div class="login-card">
+            <div class="user-icon">👤</div>
+
+            <h1 class="title">SaleSync</h1>
+            <p class="subtitle">Log in to your account</p>
+
+            <form asp-controller="Home" asp-action="Login" method="post">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <div class="input-wrap">
+                        <input type="text" id="username" name="username" placeholder="Enter username here" />
+                        <span class="field-icon">👤</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-wrap">
+                        <input type="password" id="password" name="password" placeholder="Enter password here" />
+                        <span class="field-icon">🔒</span>
+                    </div>
+                </div>
+
+                @if (ViewBag.Message != null)
+                {
+                    <p style="color:red; margin-bottom:10px;">@ViewBag.Message</p>
+                }
+
+                <button type="submit" class="login-button">Login</button>
+            </form>
+
+            <button class="forgot-button" type="button">Forgot Password?</button>
+        </div>
+    </div>
+</body>
+</html>

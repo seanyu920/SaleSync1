@@ -7,48 +7,74 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>SyncSale Login</title>
-    <link rel="stylesheet" href="~/css/LogInPage.css" />
+    <title>SaleSync Home</title>
+    <link rel="stylesheet" href="~/css/HomePage.css" />
 </head>
 <body>
-    <div class="page">
-        <div class="left-panel">
-            <img src="~/images/syncsale-logo.png" alt="SyncSale Logo" class="brand-logo" />
+    <header class="top-bar">
+        <div class="logo">SaleSync</div>
+
+        <nav class="nav-menu">
+            <a href="#home">Home</a>
+            <a href="#about">About</a>
+            <a href="#contact">Contact Us</a>
+        </nav>
+
+        <div class="nav-login">
+            <a asp-controller="Home" asp-action="Login" class="login-btn">Log In</a>
         </div>
+    </header>
 
-        <div class="login-card">
-            <div class="user-icon">👤</div>
+    <main class="hero-section" id="home">
+        <div class="hero-content">
+            <h1>Welcome to SaleSync</h1>
+            <p>
+                Track your sales, manage your inventory, and control your business
+                with ease using SaleSync.
+            </p>
+            <a asp-controller="Home" asp-action="Login" class="hero-btn">Get Started</a>
+        </div>
+    </main>
 
-            <h1 class="title">SaleSync</h1>
-            <p class="subtitle">Log in to your account</p>
+    <section class="about-section" id="about">
+        <div class="section-container">
+            <h2>About SaleSync</h2>
+            <p>
+                SaleSync is a modern Point of Sale system designed to help businesses
+                handle daily operations more efficiently. It allows users to monitor
+                sales, manage inventory, and maintain accounts in one organized platform.
+            </p>
 
-            <form asp-controller="Home" asp-action="Login" method="post">
-                <div class="form-group">
-                    <label for="username">Username</label>
-                    <div class="input-wrap">
-                        <input type="text" id="username" name="username" placeholder="Enter username here" />
-                        <span class="field-icon">👤</span>
-                    </div>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>Sales Tracking</h3>
+                    <p>Monitor business performance with clear and simple sales records.</p>
                 </div>
 
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <div class="input-wrap">
-                        <input type="password" id="password" name="password" placeholder="Enter password here" />
-                        <span class="field-icon">🔒</span>
-                    </div>
+                <div class="feature-card">
+                    <h3>Inventory Management</h3>
+                    <p>Track stock levels and product availability in an organized way.</p>
                 </div>
 
-                @if (ViewBag.Message != null)
-                {
-                    <p style="color:red; margin-bottom:10px;">@ViewBag.Message</p>
-                }
-
-                <button type="submit" class="login-button">Login</button>
-            </form>
-
-            <button class="forgot-button" type="button">Forgot Password?</button>
+                <div class="feature-card">
+                    <h3>Account Management</h3>
+                    <p>Manage admin and staff access with a secure login system.</p>
+                </div>
+            </div>
         </div>
-    </div>
+    </section>
+
+    <section class="contact-section" id="contact">
+        <div class="section-container">
+            <h2>Contact Us</h2>
+            <p>Email: support@salesync.com</p>
+            <p>Phone: +63 912 345 6789</p>
+            <p>Location: Your City, Philippines</p>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <p>© 2026 SaleSync. All rights reserved.</p>
+    </footer>
 </body>
 </html>
