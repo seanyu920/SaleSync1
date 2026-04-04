@@ -1,4 +1,6 @@
-﻿@{
+﻿@model List<SaleSync.Models.InventoryItems>
+
+@{
     Layout = null;
 }
 
@@ -31,7 +33,9 @@
             </div>
 
             <div class="logout-section">
-                <a asp-controller="Home" asp-action="Index" class="menu-btn">Log Out</a>
+                <form method="post" action="/Home/Logout">
+                    <button type="submit" class="menu-btn">Log Out</button>
+                </form>
             </div>
         </aside>
 
@@ -44,28 +48,32 @@
 
                 <!-- Buttons -->
                 <div class="action-buttons">
-                    <button class="action-btn add-btn">Add</button>
-                    <button class="action-btn update-btn">Update</button>
-                    <button class="action-btn delete-btn">Delete</button>
+                    <button type="submit" form="inventoryForm" formaction="/Admin/AddInventory" class="action-btn add-btn">Add</button>
+                    <button type="submit" form="inventoryForm" formaction="/Admin/UpdateInventory" class="action-btn update-btn">Update</button>
+                    <button type="button" onclick="deleteItem()" class="action-btn delete-btn">Delete</button>
                 </div>
 
                 <!-- Form -->
                 <div class="form-card">
                     <h1 class="form-title">Add Inventory Item</h1>
 
-                    <div class="form-grid">
-                        <input type="text" placeholder="Item Category" />
-                        <input type="text" placeholder="Item Name" />
-                        <input type="text" placeholder="Item ID" />
-                        <input type="text" placeholder="Purchase Price" />
+                    <form id="inventoryForm" method="post">
+                        <input type="hidden" name="ProductId" id="ProductId" />
 
-                        <input type="text" placeholder="Quantity" />
-                        <input type="text" placeholder="Stock Supplier" />
-                        <input type="date" />
-                        <input type="date" />
-                    </div>
+                        <div class="form-grid">
+                            <input type="text" name="ItemCategory" placeholder="Item Category" required />
+                            <input type="text" name="ItemName" placeholder="Item Name" required />
+                            <input type="text" name="ItemID" placeholder="Item ID" required />
+                            <input type="text" name="PurchasePrice" placeholder="Purchase Price" required />
 
-                    <button class="submit-btn">Add Item</button>
+                            <input type="text" name="Quantity" placeholder="Quantity" required />
+                            <input type="text" name="StockSupplier" placeholder="Stock Supplier" required />
+                            <input type="date" name="DateAcquired" required />
+                            <input type="date" name="ExpirationDate" required />
+                        </div>
+
+                        <button type="submit" formaction="/Admin/AddInventory" class="submit-btn">Add Item</button>
+                    </form>
                 </div>
 
                 <!-- Table -->
@@ -99,12 +107,12 @@
                                                        value="@item.ItemID"
                                                        onclick="fillForm(
                                                 '@item.ProductId',
-                                                '@item.ItemCategory',
-                                                '@item.ItemName',
-                                                '@item.ItemID',
+                                                '@Html.Raw((item.ItemCategory ?? "").Replace("'", "\\'"))',
+                                                '@Html.Raw((item.ItemName ?? "").Replace("'", "\\'"))',
+                                                '@Html.Raw((item.ItemID ?? "").Replace("'", "\\'"))',
                                                 '@item.PurchasePrice',
                                                 '@item.Quantity',
-                                                '@item.StockSupplier',
+                                                '@Html.Raw((item.StockSupplier ?? "").Replace("'", "\\'"))',
                                                 '@item.DateAcquired',
                                                 '@item.ExpirationDate'
                                                 )" />
@@ -128,7 +136,6 @@
                                     </tr>
                                 }
                             </tbody>
-
                         </table>
                     </div>
                 </div>
@@ -136,5 +143,43 @@
             </div>
         </main>
     </div>
+
+    <!-- Delete Form -->
+    <form id="deleteForm" method="post" action="/Admin/DeleteInventory">
+        <input type="hidden" name="id" id="deleteId" />
+    </form>
+
+    <script>
+            function fillForm(productId, itemCategory, itemName, itemID, purchasePrice, quantity, stockSupplier, dateAcquired, expirationDate) {
+                document.getElementById("ProductId").value = productId;
+                document.querySelector('input[name="ItemCategory"]').value = itemCategory;
+                document.querySelector('input[name="ItemName"]').value = itemName;
+                document.querySelector('input[name="ItemID"]').value = itemID;
+                document.querySelector('input[name="PurchasePrice"]').value = purchasePrice;
+                document.querySelector('input[name="Quantity"]').value = quantity;
+                document.querySelector('input[name="StockSupplier"]').value = stockSupplier;
+                document.querySelector('input[name="DateAcquired"]').value = dateAcquired;
+                document.querySelector('input[name="ExpirationDate"]').value = expirationDate;
+            }
+
+            function getSelectedId() {
+                const selected = document.querySelector('input[name="selectedItem"]:checked');
+                if (!selected) {
+                    alert("Select an item first.");
+                    return null;
+                }
+                return selected.value;
+            }
+
+            function deleteItem() {
+                const id = getSelectedId();
+                if (!id) return;
+
+                if (!confirm("Delete this inventory item?")) return;
+
+                document.getElementById("deleteId").value = id;
+                document.getElementById("deleteForm").submit();
+            }
+    </script>
 </body>
 </html>
