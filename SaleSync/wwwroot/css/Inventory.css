@@ -253,3 +253,30 @@ input[type="radio"] {
         grid-template-columns: 1fr;
     }
 }
+
+.search-bar {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+    .search-bar input {
+        padding: 10px 14px;
+        width: 250px;
+        border: 1px solid #cbbdb4;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+
+    .search-bar button {
+        padding: 10px 16px;
+        background: #9b7a6c;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+
+        .search-bar button:hover {
+            background: #7f5f52;
+        }

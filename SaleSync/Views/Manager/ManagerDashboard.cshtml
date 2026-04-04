@@ -3,26 +3,152 @@
 }
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Manager Dashboard</title>
-    <link rel="stylesheet" href="~/css/Inventory.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/ManagerDashboard.css" asp-append-version="true" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+    <div class="dashboard-container">
 
-    <div class="inventory-container">
-        <h1 class="page-title">Manager Dashboard</h1>
+        <aside class="sidebar">
+            <div>
+                <div class="logo-section">
+                    <img src="~/images/syncsale-logo.png" alt="SyncSale Logo" class="logo-img" />
+                </div>
 
-        <div class="top-nav">
-            <a href="/Manager/Dashboard" class="nav-btn active">Analytics</a>
-            <a href="/Manager/Inventory" class="nav-btn">Inventory</a>
-        </div>
+                <div class="profile-section">
+                    <div class="profile-circle">👤</div>
+                    <h2 class="manager-name">Manager</h2>
+                </div>
 
-        <div style="margin-top:40px; text-align:center;">
-            <h2>Analytics Overview</h2>
-            <p>Manager view of analytics.</p>
-        </div>
+                <nav class="sidebar-menu">
+                    <a asp-controller="Manager" asp-action="Dashboard" class="menu-btn active">Analysis</a>
+                    <a asp-controller="Manager" asp-action="Inventory" class="menu-btn">Inventory</a>
+                </nav>
+            </div>
+
+            <div class="logout-section">
+                <form method="post" action="/Home/Logout">
+                    <button type="submit" class="menu-btn logout-btn">Log Out</button>
+                </form>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-area">
+                <div class="success-message">
+                    Welcome, Manager!
+                </div>
+
+                <div class="chart-card">
+                    <h2 class="chart-title">Sales Analytics</h2>
+                    <canvas id="salesChart"></canvas>
+                </div>
+
+                <div class="extra-widgets">
+                    <div class="payment-card">
+                        <h2 class="widget-title">Payment Methods</h2>
+                        <div class="pie-chart-container">
+                            <canvas id="paymentChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="best-selling-card">
+                        <h2 class="widget-title">Best Selling Items</h2>
+
+                        <div class="items-list">
+                            <div class="item-row">
+                                <span class="item-name">Coca-Cola 1.5L</span>
+                                <span class="item-sold">120 sold</span>
+                            </div>
+                            <div class="item-row">
+                                <span class="item-name">Pancit Canton</span>
+                                <span class="item-sold">98 sold</span>
+                            </div>
+                            <div class="item-row">
+                                <span class="item-name">Bear Brand Milk</span>
+                                <span class="item-sold">85 sold</span>
+                            </div>
+                            <div class="item-row">
+                                <span class="item-name">Gardenia Bread</span>
+                                <span class="item-sold">73 sold</span>
+                            </div>
+                            <div class="item-row">
+                                <span class="item-name">Nescafe 3-in-1</span>
+                                <span class="item-sold">64 sold</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
     </div>
 
+    <script>
+        const salesCtx = document.getElementById('salesChart').getContext('2d');
+
+        new Chart(salesCtx, {
+        type: 'bar',
+        data: {
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        datasets: [{
+        label: 'Sales',
+        data: [12, 19, 8, 15, 22, 17, 25],
+        borderWidth: 1,
+        backgroundColor: [
+        '#8d6e63',
+        '#a1887f',
+        '#bcaaa4',
+        '#8d6e63',
+        '#a1887f',
+        '#bcaaa4',
+        '#8d6e63'
+        ]
+        }]
+        },
+        options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+        legend: {
+        display: true
+        }
+        },
+        scales: {
+        y: {
+        beginAtZero: true
+        }
+        }
+        }
+        });
+
+        const paymentCtx = document.getElementById('paymentChart').getContext('2d');
+
+        new Chart(paymentCtx, {
+        type: 'pie',
+        data: {
+        labels: ['Cash', 'GCash', 'Card'],
+        datasets: [{
+        data: [50, 30, 20],
+        backgroundColor: ['#8d6e63', '#a1887f', '#bcaaa4'],
+        borderColor: '#ffffff',
+        borderWidth: 2
+        }]
+        },
+        options: {
+        responsive: true,
+        plugins: {
+        legend: {
+        position: 'bottom'
+        }
+        }
+        }
+        });
+    </script>
 </body>
 </html>
