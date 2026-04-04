@@ -23,12 +23,19 @@
 
                 <div class="profile-section">
                     <div class="profile-circle">👤</div>
-                    <h2 class="admin-name">Admin</h2>
+                    <h2 class="admin-name">
+                        @(ViewContext.RouteData.Values["controller"]?.ToString() == "Manager" ? "Manager" : "Admin")
+                    </h2>
                 </div>
 
                 <nav class="sidebar-menu">
                     <a asp-controller="Admin" asp-action="Dashboard" class="menu-btn">Analysis</a>
                     <a asp-controller="Admin" asp-action="Inventory" class="menu-btn active">Inventory</a>
+
+                    @if (ViewContext.RouteData.Values["controller"]?.ToString() == "Admin")
+                    {
+                        <a asp-controller="Admin" asp-action="ManageAccounts" class="menu-btn">Accounts</a>
+                    }
                 </nav>
             </div>
 
@@ -40,10 +47,7 @@
         </aside>
 
         <main class="main-content">
-            <div class="top-bar">
-                <a asp-controller="Admin" asp-action="ManageAccounts" class="accounts-btn">Accounts</a>
-            </div>
-
+            
             <div class="inventory-content">
 
                 <!-- Buttons -->
@@ -71,9 +75,12 @@
                             <input type="date" name="DateAcquired" required />
                             <input type="date" name="ExpirationDate" required />
                         </div>
-
-                        <button type="submit" formaction="/Admin/AddInventory" class="submit-btn">Add Item</button>
                     </form>
+                </div>
+
+                <div class="search-bar">
+                    <input type="text" placeholder="Search item..." />
+                    <button type="button">Search</button>
                 </div>
 
                 <!-- Table -->
