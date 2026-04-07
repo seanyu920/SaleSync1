@@ -29,8 +29,17 @@
                 </div>
 
                 <nav class="sidebar-menu">
-                    <a asp-controller="Admin" asp-action="Dashboard" class="menu-btn">Analysis</a>
-                    <a asp-controller="Admin" asp-action="Inventory" class="menu-btn active">Inventory</a>
+                    <a asp-controller="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Manager" ? "Manager" : "Admin")"
+                           asp-action="Dashboard"
+                           class="menu-btn">
+                        Analysis
+                    </a>
+
+                    <a asp-controller="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Manager" ? "Manager" : "Admin")"
+                           asp-action="Inventory"
+                           class="menu-btn active">
+                        Inventory
+                    </a>
 
                     @if (ViewContext.RouteData.Values["controller"]?.ToString() == "Admin")
                     {
@@ -47,7 +56,7 @@
         </aside>
 
         <main class="main-content">
-            
+
             <div class="inventory-content">
 
                 <!-- Buttons -->
@@ -79,8 +88,8 @@
                 </div>
 
                 <div class="search-bar">
-                    <input type="text" placeholder="Search item..." />
-                    <button type="button">Search</button>
+                    <input type="text" id="inventorySearch" placeholder="Search" class="search-bar" />
+                    <button type="button" onclick="searchInventory()">Search</button>
                 </div>
 
                 <!-- Table -->
@@ -102,12 +111,12 @@
                                 </tr>
                             </thead>
 
-                            <tbody>
+                            <tbody id="inventoryTableBody">
                                 @if (Model != null && Model.Count > 0)
                                 {
                                     @foreach (var item in Model)
                                     {
-                                        <tr>
+                                        <tr class="inventory-row">
                                             <td>
                                                 <input type="radio"
                                                        name="selectedItem"
@@ -138,10 +147,14 @@
                                 }
                                 else
                                 {
-                                    <tr>
+                                    <tr id="noItemsRow">
                                         <td colspan="10">No inventory items added yet.</td>
                                     </tr>
                                 }
+
+                                <tr id="noResultsRow" style="display: none;">
+                                    <td colspan="10">No matching inventory items found.</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -187,6 +200,34 @@
                 document.getElementById("deleteId").value = id;
                 document.getElementById("deleteForm").submit();
             }
+
+            function searchInventory() {
+                const searchInput = document.getElementById("inventorySearch");
+                const filter = searchInput.value.toLowerCase().trim();
+                const rows = document.querySelectorAll(".inventory-row");
+                const noResultsRow = document.getElementById("noResultsRow");
+
+                let visibleCount = 0;
+
+                rows.forEach(function (row) {
+                    const text = row.textContent.toLowerCase();
+
+                    if (text.includes(filter)) {
+                        row.style.display = "";
+                        visibleCount++;
+                    } else {
+                        row.style.display = "none";
+                    }
+                });
+
+                if (noResultsRow) {
+                    noResultsRow.style.display = visibleCount === 0 ? "" : "none";
+                }
+            }
+
+            document.getElementById("inventorySearch").addEventListener("keyup", function (event) {
+                searchInventory();
+            });
     </script>
 </body>
 </html>

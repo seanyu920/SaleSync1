@@ -21,7 +21,13 @@ namespace SaleSync.Controllers
             return role == "Admin";
         }
 
-        //DASH NAV
+        private bool CanAccessInventory()
+        {
+            var role = HttpContext.Session.GetString("Role");
+            return role == "Admin" || role == "Manager";
+        }
+
+        // DASHBOARD
         public IActionResult Dashboard()
         {
             if (!IsAdmin())
@@ -30,34 +36,26 @@ namespace SaleSync.Controllers
             return View("AdminDashboard");
         }
 
-        //INVENTORY FUNCTION
+        // INVENTORY FUNCTION
         private static List<InventoryItems> inventoryItems = new List<InventoryItems>();
 
         [HttpGet]
         public IActionResult Inventory()
         {
-            if (!IsAdmin())
+            if (!CanAccessInventory())
                 return RedirectToAction("Index", "Home");
 
             List<InventoryItems> items = new List<InventoryItems>();
-            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
+            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
-
                 string query = @"
-            SELECT 
-                p.product_id,
-                c.category_name,
-                p.product_name,
-                p.sku,
-                p.cost_price,
-                p.stock_quantity,
-                p.description
-            FROM dbo.products p
-            INNER JOIN dbo.categories c ON p.category_id = c.category_id
-            ORDER BY p.product_id";
+                    SELECT p.product_id, c.category_name, p.product_name, p.sku, p.cost_price, p.stock_quantity, p.description
+                    FROM dbo.products p
+                    INNER JOIN dbo.categories c ON p.category_id = c.category_id
+                    ORDER BY p.product_id";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 using (SqlDataReader reader = cmd.ExecuteReader())
@@ -74,9 +72,9 @@ namespace SaleSync.Controllers
                             ItemID = reader["sku"]?.ToString() ?? "",
                             PurchasePrice = reader["cost_price"] == DBNull.Value ? 0 : Convert.ToDecimal(reader["cost_price"]),
                             Quantity = reader["stock_quantity"] == DBNull.Value ? 0 : Convert.ToInt32(reader["stock_quantity"]),
-                            StockLevel = reader["stock_quantity"] == DBNull.Value ? "In Stock"
-                                        : Convert.ToInt32(reader["stock_quantity"]) <= 10 ? "Low Stock"
-                                        : "In Stock",
+                            StockLevel = reader["stock_quantity"] == DBNull.Value
+                                ? "In Stock"
+                                : Convert.ToInt32(reader["stock_quantity"]) <= 10 ? "Low Stock" : "In Stock",
                             StockSupplier = ExtractValue(description, "Supplier:"),
                             DateAcquired = ExtractValue(description, "Date Acquired:"),
                             ExpirationDate = ExtractValue(description, "Expiration Date:")
@@ -91,22 +89,21 @@ namespace SaleSync.Controllers
         [HttpPost]
         public IActionResult AddInventory(InventoryItems item)
         {
-            if (!IsAdmin())
+            if (!CanAccessInventory())
                 return RedirectToAction("Index", "Home");
 
-            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
+            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
-
                 int categoryId = GetCategoryId(item.ItemCategory, conn);
 
                 string insertQuery = @"
-            INSERT INTO dbo.products
-            (category_id, supplier_id, product_name, barcode, sku, description, cost_price, selling_price, stock_quantity, reorder_level, unit)
-            VALUES
-            (@CategoryId, NULL, @ProductName, @Barcode, @SKU, @Description, @CostPrice, 0, @StockQuantity, 10, NULL)";
+                    INSERT INTO dbo.products
+                    (category_id, supplier_id, product_name, barcode, sku, description, cost_price, selling_price, stock_quantity, reorder_level, unit)
+                    VALUES
+                    (@CategoryId, NULL, @ProductName, @Barcode, @SKU, @Description, @CostPrice, 0, @StockQuantity, 10, NULL)";
 
                 using (SqlCommand cmd = new SqlCommand(insertQuery, conn))
                 {
@@ -117,7 +114,6 @@ namespace SaleSync.Controllers
                     cmd.Parameters.AddWithValue("@Description", $"Supplier: {item.StockSupplier}; Date Acquired: {item.DateAcquired}; Expiration Date: {item.ExpirationDate}");
                     cmd.Parameters.AddWithValue("@CostPrice", item.PurchasePrice);
                     cmd.Parameters.AddWithValue("@StockQuantity", item.Quantity);
-
                     cmd.ExecuteNonQuery();
                 }
             }
@@ -128,28 +124,20 @@ namespace SaleSync.Controllers
         [HttpGet]
         public IActionResult EditInventory(string id)
         {
-            if (!IsAdmin())
+            if (!CanAccessInventory())
                 return RedirectToAction("Index", "Home");
 
-            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
+            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
             InventoryItems item = new InventoryItems();
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
-
                 string query = @"
-            SELECT TOP 1
-                p.product_id,
-                c.category_name,
-                p.product_name,
-                p.sku,
-                p.cost_price,
-                p.stock_quantity,
-                p.description
-            FROM dbo.products p
-            INNER JOIN dbo.categories c ON p.category_id = c.category_id
-            WHERE p.sku = @Id OR p.barcode = @Id";
+                    SELECT TOP 1 p.product_id, c.category_name, p.product_name, p.sku, p.cost_price, p.stock_quantity, p.description
+                    FROM dbo.products p
+                    INNER JOIN dbo.categories c ON p.category_id = c.category_id
+                    WHERE p.sku = @Id OR p.barcode = @Id";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
@@ -168,7 +156,6 @@ namespace SaleSync.Controllers
                             item.PurchasePrice = reader["cost_price"] == DBNull.Value ? 0 : Convert.ToDecimal(reader["cost_price"]);
                             item.Quantity = reader["stock_quantity"] == DBNull.Value ? 0 : Convert.ToInt32(reader["stock_quantity"]);
                             item.StockLevel = item.Quantity <= 10 ? "Low Stock" : "In Stock";
-
                             item.StockSupplier = ExtractValue(desc, "Supplier:");
                             item.DateAcquired = ExtractValue(desc, "Date Acquired:");
                             item.ExpirationDate = ExtractValue(desc, "Expiration Date:");
@@ -183,27 +170,26 @@ namespace SaleSync.Controllers
         [HttpPost]
         public IActionResult UpdateInventory(InventoryItems item)
         {
-            if (!IsAdmin())
+            if (!CanAccessInventory())
                 return RedirectToAction("Index", "Home");
-
-            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
+                
+            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
-
                 int categoryId = GetCategoryId(item.ItemCategory, conn);
 
                 string updateQuery = @"
-            UPDATE dbo.products
-            SET category_id = @CategoryId,
-                product_name = @ProductName,
-                barcode = @Barcode,
-                sku = @SKU,
-                description = @Description,
-                cost_price = @CostPrice,
-                stock_quantity = @StockQuantity
-            WHERE product_id = @ProductId";
+                    UPDATE dbo.products
+                    SET category_id = @CategoryId,
+                        product_name = @ProductName,
+                        barcode = @Barcode,
+                        sku = @SKU,
+                        description = @Description,
+                        cost_price = @CostPrice,
+                        stock_quantity = @StockQuantity
+                    WHERE product_id = @ProductId";
 
                 using (SqlCommand cmd = new SqlCommand(updateQuery, conn))
                 {
@@ -215,7 +201,6 @@ namespace SaleSync.Controllers
                     cmd.Parameters.AddWithValue("@CostPrice", item.PurchasePrice);
                     cmd.Parameters.AddWithValue("@StockQuantity", item.Quantity);
                     cmd.Parameters.AddWithValue("@ProductId", item.ProductId);
-
                     cmd.ExecuteNonQuery();
                 }
             }
@@ -223,20 +208,17 @@ namespace SaleSync.Controllers
             return RedirectToAction("Inventory");
         }
 
-
-
         [HttpPost]
         public IActionResult DeleteInventory(string id)
         {
-            if (!IsAdmin())
+            if (!CanAccessInventory())
                 return RedirectToAction("Index", "Home");
 
-            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
+            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
-
                 string deleteQuery = "DELETE FROM dbo.products WHERE sku = @Id OR barcode = @Id";
 
                 using (SqlCommand cmd = new SqlCommand(deleteQuery, conn))
@@ -285,29 +267,26 @@ namespace SaleSync.Controllers
             return description.Substring(start, end - start).Trim();
         }
 
-        //SAVE
+        // SAVE ACCOUNT
         [HttpPost]
         public IActionResult SaveAccount(UserAccount model)
         {
             if (!IsAdmin())
                 return RedirectToAction("Index", "Home");
 
-            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
+            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
 
-                // CHECK DUPLICATE
                 string checkQuery = "SELECT COUNT(*) FROM users WHERE email = @Email OR username = @Username";
-
                 using (SqlCommand checkCmd = new SqlCommand(checkQuery, conn))
                 {
                     checkCmd.Parameters.AddWithValue("@Email", model.Email);
                     checkCmd.Parameters.AddWithValue("@Username", model.Username);
 
                     int exists = (int)checkCmd.ExecuteScalar();
-
                     if (exists > 0)
                     {
                         TempData["Error"] = "Account already exists. Use Update instead.";
@@ -315,7 +294,6 @@ namespace SaleSync.Controllers
                     }
                 }
 
-                // GET ROLE ID
                 string getRoleQuery = "SELECT role_id FROM roles WHERE role_name = @Role";
                 int roleId;
 
@@ -333,7 +311,6 @@ namespace SaleSync.Controllers
                     roleId = Convert.ToInt32(result);
                 }
 
-                // INSERT
                 string insertQuery = @"
                     INSERT INTO users (full_name, username, email, password_hash, role_id, status)
                     VALUES (@FullName, @Username, @Email, @Password, @RoleId, 'active')";
@@ -345,7 +322,6 @@ namespace SaleSync.Controllers
                     cmd.Parameters.AddWithValue("@Email", model.Email);
                     cmd.Parameters.AddWithValue("@Password", model.Password);
                     cmd.Parameters.AddWithValue("@RoleId", roleId);
-
                     cmd.ExecuteNonQuery();
                 }
             }
@@ -354,14 +330,14 @@ namespace SaleSync.Controllers
             return RedirectToAction("ManageAccounts");
         }
 
-        //UPDATE ACC
+        // UPDATE ACCOUNT
         [HttpPost]
         public IActionResult UpdateAccount(UserAccount model)
         {
             if (!IsAdmin())
                 return RedirectToAction("Index", "Home");
 
-            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
+            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
@@ -401,7 +377,6 @@ namespace SaleSync.Controllers
                     cmd.Parameters.AddWithValue("@Password", model.Password);
                     cmd.Parameters.AddWithValue("@RoleId", roleId);
                     cmd.Parameters.AddWithValue("@UserId", model.UserId);
-
                     cmd.ExecuteNonQuery();
                 }
             }
@@ -410,19 +385,18 @@ namespace SaleSync.Controllers
             return RedirectToAction("ManageAccounts");
         }
 
-        //DELETE ACC
+        // DELETE ACCOUNT
         [HttpPost]
         public IActionResult DeleteAccount(int userId)
         {
             if (!IsAdmin())
                 return RedirectToAction("Index", "Home");
 
-            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
+            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
-
                 string deleteQuery = "DELETE FROM users WHERE user_id = @UserId";
 
                 using (SqlCommand cmd = new SqlCommand(deleteQuery, conn))
@@ -435,6 +409,7 @@ namespace SaleSync.Controllers
             TempData["Success"] = "Account deleted successfully.";
             return RedirectToAction("ManageAccounts");
         }
+
         [HttpGet]
         public IActionResult ManageAccounts()
         {
@@ -442,24 +417,16 @@ namespace SaleSync.Controllers
                 return RedirectToAction("Index", "Home");
 
             List<UserAccount> accounts = new List<UserAccount>();
-            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
+            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
-
                 string query = @"
-     SELECT 
-         u.user_id,
-         u.full_name,
-         u.username,
-         u.email,
-         u.password_hash,
-         u.status,
-         r.role_name
-     FROM users u
-     INNER JOIN roles r ON u.role_id = r.role_id
-     ORDER BY u.user_id";
+                    SELECT u.user_id, u.full_name, u.username, u.email, u.password_hash, u.status, r.role_name
+                    FROM users u
+                    INNER JOIN roles r ON u.role_id = r.role_id
+                    ORDER BY u.user_id";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 using (SqlDataReader reader = cmd.ExecuteReader())
