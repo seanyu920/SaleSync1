@@ -1,206 +1,338 @@
 ﻿@{
     Layout = null;
 }
-
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Cashier</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cashier Dashboard</title>
     <link rel="stylesheet" href="~/css/CashierDashboard.css" />
 </head>
 <body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div>
+                <div class="logo-section">
+                    <img src="~/images/syncsale-logo.png" class="logo-img" alt="Logo" />
+                </div>
+                <div class="profile-section">
+                    <div class="profile-circle">👤</div>
+                    <h2 class="admin-name">Cashier</h2>
+                </div>
+                <nav class="sidebar-menu">
+                    <a href="javascript:void(0)" onclick="showMenu()" id="btnMenu" class="menu-btn active">Menu</a>
+                    <a href="javascript:void(0)" onclick="showCart()" id="btnCart" class="menu-btn">Receipt</a>
+                </nav>
+            </div>
+            <div class="logout-section">
+                <form method="post" action="/Home/Logout">
+                    <button type="submit" class="menu-btn">Log Out</button>
+                </form>
+            </div>
+        </aside>
 
-    <h1>Cashier</h1>
+        <main class="main-content">
+            <div class="inventory-content">
+                
+                <div id="menuSection" class="section-container">
+                    <div class="form-card" id="categoryGrid">
+                        <h1 class="form-title">Menu</h1>
+                        <div class="product-grid">
+                            <div class="product-card" onclick="openSubMenu('COFFEE', 'coffee.jpg')">
+                                <div class="product-thumb">
+                                    <img src="~/images/coffee.jpg" alt="Coffee" onerror="this.src='https://placehold.co/200x200?text=Coffee'">
+                                    </div>
+                                    <div class="product-info"><h3>COFFEE</h3></div>
+                                </div>
+                                <div class="product-card" onclick="openSubMenu('MILKTEA', 'milktea.jpg')">
+                                    <div class="product-thumb">
+                                        <img src="~/images/milktea.jpg" alt="Milk Tea" onerror="this.src='https://placehold.co/200x200?text=Milk+Tea'">
+                                        </div>
+                                        <div class="product-info"><h3>MILK TEA</h3></div>
+                                    </div>
+                                    <div class="product-card" onclick="openSubMenu('FRUIT TEA', 'fruittea.jpg')">
+                                        <div class="product-thumb">
+                                            <img src="~/images/fruittea.jpg" alt="Fruit Tea" onerror="this.src='https://placehold.co/200x200?text=Fruit+Tea'">
+                                            </div>
+                                            <div class="product-info"><h3>FRUIT TEA</h3></div>
+                                        </div>
+                                        <div class="product-card" onclick="openSubMenu('RICE MEAL', 'rice.jpg')">
+                                            <div class="product-thumb">
+                                                <img src="~/images/rice.jpg" alt="Rice" onerror="this.src='https://placehold.co/200x200?text=Rice+Meals'">
+                                                </div>
+                                                <div class="product-info"><h3>RICE MEAL</h3></div>
+                                            </div>
+                                            <div class="product-card" onclick="openSubMenu('BREAD & PASTRY', 'bread.jpg')">
+                                                <div class="product-thumb">
+                                                    <img src="~/images/bread.jpg" alt="Bread" onerror="this.src='https://placehold.co/200x200?text=Bread'">
+                                                    </div>
+                                                    <div class="product-info"><h3>BREAD & PASTRY</h3></div>
+                                                </div>
+                                                <div class="product-card" onclick="openSubMenu('SNACKS & PASTA', 'pasta.jpg')">
+                                                    <div class="product-thumb">
+                                                        <img src="~/images/pasta.jpg" alt="Pasta" onerror="this.src='https://placehold.co/200x200?text=Snacks'">
+                                                        </div>
+                                                        <div class="product-info"><h3>SNACKS & PASTA</h3></div>
+                                                    </div>
+                                                </div>
+                                            </div>
 
-    <!-- NAV -->
-    <button onclick="showMenu()">Menu</button>
-    <button onclick="showCart()">Cart</button>
+                                            <div class="form-card" id="subMenuGridSection" style="display:none;">
+                                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                                                    <h1 class="form-title" id="subCategoryName">Items</h1>
+                                                    <div>
+                                                        <button onclick="openAddProductModal()" class="action-btn add-btn" style="padding:5px 15px; margin-right:10px;">+ Add Item</button>
+                                                        <button onclick="backToCategories()" class="action-btn update-btn" style="padding:5px 15px;">&larr; Back</button>
+                                                    </div>
+                                                </div>
+                                                <div class="product-grid" id="itemsList"></div>
+                                            </div>
 
-    <hr />
+                                            <div class="form-card" id="selectionDetails" style="display:none;">
+                                                <div class="item-display-flex">
+                                                    <div class="item-image-container">
+                                                        <img src="" id="displayImg" class="product-img-preview" />
+                                                    </div>
+                                                    <div class="item-details-controls">
+                                                        <h2 id="displayName" class="item-name-display">Product Name</h2>
+                                                        <div class="size-selector-grid">
+                                                            <label class="custom-radio-card">
+                                                                <input type="radio" name="size" value="Medium" id="sizeM" checked />
+                                                                <span class="radio-tile">Medium</span>
+                                                            </label>
+                                                            <label class="custom-radio-card">
+                                                                <input type="radio" name="size" value="Large" id="sizeL" />
+                                                                <span class="radio-tile">Large</span>
+                                                            </label>
+                                                        </div>
+                                                        <div class="qty-flex">
+                                                            <button type="button" onclick="decreaseQty()">-</button>
+                                                            <input id="qty" value="1" readonly />
+                                                            <button type="button" onclick="increaseQty()">+</button>
+                                                        </div>
+                                                        <button type="button" class="action-btn add-btn" style="width:100%" onclick="addToCart()">Add to Cart</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
 
-    <!-- MENU -->
-    <div id="menuSection">
+                                        <div id="cartSection" class="section-container" style="display:none;">
+                                            <div class="action-buttons">
+                                                <button type="button" onclick="removeSelectedItem()" class="action-btn delete-btn">Remove Item</button>
+                                                <button type="button" onclick="checkoutOrder()" class="action-btn update-btn">Checkout</button>
+                                            </div>
+                                            <div class="table-card">
+                                                <h2 class="form-title">Current Receipt</h2>
+                                                <div class="table-wrap">
+                                                    <table>
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Select</th>
+                                                                <th>Item Name</th>
+                                                                <th>Size</th>
+                                                                <th>Qty</th>
+                                                                <th>Price</th>
+                                                                <th>Subtotal</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody id="receiptList"></tbody>
+                                                    </table>
+                                                </div>
+                                                <div class="total-footer">
+                                                    <h3>Total Amount: <span id="total">₱0.00</span></h3>
+                                                </div>
+                                            </div>
+                                        </div>
 
-        <h2>Menu</h2>
+                                    </div>
+                                </main>
+                            </div>
 
-        <p><strong>Milk Tea</strong></p>
+                            <div id="addProductModal" class="modal-overlay" style="display:none;">
+                                <div class="form-card modal-content">
+                                    <h2 class="form-title">Add New Product</h2>
+                                    <div style="margin-bottom:15px;">
+                                        <label style="display:block; margin-bottom:5px; font-weight:bold;">Product Name</label>
+                                        <input type="text" id="newProductName" placeholder="e.g. Spanish Latte" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc;">
+                                    </div>
+                                    <div style="margin-bottom:20px;">
+                                        <label style="display:block; margin-bottom:5px; font-weight:bold;">Image Filename</label>
+                                        <input type="text" id="newProductImg" placeholder="e.g. coffee.jpg" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc;">
+                                        <small style="color:#666;">Image should be in /images/ folder.</small>
+                                    </div>
+                                    <div style="display:flex; gap:10px;">
+                                        <button onclick="saveNewProduct()" class="action-btn add-btn" style="flex:1;">Save</button>
+                                        <button onclick="closeAddProductModal()" class="action-btn delete-btn" style="flex:1;">Cancel</button>
+                                    </div>
+                                </div>
+                            </div>
 
-        <!-- SIZE -->
-        <label>
-            <input type="radio" name="size" value="Medium" data-price="75" />
-            Medium - ₱75
-        </label><br />
+                            <script>
+                                    // Use 'let' so we can push new items to it
+                                    let menuData = {
+                                        "COFFEE": ["Americano", "Cappuccino", "Hot Choco", "Hot Latte", "Iced Latte", "Spanish Latte", "Hot Matcha Latte", "Iced Matcha Latte"],
+                                        "MILKTEA": ["Wintermelon", "Okinawa", "Cookies and Cream", "Salted Caramel", "Hokkaido", "Matcha", "Thai"],
+                                        "FRUIT TEA": ["Green Apple", "Strawberry", "Blueberry", "Mango", "Lychee", "Peach"],
+                                        "RICE MEAL": ["Silog", "Hot Silog", "Long Silog", "Ham Silog", "Shanghai Silog", "Embotido Silog"],
+                                        "BREAD & PASTRY": ["Chocolate Cookies", "Croissant", "Cheese Ensaymada", "Yema Ensaymada", "Ube Ensaymada", "Chocolate Donut", "Cinnamon"],
+                                        "SNACKS & PASTA": ["Flavored Fries", "Nachos", "Siomai 4pcs", "Carbonara", "Pesto Pasta", "Gambas Pasta"]
+                                    };
 
-        <label>
-            <input type="radio" name="size" value="Large" data-price="95" />
-            Large - ₱95
-        </label><br /><br />
+                                    let cart = [];
+                                    let selectedReceiptIndex = -1;
+                                    let activeItemName = "";
+                                    let activeImgPath = "";
+                                    let currentCategory = "";
 
-        <!-- QUANTITY -->
-        <button type="button" onclick="decreaseQty()">-</button>
-        <input id="qty" value="1" readonly style="width:40px; text-align:center;" />
-        <button type="button" onclick="increaseQty()">+</button>
+                                    function showMenu() {
+                                        backToCategories();
+                                        document.getElementById("menuSection").style.display = "block";
+                                        document.getElementById("cartSection").style.display = "none";
+                                        document.getElementById("btnMenu").classList.add("active");
+                                        document.getElementById("btnCart").classList.remove("active");
+                                    }
 
-        <br /><br />
+                                    function showCart() {
+                                        document.getElementById("menuSection").style.display = "none";
+                                        document.getElementById("cartSection").style.display = "block";
+                                        document.getElementById("btnCart").classList.add("active");
+                                        document.getElementById("btnMenu").classList.remove("active");
+                                        renderReceipt();
+                                    }
 
-        <button type="button" onclick="addToCart()">Add to Cart</button>
+                                    function openSubMenu(category, img) {
+                                        currentCategory = category;
+                                        activeImgPath = img;
+                                        document.getElementById("categoryGrid").style.display = "none";
+                                        document.getElementById("subMenuGridSection").style.display = "block";
+                                        document.getElementById("subCategoryName").innerText = category;
+                                        refreshSubMenuGrid();
+                                    }
 
-    </div>
+                                    function refreshSubMenuGrid() {
+                                        const itemsList = document.getElementById("itemsList");
+                                        itemsList.innerHTML = "";
+                                        menuData[currentCategory].forEach(item => {
+                                            itemsList.innerHTML += `
+                                                <div class="product-card" onclick="selectProductItem('${item}')">
+                                                    <div class="product-info">
+                                                        <h3>${item}</h3>
+                                                        <p>Select to customize</p>
+                                                    </div>
+                                                </div>`;
+                                        });
+                                    }
 
-    <!-- CART / RECEIPT -->
-    <div id="cartSection" style="display:none;">
+                                    function backToCategories() {
+                                        document.getElementById("categoryGrid").style.display = "block";
+                                        document.getElementById("subMenuGridSection").style.display = "none";
+                                        document.getElementById("selectionDetails").style.display = "none";
+                                    }
 
-        <h2>Receipt</h2>
+                                    function selectProductItem(name) {
+                                        activeItemName = name;
+                                        document.getElementById("selectionDetails").style.display = "block";
+                                        document.getElementById("displayImg").src = "/images/" + activeImgPath;
+                                        document.getElementById("displayName").innerText = name;
+                                        document.getElementById("qty").value = 1;
+                                        document.getElementById("selectionDetails").scrollIntoView({ behavior: 'smooth' });
+                                    }
 
-        <div id="receiptList">
-            <p>No items yet</p>
-        </div>
+                                    // ADD PRODUCT MODAL FUNCTIONS
+                                    function openAddProductModal() {
+                                        document.getElementById("addProductModal").style.display = "flex";
+                                    }
 
-        <hr />
+                                    function closeAddProductModal() {
+                                        document.getElementById("addProductModal").style.display = "none";
+                                        document.getElementById("newProductName").value = "";
+                                        document.getElementById("newProductImg").value = "";
+                                    }
 
-        <h3>Total: <span id="total">₱0.00</span></h3>
+                                    function saveNewProduct() {
+                                        const name = document.getElementById("newProductName").value;
+                                        const img = document.getElementById("newProductImg").value;
 
-        <br />
+                                        if (!name) { alert("Please enter product name"); return; }
+            
+                                        // Add to the list
+                                        menuData[currentCategory].push(name);
+            
+                                        // If a new image was provided for the specific product, we keep logic simple for now
+                                        // and keep using the category image or the new one if you handle dynamic paths
+            
+                                        refreshSubMenuGrid();
+                                        closeAddProductModal();
+                                        alert(name + " added successfully!");
+                                    }
 
-        <!-- REMOVE ITEM BUTTON -->
-        <button type="button" onclick="removeSelectedItem()">Remove Item</button>
+                                    function increaseQty() {
+                                        let q = document.getElementById("qty");
+                                        q.value = parseInt(q.value) + 1;
+                                    }
 
-        <!-- CHECKOUT BUTTON -->
-        <button type="button" onclick="checkoutOrder()">Checkout</button>
+                                    function decreaseQty() {
+                                        let q = document.getElementById("qty");
+                                        if (parseInt(q.value) > 1) q.value = parseInt(q.value) - 1;
+                                    }
 
-    </div>
+                                    function addToCart() {
+                                        let selectedSize = document.querySelector('input[name="size"]:checked').value;
+                                        let qty = parseInt(document.getElementById("qty").value);
+                                        let price = (selectedSize === "Medium") ? 75 : 95;
 
-    <script>
-            // cart storage
-            let cart = [];
+                                        cart.push({ name: activeItemName, size: selectedSize, qty: qty, price: price });
+                                        alert(activeItemName + " added!");
+                                        backToCategories();
+                                    }
 
-            // selected item index in receipt
-            let selectedReceiptIndex = -1;
+                                    function renderReceipt() {
+                                        let receipt = document.getElementById("receiptList");
+                                        let totalEl = document.getElementById("total");
+                                        if (cart.length === 0) {
+                                            receipt.innerHTML = "<tr><td colspan='6'>No items yet</td></tr>";
+                                            totalEl.textContent = "₱0.00";
+                                            return;
+                                        }
+                                        let html = "";
+                                        let total = 0;
+                                        cart.forEach((item, index) => {
+                                            let subtotal = item.qty * item.price;
+                                            total += subtotal;
+                                            html += `
+                                                <tr onclick="selectReceiptItem(${index})" class="${selectedReceiptIndex === index ? 'selected-row' : ''}">
+                                                    <td><input type="radio" name="cartSel" ${selectedReceiptIndex === index ? 'checked' : ''}></td>
+                                                    <td>${item.name}</td>
+                                                    <td>${item.size}</td>
+                                                    <td>${item.qty}</td>
+                                                    <td>₱${item.price.toFixed(2)}</td>
+                                                    <td>₱${subtotal.toFixed(2)}</td>
+                                                </tr>`;
+                                        });
+                                        receipt.innerHTML = html;
+                                        totalEl.textContent = "₱" + total.toFixed(2);
+                                    }
 
-            // switch to menu
-            function showMenu() {
-                document.getElementById("menuSection").style.display = "block";
-                document.getElementById("cartSection").style.display = "none";
-            }
+                                    function selectReceiptItem(index) {
+                                        selectedReceiptIndex = index;
+                                        renderReceipt();
+                                    }
 
-            // switch to cart
-            function showCart() {
-                document.getElementById("menuSection").style.display = "none";
-                document.getElementById("cartSection").style.display = "block";
-            }
+                                    function removeSelectedItem() {
+                                        if (selectedReceiptIndex === -1) { alert("Select an item to remove"); return; }
+                                        cart.splice(selectedReceiptIndex, 1);
+                                        selectedReceiptIndex = -1;
+                                        renderReceipt();
+                                    }
 
-            // quantity increase
-            function increaseQty() {
-                let q = document.getElementById("qty");
-                q.value = parseInt(q.value) + 1;
-            }
-
-            // quantity decrease
-            function decreaseQty() {
-                let q = document.getElementById("qty");
-                if (parseInt(q.value) > 1) {
-                    q.value = parseInt(q.value) - 1;
-                }
-            }
-
-            // add to cart
-            function addToCart() {
-                let selected = document.querySelector('input[name="size"]:checked');
-
-                if (!selected) {
-                    alert("Select size first");
-                    return;
-                }
-
-                let qty = parseInt(document.getElementById("qty").value);
-                let price = parseFloat(selected.getAttribute("data-price"));
-
-                cart.push({
-                    name: "Milk Tea",
-                    size: selected.value,
-                    qty: qty,
-                    price: price
-                });
-
-                document.getElementById("qty").value = 1;
-                renderReceipt();
-            }
-
-            // render receipt
-            function renderReceipt() {
-                let receipt = document.getElementById("receiptList");
-                let totalEl = document.getElementById("total");
-
-                if (cart.length === 0) {
-                    receipt.innerHTML = "<p>No items yet</p>";
-                    totalEl.textContent = "₱0.00";
-                    selectedReceiptIndex = -1;
-                    return;
-                }
-
-                let html = "";
-                let total = 0;
-
-                cart.forEach((item, index) => {
-                    let subtotal = item.qty * item.price;
-                    total += subtotal;
-
-                    html += `
-                        <div
-                            onclick="selectReceiptItem(${index})"
-                            style="
-                                border: 1px solid ${selectedReceiptIndex === index ? '#000' : '#ccc'};
-                                background-color: ${selectedReceiptIndex === index ? '#f0f0f0' : '#fff'};
-                                padding: 10px;
-                                margin-bottom: 10px;
-                                cursor: pointer;
-                            ">
-                            <p>
-                                ${item.name} (${item.size}) <br/>
-                                Qty: ${item.qty} <br/>
-                                ₱${item.price} x ${item.qty} = ₱${subtotal}
-                            </p>
-                        </div>
-                    `;
-                });
-
-                receipt.innerHTML = html;
-                totalEl.textContent = "₱" + total.toFixed(2);
-            }
-
-            // select receipt item
-            function selectReceiptItem(index) {
-                selectedReceiptIndex = index;
-                renderReceipt();
-            }
-
-            // remove selected item
-            function removeSelectedItem() {
-                if (selectedReceiptIndex === -1) {
-                    alert("Select an item in the receipt first");
-                    return;
-                }
-
-                cart.splice(selectedReceiptIndex, 1);
-                selectedReceiptIndex = -1;
-                renderReceipt();
-            }
-
-            // checkout
-            function checkoutOrder() {
-                if (cart.length === 0) {
-                    alert("No items in cart");
-                    return;
-                }
-
-                alert("Checkout successful!");
-
-                cart = [];
-                selectedReceiptIndex = -1;
-                renderReceipt();
-                showMenu();
-            }
-    </script>
-
-</body>
-</html>
+                                    function checkoutOrder() {
+                                        if (cart.length === 0) { alert("Cart is empty"); return; }
+                                        alert("Order processed successfully!");
+                                        cart = [];
+                                        selectedReceiptIndex = -1;
+                                        showMenu();
+                                    }
+                            </script>
+                        </body>
+                    </html>
