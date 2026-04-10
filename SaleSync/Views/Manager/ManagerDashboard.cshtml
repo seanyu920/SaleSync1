@@ -1,15 +1,14 @@
-﻿@{
+﻿@model List<SaleSync.Models.InventoryItems>
+@{
     Layout = null;
 }
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Manager Dashboard</title>
-    <link rel="stylesheet" href="~/css/ManagerDashboard.css" asp-append-version="true" />
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Manager Dashboard - SyncScale</title>
+    <link rel="stylesheet" href="~/css/AdminDashboard.css" asp-append-version="true" />
 </head>
 <body>
     <div class="dashboard-container">
@@ -17,138 +16,92 @@
         <aside class="sidebar">
             <div>
                 <div class="logo-section">
-                    <img src="~/images/syncsale-logo.png" alt="SyncSale Logo" class="logo-img" />
+                    <div class="logo-title" style="font-size: 24px; font-weight: 800; color: #ffffff;">SyncScale</div>
+                    <div class="logo-subtitle" style="font-size: 13px; color: #dcbca5;">Coffee & Pastries</div>
                 </div>
 
-                <div class="profile-section">
-                    <div class="profile-circle">👤</div>
-                    <h2 class="manager-name">Manager</h2>
+                <div class="profile-section" style="display: flex; align-items: center; gap: 15px; margin-bottom: 40px;">
+                    <div class="profile-circle" style="width: 45px; height: 45px; background: #f46a05; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #fff;">👤</div>
+                    <div>
+                        <h2 class="admin-name" style="font-size: 16px; font-weight: 700; color: #ffffff; margin: 0;">Manager</h2>
+                        <div style="font-size: 12px; color: #dcbca5;">System Access</div>
+                    </div>
                 </div>
 
                 <nav class="sidebar-menu">
-                    <a asp-controller="Manager" asp-action="Dashboard" class="menu-btn active">Analysis</a>
-                    <a asp-controller="Manager" asp-action="Inventory" class="menu-btn">Inventory</a>
+                    <a asp-controller="Manager" asp-action="Dashboard"
+                           class="menu-btn active">
+                        ❖ Dashboard
+                    </a>
+
+                    <a asp-controller="Manager" asp-action="Analytics"
+                           class="menu-btn">
+                        📊 Analytics
+                    </a>
+
+                    <a asp-controller="Manager" asp-action="Inventory"
+                           class="menu-btn">
+                        📦 Inventory
+                    </a>
                 </nav>
             </div>
 
-            <div class="logout-section">
+            <div class="logout-section" style="margin-top: auto;">
                 <form method="post" action="/Home/Logout">
-                    <button type="submit" class="menu-btn logout-btn">Log Out</button>
+                    <button type="submit" class="menu-btn logout-btn" style="background: transparent; border: none; width: 100%; text-align: left; cursor: pointer; color: #dcbca5; padding: 14px 20px;">
+                        ⎋ Log Out
+                    </button>
                 </form>
             </div>
         </aside>
 
         <main class="main-content">
-            <div class="content-area">
-                <div class="success-message">
-                    Welcome, Manager!
+            <div class="page-header" style="margin-bottom: 30px;">
+                <h1 class="greeting-title" style="font-size: 32px; font-weight: 800; color: #4a2511;">Good Morning! ☕</h1>
+                <p style="color: #b58361;">Welcome back! Here's what's brewing today.</p>
+            </div>
+
+            <div class="summary-dashboard" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 40px;">
+                <div class="summary-card" style="background: #ffffff; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(74, 37, 17, 0.04);">
+                    <div class="card-icon-box" style="width: 40px; height: 40px; background: #ab4a03; color: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">📦</div>
+                    <div class="card-label" style="font-size: 13px; font-weight: 600; color: #8c5b3e; margin-bottom: 5px;">Total Items</div>
+                    <div class="card-value" style="font-size: 24px; font-weight: 800; color: #4a2511;">1,247</div>
                 </div>
 
-                <div class="chart-card">
-                    <h2 class="chart-title">Sales Analytics</h2>
-                    <canvas id="salesChart"></canvas>
+                <div class="summary-card" style="background: #ffffff; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(74, 37, 17, 0.04);">
+                    <div class="card-icon-box" style="width: 40px; height: 40px; background: #0b8a53; color: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">📈</div>
+                    <div class="card-label" style="font-size: 13px; font-weight: 600; color: #8c5b3e; margin-bottom: 5px;">Today's Sales</div>
+                    <div class="card-value" style="font-size: 24px; font-weight: 800; color: #4a2511;">₱650.00</div>
                 </div>
 
-                <div class="extra-widgets">
-                    <div class="payment-card">
-                        <h2 class="widget-title">Payment Methods</h2>
-                        <div class="pie-chart-container">
-                            <canvas id="paymentChart"></canvas>
-                        </div>
-                    </div>
+                <div class="summary-card" style="background: #ffffff; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(74, 37, 17, 0.04);">
+                    <div class="card-icon-box" style="width: 40px; height: 40px; background: #f46a05; color: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">📁</div>
+                    <div class="card-label" style="font-size: 13px; font-weight: 600; color: #8c5b3e; margin-bottom: 5px;">Categories</div>
+                    <div class="card-value" style="font-size: 24px; font-weight: 800; color: #4a2511;">24</div>
+                </div>
 
-                    <div class="best-selling-card">
-                        <h2 class="widget-title">Best Selling Items</h2>
-
-                        <div class="items-list">
-                            <div class="item-row">
-                                <span class="item-name">Coca-Cola 1.5L</span>
-                                <span class="item-sold">120 sold</span>
-                            </div>
-                            <div class="item-row">
-                                <span class="item-name">Pancit Canton</span>
-                                <span class="item-sold">98 sold</span>
-                            </div>
-                            <div class="item-row">
-                                <span class="item-name">Bear Brand Milk</span>
-                                <span class="item-sold">85 sold</span>
-                            </div>
-                            <div class="item-row">
-                                <span class="item-name">Gardenia Bread</span>
-                                <span class="item-sold">73 sold</span>
-                            </div>
-                            <div class="item-row">
-                                <span class="item-name">Nescafe 3-in-1</span>
-                                <span class="item-sold">64 sold</span>
-                            </div>
-                        </div>
-                    </div>
+                <div class="summary-card" style="background: #ffffff; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(74, 37, 17, 0.04);">
+                    <div class="card-icon-box" style="width: 40px; height: 40px; background: #e02424; color: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">⚠️</div>
+                    <div class="card-label" style="font-size: 13px; font-weight: 600; color: #8c5b3e; margin-bottom: 5px;">Low Stock</div>
+                    <div class="card-value" style="font-size: 24px; font-weight: 800; color: #4a2511;">7</div>
                 </div>
             </div>
+
+            <div class="table-card" style="background: #ffffff; border-radius: 16px; padding: 40px; box-shadow: 0 4px 20px rgba(74, 37, 17, 0.04); text-align: center;">
+                <div style="font-size: 50px; margin-bottom: 20px;">🏪</div>
+                <h2 class="widget-title" style="font-size: 24px; font-weight: 800; color: #4a2511; margin-bottom: 10px;">Store Overview Active</h2>
+                <p style="color: #b58361; max-width: 500px; margin: 0 auto 30px;">
+                    Your store metrics are currently healthy. You can deep dive into sales trends in the
+                    <strong>Analytics</strong> tab or manage your coffee and pastry stock in
+                    <strong>Inventory</strong>.
+                </p>
+                <div style="display: flex; justify-content: center; gap: 15px;">
+                    <a asp-action="Analytics" style="text-decoration: none; background: #f46a05; color: white; padding: 12px 25px; border-radius: 8px; font-weight: 700;">View Sales Trends</a>
+                    <a asp-action="Inventory" style="text-decoration: none; background: #4a2511; color: white; padding: 12px 25px; border-radius: 8px; font-weight: 700;">Manage Stock</a>
+                </div>
+            </div>
+
         </main>
-
     </div>
-
-    <script>
-        const salesCtx = document.getElementById('salesChart').getContext('2d');
-
-        new Chart(salesCtx, {
-        type: 'bar',
-        data: {
-        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-        datasets: [{
-        label: 'Sales',
-        data: [12, 19, 8, 15, 22, 17, 25],
-        borderWidth: 1,
-        backgroundColor: [
-        '#8d6e63',
-        '#a1887f',
-        '#bcaaa4',
-        '#8d6e63',
-        '#a1887f',
-        '#bcaaa4',
-        '#8d6e63'
-        ]
-        }]
-        },
-        options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-        legend: {
-        display: true
-        }
-        },
-        scales: {
-        y: {
-        beginAtZero: true
-        }
-        }
-        }
-        });
-
-        const paymentCtx = document.getElementById('paymentChart').getContext('2d');
-
-        new Chart(paymentCtx, {
-        type: 'pie',
-        data: {
-        labels: ['Cash', 'GCash', 'Card'],
-        datasets: [{
-        data: [50, 30, 20],
-        backgroundColor: ['#8d6e63', '#a1887f', '#bcaaa4'],
-        borderColor: '#ffffff',
-        borderWidth: 2
-        }]
-        },
-        options: {
-        responsive: true,
-        plugins: {
-        legend: {
-        position: 'bottom'
-        }
-        }
-        }
-        });
-    </script>
 </body>
 </html>

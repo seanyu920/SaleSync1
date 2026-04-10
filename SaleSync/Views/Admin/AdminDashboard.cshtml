@@ -7,9 +7,8 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Admin Dashboard</title>
-    <link rel="stylesheet" href="~/css/AdminDashboard.css" />
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Admin Dashboard - SyncScale</title>
+    <link rel="stylesheet" href="~/css/AdminDashboard.css" asp-append-version="true" />
 </head>
 <body>
     <div class="dashboard-container">
@@ -17,140 +16,130 @@
         <aside class="sidebar">
             <div>
                 <div class="logo-section">
-                    <img src="~/images/syncsale-logo.png" alt="SyncSale Logo" class="logo-img" />
+                    <div class="logo-title">Cafero</div>
+                    <div class="logo-subtitle">Coffee & Pastries</div>
                 </div>
 
                 <div class="profile-section">
                     <div class="profile-circle">👤</div>
-                    <h2 class="admin-name">Admin</h2>
+                    <div>
+                        <div class="admin-name">Admin</div>
+                        <div class="admin-role">Administrator</div>
+                    </div>
                 </div>
 
                 <nav class="sidebar-menu">
-                    <a asp-controller="Admin" asp-action="Dashboard" class="menu-btn active">Analysis</a>
-                    <a asp-controller="Admin" asp-action="Inventory" class="menu-btn">Inventory</a>
-                    <a asp-controller="Admin" asp-action="ManageAccounts" class="menu-btn">Accounts</a>
+                    <a asp-controller="Admin" asp-action="Dashboard" class="menu-btn active">❖ Dashboard</a>
+                    <a asp-controller="Admin" asp-action="Analytics" class="menu-btn">📊 Analytics</a>
+                    <a asp-controller="Admin" asp-action="Inventory" class="menu-btn">📦 Inventory</a>
+                    <a asp-controller="Admin" asp-action="ManageAccounts" class="menu-btn">💳 Accounts</a>
                 </nav>
             </div>
 
             <div class="logout-section">
-                <a asp-controller="Home" asp-action="Index" class="menu-btn logout-btn">Log Out</a>
+                <form method="post" action="/Home/Logout">
+                    <button type="submit" class="menu-btn logout-btn">⎋ Log Out</button>
+                </form>
             </div>
         </aside>
 
         <main class="main-content">
-
-            <div class="content-area">
-                
-
-                <div class="chart-card">
-                    <h2 class="chart-title">Sales Analytics</h2>
-                    <canvas id="salesChart"></canvas>
-                </div>
-
-                <div class="extra-widgets">
-                    <div class="payment-card">
-                        <h2 class="widget-title">Payment Methods</h2>
-                        <div class="pie-chart-container">
-                            <canvas id="paymentChart"></canvas>
-                        </div>
-                    </div>
-
-                    <div class="best-selling-card">
-                        <h2 class="widget-title">Best Selling Items</h2>
-
-                        <div class="items-list">
-                            <div class="item-row">
-                                <span class="item-name">Coca-Cola 1.5L</span>
-                                <span class="item-sold">120 sold</span>
-                            </div>
-                            <div class="item-row">
-                                <span class="item-name">Pancit Canton</span>
-                                <span class="item-sold">98 sold</span>
-                            </div>
-                            <div class="item-row">
-                                <span class="item-name">Bear Brand Milk</span>
-                                <span class="item-sold">85 sold</span>
-                            </div>
-                            <div class="item-row">
-                                <span class="item-name">Gardenia Bread</span>
-                                <span class="item-sold">73 sold</span>
-                            </div>
-                            <div class="item-row">
-                                <span class="item-name">Nescafe 3-in-1</span>
-                                <span class="item-sold">64 sold</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
+            
+            <div class="page-header">
+                <h1 class="greeting-title">Good Morning! ☕</h1>
+                <p class="greeting-subtitle">Welcome back! Here's what's brewing today.</p>
             </div>
+
+            <div class="summary-dashboard">
+                <div class="summary-card">
+                    <div class="card-icon-box icon-orange">📦</div>
+                    <div class="card-label">Total Inventory Items</div>
+                    <div class="card-value">1,247</div>
+                    <span class="trend-badge trend-yellow">+ 12% from last month</span>
+                </div>
+
+                <div class="summary-card">
+                    <div class="card-icon-box icon-green">📈</div>
+                    <div class="card-label">Total Sales Today</div>
+                    <div class="card-value">₱650.00</div>
+                    <span class="trend-badge trend-green">+ 8% from yesterday</span>
+                </div>
+
+                <div class="summary-card">
+                    <div class="card-icon-box icon-light-orange">📁</div>
+                    <div class="card-label">Active Categories</div>
+                    <div class="card-value">24</div>
+                    <span class="trend-badge trend-orange">3 new this week</span>
+                </div>
+
+                <div class="summary-card">
+                    <div class="card-icon-box icon-red">⚠️</div>
+                    <div class="card-label">Low Stock Alerts</div>
+                    <div class="card-value">7</div>
+                    <span class="trend-badge trend-red">Requires attention</span>
+                </div>
+            </div>
+
+            <div class="recent-sales-card">
+                <div class="card-header-flex">
+                    <div>
+                        <h2 class="widget-title">Recent Sales</h2>
+                        <p class="widget-subtitle">Latest transactions from today</p>
+                    </div>
+                    <a href="#" class="view-all-link">View Full Report &rarr;</a>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="recent-sales-table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Time</th>
+                                <th>Cashier</th>
+                                <th>Items</th>
+                                <th>Total Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="order-id">#ORD-1025</td>
+                                <td>10:45 AM</td>
+                                <td><span class="cashier-badge">Cashier_01</span></td>
+                                <td>2x Spanish Latte, 1x Croissant</td>
+                                <td>₱265.00</td>
+                                <td><span class="status-badge status-completed">Completed</span></td>
+                            </tr>
+                            <tr>
+                                <td class="order-id">#ORD-1024</td>
+                                <td>10:32 AM</td>
+                                <td><span class="cashier-badge">Cashier_02</span></td>
+                                <td>1x Matcha Milk Tea</td>
+                                <td>₱95.00</td>
+                                <td><span class="status-badge status-completed">Completed</span></td>
+                            </tr>
+                            <tr>
+                                <td class="order-id">#ORD-1023</td>
+                                <td>10:15 AM</td>
+                                <td><span class="cashier-badge">Cashier_01</span></td>
+                                <td>1x Silog Meal, 1x Americano</td>
+                                <td>₱150.00</td>
+                                <td><span class="status-badge status-completed">Completed</span></td>
+                            </tr>
+                            <tr>
+                                <td class="order-id">#ORD-1022</td>
+                                <td>09:50 AM</td>
+                                <td><span class="cashier-badge">Cashier_01</span></td>
+                                <td>3x Cheese Ensaymada</td>
+                                <td>₱135.00</td>
+                                <td><span class="status-badge status-pending">Pending</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </main>
     </div>
-
-    <script>
-        const ctx = document.getElementById('salesChart').getContext('2d');
-
-        new Chart(ctx, {
-        type: 'bar',
-        data: {
-        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-        datasets: [{
-        label: 'Sales',
-        data: [12, 19, 8, 15, 22, 17, 25],
-        borderWidth: 1,
-        backgroundColor: [
-        '#8d6e63',
-        '#a1887f',
-        '#bcaaa4',
-        '#8d6e63',
-        '#a1887f',
-        '#bcaaa4',
-        '#8d6e63'
-        ]
-        }]
-        },
-        options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-        legend: {
-        display: true
-        }
-        },
-        scales: {
-        y: {
-        beginAtZero: true
-        }
-        }
-        }
-        });
-
-        const paymentCtx = document.getElementById('paymentChart').getContext('2d');
-
-        new Chart(paymentCtx, {
-        type: 'pie',
-        data: {
-        labels: ['Cash', 'GCash', 'Card'],
-        datasets: [{
-        data: [50, 30, 20],
-        backgroundColor: [
-        '#8d6e63',
-        '#a1887f',
-        '#bcaaa4'
-        ],
-        borderColor: '#ffffff',
-        borderWidth: 2
-        }]
-        },
-        options: {
-        responsive: true,
-        plugins: {
-        legend: {
-        position: 'bottom'
-        }
-        }
-        }
-        });
-    </script>
 </body>
 </html>

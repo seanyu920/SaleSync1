@@ -14,6 +14,10 @@ namespace SaleSync.Controllers
         {
             _configuration = configuration;
         }
+        public IActionResult Analytics()
+        {
+            return View();
+        }
 
         private bool IsAdmin()
         {
@@ -46,7 +50,7 @@ namespace SaleSync.Controllers
                 return RedirectToAction("Index", "Home");
 
             List<InventoryItems> items = new List<InventoryItems>();
-            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
@@ -92,7 +96,7 @@ namespace SaleSync.Controllers
             if (!CanAccessInventory())
                 return RedirectToAction("Index", "Home");
 
-            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
@@ -127,7 +131,7 @@ namespace SaleSync.Controllers
             if (!CanAccessInventory())
                 return RedirectToAction("Index", "Home");
 
-            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
             InventoryItems item = new InventoryItems();
 
             using (SqlConnection conn = new SqlConnection(connectionString))
@@ -173,7 +177,7 @@ namespace SaleSync.Controllers
             if (!CanAccessInventory())
                 return RedirectToAction("Index", "Home");
                 
-            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
@@ -214,7 +218,7 @@ namespace SaleSync.Controllers
             if (!CanAccessInventory())
                 return RedirectToAction("Index", "Home");
 
-            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
@@ -274,7 +278,7 @@ namespace SaleSync.Controllers
             if (!IsAdmin())
                 return RedirectToAction("Index", "Home");
 
-            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
@@ -337,7 +341,7 @@ namespace SaleSync.Controllers
             if (!IsAdmin())
                 return RedirectToAction("Index", "Home");
 
-            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
@@ -392,7 +396,7 @@ namespace SaleSync.Controllers
             if (!IsAdmin())
                 return RedirectToAction("Index", "Home");
 
-            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
@@ -417,7 +421,7 @@ namespace SaleSync.Controllers
                 return RedirectToAction("Index", "Home");
 
             List<UserAccount> accounts = new List<UserAccount>();
-            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {

@@ -19,6 +19,18 @@ namespace SaleSync.Controllers
             return View("ManagerDashboard");
         }
 
+        public IActionResult Analytics()
+        {
+            // Security check: Only let Managers in
+            var role = HttpContext.Session.GetString("Role");
+
+            if (string.IsNullOrEmpty(role) || role != "Manager")
+                return RedirectToAction("Index", "Home");
+
+            // EXACT FIX: Tell it to load the Admin's Analytics page
+            return View("~/Views/Admin/Analytics.cshtml");
+        }
+
         [HttpGet]
         public IActionResult Inventory()
         {
@@ -28,7 +40,7 @@ namespace SaleSync.Controllers
                 return RedirectToAction("Index", "Home");
 
             List<InventoryItems> items = new List<InventoryItems>();
-            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
