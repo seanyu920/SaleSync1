@@ -89,7 +89,7 @@ namespace SaleSync.Controllers
             }
 
             ViewBag.Message = "Invalid username or password.";
-            return View("Index");
+            return View("LogIn");
         }
 
         public IActionResult Logout()
