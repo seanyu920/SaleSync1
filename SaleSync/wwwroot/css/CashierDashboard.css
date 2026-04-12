@@ -5,9 +5,9 @@
 }
 
 body {
-    font-family: Arial, sans-serif;
-    background: #f5f1ee;
-    color: #111;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #fdfaf6;
+    color: #4a2511;
 }
 
 .dashboard-container {
@@ -15,302 +15,86 @@ body {
     min-height: 100vh;
 }
 
-/* Sidebar */
+/* --- SIDEBAR --- */
 .sidebar {
-    width: 200px;
-    background: #d9d9d9;
-    border-right: 1px solid #8a8a8a;
-    padding: 18px 15px;
+    width: 260px;
+    background: #4a2511;
+    padding: 30px 20px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    height: 100vh;
 }
 
-.logo-img {
-    width: 70px;
-    height: auto;
-    margin-bottom: 20px;
-}
+.logo-section { margin-bottom: 40px; }
+.logo-title { font-size: 24px; font-weight: 800; color: #ffffff; }
+.logo-subtitle { font-size: 13px; color: #dcbca5; }
 
 .profile-section {
     text-align: center;
     margin-bottom: 40px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(220, 188, 165, 0.1);
 }
 
 .profile-circle {
-    width: 100px;
-    height: 100px;
-    margin: 0 auto 10px;
-    border: 1px solid #555;
+    width: 80px; height: 80px;
+    margin: 0 auto 15px;
     border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 50px;
-    background: #efefef;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 40px; background: #f46a05; color: white;
 }
 
-.admin-name {
-    font-size: 20px;
-    font-weight: normal;
-}
-
-.sidebar-menu {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
+.sidebar-menu { display: flex; flex-direction: column; gap: 12px; }
 
 .menu-btn {
-    display: block;
-    text-align: center;
-    text-decoration: none;
-    color: #111;
-    font-size: 18px;
-    padding: 10px 0;
-    background: #efe7e2;
-    border: 1px solid #7c7c7c;
-    transition: 0.3s;
-    cursor: pointer;
-    width: 100%;
+    display: block; text-align: left; text-decoration: none;
+    color: #dcbca5; font-size: 16px; padding: 14px 20px;
+    background: transparent; border: 1px solid rgba(220, 188, 165, 0.1);
+    border-radius: 12px; transition: 0.3s; cursor: pointer; width: 100%;
 }
 
-    .menu-btn.active {
-        background: #e3d9d2;
-        font-weight: bold;
-    }
-
-    .menu-btn:hover {
-        background: #ddd1c8;
-    }
-
-/* Content Area */
-.main-content {
-    flex: 1;
-    padding: 25px;
-    overflow-y: auto;
+.menu-btn.active {
+    background: #f46a05; color: #ffffff; border-color: #f46a05;
+    font-weight: 700; box-shadow: 0 4px 15px rgba(244, 106, 5, 0.2);
 }
 
+/* --- MAIN CONTENT & CARDS --- */
+.main-content { flex: 1; padding: 35px; overflow-y: auto; }
 .form-card, .table-card {
-    background: #ffffff;
-    border: 1px solid #9f8d83;
-    border-radius: 20px;
-    padding: 24px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-    margin-bottom: 28px;
+    background: #ffffff; border-radius: 20px; padding: 30px;
+    box-shadow: 0 4px 20px rgba(74, 37, 17, 0.04); margin-bottom: 30px;
 }
+.form-title { font-size: 24px; font-weight: 800; color: #4a2511; margin-bottom: 20px; }
 
-.form-title {
-    font-size: 24px;
-    color: #5f3318;
-    margin-bottom: 20px;
-}
-
-/* Product Grid */
-.product-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 20px;
-}
-
+/* --- PRODUCT GRID --- */
+.product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; }
 .product-card {
-    background: #fff;
-    border: 1px solid #cbbdb4;
-    border-radius: 12px;
-    overflow: hidden;
-    cursor: pointer;
-    transition: 0.2s;
+    background: #fff; border: 1px solid #f9f5f0; border-radius: 16px;
+    overflow: hidden; cursor: pointer; transition: 0.3s ease;
 }
-
-    .product-card:hover {
-        transform: translateY(-5px);
-        border-color: #9b7a6c;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    }
-
+.product-card:hover { transform: translateY(-5px); border-color: #f46a05; }
 .product-thumb {
-    width: 100%;
-    height: 120px;
-    background: #eee;
+    width: 100%; height: 130px; background: #fdfaf6;
+    display: flex; align-items: center; justify-content: center; font-size: 40px;
 }
+.product-info { padding: 15px; text-align: center; }
+.product-info h3 { font-size: 15px; font-weight: 700; color: #4a2511; }
 
-    .product-thumb img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
+/* --- BUTTONS --- */
+.action-btn { border: none; color: white; padding: 14px; border-radius: 10px; cursor: pointer; font-weight: 700; }
+.add-btn { background: #f46a05; }
+.update-btn { background: #4a2511; }
+.delete-btn { background: #e02424; }
 
-.product-info {
-    padding: 12px;
-    text-align: center;
-}
+/* --- TABLE --- */
+table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
+thead th { color: #8c5b3e; font-size: 13px; text-transform: uppercase; text-align: left; padding: 15px; }
+tbody td { background: #fdfaf6; padding: 15px; color: #4a2511; font-weight: 600; }
+tbody tr td:first-child { border-radius: 10px 0 0 10px; }
+tbody tr td:last-child { border-radius: 0 10px 10px 0; }
+.selected-row td { background: #fef1e8 !important; color: #f46a05 !important; }
 
-    .product-info h3 {
-        font-size: 16px;
-        color: #5f3318;
-    }
-
-/* Selection Details & Image Preview */
-.item-display-flex {
-    display: flex;
-    gap: 30px;
-}
-
-.item-image-container {
-    flex: 0 0 200px;
-    height: 200px;
-    border: 1px solid #cbbdb4;
-    border-radius: 12px;
-    overflow: hidden;
-}
-
-.product-img-preview {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.item-details-controls {
-    flex: 1;
-}
-
-/* Buttons & Inputs */
-.action-btn {
-    border: none;
-    color: white;
-    padding: 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-}
-
-.add-btn {
-    background: #9b7a6c;
-}
-
-.update-btn {
-    background: #5d6fd3;
-}
-
-.delete-btn {
-    background: #d9534f;
-}
-
-.size-selector-grid {
-    display: flex;
-    gap: 10px;
-    margin: 15px 0;
-}
-
-.radio-tile {
-    display: block;
-    padding: 10px;
-    border: 1px solid #cbbdb4;
-    border-radius: 8px;
-    text-align: center;
-    width: 100%;
-}
-
-.custom-radio-card input {
-    display: none;
-}
-
-    .custom-radio-card input:checked + .radio-tile {
-        background: #9b7a6c;
-        color: white;
-    }
-
-.qty-flex {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-    .qty-flex input {
-        width: 50px;
-        text-align: center;
-        padding: 8px;
-        border: 1px solid #cbbdb4;
-        border-radius: 5px;
-    }
-
-    .qty-flex button {
-        width: 35px;
-        height: 35px;
-        background: #9b7a6c;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-    }
-
-/* Table */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-}
-
-thead th {
-    background: #d9d9d9;
-    padding: 12px;
-    border: 1px solid #c7c7c7;
-}
-
-tbody td {
-    padding: 12px;
-    border: 1px solid #d0d0d0;
-    text-align: center;
-}
-
-.selected-row {
-    background-color: #f4f1ef !important;
-    font-weight: bold;
-}
-
-.total-footer {
-    text-align: right;
-    margin-top: 15px;
-    font-size: 22px;
-    color: #5f3318;
-}
-
-/* Add this to your CashierDashboard.css */
-
-/* Modal Backdrop */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5); /* Dim the background */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 2000;
-}
-
-/* Modal Content Box */
-.modal-content {
-    width: 100%;
-    max-width: 400px;
-    background: white;
-    padding: 30px;
-    border-radius: 20px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-    animation: slideDown 0.3s ease-out;
-}
-
-@keyframes slideDown {
-    from {
-        transform: translateY(-20px);
-        opacity: 0;
-    }
-
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
+.total-footer { text-align: right; margin-top: 25px; }
+#total { font-size: 32px; font-weight: 800; color: #4a2511; }
