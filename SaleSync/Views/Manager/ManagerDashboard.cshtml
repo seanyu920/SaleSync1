@@ -87,17 +87,62 @@
                 </div>
             </div>
 
-            <div class="table-card" style="background: #ffffff; border-radius: 16px; padding: 40px; box-shadow: 0 4px 20px rgba(74, 37, 17, 0.04); text-align: center;">
-                <div style="font-size: 50px; margin-bottom: 20px;">🏪</div>
-                <h2 class="widget-title" style="font-size: 24px; font-weight: 800; color: #4a2511; margin-bottom: 10px;">Store Overview Active</h2>
-                <p style="color: #b58361; max-width: 500px; margin: 0 auto 30px;">
-                    Your store metrics are currently healthy. You can deep dive into sales trends in the
-                    <strong>Analytics</strong> tab or manage your coffee and pastry stock in
-                    <strong>Inventory</strong>.
-                </p>
-                <div style="display: flex; justify-content: center; gap: 15px;">
-                    <a asp-action="Analytics" style="text-decoration: none; background: #f46a05; color: white; padding: 12px 25px; border-radius: 8px; font-weight: 700;">View Sales Trends</a>
-                    <a asp-action="Inventory" style="text-decoration: none; background: #4a2511; color: white; padding: 12px 25px; border-radius: 8px; font-weight: 700;">Manage Stock</a>
+            <div class="recent-sales-card" style="margin-bottom: 30px;">
+                <div class="card-header-flex">
+                    <div>
+                        <h2 class="widget-title">Recent Sales</h2>
+                        <div class="widget-subtitle">Latest transactions from today</div>
+                    </div>
+                    <a asp-controller="Manager" asp-action="Analytics" class="view-all-link">View Full Report &rarr;</a>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="recent-sales-table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Time</th>
+                                <th>Cashier</th>
+                                <th>Items</th>
+                                <th>Total Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="order-id">#ORD-1025</td>
+                                <td>10:45 AM</td>
+                                <td><span class="cashier-badge">Cashier_01</span></td>
+                                <td>2x Spanish Latte, 1x Croissant</td>
+                                <td>₱265.00</td>
+                                <td><span class="status-badge status-completed">Completed</span></td>
+                            </tr>
+                            <tr>
+                                <td class="order-id">#ORD-1024</td>
+                                <td>10:32 AM</td>
+                                <td><span class="cashier-badge">Cashier_02</span></td>
+                                <td>1x Matcha Milk Tea</td>
+                                <td>₱95.00</td>
+                                <td><span class="status-badge status-completed">Completed</span></td>
+                            </tr>
+                            <tr>
+                                <td class="order-id">#ORD-1023</td>
+                                <td>10:15 AM</td>
+                                <td><span class="cashier-badge">Cashier_01</span></td>
+                                <td>1x Silog Meal, 1x Americano</td>
+                                <td>₱150.00</td>
+                                <td><span class="status-badge status-completed">Completed</span></td>
+                            </tr>
+                            <tr>
+                                <td class="order-id">#ORD-1022</td>
+                                <td>09:50 AM</td>
+                                <td><span class="cashier-badge">Cashier_01</span></td>
+                                <td>3x Cheese Ensaymada</td>
+                                <td>₱135.00</td>
+                                <td><span class="status-badge status-pending">Pending</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 

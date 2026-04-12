@@ -25,6 +25,11 @@ body {
     flex-direction: column;
     justify-content: space-between;
     color: #ffffff;
+    /* --- STICKY SIDEBAR CODE --- */
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto; /* Adds a scrollbar just for the sidebar if your menu gets long */
 }
 
 .logo-section {
@@ -227,7 +232,6 @@ body {
     background: #fce8e8;
     color: #b81d1d;
 }
-
 
 /* --- TABLE CARD --- */
 .recent-sales-card {

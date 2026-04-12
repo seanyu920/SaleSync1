@@ -171,6 +171,19 @@ namespace SaleSync.Controllers
             return View("EditInventory", item);
         }
 
+        public IActionResult Products()
+        {
+            // Security Check (Optional, but good practice since you have roles!)
+            var role = HttpContext.Session.GetString("Role");
+            if (string.IsNullOrEmpty(role) || role != "Admin")
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            // Tells the server to show the Products.cshtml page
+            return View();
+        }
+
         [HttpPost]
         public IActionResult UpdateInventory(InventoryItems item)
         {

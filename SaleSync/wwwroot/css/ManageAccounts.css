@@ -25,6 +25,11 @@ body {
     flex-direction: column;
     justify-content: space-between;
     color: #ffffff;
+    /* --- STICKY SIDEBAR CODE --- */
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
 }
 
 .logo-section {
@@ -107,6 +112,10 @@ body {
         background: #f46a05;
         color: #ffffff;
     }
+
+.logout-section {
+    margin-top: auto;
+}
 
 /* --- MAIN CONTENT --- */
 .main-content {

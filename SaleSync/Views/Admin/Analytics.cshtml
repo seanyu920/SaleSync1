@@ -1,6 +1,7 @@
 ﻿@{
     Layout = null;
-    var currentRole = ViewContext.RouteData.Values["controller"]?.ToString() == "Manager" ? "Manager" : "Admin";
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "Admin";
+    var currentRole = currentController == "Manager" ? "Manager" : "Admin";
 }
 
 <!DOCTYPE html>
@@ -33,13 +34,11 @@
                 </div>
 
                 <nav class="sidebar-menu">
-                    <a asp-controller="@currentRole" asp-action="Dashboard" class="menu-btn">❖ Dashboard</a>
-                    
-                    <a asp-controller="@currentRole" asp-action="Analytics" class="menu-btn active">📊 Analytics</a>
-                    
-                    <a asp-controller="@currentRole" asp-action="Inventory" class="menu-btn">📦 Inventory</a>
+                    <a asp-controller="@currentController" asp-action="Dashboard" class="menu-btn">❖ Dashboard</a>
+                    <a asp-controller="@currentController" asp-action="Analytics" class="menu-btn active">📊 Analytics</a>
+                    <a asp-controller="@currentController" asp-action="Inventory" class="menu-btn">📦 Inventory</a>
 
-                    @if (currentRole == "Admin")
+                    @if (currentController == "Admin")
                     {
                         <a asp-controller="Admin" asp-action="ManageAccounts" class="menu-btn">💳 Accounts</a>
                     }
@@ -56,9 +55,22 @@
         </aside>
 
         <main class="main-content">
-            <div class="page-header" style="margin-bottom: 30px;">
-                <h1 class="greeting-title" style="font-size: 32px; font-weight: 800; color: #4a2511;">Analytics Overview 📊</h1>
-                <p style="color: #b58361;">Deep dive into your sales and performance metrics.</p>
+            
+            <div class="page-header" style="margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end;">
+                <div>
+                    <h1 class="greeting-title" style="font-size: 32px; font-weight: 800; color: #4a2511;">Analytics Overview 📊</h1>
+                    <p style="color: #b58361; margin-top: 5px;">Deep dive into your sales and performance metrics.</p>
+                </div>
+                
+                <div class="timeframe-filter">
+                    <select id="analyticsTimeframe" style="padding: 10px 16px; border-radius: 8px; border: 1px solid #dcbca5; background-color: #ffffff; color: #4a2511; font-weight: 700; font-size: 14px; outline: none; cursor: pointer; box-shadow: 0 2px 10px rgba(74, 37, 17, 0.05); transition: 0.3s;">
+                        <option value="today">📅 Today</option>
+                        <option value="week" selected>📅 This Week</option>
+                        <option value="month">📅 This Month</option>
+                        <option value="year">📅 This Year</option>
+                        <option value="custom">⚙️ Custom Range...</option>
+                    </select>
+                </div>
             </div>
 
             <div class="analytics-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px;">
@@ -141,6 +153,13 @@
         plugins: { legend: { position: 'bottom' } },
         cutout: '70%'
         }
+        });
+
+        // Event listener for the dropdown menu
+        document.getElementById('analyticsTimeframe').addEventListener('change', function() {
+        // For now, this just logs to the console, but later you can use this
+        // to fetch new data from your server using AJAX/Fetch!
+        console.log("Timeframe changed to: " + this.value);
         });
     </script>
 </body>
