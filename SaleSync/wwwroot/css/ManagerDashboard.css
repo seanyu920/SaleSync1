@@ -22,6 +22,11 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    /* --- STICKY SIDEBAR CODE --- */
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
 }
 
 .logo-section {
@@ -145,8 +150,7 @@ body {
     flex-wrap: wrap;
 }
 
-.payment-card,
-.best-selling-card {
+.payment-card, .best-selling-card {
     width: 280px;
     background: #d9d9d9;
     border-radius: 10px;
@@ -198,5 +202,8 @@ body {
         width: 100%;
         border-right: none;
         border-bottom: 1px solid #8a8a8a;
+        /* Resets the sticky feature for mobile screens so it doesn't break */
+        position: relative;
+        height: auto;
     }
 }

@@ -5,14 +5,15 @@
 }
 
 body {
-    font-family: Arial, sans-serif;
-    background: #ffffff;
-    color: #000000;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #FAF7F2; /* Soft cream background */
+    color: #3E2723; /* Dark espresso brown */
 }
 
 .top-bar {
     width: 100%;
-    background: #d9d9d9;
+    background: #EFEBE5; /* Soft beige */
+    border-bottom: 1px solid #E0D8D0; /* Subtle separator */
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -22,6 +23,7 @@ body {
 .logo {
     font-size: 30px;
     font-weight: bold;
+    color: #5D4037; /* Coffee brand color */
 }
 
 .nav-menu {
@@ -31,37 +33,46 @@ body {
 
     .nav-menu a {
         text-decoration: none;
-        color: #000000;
+        color: #3E2723;
         font-size: 20px;
         padding: 10px 18px;
-        background: #f2f2f2;
+        background: transparent;
         border-radius: 8px;
-        transition: 0.3s;
+        transition: 0.3s ease;
     }
 
         .nav-menu a:hover {
-            background: #c8c8c8;
+            background: #E0D8D0; /* Gentle highlight on hover */
         }
 
+/* Call to Action Buttons */
 .nav-login .login-btn {
     text-decoration: none;
-    color: #000000;
+    color: #ffffff;
     font-size: 20px;
     padding: 10px 24px;
-    background: #f2f2f2;
+    background: #8D6E63; /* Warm coffee brown */
     border-radius: 8px;
-    transition: 0.3s;
+    transition: 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* Adds depth */
+    display: inline-block;
 }
 
     .nav-login .login-btn:hover {
-        background: #c8c8c8;
+        background: #5D4037; /* Darker brown on hover */
+        transform: translateY(-2px); /* Lifts up slightly */
     }
 
 .hero-section {
-    min-height: 500px;
+    min-height: 60vh; /* Better scaling than fixed 500px */
     display: flex;
     align-items: center;
+    justify-content: center;
+    text-align: center;
     padding: 80px 65px;
+    /* Adds a dark overlay on top of an image so text stays readable */
+    background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('/images/coffee-shop-bg.jpg') center/cover;
+    color: #ffffff;
 }
 
 .hero-content {
@@ -82,16 +93,18 @@ body {
 .hero-btn {
     display: inline-block;
     text-decoration: none;
-    background: #d9d9d9;
-    color: #000000;
+    background: #8D6E63;
+    color: #ffffff;
     padding: 14px 28px;
     font-size: 20px;
     border-radius: 8px;
-    transition: 0.3s;
+    transition: 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
     .hero-btn:hover {
-        background: #bfbfbf;
+        background: #5D4037;
+        transform: translateY(-2px);
     }
 
 .about-section,
@@ -102,6 +115,7 @@ body {
 .section-container h2 {
     font-size: 36px;
     margin-bottom: 20px;
+    color: #5D4037;
 }
 
 .section-container p {
@@ -117,17 +131,28 @@ body {
     flex-wrap: wrap;
 }
 
+/* Improved Interactive Cards */
 .feature-card {
     flex: 1;
     min-width: 250px;
-    background: #f3f3f3;
+    background: #ffffff;
     padding: 25px;
     border-radius: 12px;
+    border: 1px solid #E0D8D0;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05); /* Soft shadow */
+    transition: all 0.3s ease; /* Smooth animation setup */
 }
+
+    .feature-card:hover {
+        transform: translateY(-5px); /* Card pops up when hovered */
+        box-shadow: 0 8px 15px rgba(0,0,0,0.1); /* Shadow gets darker */
+        border-color: #8D6E63;
+    }
 
     .feature-card h3 {
         font-size: 24px;
         margin-bottom: 12px;
+        color: #5D4037;
     }
 
     .feature-card p {
@@ -136,9 +161,11 @@ body {
     }
 
 .footer {
-    background: #d9d9d9;
+    background: #EFEBE5;
+    border-top: 1px solid #E0D8D0;
     padding: 25px 65px;
     margin-top: 40px;
+    text-align: center; /* Center the copyright text */
 }
 
     .footer p {
@@ -147,4 +174,40 @@ body {
 
 html {
     scroll-behavior: smooth;
+}
+
+/* --- Mobile Responsiveness (For Phones & Small Tablets) --- */
+@media (max-width: 768px) {
+    .top-bar {
+        flex-direction: column;
+        padding: 20px;
+        gap: 15px;
+    }
+
+    .nav-menu {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 15px;
+    }
+
+    .hero-section {
+        padding: 40px 20px;
+    }
+
+    .hero-content h1 {
+        font-size: 40px; /* Scale down massive text */
+    }
+
+    .hero-content p {
+        font-size: 24px;
+    }
+
+    .feature-grid {
+        flex-direction: column; /* Stack cards vertically on phones */
+    }
+
+    .about-section,
+    .contact-section {
+        padding: 40px 20px;
+    }
 }

@@ -2,6 +2,17 @@
 
 @{
     Layout = null;
+
+    // Dynamically grab all unique categories currently in the database
+    var dbCategories = new List<string>();
+    if (Model != null && Model.Any())
+    {
+        dbCategories = Model.Select(i => i.ItemCategory)
+                            .Where(c => !string.IsNullOrEmpty(c))
+                            .Distinct()
+                            .OrderBy(c => c)
+                            .ToList();
+    }
 }
 
 <!DOCTYPE html>
@@ -9,8 +20,8 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Inventory</title>
-    <link rel="stylesheet" href="~/css/Inventory.css" />
+    <title>Inventory Management - SyncScale</title>
+    <link rel="stylesheet" href="~/css/Inventory.css" asp-append-version="true" />
 </head>
 <body>
     <div class="dashboard-container">
@@ -18,96 +29,144 @@
         <aside class="sidebar">
             <div>
                 <div class="logo-section">
-                    <img src="~/images/syncsale-logo.png" class="logo-img" />
+                    <div class="logo-title" style="font-size: 24px; font-weight: 800; color: #ffffff;">SyncScale</div>
+                    <div class="logo-subtitle" style="font-size: 13px; color: #dcbca5;">Coffee & Pastries</div>
                 </div>
 
-                <div class="profile-section">
-                    <div class="profile-circle">👤</div>
-                    <h2 class="admin-name">
-                        @(ViewContext.RouteData.Values["controller"]?.ToString() == "Manager" ? "Manager" : "Admin")
-                    </h2>
+                <div class="profile-section" style="display: flex; align-items: center; gap: 15px; margin-bottom: 40px;">
+                    <div class="profile-circle" style="width: 45px; height: 45px; background: #f46a05; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #fff;">👤</div>
+                    <div>
+                        <h2 class="admin-name" style="font-size: 16px; font-weight: 700; color: #ffffff; margin: 0;">
+                            @(ViewContext.RouteData.Values["controller"]?.ToString() == "Manager" ? "Manager" : "Admin")
+                        </h2>
+                        <div style="font-size: 12px; color: #dcbca5;">System Access</div>
+                    </div>
                 </div>
 
                 <nav class="sidebar-menu">
                     <a asp-controller="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Manager" ? "Manager" : "Admin")"
-                           asp-action="Dashboard"
-                           class="menu-btn">
-                        Analysis
-                    </a>
+                       asp-action="Dashboard"
+                       class="menu-btn">❖ Dashboard</a>
 
                     <a asp-controller="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Manager" ? "Manager" : "Admin")"
-                           asp-action="Inventory"
-                           class="menu-btn active">
-                        Inventory
-                    </a>
+                       asp-action="Analytics"
+                       class="menu-btn">📊 Analytics</a>
+
+                    <a asp-controller="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Manager" ? "Manager" : "Admin")"
+                       asp-action="Inventory"
+                       class="menu-btn active">📦 Inventory</a>
 
                     @if (ViewContext.RouteData.Values["controller"]?.ToString() == "Admin")
                     {
-                        <a asp-controller="Admin" asp-action="ManageAccounts" class="menu-btn">Accounts</a>
+                        <a asp-controller="Admin" asp-action="ManageAccounts" class="menu-btn">💳 Accounts</a>
                     }
                 </nav>
             </div>
 
-            <div class="logout-section">
+            <div class="logout-section" style="margin-top: auto;">
                 <form method="post" action="/Home/Logout">
-                    <button type="submit" class="menu-btn">Log Out</button>
+                    <button type="submit" class="menu-btn logout-btn" style="background: transparent; border: none; width: 100%; text-align: left; cursor: pointer;">⎋ Log Out</button>
                 </form>
             </div>
         </aside>
 
         <main class="main-content">
 
+            <div class="page-header" style="margin-bottom: 30px;">
+                <h1 class="greeting-title" style="font-size: 32px; font-weight: 800; color: #4a2511;">Inventory Management 📦</h1>
+                <p style="color: #b58361;">Track and update your shop's stock levels.</p>
+            </div>
+
             <div class="inventory-content">
 
-                <!-- Buttons -->
-                <div class="action-buttons">
-                    <button type="submit" form="inventoryForm" formaction="/Admin/AddInventory" class="action-btn add-btn">Add</button>
-                    <button type="submit" form="inventoryForm" formaction="/Admin/UpdateInventory" class="action-btn update-btn">Update</button>
-                    <button type="button" onclick="deleteItem()" class="action-btn delete-btn">Delete</button>
-                </div>
-
-                <!-- Form -->
                 <div class="form-card">
-                    <h1 class="form-title">Add Inventory Item</h1>
+                    <h2 class="widget-title">Add Inventory Item</h2>
 
                     <form id="inventoryForm" method="post">
                         <input type="hidden" name="ProductId" id="ProductId" />
 
                         <div class="form-grid">
-                            <input type="text" name="ItemCategory" placeholder="Item Category" required />
-                            <input type="text" name="ItemName" placeholder="Item Name" required />
-                            <input type="text" name="ItemID" placeholder="Item ID" required />
-                            <input type="text" name="PurchasePrice" placeholder="Purchase Price" required />
+                            <div class="input-group">
+                                <label>Item Category</label>
+                                <input list="categoryList" name="ItemCategory" placeholder="e.g. Beverages" required autocomplete="off" />
+                                <datalist id="categoryList">
+                                    @foreach (var cat in dbCategories)
+                                    {
+                                        <option value="@cat"></option>
+                                    }
+                                </datalist>
+                            </div>
+                            
+                            <div class="input-group">
+                                <label>Item Name</label>
+                                <input type="text" name="ItemName" placeholder="Item Name" required />
+                            </div>
+                            
+                            <div class="input-group">
+                                <label>Item ID</label>
+                                <input type="text" name="ItemID" placeholder="Item ID" required />
+                            </div>
+                            
+                            <div class="input-group">
+                                <label>Purchase Price</label>
+                                <input type="text" name="PurchasePrice" placeholder="₱0.00" required />
+                            </div>
 
-                            <input type="text" name="Quantity" placeholder="Quantity" required />
-                            <input type="text" name="StockSupplier" placeholder="Stock Supplier" required />
-                            <input type="date" name="DateAcquired" required />
-                            <input type="date" name="ExpirationDate" required />
+                            <div class="input-group">
+                                <label>Quantity</label>
+                                <input type="number" name="Quantity" placeholder="0" required />
+                            </div>
+                            
+                            <div class="input-group">
+                                <label>Stock Supplier</label>
+                                <input type="text" name="StockSupplier" placeholder="Supplier" required />
+                            </div>
+                            
+                            <div class="input-group">
+                                <label>Date Acquired</label>
+                                <input type="date" name="DateAcquired" required />
+                            </div>
+                            
+                            <div class="input-group">
+                                <label>Expiration Date</label>
+                                <input type="date" name="ExpirationDate" required />
+                            </div>
+                        </div>
+
+                        <div class="action-buttons">
+                            <button type="submit" form="inventoryForm" formaction="/Admin/AddInventory" class="action-btn add-btn">Add Item</button>
+                            <button type="submit" form="inventoryForm" formaction="/Admin/UpdateInventory" class="action-btn update-btn">Update Item</button>
+                            <button type="button" onclick="deleteItem()" class="action-btn delete-btn">Delete Item</button>
                         </div>
                     </form>
                 </div>
 
                 <div class="search-bar">
-                    <input type="text" id="inventorySearch" placeholder="Search" class="search-bar" />
-                    <button type="button" onclick="searchInventory()">Search</button>
+                    <select id="categoryFilter" class="filter-select" onchange="filterInventory()">
+                        <option value="ALL">All Categories</option>
+                        @foreach (var cat in dbCategories)
+                        {
+                            <option value="@cat">@cat</option>
+                        }
+                    </select>
+                    <input type="text" id="inventorySearch" class="search-input" placeholder="Search items or IDs..." onkeyup="filterInventory()" />
                 </div>
 
-                <!-- Table -->
                 <div class="table-card">
                     <div class="table-wrap">
-                        <table>
+                        <table class="inventory-table">
                             <thead>
                                 <tr>
                                     <th>Select</th>
-                                    <th>Item Category</th>
+                                    <th>Category</th>
                                     <th>Item Name</th>
                                     <th>Item ID</th>
-                                    <th>Purchase Price</th>
-                                    <th>Quantity</th>
+                                    <th>Price</th>
+                                    <th>Qty</th>
                                     <th>Stock Level</th>
-                                    <th>Stock Supplier</th>
-                                    <th>Date Acquired</th>
-                                    <th>Expiration Date</th>
+                                    <th>Supplier</th>
+                                    <th>Acquired</th>
+                                    <th>Expiration</th>
                                 </tr>
                             </thead>
 
@@ -117,7 +176,7 @@
                                     @foreach (var item in Model)
                                     {
                                         <tr class="inventory-row">
-                                            <td>
+                                            <td style="text-align:center;">
                                                 <input type="radio"
                                                        name="selectedItem"
                                                        value="@item.ItemID"
@@ -133,12 +192,31 @@
                                                 '@item.ExpirationDate'
                                                 )" />
                                             </td>
-                                            <td>@item.ItemCategory</td>
+                                            <td><strong>@item.ItemCategory</strong></td>
                                             <td>@item.ItemName</td>
                                             <td>@item.ItemID</td>
-                                            <td>@item.PurchasePrice.ToString("0.00")</td>
+                                            <td>₱@item.PurchasePrice.ToString("0.00")</td>
                                             <td>@item.Quantity</td>
-                                            <td>@item.StockLevel</td>
+                                            <td>
+                                                @{
+                                                    int qty = 0;
+                                                    int.TryParse(item.Quantity.ToString(), out qty);
+                                                    if (qty <= 10)
+                                                    {
+                                                        <span class="stock-badge badge-low">Low</span>
+                                                    }
+                                                    else if (qty <= 30)
+                                                    {
+
+                                                        <span class="stock-badge badge-medium">Medium</span>
+                                                    }
+                                                    else
+                                                    {
+
+                                                        <span class="stock-badge badge-high">High</span>
+                                                    }
+                                                }
+                                            </td>
                                             <td>@item.StockSupplier</td>
                                             <td>@item.DateAcquired</td>
                                             <td>@item.ExpirationDate</td>
@@ -148,12 +226,11 @@
                                 else
                                 {
                                     <tr id="noItemsRow">
-                                        <td colspan="10">No inventory items added yet.</td>
+                                        <td colspan="10" style="text-align:center; padding: 20px;">No inventory items found.</td>
                                     </tr>
                                 }
-
                                 <tr id="noResultsRow" style="display: none;">
-                                    <td colspan="10">No matching inventory items found.</td>
+                                    <td colspan="10" style="text-align:center; padding: 20px;">No matching items found.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -164,7 +241,6 @@
         </main>
     </div>
 
-    <!-- Delete Form -->
     <form id="deleteForm" method="post" action="/Admin/DeleteInventory">
         <input type="hidden" name="id" id="deleteId" />
     </form>
@@ -194,40 +270,35 @@
             function deleteItem() {
                 const id = getSelectedId();
                 if (!id) return;
-
                 if (!confirm("Delete this inventory item?")) return;
-
                 document.getElementById("deleteId").value = id;
                 document.getElementById("deleteForm").submit();
             }
 
-            function searchInventory() {
-                const searchInput = document.getElementById("inventorySearch");
-                const filter = searchInput.value.toLowerCase().trim();
+            function filterInventory() {
+                const searchInput = document.getElementById("inventorySearch").value.toLowerCase().trim();
+                const categoryDropdown = document.getElementById("categoryFilter").value;
                 const rows = document.querySelectorAll(".inventory-row");
                 const noResultsRow = document.getElementById("noResultsRow");
-
                 let visibleCount = 0;
 
                 rows.forEach(function (row) {
-                    const text = row.textContent.toLowerCase();
+                    const rowText = row.textContent.toLowerCase();
+                    const categoryCellText = row.cells[1].textContent.trim();
+                    const matchesSearch = rowText.includes(searchInput);
+                    const matchesCategory = (categoryDropdown === "ALL" || categoryCellText === categoryDropdown);
 
-                    if (text.includes(filter)) {
+                    if (matchesSearch && matchesCategory) {
                         row.style.display = "";
                         visibleCount++;
                     } else {
                         row.style.display = "none";
                     }
                 });
-
                 if (noResultsRow) {
                     noResultsRow.style.display = visibleCount === 0 ? "" : "none";
                 }
             }
-
-            document.getElementById("inventorySearch").addEventListener("keyup", function (event) {
-                searchInventory();
-            });
     </script>
 </body>
 </html>

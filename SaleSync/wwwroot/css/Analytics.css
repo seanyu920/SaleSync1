@@ -29,7 +29,7 @@ body {
     position: sticky;
     top: 0;
     height: 100vh;
-    overflow-y: auto;
+    overflow-y: auto; /* Adds a scrollbar just for the sidebar if your menu gets long */
 }
 
 .logo-section {
@@ -99,7 +99,7 @@ body {
     border-radius: 10px;
     background: transparent;
     border: none;
-    transition: 0.3s;
+    transition: all 0.3s ease;
     cursor: pointer;
 }
 
@@ -117,7 +117,7 @@ body {
     margin-top: auto;
 }
 
-/* --- MAIN CONTENT --- */
+/* --- MAIN CONTENT & HEADER --- */
 .main-content {
     flex: 1;
     padding: 40px 50px;
@@ -140,8 +140,15 @@ body {
     color: #b58361;
 }
 
+/* --- ANALYTICS GRID --- */
+.analytics-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr; /* Left side is twice as big as right side */
+    gap: 30px;
+}
+
 /* --- CARDS --- */
-.form-card, .table-card {
+.chart-card {
     background: #ffffff;
     border-radius: 16px;
     padding: 30px;
@@ -153,145 +160,55 @@ body {
     font-size: 20px;
     font-weight: 800;
     color: #4a2511;
-    margin-bottom: 25px;
+    margin-bottom: 20px;
 }
 
-/* --- INPUTS GRID --- */
-.form-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 15px;
-    margin-bottom: 25px;
-}
-
-.input-group {
+/* --- BEST SELLING LIST --- */
+.best-selling-list {
     display: flex;
     flex-direction: column;
-}
-
-    .input-group label {
-        font-size: 13px;
-        font-weight: 700;
-        color: #8c5b3e;
-        margin-bottom: 8px;
-    }
-
-    .input-group input, .input-group select {
-        padding: 12px 14px;
-        border: 1px solid #f0e6dd;
-        border-radius: 8px;
-        font-size: 14px;
-        background: #fdfaf6;
-        height: 44px;
-        outline: none;
-        transition: 0.3s;
-    }
-
-        .input-group input:focus {
-            border-color: #f46a05;
-            background: #fff;
-        }
-
-/* --- NEW BUTTONS ROW (UNDER INFO) --- */
-.form-actions-row {
-    display: flex;
-    justify-content: flex-end;
     gap: 12px;
-    border-top: 1px solid #f9f5f0;
-    padding-top: 20px;
 }
 
-.btn {
-    border: none;
-    color: white;
-    font-size: 14px;
-    padding: 0 24px;
-    height: 44px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: 0.3s;
-    min-width: 160px;
-}
-
-.update-btn {
-    background: #ab4a03;
-}
-
-    .update-btn:hover {
-        background: #8c3b02;
-    }
-
-.delete-btn {
-    background: #e02424;
-}
-
-    .delete-btn:hover {
-        background: #b81d1d;
-    }
-
-.save-btn {
-    background: #f46a05;
-}
-
-    .save-btn:hover {
-        background: #cc5500;
-    }
-
-/* --- TABLE --- */
-.table-wrap {
-    width: 100%;
-    overflow-x: auto;
-}
-
-.accounts-table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 900px;
-}
-
-    .accounts-table thead th {
-        background: #fdfaf6;
-        color: #8c5b3e;
-        font-size: 12px;
-        font-weight: 700;
-        text-transform: uppercase;
-        padding: 16px 12px;
-        text-align: left;
-        border-bottom: 1px solid #f0e6dd;
-    }
-
-    .accounts-table tbody td {
-        padding: 16px 12px;
-        font-size: 14px;
-        color: #4a2511;
-        border-bottom: 1px solid #f9f5f0;
-    }
-
-.clickable-row:hover {
+.best-selling-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px;
     background: #fdfaf6;
-    cursor: pointer;
+    border: 1px solid #f0e6dd;
+    border-radius: 12px;
+    transition: 0.2s ease;
 }
 
-/* Role Badges */
-.role-badge {
+    .best-selling-item:hover {
+        background: #f9f5f0;
+    }
+
+.item-name {
+    font-weight: 700;
+    color: #4a2511;
+    font-size: 14px;
+}
+
+.item-sold {
+    background: #fdf0dc;
+    color: #a16c1b;
     padding: 4px 12px;
     border-radius: 20px;
     font-size: 12px;
     font-weight: 700;
 }
 
-.role-admin {
-    background: #d1f4e0;
-    color: #0d7a46;
+.pie-chart-container {
+    position: relative;
+    height: 250px;
+    width: 100%;
 }
 
-.role-manager {
-    background: #fdf0dc;
-    color: #a16c1b;
-}
-
-.role-cashier {
-    background: #ffebd9;
-    color: #cc5500;
+/* --- RESPONSIVE --- */
+@media (max-width: 1100px) {
+    .analytics-grid {
+        grid-template-columns: 1fr;
+    }
 }

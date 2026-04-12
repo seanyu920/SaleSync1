@@ -1,0 +1,166 @@
+﻿@{
+    Layout = null;
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "Admin";
+    var currentRole = currentController == "Manager" ? "Manager" : "Admin";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@currentRole Analytics - SyncScale</title>
+    <link rel="stylesheet" href="~/css/AdminDashboard.css" asp-append-version="true" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+
+        <aside class="sidebar">
+            <div>
+                <div class="logo-section">
+                    <div class="logo-title" style="font-size: 24px; font-weight: 800; color: #ffffff;">SyncScale</div>
+                    <div class="logo-subtitle" style="font-size: 13px; color: #dcbca5;">Coffee & Pastries</div>
+                </div>
+
+                <div class="profile-section" style="display: flex; align-items: center; gap: 15px; margin-bottom: 40px;">
+                    <div class="profile-circle" style="width: 45px; height: 45px; background: #f46a05; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #fff;">👤</div>
+                    <div>
+                        <h2 class="admin-name" style="font-size: 16px; font-weight: 700; color: #ffffff; margin: 0;">
+                            @currentRole
+                        </h2>
+                        <div style="font-size: 12px; color: #dcbca5;">System Access</div>
+                    </div>
+                </div>
+
+                <nav class="sidebar-menu">
+                    <a asp-controller="@currentController" asp-action="Dashboard" class="menu-btn">❖ Dashboard</a>
+                    <a asp-controller="@currentController" asp-action="Analytics" class="menu-btn active">📊 Analytics</a>
+                    <a asp-controller="@currentController" asp-action="Inventory" class="menu-btn">📦 Inventory</a>
+
+                    @if (currentController == "Admin")
+                    {
+                        <a asp-controller="Admin" asp-action="ManageAccounts" class="menu-btn">💳 Accounts</a>
+                    }
+                </nav>
+            </div>
+
+            <div class="logout-section" style="margin-top: auto;">
+                <form method="post" action="/Home/Logout">
+                    <button type="submit" class="menu-btn logout-btn" style="background: transparent; border: none; width: 100%; text-align: left; cursor: pointer; color: #dcbca5; padding: 14px 20px;">
+                        ⎋ Log Out
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            
+            <div class="page-header" style="margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end;">
+                <div>
+                    <h1 class="greeting-title" style="font-size: 32px; font-weight: 800; color: #4a2511;">Analytics Overview 📊</h1>
+                    <p style="color: #b58361; margin-top: 5px;">Deep dive into your sales and performance metrics.</p>
+                </div>
+                
+                <div class="timeframe-filter">
+                    <select id="analyticsTimeframe" style="padding: 10px 16px; border-radius: 8px; border: 1px solid #dcbca5; background-color: #ffffff; color: #4a2511; font-weight: 700; font-size: 14px; outline: none; cursor: pointer; box-shadow: 0 2px 10px rgba(74, 37, 17, 0.05); transition: 0.3s;">
+                        <option value="today">📅 Today</option>
+                        <option value="week" selected>📅 This Week</option>
+                        <option value="month">📅 This Month</option>
+                        <option value="year">📅 This Year</option>
+                        <option value="custom">⚙️ Custom Range...</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="analytics-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px;">
+                
+                <div class="chart-column">
+                    <div class="chart-card" style="background: #ffffff; border-radius: 16px; padding: 30px; box-shadow: 0 4px 20px rgba(74, 37, 17, 0.04); height: 450px;">
+                        <h2 class="widget-title" style="font-size: 20px; font-weight: 800; color: #4a2511; margin-bottom: 20px;">Sales Analytics</h2>
+                        <canvas id="salesChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="widgets-column">
+                    <div class="chart-card" style="background: #ffffff; border-radius: 16px; padding: 30px; box-shadow: 0 4px 20px rgba(74, 37, 17, 0.04); margin-bottom: 30px;">
+                        <h2 class="widget-title" style="font-size: 20px; font-weight: 800; color: #4a2511; margin-bottom: 20px;">Best Sellers</h2>
+                        <div class="items-list" style="display: flex; flex-direction: column; gap: 12px;">
+                            <div class="item-row" style="display: flex; justify-content: space-between; padding: 10px; background: #fdfaf6; border-radius: 8px;">
+                                <span style="font-weight: 700;">Coca-Cola 1.5L</span>
+                                <span style="color: #f46a05; font-weight: bold;">120 sold</span>
+                            </div>
+                            <div class="item-row" style="display: flex; justify-content: space-between; padding: 10px; background: #fdfaf6; border-radius: 8px;">
+                                <span style="font-weight: 700;">Pancit Canton</span>
+                                <span style="color: #f46a05; font-weight: bold;">98 sold</span>
+                            </div>
+                            <div class="item-row" style="display: flex; justify-content: space-between; padding: 10px; background: #fdfaf6; border-radius: 8px;">
+                                <span style="font-weight: 700;">Bear Brand Milk</span>
+                                <span style="color: #f46a05; font-weight: bold;">85 sold</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chart-card" style="background: #ffffff; border-radius: 16px; padding: 30px; box-shadow: 0 4px 20px rgba(74, 37, 17, 0.04);">
+                        <h2 class="widget-title" style="font-size: 20px; font-weight: 800; color: #4a2511; margin-bottom: 20px;">Payment Methods</h2>
+                        <div class="pie-chart-container" style="height: 200px;">
+                            <canvas id="paymentChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const ctx = document.getElementById('salesChart').getContext('2d');
+        new Chart(ctx, {
+        type: 'bar',
+        data: {
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        datasets: [{
+        label: 'Sales Output',
+        data: [12, 19, 8, 15, 22, 17, 25],
+        backgroundColor: ['#4a2511', '#f46a05', '#dcbca5', '#4a2511', '#f46a05', '#dcbca5', '#4a2511'],
+        borderRadius: 6
+        }]
+        },
+        options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+        y: { beginAtZero: true, grid: { color: '#f0e6dd' } },
+        x: { grid: { display: false } }
+        }
+        }
+        });
+
+        const paymentCtx = document.getElementById('paymentChart').getContext('2d');
+        new Chart(paymentCtx, {
+        type: 'doughnut',
+        data: {
+        labels: ['Cash', 'GCash', 'Card'],
+        datasets: [{
+        data: [50, 30, 20],
+        backgroundColor: ['#4a2511', '#f46a05', '#dcbca5'],
+        borderWidth: 0
+        }]
+        },
+        options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } },
+        cutout: '70%'
+        }
+        });
+
+        // Event listener for the dropdown menu
+        document.getElementById('analyticsTimeframe').addEventListener('change', function() {
+        // For now, this just logs to the console, but later you can use this
+        // to fetch new data from your server using AJAX/Fetch!
+        console.log("Timeframe changed to: " + this.value);
+        });
+    </script>
+</body>
+</html>
