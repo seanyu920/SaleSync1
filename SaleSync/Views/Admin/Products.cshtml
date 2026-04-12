@@ -7,20 +7,18 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Products - SyncScale</title>
+    <title>Menu Management - SyncScale</title>
     <link rel="stylesheet" href="~/css/AdminDashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/Products.css" asp-append-version="true" />
 </head>
 <body>
     <div class="dashboard-container">
-
         <aside class="sidebar">
             <div>
                 <div class="logo-section">
                     <div class="logo-title">SyncScale</div>
                     <div class="logo-subtitle">Coffee & Pastries</div>
                 </div>
-
                 <div class="profile-section" style="display: flex; align-items: center; gap: 15px; margin-bottom: 40px; padding: 0 10px;">
                     <div class="profile-circle" style="width: 45px; height: 45px; background: #f46a05; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #fff;">👤</div>
                     <div>
@@ -28,144 +26,126 @@
                         <div style="font-size: 12px; color: #dcbca5;">Administrator</div>
                     </div>
                 </div>
-
                 <nav class="sidebar-menu">
-                    <a asp-controller="Admin" asp-action="Dashboard" class="menu-btn">❖ Dashboard</a>
-                    <a asp-controller="Admin" asp-action="Analytics" class="menu-btn">📊 Analytics</a>
-                    
-                    <a asp-controller="Admin" asp-action="Products" class="menu-btn active">🏷️ Products</a>
-                    
-                    <a asp-controller="Admin" asp-action="Inventory" class="menu-btn">📦 Inventory</a>
-                    <a asp-controller="Admin" asp-action="ManageAccounts" class="menu-btn">💳 Accounts</a>
+                    <a href="#" class="menu-btn">❖ Dashboard</a>
+                    <a href="#" class="menu-btn">📊 Analytics</a>
+                    <a href="#" class="menu-btn active">🏷️ Products</a>
+                    <a href="#" class="menu-btn">📦 Inventory</a>
                 </nav>
-            </div>
-
-            <div class="logout-section" style="margin-top: auto;">
-                <form method="post" action="/Home/Logout">
-                    <button type="submit" class="menu-btn logout-btn" style="background: transparent; border: none; width: 100%; text-align: left; cursor: pointer; color: #dcbca5; padding: 14px 20px;">
-                        ⎋ Log Out
-                    </button>
-                </form>
             </div>
         </aside>
 
         <main class="main-content">
             <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px;">
                 <div>
-                    <h1 class="greeting-title">Menu Products 🏷️</h1>
-                    <p class="greeting-subtitle">Manage the items available on your Cashier POS screen.</p>
+                    <h1 class="greeting-title" id="pageTitle">Menu Categories 🏷️</h1>
+                    <p class="greeting-subtitle" id="pageSubtitle">Manage high-level categories or drill down into items.</p>
                 </div>
-                <button id="openModalBtn" class="btn-primary">+ Add New Product</button>
-            </div>
-
-            <div class="product-filters">
-                <button class="filter-pill active">All Items</button>
-                <button class="filter-pill">COFFEE</button>
-                <button class="filter-pill">MILKTEA</button>
-                <button class="filter-pill">PASTRIES</button>
-            </div>
-
-            <input type="file" id="categoryImgUpload" style="display:none;" accept="image/*">
-
-            <div class="product-catalog-grid">
-                <div class="menu-item-card" onclick="triggerUpload('COFFEE')">
-                    <div class="item-image-placeholder">
-                        <img id="img-COFFEE" src="" style="display:none; width:100%; height:100%; object-fit:cover;">
-                        <span id="emoji-COFFEE" style="font-size:50px;">☕</span>
-                        <div style="position:absolute; bottom:10px; background:rgba(0,0,0,0.5); color:white; font-size:10px; padding:2px 8px; border-radius:10px;">Change Photo</div>
-                    </div>
-                    <div class="item-details">
-                        <div class="item-category">Category</div>
-                        <div class="item-title">Coffee Menu</div>
-                        <div class="item-price-row">
-                            <span class="item-price">View Items</span>
-                            <span class="edit-icon">✏️</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="menu-item-card" onclick="triggerUpload('MILKTEA')">
-                    <div class="item-image-placeholder">
-                        <img id="img-MILKTEA" src="" style="display:none; width:100%; height:100%; object-fit:cover;">
-                        <span id="emoji-MILKTEA" style="font-size:50px;">🧋</span>
-                        <div style="position:absolute; bottom:10px; background:rgba(0,0,0,0.5); color:white; font-size:10px; padding:2px 8px; border-radius:10px;">Change Photo</div>
-                    </div>
-                    <div class="item-details">
-                        <div class="item-category">Category</div>
-                        <div class="item-title">Milk Tea Menu</div>
-                        <div class="item-price-row">
-                            <span class="item-price">View Items</span>
-                            <span class="edit-icon">✏️</span>
-                        </div>
-                    </div>
+                <div style="display: flex; gap: 10px;">
+                    <button id="backBtn" class="btn-secondary" style="display: none;" onclick="showCategories()">← Back to Categories</button>
+                    <button class="btn-primary">+ Add New</button>
                 </div>
             </div>
+
+            <div id="categoryContainer" class="product-catalog-grid">
+                <div class="menu-item-card" onclick="openSubMenu('COFFEE')">
+                    <div class="item-image-placeholder">☕</div>
+                    <div class="item-details"><div class="item-title">COFFEE</div></div>
+                </div>
+                <div class="menu-item-card" onclick="openSubMenu('MILKTEA')">
+                    <div class="item-image-placeholder">🧋</div>
+                    <div class="item-details"><div class="item-title">MILK TEA</div></div>
+                </div>
+                <div class="menu-item-card" onclick="openSubMenu('FRUIT TEA')">
+                    <div class="item-image-placeholder">🍹</div>
+                    <div class="item-details"><div class="item-title">FRUIT TEA</div></div>
+                </div>
+                <div class="menu-item-card" onclick="openSubMenu('RICE MEAL')">
+                    <div class="item-image-placeholder">🍱</div>
+                    <div class="item-details"><div class="item-title">RICE MEAL</div></div>
+                </div>
+                <div class="menu-item-card" onclick="openSubMenu('BREAD & PASTRY')">
+                    <div class="item-image-placeholder">🥐</div>
+                    <div class="item-details"><div class="item-title">BREAD & PASTRY</div></div>
+                </div>
+                <div class="menu-item-card" onclick="openSubMenu('SNACKS & PASTA')">
+                    <div class="item-image-placeholder">🍝</div>
+                    <div class="item-details"><div class="item-title">SNACKS & PASTA</div></div>
+                </div>
+            </div>
+
+            <div id="subItemsContainer" class="product-catalog-grid" style="display: none;"></div>
         </main>
     </div>
 
-    <div id="productModal" class="modal-overlay">
+    <div id="recipeModal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Add New Product</h2>
-                <button id="closeModalBtn" class="close-btn">&times;</button>
+                <h2 id="recipeItemName">Recipe</h2>
+                <button onclick="closeRecipe()" class="close-btn">&times;</button>
             </div>
-            <form>
-                <div class="form-group">
-                    <label>Product Name</label>
-                    <input type="text" placeholder="e.g. Caramel Macchiato">
-                </div>
-                <div class="modal-actions">
-                    <button type="button" id="cancelBtn" class="btn-secondary">Cancel</button>
-                    <button type="button" class="btn-primary">Save Product</button>
-                </div>
-            </form>
+            <div class="form-group">
+                <label>Ingredients & Proportions</label>
+                <textarea rows="6" placeholder="List ingredients for inventory deduction..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button type="button" onclick="closeRecipe()" class="btn-primary">Save Recipe</button>
+            </div>
         </div>
     </div>
 
     <script>
-            // Modal logic
-            const modal = document.getElementById('productModal');
-            document.getElementById('openModalBtn').onclick = () => modal.style.display = 'flex';
-            document.getElementById('closeModalBtn').onclick = () => modal.style.display = 'none';
-            document.getElementById('cancelBtn').onclick = () => modal.style.display = 'none';
-
-            // Image Upload Logic
-            let activeCat = "";
-            const uploader = document.getElementById('categoryImgUpload');
-
-            function triggerUpload(cat) {
-                activeCat = cat;
-                uploader.click();
-            }
-
-            uploader.onchange = function() {
-                if (this.files && this.files[0]) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const data = e.target.result;
-                        localStorage.setItem(`cat_img_${activeCat}`, data);
-                        updateUI(activeCat, data);
-                    };
-                    reader.readAsDataURL(this.files[0]);
-                }
+            const menuData = {
+                "COFFEE": ["Americano", "Cappuccino", "Hot Choco", "Hot Latte", "Iced Latte", "Spanish Latte", "Hot Matcha Latte", "Iced Matcha Latte"],
+                "MILKTEA": ["Wintermelon", "Okinawa", "Cookies and Cream", "Salted Caramel", "Hokkaido", "Matcha", "Thai"],
+                "FRUIT TEA": ["Green Apple", "Strawberry", "Blueberry", "Mango", "Lychee", "Peach"],
+                "RICE MEAL": ["Silog", "Hot Silog", "Long Silog", "Ham Silog", "Shanghai Silog", "Embotido Silog"],
+                "BREAD & PASTRY": ["Chocolate Cookies", "Croissant", "Cheese Ensaymada", "Yema Ensaymada", "Ube Ensaymada", "Chocolate Donut", "Cinnamon"],
+                "SNACKS & PASTA": ["Flavored Fries", "Nachos", "Siomai 4pcs", "Carbonara", "Pesto Pasta", "Gambas Pasta"]
             };
 
-            function updateUI(cat, data) {
-                const img = document.getElementById(`img-${cat}`);
-                const emoji = document.getElementById(`emoji-${cat}`);
-                if(img && data) {
-                    img.src = data;
-                    img.style.display = "block";
-                    emoji.style.display = "none";
-                }
-            }
-
-            window.onload = () => {
-                ['COFFEE', 'MILKTEA'].forEach(cat => {
-                    const saved = localStorage.getItem(`cat_img_${cat}`);
-                    if(saved) updateUI(cat, saved);
+            function openSubMenu(cat) {
+                const items = menuData[cat];
+                const container = document.getElementById('subItemsContainer');
+                const catImg = localStorage.getItem(`cat_img_${cat}`) || "";
+            
+                document.getElementById('pageTitle').innerText = cat;
+                document.getElementById('pageSubtitle').innerText = "Managing recipes for " + cat;
+            
+                container.innerHTML = "";
+                items.forEach(item => {
+                    let imgTag = catImg ? `<img src="${catImg}" style="width:100%;height:100%;object-fit:cover;">` : `<span style="font-size:40px;">📦</span>`;
+                
+                    container.innerHTML += `
+                        <div class="menu-item-card">
+                            <div class="item-image-placeholder" style="height:120px;">${imgTag}</div>
+                            <div class="item-details">
+                                <div class="item-title" style="font-size:15px; margin-bottom:10px;">${item}</div>
+                                <button class="btn-primary" style="width:100%; font-size:11px; background:#4a2511;" onclick="openRecipe('${item}')">Edit Recipe</button>
+                            </div>
+                        </div>`;
                 });
-            };
+
+                document.getElementById('categoryContainer').style.display = 'none';
+                document.getElementById('subItemsContainer').style.display = 'grid';
+                document.getElementById('backBtn').style.display = 'block';
+            }
+
+            function showCategories() {
+                document.getElementById('pageTitle').innerText = "Menu Categories 🏷️";
+                document.getElementById('categoryContainer').style.display = 'grid';
+                document.getElementById('subItemsContainer').style.display = 'none';
+                document.getElementById('backBtn').style.display = 'none';
+            }
+
+            function openRecipe(name) {
+                document.getElementById('recipeItemName').innerText = name + " Recipe";
+                document.getElementById('recipeModal').classList.add('show');
+            }
+
+            function closeRecipe() {
+                document.getElementById('recipeModal').classList.remove('show');
+            }
     </script>
 </body>
 </html>
