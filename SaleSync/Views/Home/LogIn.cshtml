@@ -1,54 +1,66 @@
 ﻿@{
     Layout = null;
 }
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>SyncSale Login</title>
-    <link rel="stylesheet" href="~/css/LogInPage.css" />
+    <title>Log In - Cafero</title>
+    <link rel="stylesheet" href="~/css/LogInPage.css" asp-append-version="true" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@800&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="page">
-        <div class="left-panel">
-            <img src="~/images/syncsale-logo.png" alt="SyncSale Logo" class="brand-logo" />
+    <div class="login-split-container">
+        
+        <div class="login-left">
+            <div class="brand-content">
+                <h1 class="login-logo">Cafero</h1>
+                <p>Welcome back! Sign in to access your dashboard, manage inventory, and track sales.</p>
+            </div>
         </div>
 
-        <div class="login-card">
-            <div class="user-icon">👤</div>
-
-            <h1 class="title">SaleSync</h1>
-            <p class="subtitle">Log in to your account</p>
-
-            <form asp-controller="Home" asp-action="Login" method="post">
-                <div class="form-group">
-                    <label for="username">Username</label>
-                    <div class="input-wrap">
-                        <input type="text" id="username" name="username" placeholder="Enter username here" />
-                        <span class="field-icon">👤</span>
-                    </div>
+        <div class="login-right">
+            <div class="login-card">
+                <div class="login-header">
+                    <span class="top-user-icon">👤</span>
+    
+                    <h2>Sign In</h2>
+                    <p>Enter your credentials to continue.</p>
                 </div>
 
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <div class="input-wrap">
-                        <input type="password" id="password" name="password" placeholder="Enter password here" />
-                        <span class="field-icon">🔒</span>
+                <form asp-controller="Home" asp-action="Login" method="post">
+                    <div class="input-group">
+                        <label for="username">Username</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">👤</span>
+                            <input type="text" id="username" name="username" placeholder="Enter username" required />
+                        </div>
                     </div>
-                </div>
 
-                @if (ViewBag.Message != null)
-                {
-                    <p style="color:red; margin-bottom:10px;">@ViewBag.Message</p>
-                }
+                    <div class="input-group">
+                        <label for="password">Password</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">🔒</span>
+                            <input type="password" id="password" name="password" placeholder="••••••••" required />
+                        </div>
+                    </div>
 
-                <button type="submit" class="login-button">Login</button>
-            </form>
+                    @if (ViewBag.Message != null)
+                    {
+                        <p style="color:#e02424; font-size:14px; font-weight:600; margin-bottom:15px; text-align:center;">
+                            @ViewBag.Message
+                        </p>
+                    }
 
-            <button class="forgot-button" type="button">Forgot Password?</button>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-login">Log In</button>
+                        <a href="#" class="forgot-link">Forgot Password?</a>
+                    </div>
+                </form>
+            </div>
         </div>
+
     </div>
 </body>
 </html>
