@@ -46,19 +46,19 @@ namespace SaleSync.Controllers
         [HttpPost]
         public IActionResult Login(string username, string password)
         {
-            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
+            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
 
                 string query = @"
-            SELECT u.user_id, u.full_name, u.username, r.role_name
-            FROM users u
-            INNER JOIN roles r ON u.role_id = r.role_id
-            WHERE u.username = @Username
-              AND u.password_hash = @Password
-              AND u.status = 'active'";
+                    SELECT u.user_id, u.full_name, u.username, r.role_name
+                    FROM users u
+                    INNER JOIN roles r ON u.role_id = r.role_id
+                    WHERE u.username = @Username
+                      AND u.password_hash = @Password
+                      AND u.status = 'active'";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
@@ -71,6 +71,7 @@ namespace SaleSync.Controllers
                         {
                             string role = reader["role_name"].ToString();
 
+                            HttpContext.Session.SetInt32("UserId", Convert.ToInt32(reader["user_id"])); // ← ADDED
                             HttpContext.Session.SetString("UserName", reader["username"].ToString());
                             HttpContext.Session.SetString("FullName", reader["full_name"].ToString());
                             HttpContext.Session.SetString("Role", role);
@@ -97,6 +98,7 @@ namespace SaleSync.Controllers
             HttpContext.Session.Clear();
             return RedirectToAction("Index");
         }
+
         [HttpGet]
         public IActionResult Login()
         {

@@ -86,9 +86,8 @@
                         <div class="item-image-container" id="detailImageContainer"></div>
                         <div class="item-details-controls">
                             <h2 id="displayName" class="item-name-display">Product Name</h2>
-                            <div class="size-selector-grid">
-                                <label class="custom-radio-card"><input type="radio" name="size" value="Medium" checked /><span class="radio-tile">Medium</span></label>
-                                <label class="custom-radio-card"><input type="radio" name="size" value="Large" /><span class="radio-tile">Large</span></label>
+                            <div class="size-selector-grid" id="sizeSelector">
+                                <!-- sizes rendered dynamically based on category -->
                             </div>
                             <div class="qty-flex">
                                 <button type="button" onclick="decreaseQty()">-</button>
@@ -135,6 +134,60 @@
                 "SNACKS & PASTA": ["Flavored Fries", "Nachos", "Siomai 4pcs", "Carbonara", "Pesto Pasta", "Gambas Pasta"]
             };
 
+            // Categories that have Small/Large variants in the DB
+            const sizedCategories = ["COFFEE", "MILKTEA", "FRUIT TEA"];
+
+            // ── product_id lookup: "Product Name - Small/Large" or just "Product Name" ──
+            // Keys match exactly the DB product_name column
+            const productIdMap = {
+                // COFFEE
+                "Americano - Small": 17,       "Americano - Large": 18,
+                "Cappuccino - Small": 19,      "Cappuccino - Large": 20,
+                "Hot Choco - Small": 21,       "Hot Choco - Large": 22,
+                "Hot Latte - Small": 23,       "Hot Latte - Large": 24,
+                "Iced Latte - Small": 25,      "Iced Latte - Large": 26,
+                "Spanish Latte - Small": 27,   "Spanish Latte - Large": 28,
+                "Hot Matcha Latte - Small": 29,"Hot Matcha Latte - Large": 30,
+                "Iced Matcha Latte - Small": 31,"Iced Matcha Latte - Large": 32,
+                // MILKTEA
+                "Wintermelon - Small": 33,     "Wintermelon - Large": 34,
+                "Okinawa - Small": 35,         "Okinawa - Large": 36,
+                "Cookies and Cream - Small": 37,"Cookies and Cream - Large": 38,
+                "Salted Caramel - Small": 39,  "Salted Caramel - Large": 40,
+                "Hokkaido - Small": 41,        "Hokkaido - Large": 42,
+                "Matcha - Small": 43,          "Matcha - Large": 44,
+                "Thai - Small": 45,            "Thai - Large": 46,
+                // FRUIT TEA
+                "Green Apple - Small": 47,     "Green Apple - Large": 48,
+                "Strawberry - Small": 49,      "Strawberry - Large": 50,
+                "Blueberry - Small": 51,       "Blueberry - Large": 52,
+                "Mango - Small": 53,           "Mango - Large": 54,
+                "Lychee - Small": 55,          "Lychee - Large": 56,
+                "Peach - Small": 57,           "Peach - Large": 58,
+                // RICE MEAL (no size)
+                "Silog": 59,
+                "Hot Silog": 60,
+                "Long Silog": 61,
+                "Ham Silog": 62,
+                "Shanghai Silog": 63,
+                "Embotido Silog": 64,
+                // BREAD & PASTRY (no size)
+                "Chocolate Cookies": 65,
+                "Croissant": 66,
+                "Cheese Ensaymada": 67,
+                "Yema Ensaymada": 68,
+                "Ube Ensaymada": 69,
+                "Chocolate Donut": 70,
+                "Cinnamon": 71,
+                // SNACKS & PASTA (no size)
+                "Flavored Fries": 72,
+                "Nachos": 73,
+                "Siomai (4 pcs)": 74,
+                "Carbonara": 75,
+                "Pesto Pasta": 76,
+                "Gambas Pasta": 77
+            };
+
             let cart = [], selectedReceiptIndex = -1, activeItemName = "", currentCategory = "";
 
             function openSubMenu(cat) {
@@ -142,10 +195,10 @@
                 const items = menuData[cat];
                 const grid = document.getElementById('subItemsGrid');
                 const customImg = localStorage.getItem(`cat_img_${cat}`);
-            
+
                 document.getElementById('cashierTitle').innerText = cat;
                 document.getElementById('cashierSubtitle').innerText = "Select an item to customize";
-            
+
                 grid.innerHTML = "";
                 items.forEach(item => {
                     let imgContent = customImg ? `<img src="${customImg}" style="width:100%;height:100%;object-fit:cover;">` : `<span style="font-size:40px;">${getCategoryEmoji(cat)}</span>`;
@@ -174,11 +227,23 @@
                 document.getElementById('selectionDetails').style.display = 'block';
                 document.getElementById('displayName').innerText = name;
                 document.getElementById('qty').value = 1;
-            
+
+                // Show Small/Large for sized categories, hide size selector for food items
+                const sizeSelector = document.getElementById('sizeSelector');
+                if (sizedCategories.includes(currentCategory)) {
+                    sizeSelector.style.display = '';
+                    sizeSelector.innerHTML = `
+                        <label class="custom-radio-card"><input type="radio" name="size" value="Small" checked /><span class="radio-tile">Small</span></label>
+                        <label class="custom-radio-card"><input type="radio" name="size" value="Large" /><span class="radio-tile">Large</span></label>`;
+                } else {
+                    sizeSelector.style.display = 'none';
+                    sizeSelector.innerHTML = `<input type="radio" name="size" value="Regular" checked style="display:none;">`;
+                }
+
                 const customImg = localStorage.getItem(`cat_img_${currentCategory}`);
                 const container = document.getElementById('detailImageContainer');
                 container.innerHTML = customImg ? `<img src="${customImg}" style="width:100%;height:100%;object-fit:cover;">` : `<div style="font-size:60px; text-align:center; padding-top:40px;">${getCategoryEmoji(currentCategory)}</div>`;
-            
+
                 document.getElementById('selectionDetails').scrollIntoView({ behavior: 'smooth' });
             }
 
@@ -195,8 +260,14 @@
             function addToCart() {
                 let size = document.querySelector('input[name="size"]:checked').value;
                 let qty = parseInt(document.getElementById("qty").value);
-                let price = (size === "Medium") ? 75 : 95;
-                cart.push({ name: activeItemName, size: size, qty: qty, price: price });
+                let price = (size === "Small") ? 75 : (size === "Large") ? 95 : 75;
+
+                // Build the DB key: sized items append " - Small/Large", food items use name as-is
+                let dbKey = sizedCategories.includes(currentCategory)
+                    ? `${activeItemName} - ${size}`
+                    : activeItemName;
+
+                cart.push({ name: activeItemName, dbKey: dbKey, size: size, qty: qty, price: price });
                 backToCategories();
             }
 
@@ -219,15 +290,67 @@
 
             function selectReceiptItem(index) { selectedReceiptIndex = index; renderReceipt(); }
             function removeSelectedItem() { if (selectedReceiptIndex === -1) return; cart.splice(selectedReceiptIndex, 1); selectedReceiptIndex = -1; renderReceipt(); }
-            function checkoutOrder() { if (cart.length === 0) return; alert("Checkout Done!"); cart = []; selectedReceiptIndex = -1; showMenu(); }
+
+            async function checkoutOrder() {
+                if (cart.length === 0) return;
+
+                // Use dbKey (e.g. "Americano - Small") to look up the correct product_id
+                const payload = cart.map(item => ({
+                    productId: productIdMap[item.dbKey] ?? 0,
+                    quantity:  item.qty,
+                    price:     item.price
+                }));
+
+                const unknown = cart.filter((item, i) => payload[i].productId === 0);
+                if (unknown.length > 0) {
+                    alert("Could not match product ID for: " + unknown.map(i => i.dbKey).join(", "));
+                    return;
+                }
+
+                const btn = document.querySelector('button[onclick="checkoutOrder()"]');
+                btn.disabled = true;
+                btn.textContent = "Processing…";
+
+                try {
+                    const response = await fetch('/Cashier/Checkout', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            items:         payload,
+                            paymentMethod: "cash",
+                            amountPaid:    0
+                        })
+                    });
+
+                    if (response.ok) {
+                        alert("Checkout Done!");
+                        cart = [];
+                        selectedReceiptIndex = -1;
+                        showMenu();
+                    } else {
+                        const text = await response.text();
+                        try {
+                            const json = JSON.parse(text);
+                            alert("Checkout failed: " + (json.message ?? text));
+                        } catch {
+                            alert("Checkout failed: " + text);
+                        }
+                    }
+                } catch (err) {
+                    alert("Network error: " + err.message);
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = "Complete Checkout";
+                }
+            }
 
             window.onload = () => {
                 const cats = ['COFFEE', 'MILKTEA', 'FRUIT TEA', 'RICE MEAL', 'BREAD & PASTRY', 'SNACKS & PASTA'];
                 cats.forEach(cat => {
                     const saved = localStorage.getItem(`cat_img_${cat}`);
-                    if(saved) {
+                    if (saved) {
                         const thumb = document.getElementById(`thumb-${cat}`);
-                        if(thumb) thumb.innerHTML = `<img src="${saved}" style="width:100%;height:100%;object-fit:cover;">`;
+                        if (thumb) thumb.innerHTML = `<img src="${saved}" style="width:100%;height:100%;object-fit:cover;">`;
                     }
                 });
             };
