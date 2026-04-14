@@ -29,7 +29,7 @@ body {
     position: sticky;
     top: 0;
     height: 100vh;
-    overflow-y: auto; /* Adds a scrollbar just for the sidebar if your menu gets long */
+    overflow-y: auto;
 }
 
 .logo-section {
@@ -143,7 +143,7 @@ body {
 /* --- ANALYTICS GRID --- */
 .analytics-grid {
     display: grid;
-    grid-template-columns: 2fr 1fr; /* Left side is twice as big as right side */
+    grid-template-columns: 2fr 1fr;
     gap: 30px;
 }
 

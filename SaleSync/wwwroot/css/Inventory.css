@@ -15,7 +15,6 @@ body {
     display: flex;
     min-height: 100vh;
 }
-
 /* --- MOCHA SIDEBAR --- */
 .sidebar {
     width: 260px;
@@ -116,7 +115,6 @@ body {
 .logout-section {
     margin-top: auto;
 }
-
 /* --- MAIN CONTENT & HEADER --- */
 .main-content {
     flex: 1;
@@ -139,7 +137,6 @@ body {
     font-size: 15px;
     color: #b58361;
 }
-
 /* --- CARDS --- */
 .form-card, .table-card {
     background: #ffffff;
@@ -155,7 +152,6 @@ body {
     color: #4a2511;
     margin-bottom: 25px;
 }
-
 /* --- INVENTORY FORM GRID --- */
 .form-grid {
     display: grid;
@@ -193,7 +189,6 @@ body {
             border-color: #f46a05;
             background: #fff;
         }
-
 /* --- BUTTONS --- */
 .action-buttons {
     display: flex;
@@ -236,7 +231,6 @@ body {
     .delete-btn:hover {
         background: #b81d1d;
     }
-
 /* --- SEARCH & FILTER --- */
 .search-bar {
     display: flex;
@@ -269,7 +263,6 @@ body {
     .search-input:focus, .filter-select:focus {
         border-color: #f46a05;
     }
-
 /* --- SCROLLABLE TABLE FIXES --- */
 .table-wrap {
     width: 100%;
@@ -286,7 +279,6 @@ body {
     border-spacing: 0;
     min-width: 1100px;
 }
-
     /* Sticky Header */
     .inventory-table thead th {
         position: sticky;
@@ -302,7 +294,6 @@ body {
         text-align: left;
         border-bottom: 2px solid #f0e9e4;
     }
-
     /* Sticky First Column (Radio Button) */
     .inventory-table td:first-child,
     .inventory-table th:first-child {
@@ -335,7 +326,6 @@ body {
     height: 16px;
     accent-color: #f46a05;
 }
-
 /* --- STOCK LEVEL BADGES --- */
 .stock-badge {
     padding: 6px 12px;
@@ -361,7 +351,6 @@ body {
     background: #fce8e8;
     color: #b81d1d;
 }
-
 /* --- RESPONSIVE --- */
 @media (max-width: 1200px) {
     .form-grid {
