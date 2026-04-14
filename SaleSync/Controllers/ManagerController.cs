@@ -40,7 +40,7 @@ namespace SaleSync.Controllers
                 return RedirectToAction("Index", "Home");
 
             List<InventoryItems> items = new List<InventoryItems>();
-            string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
+            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
