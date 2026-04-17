@@ -1,472 +1,324 @@
-﻿using System.Collections.Generic;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
 using SaleSync.Models;
-using static System.Collections.Specialized.BitVector32;
+using System;
+using System.Collections.Generic;
 
 namespace SaleSync.Controllers
 {
     public class AdminController : Controller
     {
         private readonly IConfiguration _configuration;
+        private readonly string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
 
         public AdminController(IConfiguration configuration)
         {
             _configuration = configuration;
         }
-        public IActionResult Analytics()
-        {
-            return View();
-        }
 
-        private bool IsAdmin()
-        {
-            
-            var role = HttpContext.Session.GetString("Role");
-            return role == "Admin";
-        }
+        private bool IsAdmin() => HttpContext.Session.GetString("Role") == "Admin";
+        private bool CanAccessInventory() => IsAdmin() || HttpContext.Session.GetString("Role") == "Manager";
 
-        private bool CanAccessInventory()
-        {
-            var role = HttpContext.Session.GetString("Role");
-            return role == "Admin" || role == "Manager";
-        }
-
-        // DASHBOARD
         public IActionResult Dashboard()
         {
-            if (!IsAdmin())
+            var role = HttpContext.Session.GetString("Role");
+            if (string.IsNullOrEmpty(role) || (role != "Admin" && role != "Manager"))
                 return RedirectToAction("Index", "Home");
 
-            return View("AdminDashboard");
-        }
-
-        // INVENTORY FUNCTION
-        private static List<InventoryItems> inventoryItems = new List<InventoryItems>();
-
-        [HttpGet]
-        public IActionResult Inventory()
-        {
-            if (!CanAccessInventory())
-                return RedirectToAction("Index", "Home");
-
-            List<InventoryItems> items = new List<InventoryItems>();
-            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+            var model = new CashierDashboardViewModel { RecentSales = new List<SaleHistoryItem>() };
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
+                string totalSql = @"SELECT ISNULL(SUM(total_amount), 0) as Total, COUNT(sale_id) as Count 
+                                    FROM sales WHERE CAST(sale_date AS DATE) = CAST(GETDATE() AS DATE)";
+
+                string historySql = @"
+                    SELECT TOP 10 s.sale_id, s.sale_date, s.total_amount, s.status, u.username,
+                    (SELECT STRING_AGG(CAST(si.quantity AS VARCHAR) + 'x ' + p.product_name, ', ') 
+                     FROM sale_items si JOIN products p ON si.product_id = p.product_id 
+                     WHERE si.sale_id = s.sale_id) as ItemsSummary
+                    FROM sales s JOIN users u ON s.user_id = u.user_id
+                    ORDER BY s.sale_date DESC";
+
                 conn.Open();
-                string query = @"
-                    SELECT p.product_id, c.category_name, p.product_name, p.sku, p.cost_price, p.stock_quantity, p.description
-                    FROM dbo.products p
-                    INNER JOIN dbo.categories c ON p.category_id = c.category_id
-                    ORDER BY p.product_id";
-
-                using (SqlCommand cmd = new SqlCommand(query, conn))
-                using (SqlDataReader reader = cmd.ExecuteReader())
+                using (SqlCommand cmd = new SqlCommand(totalSql, conn))
+                using (SqlDataReader r = cmd.ExecuteReader())
                 {
-                    while (reader.Read())
+                    if (r.Read())
                     {
-                        string description = reader["description"]?.ToString() ?? "";
+                        model.TodayTotalSales = Convert.ToDecimal(r["Total"]);
+                        model.TodayTransactionCount = Convert.ToInt32(r["Count"]);
+                    }
+                }
 
-                        items.Add(new InventoryItems
+                using (SqlCommand cmd = new SqlCommand(historySql, conn))
+                using (SqlDataReader r = cmd.ExecuteReader())
+                {
+                    while (r.Read())
+                    {
+                        model.RecentSales.Add(new SaleHistoryItem
                         {
-                            ProductId = Convert.ToInt32(reader["product_id"]),
-                            ItemCategory = reader["category_name"]?.ToString() ?? "",
-                            ItemName = reader["product_name"]?.ToString() ?? "",
-                            ItemID = reader["sku"]?.ToString() ?? "",
-                            PurchasePrice = reader["cost_price"] == DBNull.Value ? 0 : Convert.ToDecimal(reader["cost_price"]),
-                            Quantity = reader["stock_quantity"] == DBNull.Value ? 0 : Convert.ToInt32(reader["stock_quantity"]),
-                            StockLevel = reader["stock_quantity"] == DBNull.Value
-                                ? "In Stock"
-                                : Convert.ToInt32(reader["stock_quantity"]) <= 10 ? "Low Stock" : "In Stock",
-                            StockSupplier = ExtractValue(description, "Supplier:"),
-                            DateAcquired = ExtractValue(description, "Date Acquired:"),
-                            ExpirationDate = ExtractValue(description, "Expiration Date:")
+                            SaleId = Convert.ToInt32(r["sale_id"]),
+                            SaleDate = Convert.ToDateTime(r["sale_date"]),
+                            TotalAmount = Convert.ToDecimal(r["total_amount"]),
+                            CashierName = r["username"].ToString(),
+                            ItemsSummary = r["ItemsSummary"]?.ToString() ?? "No items",
+                            Status = r["status"]?.ToString() ?? "Pending"
                         });
                     }
                 }
             }
-
-            return View(items);
+            return View("AdminDashboard", model);
         }
 
         [HttpPost]
-        public IActionResult AddInventory(InventoryItems item)
+        public IActionResult UpdateSaleStatus([FromBody] StatusUpdateModel request)
         {
-            if (!CanAccessInventory())
-                return RedirectToAction("Index", "Home");
-
-            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
-
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                conn.Open();
-                int categoryId = GetCategoryId(item.ItemCategory, conn);
-
-                string insertQuery = @"
-                    INSERT INTO dbo.products
-                    (category_id, supplier_id, product_name, barcode, sku, description, cost_price, selling_price, stock_quantity, reorder_level, unit)
-                    VALUES
-                    (@CategoryId, NULL, @ProductName, @Barcode, @SKU, @Description, @CostPrice, 0, @StockQuantity, 10, NULL)";
-
-                using (SqlCommand cmd = new SqlCommand(insertQuery, conn))
+                string sql = "UPDATE sales SET status = @status WHERE sale_id = @id";
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
-                    cmd.Parameters.AddWithValue("@CategoryId", categoryId);
-                    cmd.Parameters.AddWithValue("@ProductName", item.ItemName);
-                    cmd.Parameters.AddWithValue("@Barcode", item.ItemID);
-                    cmd.Parameters.AddWithValue("@SKU", item.ItemID);
-                    cmd.Parameters.AddWithValue("@Description", $"Supplier: {item.StockSupplier}; Date Acquired: {item.DateAcquired}; Expiration Date: {item.ExpirationDate}");
-                    cmd.Parameters.AddWithValue("@CostPrice", item.PurchasePrice);
-                    cmd.Parameters.AddWithValue("@StockQuantity", item.Quantity);
+                    cmd.Parameters.AddWithValue("@status", request.Status);
+                    cmd.Parameters.AddWithValue("@id", request.SaleId);
+                    conn.Open();
                     cmd.ExecuteNonQuery();
                 }
             }
-
-            return RedirectToAction("Inventory");
+            return Ok();
         }
 
-        [HttpGet]
-        public IActionResult EditInventory(string id)
+        [HttpPost]
+        public IActionResult VerifyAndVoid([FromBody] AdminVoidRequest request)
         {
-            if (!CanAccessInventory())
-                return RedirectToAction("Index", "Home");
-
-            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
-            InventoryItems item = new InventoryItems();
-
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
-                string query = @"
-                    SELECT TOP 1 p.product_id, c.category_name, p.product_name, p.sku, p.cost_price, p.stock_quantity, p.description
-                    FROM dbo.products p
-                    INNER JOIN dbo.categories c ON p.category_id = c.category_id
-                    WHERE p.sku = @Id OR p.barcode = @Id";
 
-                using (SqlCommand cmd = new SqlCommand(query, conn))
+                string checkAuth = @"
+            SELECT COUNT(*) 
+            FROM users u 
+            JOIN roles r ON u.role_id = r.role_id 
+            WHERE u.password_hash = @pass 
+            AND (r.role_name = 'Admin' OR r.role_name = 'Manager')";
+
+                using (SqlCommand cmd = new SqlCommand(checkAuth, conn))
                 {
-                    cmd.Parameters.AddWithValue("@Id", id);
+                    cmd.Parameters.AddWithValue("@pass", request.Pass ?? "");
+                    int isValid = Convert.ToInt32(cmd.ExecuteScalar());
 
-                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    if (isValid == 0)
+                        return Unauthorized(new { message = "Invalid credentials. Void denied." });
+
+                    string voidSql = "UPDATE sales SET status = 'Voided' WHERE sale_id = @id";
+                    using (SqlCommand voidCmd = new SqlCommand(voidSql, conn))
                     {
-                        if (reader.Read())
-                        {
-                            string desc = reader["description"]?.ToString() ?? "";
+                        voidCmd.Parameters.AddWithValue("@id", request.SaleId);
+                        voidCmd.ExecuteNonQuery();
+                    }
+                }
+            }
+            return Ok();
+        }
 
-                            item.ProductId = Convert.ToInt32(reader["product_id"]);
-                            item.ItemCategory = reader["category_name"]?.ToString() ?? "";
-                            item.ItemName = reader["product_name"]?.ToString() ?? "";
-                            item.ItemID = reader["sku"]?.ToString() ?? "";
-                            item.PurchasePrice = reader["cost_price"] == DBNull.Value ? 0 : Convert.ToDecimal(reader["cost_price"]);
-                            item.Quantity = reader["stock_quantity"] == DBNull.Value ? 0 : Convert.ToInt32(reader["stock_quantity"]);
-                            item.StockLevel = item.Quantity <= 10 ? "Low Stock" : "In Stock";
-                            item.StockSupplier = ExtractValue(desc, "Supplier:");
-                            item.DateAcquired = ExtractValue(desc, "Date Acquired:");
-                            item.ExpirationDate = ExtractValue(desc, "Expiration Date:");
+        public IActionResult Analytics() => View();
+        public IActionResult Products() => IsAdmin() ? View() : RedirectToAction("Index", "Home");
+
+        [HttpGet]
+        public IActionResult Inventory()
+        {
+            if (!CanAccessInventory()) return RedirectToAction("Index", "Home");
+
+            var inventoryList = new List<InventoryItems>();
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                string sql = @"
+    SELECT p.product_id, p.product_name, p.stock_quantity, p.cost_price, p.sku, c.category_name 
+    FROM products p
+    LEFT JOIN categories c ON p.category_id = c.category_id
+    WHERE p.is_ingredient = 1";
+
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                {
+                    conn.Open();
+                    using (SqlDataReader r = cmd.ExecuteReader())
+                    {
+                        while (r.Read())
+                        {
+                            inventoryList.Add(new InventoryItems
+                            {
+                                ProductId = Convert.ToInt32(r["product_id"]),
+                                ItemID = r["sku"]?.ToString() ?? "N/A",
+                                ItemName = r["product_name"].ToString(),
+                                Quantity = Convert.ToInt32(r["stock_quantity"]),
+                                PurchasePrice = Convert.ToDecimal(r["cost_price"]),
+                                ItemCategory = r["category_name"]?.ToString() ?? "Raw Materials"
+                            });
                         }
                     }
                 }
             }
-
-            return View("EditInventory", item);
+            return View(inventoryList);
         }
 
-        public IActionResult Products()
-        {
-            // Security Check (Optional, but good practice since you have roles!)
-            var role = HttpContext.Session.GetString("Role");
-            if (string.IsNullOrEmpty(role) || role != "Admin")
-            {
-                return RedirectToAction("Index", "Home");
-            }
-
-            // Tells the server to show the Products.cshtml page
-            return View();
-        }
-
+        // ⭐ ADDED: This connects your HTML Update button to the Database
         [HttpPost]
-        public IActionResult UpdateInventory(InventoryItems item)
+        public IActionResult UpdateInventory(InventoryItems model)
         {
-            if (!CanAccessInventory())
-                return RedirectToAction("Index", "Home");
-                
-            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+            if (!CanAccessInventory()) return RedirectToAction("Index", "Home");
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                conn.Open();
-                int categoryId = GetCategoryId(item.ItemCategory, conn);
-
-                string updateQuery = @"
-                    UPDATE dbo.products
-                    SET category_id = @CategoryId,
-                        product_name = @ProductName,
-                        barcode = @Barcode,
-                        sku = @SKU,
-                        description = @Description,
-                        cost_price = @CostPrice,
-                        stock_quantity = @StockQuantity
-                    WHERE product_id = @ProductId";
-
-                using (SqlCommand cmd = new SqlCommand(updateQuery, conn))
+                string sql = "UPDATE products SET stock_quantity = @qty, cost_price = @price WHERE product_id = @id";
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
-                    cmd.Parameters.AddWithValue("@CategoryId", categoryId);
-                    cmd.Parameters.AddWithValue("@ProductName", item.ItemName);
-                    cmd.Parameters.AddWithValue("@Barcode", item.ItemID);
-                    cmd.Parameters.AddWithValue("@SKU", item.ItemID);
-                    cmd.Parameters.AddWithValue("@Description", $"Supplier: {item.StockSupplier}; Date Acquired: {item.DateAcquired}; Expiration Date: {item.ExpirationDate}");
-                    cmd.Parameters.AddWithValue("@CostPrice", item.PurchasePrice);
-                    cmd.Parameters.AddWithValue("@StockQuantity", item.Quantity);
-                    cmd.Parameters.AddWithValue("@ProductId", item.ProductId);
+                    cmd.Parameters.AddWithValue("@qty", model.Quantity);
+                    cmd.Parameters.AddWithValue("@price", model.PurchasePrice);
+                    cmd.Parameters.AddWithValue("@id", model.ProductId);
+
+                    conn.Open();
                     cmd.ExecuteNonQuery();
                 }
             }
-
             return RedirectToAction("Inventory");
-        }
-
-        [HttpPost]
-        public IActionResult DeleteInventory(string id)
-        {
-            if (!CanAccessInventory())
-                return RedirectToAction("Index", "Home");
-
-            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
-
-            using (SqlConnection conn = new SqlConnection(connectionString))
-            {
-                conn.Open();
-                string deleteQuery = "DELETE FROM dbo.products WHERE sku = @Id OR barcode = @Id";
-
-                using (SqlCommand cmd = new SqlCommand(deleteQuery, conn))
-                {
-                    cmd.Parameters.AddWithValue("@Id", id);
-                    cmd.ExecuteNonQuery();
-                }
-            }
-
-            return RedirectToAction("Inventory");
-        }
-
-        private int GetCategoryId(string categoryName, SqlConnection conn)
-        {
-            string query = "SELECT category_id FROM dbo.categories WHERE category_name = @CategoryName";
-
-            using (SqlCommand cmd = new SqlCommand(query, conn))
-            {
-                cmd.Parameters.AddWithValue("@CategoryName", categoryName);
-                object result = cmd.ExecuteScalar();
-
-                if (result != null)
-                    return Convert.ToInt32(result);
-            }
-
-            string insertQuery = "INSERT INTO dbo.categories (category_name) VALUES (@CategoryName); SELECT SCOPE_IDENTITY();";
-
-            using (SqlCommand cmd = new SqlCommand(insertQuery, conn))
-            {
-                cmd.Parameters.AddWithValue("@CategoryName", categoryName);
-                return Convert.ToInt32(cmd.ExecuteScalar());
-            }
-        }
-
-        private string ExtractValue(string description, string key)
-        {
-            if (string.IsNullOrEmpty(description) || !description.Contains(key))
-                return "";
-
-            int start = description.IndexOf(key) + key.Length;
-            int end = description.IndexOf(";", start);
-
-            if (end == -1)
-                end = description.Length;
-
-            return description.Substring(start, end - start).Trim();
-        }
-
-        // SAVE ACCOUNT
-        [HttpPost]
-        public IActionResult SaveAccount(UserAccount model)
-        {
-            if (!IsAdmin())
-                return RedirectToAction("Index", "Home");
-
-            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
-
-            using (SqlConnection conn = new SqlConnection(connectionString))
-            {
-                conn.Open();
-
-                string checkQuery = "SELECT COUNT(*) FROM users WHERE email = @Email OR username = @Username";
-                using (SqlCommand checkCmd = new SqlCommand(checkQuery, conn))
-                {
-                    checkCmd.Parameters.AddWithValue("@Email", model.Email);
-                    checkCmd.Parameters.AddWithValue("@Username", model.Username);
-
-                    int exists = (int)checkCmd.ExecuteScalar();
-                    if (exists > 0)
-                    {
-                        TempData["Error"] = "Account already exists. Use Update instead.";
-                        return RedirectToAction("ManageAccounts");
-                    }
-                }
-
-                string getRoleQuery = "SELECT role_id FROM roles WHERE role_name = @Role";
-                int roleId;
-
-                using (SqlCommand roleCmd = new SqlCommand(getRoleQuery, conn))
-                {
-                    roleCmd.Parameters.AddWithValue("@Role", model.Role);
-                    object result = roleCmd.ExecuteScalar();
-
-                    if (result == null)
-                    {
-                        TempData["Error"] = "Invalid role selected.";
-                        return RedirectToAction("ManageAccounts");
-                    }
-
-                    roleId = Convert.ToInt32(result);
-                }
-
-                string insertQuery = @"
-                    INSERT INTO users (full_name, username, email, password_hash, role_id, status)
-                    VALUES (@FullName, @Username, @Email, @Password, @RoleId, 'active')";
-
-                using (SqlCommand cmd = new SqlCommand(insertQuery, conn))
-                {
-                    cmd.Parameters.AddWithValue("@FullName", model.FullName);
-                    cmd.Parameters.AddWithValue("@Username", model.Username);
-                    cmd.Parameters.AddWithValue("@Email", model.Email);
-                    cmd.Parameters.AddWithValue("@Password", model.Password);
-                    cmd.Parameters.AddWithValue("@RoleId", roleId);
-                    cmd.ExecuteNonQuery();
-                }
-            }
-
-            TempData["Success"] = "Account saved successfully.";
-            return RedirectToAction("ManageAccounts");
-        }
-
-        // UPDATE ACCOUNT
-        [HttpPost]
-        public IActionResult UpdateAccount(UserAccount model)
-        {
-            if (!IsAdmin())
-                return RedirectToAction("Index", "Home");
-
-            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
-
-            using (SqlConnection conn = new SqlConnection(connectionString))
-            {
-                conn.Open();
-
-                string getRoleQuery = "SELECT role_id FROM roles WHERE role_name = @Role";
-                int roleId;
-
-                using (SqlCommand roleCmd = new SqlCommand(getRoleQuery, conn))
-                {
-                    roleCmd.Parameters.AddWithValue("@Role", model.Role);
-                    object result = roleCmd.ExecuteScalar();
-
-                    if (result == null)
-                    {
-                        TempData["Error"] = "Invalid role selected.";
-                        return RedirectToAction("ManageAccounts");
-                    }
-
-                    roleId = Convert.ToInt32(result);
-                }
-
-                string updateQuery = @"
-                    UPDATE users
-                    SET full_name = @FullName,
-                        username = @Username,
-                        email = @Email,
-                        password_hash = @Password,
-                        role_id = @RoleId
-                    WHERE user_id = @UserId";
-
-                using (SqlCommand cmd = new SqlCommand(updateQuery, conn))
-                {
-                    cmd.Parameters.AddWithValue("@FullName", model.FullName);
-                    cmd.Parameters.AddWithValue("@Username", model.Username);
-                    cmd.Parameters.AddWithValue("@Email", model.Email);
-                    cmd.Parameters.AddWithValue("@Password", model.Password);
-                    cmd.Parameters.AddWithValue("@RoleId", roleId);
-                    cmd.Parameters.AddWithValue("@UserId", model.UserId);
-                    cmd.ExecuteNonQuery();
-                }
-            }
-
-            TempData["Success"] = "Account updated successfully.";
-            return RedirectToAction("ManageAccounts");
-        }
-
-        // DELETE ACCOUNT
-        [HttpPost]
-        public IActionResult DeleteAccount(int userId)
-        {
-            if (!IsAdmin())
-                return RedirectToAction("Index", "Home");
-
-            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
-
-            using (SqlConnection conn = new SqlConnection(connectionString))
-            {
-                conn.Open();
-                string deleteQuery = "DELETE FROM users WHERE user_id = @UserId";
-
-                using (SqlCommand cmd = new SqlCommand(deleteQuery, conn))
-                {
-                    cmd.Parameters.AddWithValue("@UserId", userId);
-                    cmd.ExecuteNonQuery();
-                }
-            }
-
-            TempData["Success"] = "Account deleted successfully.";
-            return RedirectToAction("ManageAccounts");
         }
 
         [HttpGet]
         public IActionResult ManageAccounts()
         {
-            if (!IsAdmin())
-                return RedirectToAction("Index", "Home");
+            if (!IsAdmin()) return RedirectToAction("Index", "Home");
 
-            List<UserAccount> accounts = new List<UserAccount>();
-            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+            var accountList = new List<UserAccount>();
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                conn.Open();
-                string query = @"
-                    SELECT u.user_id, u.full_name, u.username, u.email, u.password_hash, u.status, r.role_name
-                    FROM users u
-                    INNER JOIN roles r ON u.role_id = r.role_id
-                    ORDER BY u.user_id";
+                // Added u.password_hash to match your database and HTML table
+                string sql = @"
+            SELECT u.user_id, u.username, u.full_name, u.email, u.password_hash, r.role_name 
+            FROM users u
+            LEFT JOIN roles r ON u.role_id = r.role_id";
 
-                using (SqlCommand cmd = new SqlCommand(query, conn))
-                using (SqlDataReader reader = cmd.ExecuteReader())
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
-                    while (reader.Read())
+                    conn.Open();
+                    using (SqlDataReader r = cmd.ExecuteReader())
                     {
-                        accounts.Add(new UserAccount
+                        while (r.Read())
                         {
-                            UserId = Convert.ToInt32(reader["user_id"]),
-                            FullName = reader["full_name"]?.ToString() ?? "",
-                            Username = reader["username"]?.ToString() ?? "",
-                            Email = reader["email"]?.ToString() ?? "",
-                            Password = reader["password_hash"]?.ToString() ?? "",
-                            Role = reader["role_name"]?.ToString() ?? "",
-                            Status = reader["status"]?.ToString() ?? ""
-                        });
+                            accountList.Add(new UserAccount
+                            {
+                                UserId = Convert.ToInt32(r["user_id"]),
+                                FullName = r["full_name"]?.ToString() ?? "",
+                                Username = r["username"]?.ToString() ?? "",
+                                Email = r["email"]?.ToString() ?? "",
+                                Password = r["password_hash"]?.ToString() ?? "", // <-- Passing it to the View
+                                Role = r["role_name"]?.ToString() ?? "Unknown"
+                            });
+                        }
                     }
                 }
             }
-
-            return View(accounts);
+            return View(accountList);
         }
+        // ⭐ ADDED: This catches the data when you click "Update Selected"
+        [HttpPost]
+        public IActionResult UpdateAccount(UserAccount model)
+        {
+            // Security check: Only Admins can update accounts
+            if (!IsAdmin()) return RedirectToAction("Index", "Home");
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                // This updates the user details. 
+                // The sub-query handles converting the text Role (like "Cashier") back into the correct role_id for your database!
+                string sql = @"
+                    UPDATE users 
+                    SET full_name = @fullName, 
+                        username = @username, 
+                        email = @email, 
+                        password_hash = @password,
+                        role_id = ISNULL((SELECT TOP 1 role_id FROM roles WHERE role_name = @role), role_id)
+                    WHERE user_id = @id";
+
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@fullName", model.FullName ?? "");
+                    cmd.Parameters.AddWithValue("@username", model.Username ?? "");
+                    cmd.Parameters.AddWithValue("@email", model.Email ?? "");
+                    cmd.Parameters.AddWithValue("@password", model.Password ?? "");
+                    cmd.Parameters.AddWithValue("@role", model.Role ?? "");
+                    cmd.Parameters.AddWithValue("@id", model.UserId);
+
+                    conn.Open();
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            // Refreshes the page so you can instantly see your updates in the table
+            return RedirectToAction("ManageAccounts");
+        }
+        // ⭐ ADDED: This catches the data when you click "+ Add Account"
+        [HttpPost]
+        public IActionResult AddAccount(UserAccount model)
+        {
+            // Security check
+            if (!IsAdmin()) return RedirectToAction("Index", "Home");
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                string sql = @"
+                    INSERT INTO users (full_name, username, email, password_hash, role_id)
+                    VALUES (@fullName, @username, @email, @password, 
+                            ISNULL((SELECT TOP 1 role_id FROM roles WHERE role_name = @role), 2))";
+                // Note: Defaults to role_id 2 (Cashier) if they forget to select a role
+
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@fullName", model.FullName ?? "");
+                    cmd.Parameters.AddWithValue("@username", model.Username ?? "");
+                    cmd.Parameters.AddWithValue("@email", model.Email ?? "");
+                    cmd.Parameters.AddWithValue("@password", model.Password ?? "");
+                    cmd.Parameters.AddWithValue("@role", model.Role ?? "Cashier");
+
+                    conn.Open();
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            return RedirectToAction("ManageAccounts");
+        }
+        // ⭐ ADDED: This catches the data when you click "Delete Selected"
+        [HttpPost]
+        public IActionResult DeleteAccount(int UserId)
+        {
+            // Security check
+            if (!IsAdmin()) return RedirectToAction("Index", "Home");
+
+            // Prevent the Admin from accidentally deleting themselves!
+            var currentUserId = HttpContext.Session.GetInt32("UserId");
+            if (currentUserId == UserId)
+            {
+                // Optionally return a warning, but for now, just cancel the delete
+                return RedirectToAction("ManageAccounts");
+            }
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                string sql = "DELETE FROM users WHERE user_id = @id";
+
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@id", UserId);
+
+                    conn.Open();
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            return RedirectToAction("ManageAccounts");
+        }
+
+        public class AdminVoidRequest { public int SaleId { get; set; } public string Pass { get; set; } }
+        public class StatusUpdateModel { public int SaleId { get; set; } public string Status { get; set; } }
     }
 }

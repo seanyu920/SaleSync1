@@ -7,8 +7,8 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #fdfaf6; /* Creamy Cafero background */
-    color: #4a2511; /* Dark Mocha text */
+    background: #fdfaf6;
+    color: #4a2511;
 }
 
 .dashboard-container {
@@ -84,6 +84,11 @@ body {
     width: 100%;
 }
 
+    .menu-btn:hover {
+        border-color: #f46a05;
+        color: white;
+    }
+
     .menu-btn.active {
         background: #f46a05;
         color: #ffffff;
@@ -95,251 +100,227 @@ body {
 /* --- MAIN CONTENT --- */
 .main-content {
     flex: 1;
-    padding: 35px;
+    padding: 35px 50px;
     overflow-y: auto;
 }
 
-.form-card, .table-card {
-    background: #ffffff;
-    border-radius: 20px;
-    padding: 30px;
-    box-shadow: 0 4px 20px rgba(74, 37, 17, 0.04);
+.page-header {
     margin-bottom: 30px;
 }
 
-.form-title {
-    font-size: 24px;
+.greeting-title {
+    font-size: 32px;
     font-weight: 800;
     color: #4a2511;
-    margin-bottom: 20px;
+    margin-bottom: 5px;
 }
 
-/* --- PRODUCT & CATEGORY GRID --- */
-.product-grid {
+.greeting-subtitle {
+    color: #8c5b3e;
+    font-size: 15px;
+}
+
+/* --- SUMMARY WIDGETS --- */
+.summary-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
+    gap: 25px;
+    margin-bottom: 35px;
+}
+
+.summary-card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: 0 4px 20px rgba(74, 37, 17, 0.04);
+    display: flex;
+    align-items: center;
     gap: 20px;
 }
 
-.product-card {
-    background: #fff;
-    border: 1px solid #f9f5f0;
-    border-radius: 16px;
-    overflow: hidden;
-    cursor: pointer;
-    transition: 0.3s ease;
-}
-
-    .product-card:hover {
-        transform: translateY(-5px);
-        border-color: #f46a05;
-    }
-
-.product-thumb {
-    width: 100%;
-    height: 130px;
-    background: #fdfaf6;
+.card-icon-box {
+    width: 60px;
+    height: 60px;
+    color: white;
+    border-radius: 15px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 40px;
-    overflow: hidden;
+    font-size: 28px;
 }
 
-    .product-thumb img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-.product-info {
-    padding: 15px;
-    text-align: center;
+.icon-sales {
+    background: #0b8a53;
 }
 
-    .product-info h3 {
-        font-size: 15px;
-        font-weight: 700;
-        color: #4a2511;
-    }
-
-/* --- SELECTION DRAWER (Price/Size/Qty) --- */
-.item-display-flex {
-    display: flex;
-    gap: 40px;
-    align-items: center;
-    padding: 10px;
+.icon-trans {
+    background: #f46a05;
 }
 
-.item-image-container {
-    flex: 0 0 200px;
-    height: 200px;
-    background: #fdfaf6;
-    border-radius: 20px;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid #f0e6dd;
+.card-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #8c5b3e;
+    margin-bottom: 5px;
 }
 
-    .item-image-container img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-.item-details-controls {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.item-name-display {
+.card-value {
     font-size: 28px;
     font-weight: 800;
     color: #4a2511;
 }
 
-/* Size Tiles */
-.size-selector-grid {
+/* --- RECENT SALES TABLE --- */
+.table-card {
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(74, 37, 17, 0.04);
+    overflow: hidden;
+}
+
+.table-header-row {
     display: flex;
-    gap: 12px;
-}
-
-.custom-radio-card {
-    cursor: pointer;
-}
-
-    .custom-radio-card input {
-        display: none;
-    }
-
-.radio-tile {
-    display: inline-block;
-    padding: 10px 20px;
-    background: #fdfaf6;
-    border: 2px solid #f0e6dd;
-    border-radius: 10px;
-    font-weight: 700;
-    color: #8c5b3e;
-    transition: 0.2s;
-}
-
-.custom-radio-card input:checked + .radio-tile {
-    background: #f46a05;
-    color: white;
-    border-color: #f46a05;
-}
-
-/* Quantity Controls */
-.qty-flex {
-    display: flex;
+    justify-content: space-between;
     align-items: center;
-    margin: 10px 0;
+    padding: 25px 30px 15px 30px;
 }
 
-    .qty-flex button {
-        width: 40px;
-        height: 40px;
-        background: #4a2511;
-        color: white;
-        border: none;
-        font-size: 18px;
-        cursor: pointer;
-    }
-
-        .qty-flex button:first-child {
-            border-radius: 8px 0 0 8px;
-        }
-
-        .qty-flex button:last-child {
-            border-radius: 0 8px 8px 0;
-        }
-
-    .qty-flex input {
-        width: 50px;
-        height: 40px;
-        text-align: center;
-        border-top: 1px solid #4a2511;
-        border-bottom: 1px solid #4a2511;
-        border-left: none;
-        border-right: none;
-        font-weight: 800;
-        color: #4a2511;
-    }
-
-.add-btn-large {
-    background: #f46a05;
-    color: white;
-    border: none;
-    padding: 15px;
-    border-radius: 12px;
+.table-title {
+    font-size: 20px;
     font-weight: 800;
-    cursor: pointer;
-    transition: 0.2s;
+    color: #4a2511;
+    margin: 0;
 }
 
-    .add-btn-large:hover {
-        background: #cc5500;
-    }
-
-/* --- RECEIPT TABLE --- */
-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0 8px;
-}
-
-thead th {
+.table-subtitle {
     color: #8c5b3e;
     font-size: 13px;
-    text-transform: uppercase;
-    text-align: left;
-    padding: 15px;
+    margin-top: 5px;
 }
 
-tbody td {
-    background: #fdfaf6;
-    padding: 15px;
-    color: #4a2511;
-    font-weight: 600;
-}
-
-tbody tr td:first-child {
-    border-radius: 10px 0 0 10px;
-}
-
-tbody tr td:last-child {
-    border-radius: 0 10px 10px 0;
-}
-
-.selected-row td {
-    background: #fef1e8 !important;
-    color: #f46a05 !important;
-}
-
-.total-footer {
-    text-align: right;
-    margin-top: 25px;
-}
-
-#total {
-    font-size: 32px;
-    font-weight: 800;
-    color: #4a2511;
-}
-
-.action-btn {
+.btn-full-report {
+    background: #fdf0e6;
+    color: #f46a05;
     border: none;
-    color: white;
-    padding: 12px 20px;
-    border-radius: 10px;
-    cursor: pointer;
+    padding: 10px 20px;
+    border-radius: 20px;
     font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: 0.3s;
 }
 
-.delete-btn {
-    background: #e02424;
+    .btn-full-report:hover {
+        background: #f46a05;
+        color: white;
+    }
+
+.recent-sales-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+    .recent-sales-table thead {
+        background: #fdfaf6;
+        border-top: 1px solid #f0e6dd;
+        border-bottom: 1px solid #f0e6dd;
+    }
+
+    .recent-sales-table th {
+        padding: 15px 30px;
+        color: #8c5b3e;
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .recent-sales-table td {
+        padding: 18px 30px;
+        border-bottom: 1px solid #fdfaf6;
+        color: #4a2511;
+        font-size: 14px;
+    }
+
+.td-bold {
+    font-weight: bold;
+    color: #4a2511;
+}
+
+.td-price {
+    font-weight: bold;
+}
+
+/* --- ACTION BUTTONS --- */
+.action-btn-group {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+}
+
+.btn-action {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-confirm {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+
+    .btn-confirm:hover {
+        background-color: #0b8a53;
+        color: white;
+    }
+
+.btn-void {
+    background-color: #fee2e2;
+    color: #b91c1c;
+}
+
+    .btn-void:hover {
+        background-color: #e11d48;
+        color: white;
+    }
+
+/* Pill Badges */
+.badge-cashier {
+    background: #fdf0e6;
+    color: #d97706;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-block;
+}
+
+.badge-completed {
+    background: #d1fae5;
+    color: #065f46;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-block;
+}
+
+.badge-pending {
+    background: #ffedd5;
+    color: #c2410c;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-block;
 }

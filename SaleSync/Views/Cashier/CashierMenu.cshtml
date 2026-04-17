@@ -1,0 +1,361 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cashier Menu - Cafero</title>
+    <link rel="stylesheet" href="~/css/CashierMenu.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="dashboard-container">
+        
+        <aside class="sidebar">
+            <div class="logo-section">
+                <div class="logo-title">Cafero</div>
+                <div class="logo-subtitle">Coffee & Pastries</div>
+            </div>
+
+            <div class="profile-section">
+                <div class="profile-circle">👤</div>
+                <h2 style="font-size: 16px; font-weight: 700; color: #ffffff; margin: 0;">Cashier</h2>
+                <div style="font-size: 12px; color: #dcbca5;">Front Desk Access</div>
+            </div>
+            <nav class="sidebar-menu">
+                <a href="/Cashier/Dashboard" class="menu-btn">❖ Dashboard</a>
+    
+                <a href="javascript:void(0)" onclick="showMenu()" id="btnMenu" class="menu-btn active">📋 Menu</a>
+    
+                <a href="javascript:void(0)" onclick="showCart()" id="btnCart" class="menu-btn">📄 Receipt</a>
+            </nav>
+
+            <div style="margin-top: auto;">
+                <form method="post" action="/Home/Logout">
+                    <button type="submit" class="menu-btn">⎋ Log Out</button>
+                </form>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            
+            <div id="menuSection">
+                <div class="page-header">
+                    <div>
+                        <h1 class="form-title" id="cashierTitle" style="margin-bottom:5px;">Menu Categories</h1>
+                        <p id="cashierSubtitle" style="color:#8c5b3e; font-size:14px;">Select a category to view items.</p>
+                    </div>
+                    <button id="backBtn" class="btn-secondary" style="display: none;" onclick="backToCategories()">← Back</button>
+                </div>
+
+                <div id="categoryGrid" class="product-grid">
+                    <div class="product-card" onclick="openSubMenu('COFFEE')">
+                        <div class="product-thumb" id="thumb-COFFEE">☕</div>
+                        <div class="product-info"><h3>COFFEE</h3></div>
+                    </div>
+                    <div class="product-card" onclick="openSubMenu('MILKTEA')">
+                        <div class="product-thumb" id="thumb-MILKTEA">🧋</div>
+                        <div class="product-info"><h3>MILK TEA</h3></div>
+                    </div>
+                    <div class="product-card" onclick="openSubMenu('FRUIT TEA')">
+                        <div class="product-thumb" id="thumb-FRUIT TEA">🍹</div>
+                        <div class="product-info"><h3>FRUIT TEA</h3></div>
+                    </div>
+                    <div class="product-card" onclick="openSubMenu('RICE MEAL')">
+                        <div class="product-thumb" id="thumb-RICE MEAL">🍱</div>
+                        <div class="product-info"><h3>RICE MEAL</h3></div>
+                    </div>
+                    <div class="product-card" onclick="openSubMenu('BREAD & PASTRY')">
+                        <div class="product-thumb" id="thumb-BREAD & PASTRY">🥐</div>
+                        <div class="product-info"><h3>BREAD & PASTRY</h3></div>
+                    </div>
+                    <div class="product-card" onclick="openSubMenu('SNACKS & PASTA')">
+                        <div class="product-thumb" id="thumb-SNACKS & PASTA">🍝</div>
+                        <div class="product-info"><h3>SNACKS & PASTA</h3></div>
+                    </div>
+                </div>
+
+                <div id="subItemsGrid" class="product-grid" style="display:none;"></div>
+
+                <div class="form-card" id="selectionDetails" style="display:none; margin-top:30px;">
+                    <div class="item-display-flex">
+                        <div class="item-image-container" id="detailImageContainer"></div>
+                        <div class="item-details-controls">
+                            <h2 id="displayName" class="item-name-display">Product Name</h2>
+                            <div class="size-selector-grid" id="sizeSelector"></div>
+                            
+                            <div class="qty-flex">
+                                <button type="button" onclick="decreaseQty()">-</button>
+                                <input id="qty" value="1" readonly />
+                                <button type="button" onclick="increaseQty()">+</button>
+                            </div>
+                            
+                            <button type="button" class="add-btn-large" onclick="addToCart()">Add to Receipt</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="cartSection" style="display:none;">
+                <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                    <h1 class="form-title" style="margin-bottom:0;">Current Order</h1>
+                    <div style="display:flex; gap:12px;">
+                        <button type="button" onclick="removeSelectedItem()" class="action-btn delete-btn">Remove Item</button>
+                        <button type="button" onclick="checkoutOrder()" class="action-btn btn-checkout">Complete Checkout</button>
+                    </div>
+                </div>
+                <div class="table-card">
+                    <table>
+                        <thead>
+                            <tr><th>Sel</th><th>Item Name</th><th>Size</th><th>Qty</th><th>Price</th><th>Subtotal</th></tr>
+                        </thead>
+                        <tbody id="receiptList"></tbody>
+                    </table>
+                    <div class="total-footer">
+                        <div style="font-size: 14px; color: #8c5b3e; font-weight: 600;">Grand Total</div>
+                        <div id="total">₱0.00</div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+            const menuData = {
+                "COFFEE": ["Americano", "Cappuccino", "Hot Choco", "Hot Latte", "Iced Latte", "Spanish Latte", "Hot Matcha Latte", "Iced Matcha Latte"],
+                "MILKTEA": ["Wintermelon", "Okinawa", "Cookies and Cream", "Salted Caramel", "Hokkaido", "Matcha", "Thai"],
+                "FRUIT TEA": ["Green Apple", "Strawberry", "Blueberry", "Mango", "Lychee", "Peach"],
+                "RICE MEAL": ["Silog", "Hot Silog", "Long Silog", "Ham Silog", "Shanghai Silog", "Embotido Silog"],
+                "BREAD & PASTRY": ["Chocolate Cookies", "Croissant", "Cheese Ensaymada", "Yema Ensaymada", "Ube Ensaymada", "Chocolate Donut", "Cinnamon"],
+                "SNACKS & PASTA": ["Flavored Fries", "Nachos", "Siomai 4pcs", "Carbonara", "Pesto Pasta", "Gambas Pasta"]
+            };
+
+            const sizedCategories = ["COFFEE", "MILKTEA", "FRUIT TEA"];
+
+            const productIdMap = {
+                "Americano - Small": 17,       "Americano - Large": 18,
+                "Cappuccino - Small": 19,      "Cappuccino - Large": 20,
+                "Hot Choco - Small": 21,       "Hot Choco - Large": 22,
+                "Hot Latte - Small": 23,       "Hot Latte - Large": 24,
+                "Iced Latte - Small": 25,      "Iced Latte - Large": 26,
+                "Spanish Latte - Small": 27,   "Spanish Latte - Large": 28,
+                "Hot Matcha Latte - Small": 29,"Hot Matcha Latte - Large": 30,
+                "Iced Matcha Latte - Small": 31,"Iced Matcha Latte - Large": 32,
+                "Wintermelon - Small": 33,     "Wintermelon - Large": 34,
+                "Okinawa - Small": 35,         "Okinawa - Large": 36,
+                "Cookies and Cream - Small": 37,"Cookies and Cream - Large": 38,
+                "Salted Caramel - Small": 39,  "Salted Caramel - Large": 40,
+                "Hokkaido - Small": 41,        "Hokkaido - Large": 42,
+                "Matcha - Small": 43,          "Matcha - Large": 44,
+                "Thai - Small": 45,            "Thai - Large": 46,
+                "Green Apple - Small": 47,     "Green Apple - Large": 48,
+                "Strawberry - Small": 49,      "Strawberry - Large": 50,
+                "Blueberry - Small": 51,       "Blueberry - Large": 52,
+                "Mango - Small": 53,           "Mango - Large": 54,
+                "Lychee - Small": 55,          "Lychee - Large": 56,
+                "Peach - Small": 57,           "Peach - Large": 58,
+                "Silog": 59,
+                "Hot Silog": 60,
+                "Long Silog": 61,
+                "Ham Silog": 62,
+                "Shanghai Silog": 63,
+                "Embotido Silog": 64,
+                "Chocolate Cookies": 65,
+                "Croissant": 66,
+                "Cheese Ensaymada": 67,
+                "Yema Ensaymada": 68,
+                "Ube Ensaymada": 69,
+                "Chocolate Donut": 70,
+                "Cinnamon": 71,
+                "Flavored Fries": 72,
+                "Nachos": 73,
+                "Siomai (4 pcs)": 74,
+                "Carbonara": 75,
+                "Pesto Pasta": 76,
+                "Gambas Pasta": 77
+            };
+
+            let cart = [], selectedReceiptIndex = -1, activeItemName = "", currentCategory = "";
+
+            function openSubMenu(cat) {
+                currentCategory = cat;
+                const items = menuData[cat];
+                const grid = document.getElementById('subItemsGrid');
+                const customImg = localStorage.getItem(`cat_img_${cat}`);
+
+                document.getElementById('cashierTitle').innerText = cat;
+                document.getElementById('cashierSubtitle').innerText = "Select an item to customize";
+
+                grid.innerHTML = "";
+                items.forEach(item => {
+                    let imgContent = customImg ? `<img src="${customImg}">` : `${getCategoryEmoji(cat)}`;
+                    grid.innerHTML += `
+                        <div class="product-card" onclick="selectProductItem('${item}')">
+                            <div class="product-thumb">${imgContent}</div>
+                            <div class="product-info"><h3>${item}</h3></div>
+                        </div>`;
+                });
+
+                document.getElementById('categoryGrid').style.display = 'none';
+                document.getElementById('subItemsGrid').style.display = 'grid';
+                document.getElementById('backBtn').style.display = 'block';
+            }
+
+            function backToCategories() {
+                document.getElementById('cashierTitle').innerText = "Menu Categories";
+                document.getElementById('categoryGrid').style.display = 'grid';
+                document.getElementById('subItemsGrid').style.display = 'none';
+                document.getElementById('backBtn').style.display = 'none';
+                document.getElementById('selectionDetails').style.display = 'none';
+            }
+
+            function selectProductItem(name) {
+                activeItemName = name;
+                document.getElementById('selectionDetails').style.display = 'block';
+                document.getElementById('displayName').innerText = name;
+                document.getElementById('qty').value = 1;
+
+                const sizeSelector = document.getElementById('sizeSelector');
+                if (sizedCategories.includes(currentCategory)) {
+                    sizeSelector.style.display = '';
+                    sizeSelector.innerHTML = `
+                        <label class="custom-radio-card"><input type="radio" name="size" value="Small" checked /><span class="radio-tile">Small</span></label>
+                        <label class="custom-radio-card"><input type="radio" name="size" value="Large" /><span class="radio-tile">Large</span></label>`;
+                } else {
+                    sizeSelector.style.display = 'none';
+                    sizeSelector.innerHTML = `<input type="radio" name="size" value="Regular" checked style="display:none;">`;
+                }
+
+                const customImg = localStorage.getItem(`cat_img_${currentCategory}`);
+                const container = document.getElementById('detailImageContainer');
+                container.innerHTML = customImg ? `<img src="${customImg}">` : `${getCategoryEmoji(currentCategory)}`;
+
+                document.getElementById('selectionDetails').scrollIntoView({ behavior: 'smooth' });
+            }
+
+            function getCategoryEmoji(cat) {
+                const emojis = { "MILKTEA": "🧋", "RICE MEAL": "🍱", "BREAD & PASTRY": "🥐", "FRUIT TEA": "🍹", "SNACKS & PASTA": "🍝" };
+                return emojis[cat] || "☕";
+            }
+
+            function showMenu() {
+                backToCategories();
+                document.getElementById("menuSection").style.display = "block";
+                document.getElementById("cartSection").style.display = "none";
+                document.getElementById("btnMenu").classList.add("active");
+                document.getElementById("btnCart").classList.remove("active");
+            }
+
+            function showCart() {
+                document.getElementById("menuSection").style.display = "none";
+                document.getElementById("cartSection").style.display = "block";
+                document.getElementById("btnCart").classList.add("active");
+                document.getElementById("btnMenu").classList.remove("active");
+                renderReceipt();
+            }
+
+            function increaseQty() { let q = document.getElementById("qty"); q.value = parseInt(q.value) + 1; }
+            function decreaseQty() { let q = document.getElementById("qty"); if (parseInt(q.value) > 1) q.value = parseInt(q.value) - 1; }
+
+            function addToCart() {
+                let size = document.querySelector('input[name="size"]:checked').value;
+                let qty = parseInt(document.getElementById("qty").value);
+                let price = (size === "Small") ? 75 : (size === "Large") ? 95 : 75;
+
+                let dbKey = sizedCategories.includes(currentCategory)
+                    ? `${activeItemName} - ${size}`
+                    : activeItemName;
+
+                cart.push({ name: activeItemName, dbKey: dbKey, size: size, qty: qty, price: price });
+                alert(qty + "x " + activeItemName + " added to receipt!");
+                backToCategories();
+            }
+
+            function renderReceipt() {
+                let receipt = document.getElementById("receiptList");
+                let totalEl = document.getElementById("total");
+                if (cart.length === 0) { receipt.innerHTML = "<tr><td colspan='6' style='text-align: center; padding: 40px;'>No items in receipt.</td></tr>"; totalEl.textContent = "₱0.00"; return; }
+            
+                let html = "", total = 0;
+                cart.forEach((item, index) => {
+                    let sub = item.qty * item.price;
+                    total += sub;
+                    html += `<tr onclick="selectReceiptItem(${index})" class="${selectedReceiptIndex === index ? 'selected-row' : ''}">
+                        <td><input type="radio" name="cartSel" ${selectedReceiptIndex === index ? 'checked' : ''}></td>
+                        <td>${item.name}</td><td>${item.size}</td><td>${item.qty}</td><td>₱${item.price.toFixed(2)}</td><td style="color:#f46a05;">₱${sub.toFixed(2)}</td>
+                    </tr>`;
+                });
+                receipt.innerHTML = html;
+                totalEl.textContent = "₱" + total.toFixed(2);
+            }
+
+            function selectReceiptItem(index) { selectedReceiptIndex = index; renderReceipt(); }
+            function removeSelectedItem() { if (selectedReceiptIndex === -1) return; cart.splice(selectedReceiptIndex, 1); selectedReceiptIndex = -1; renderReceipt(); }
+
+            async function checkoutOrder() {
+                if (cart.length === 0) return;
+
+                const payload = cart.map(item => ({
+                    productId: productIdMap[item.dbKey] ?? 0,
+                    quantity:  item.qty,
+                    price:     item.price
+                }));
+
+                const unknown = cart.filter((item, i) => payload[i].productId === 0);
+                if (unknown.length > 0) {
+                    alert("Could not match product ID for: " + unknown.map(i => i.dbKey).join(", "));
+                    return;
+                }
+
+                const btn = document.querySelector('button[onclick="checkoutOrder()"]');
+                btn.disabled = true;
+                btn.textContent = "Processing…";
+
+                try {
+                    const response = await fetch('/Cashier/Checkout', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            items:         payload,
+                            paymentMethod: "cash",
+                            amountPaid:    0
+                        })
+                    });
+
+                    if (response.ok) {
+                        alert("Checkout Done!");
+                        cart = [];
+                        selectedReceiptIndex = -1;
+                        showMenu();
+                    } else {
+                        const text = await response.text();
+                        try {
+                            const json = JSON.parse(text);
+                            alert("Checkout failed: " + (json.message ?? text));
+                        } catch {
+                            alert("Checkout failed: " + text);
+                        }
+                    }
+                } catch (err) {
+                    alert("Network error: " + err.message);
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = "Complete Checkout";
+                }
+            }
+
+            window.onload = () => {
+                const cats = ['COFFEE', 'MILKTEA', 'FRUIT TEA', 'RICE MEAL', 'BREAD & PASTRY', 'SNACKS & PASTA'];
+                cats.forEach(cat => {
+                    const saved = localStorage.getItem(`cat_img_${cat}`);
+                    if (saved) {
+                        const thumb = document.getElementById(`thumb-${cat}`);
+                        if (thumb) thumb.innerHTML = `<img src="${saved}">`;
+                    }
+                });
+            };
+    </script>
+</body>
+</html>

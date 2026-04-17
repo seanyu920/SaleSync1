@@ -1,97 +1,143 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
 using SaleSync.Models;
 using System;
 using System.Collections.Generic;
 
 namespace SaleSync.Controllers
 {
+    // ⭐ CRITICAL: This must say ManagerController, NOT AdminController
     public class ManagerController : Controller
     {
-        public IActionResult Dashboard()
+        private readonly IConfiguration _configuration;
+        private readonly string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
+
+        public ManagerController(IConfiguration configuration)
         {
-            var role = HttpContext.Session.GetString("Role");
-
-            if (string.IsNullOrEmpty(role) || role != "Manager")
-                return RedirectToAction("Index", "Home");
-
-            return View("ManagerDashboard");
+            _configuration = configuration;
         }
 
-        public IActionResult Analytics()
+        // Authorization helper
+        private bool IsManager()
         {
-            // Security check: Only let Managers in
             var role = HttpContext.Session.GetString("Role");
+            return role == "Manager" || role == "Admin";
+        }
 
-            if (string.IsNullOrEmpty(role) || role != "Manager")
-                return RedirectToAction("Index", "Home");
+        public IActionResult Dashboard()
+        {
+            if (!IsManager()) return RedirectToAction("Index", "Home");
 
-            // EXACT FIX: Tell it to load the Admin's Analytics page
-            return View("~/Views/Admin/Analytics.cshtml");
+            var model = new CashierDashboardViewModel { RecentSales = new List<SaleHistoryItem>() };
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                string totalSql = @"SELECT ISNULL(SUM(total_amount), 0) as Total, COUNT(sale_id) as Count 
+                                    FROM sales WHERE CAST(sale_date AS DATE) = CAST(GETDATE() AS DATE)";
+
+                string historySql = @"
+                    SELECT TOP 10 s.sale_id, s.sale_date, s.total_amount, s.status, u.username,
+                    (SELECT STRING_AGG(CAST(si.quantity AS VARCHAR) + 'x ' + p.product_name, ', ') 
+                     FROM sale_items si JOIN products p ON si.product_id = p.product_id 
+                     WHERE si.sale_id = s.sale_id) as ItemsSummary
+                    FROM sales s JOIN users u ON s.user_id = u.user_id
+                    ORDER BY s.sale_date DESC";
+
+                conn.Open();
+                using (SqlCommand cmd = new SqlCommand(totalSql, conn))
+                using (SqlDataReader r = cmd.ExecuteReader())
+                {
+                    if (r.Read())
+                    {
+                        model.TodayTotalSales = Convert.ToDecimal(r["Total"]);
+                        model.TodayTransactionCount = Convert.ToInt32(r["Count"]);
+                    }
+                }
+
+                using (SqlCommand cmd = new SqlCommand(historySql, conn))
+                using (SqlDataReader r = cmd.ExecuteReader())
+                {
+                    while (r.Read())
+                    {
+                        model.RecentSales.Add(new SaleHistoryItem
+                        {
+                            SaleId = Convert.ToInt32(r["sale_id"]),
+                            SaleDate = Convert.ToDateTime(r["sale_date"]),
+                            TotalAmount = Convert.ToDecimal(r["total_amount"]),
+                            CashierName = r["username"].ToString(),
+                            ItemsSummary = r["ItemsSummary"]?.ToString() ?? "No items",
+                            Status = r["status"]?.ToString() ?? "Pending"
+                        });
+                    }
+                }
+            }
+            // Ensure you have a ManagerDashboard.cshtml view, or route them to a shared one
+            return View("ManagerDashboard", model);
         }
 
         [HttpGet]
         public IActionResult Inventory()
         {
-            var role = HttpContext.Session.GetString("Role");
+            if (!IsManager()) return RedirectToAction("Index", "Home");
 
-            if (string.IsNullOrEmpty(role) || role != "Manager")
-                return RedirectToAction("Index", "Home");
-
-            List<InventoryItems> items = new List<InventoryItems>();
-            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+            var inventoryList = new List<InventoryItems>();
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                conn.Open();
-                string query = @"
-                    SELECT p.product_id, c.category_name, p.product_name, p.sku, p.cost_price, p.stock_quantity, p.description
-                    FROM dbo.products p
-                    INNER JOIN dbo.categories c ON p.category_id = c.category_id
-                    ORDER BY p.product_id";
+                string sql = @"
+    SELECT p.product_id, p.product_name, p.stock_quantity, p.cost_price, p.sku, c.category_name 
+    FROM products p
+    LEFT JOIN categories c ON p.category_id = c.category_id
+    WHERE p.is_ingredient = 1";
 
-                using (SqlCommand cmd = new SqlCommand(query, conn))
-                using (SqlDataReader reader = cmd.ExecuteReader())
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
-                    while (reader.Read())
+                    conn.Open();
+                    using (SqlDataReader r = cmd.ExecuteReader())
                     {
-                        string description = reader["description"]?.ToString() ?? "";
-
-                        items.Add(new InventoryItems
+                        while (r.Read())
                         {
-                            ProductId = Convert.ToInt32(reader["product_id"]),
-                            ItemCategory = reader["category_name"]?.ToString() ?? "",
-                            ItemName = reader["product_name"]?.ToString() ?? "",
-                            ItemID = reader["sku"]?.ToString() ?? "",
-                            PurchasePrice = reader["cost_price"] == DBNull.Value ? 0 : Convert.ToDecimal(reader["cost_price"]),
-                            Quantity = reader["stock_quantity"] == DBNull.Value ? 0 : Convert.ToInt32(reader["stock_quantity"]),
-                            StockLevel = reader["stock_quantity"] == DBNull.Value
-                                ? "In Stock"
-                                : Convert.ToInt32(reader["stock_quantity"]) <= 10 ? "Low Stock" : "In Stock",
-                            StockSupplier = ExtractValue(description, "Supplier:"),
-                            DateAcquired = ExtractValue(description, "Date Acquired:"),
-                            ExpirationDate = ExtractValue(description, "Expiration Date:")
-                        });
+                            inventoryList.Add(new InventoryItems
+                            {
+                                ProductId = Convert.ToInt32(r["product_id"]),
+                                ItemID = r["sku"]?.ToString() ?? "N/A",
+                                ItemName = r["product_name"].ToString(),
+                                Quantity = Convert.ToInt32(r["stock_quantity"]),
+                                PurchasePrice = Convert.ToDecimal(r["cost_price"]),
+                                ItemCategory = r["category_name"]?.ToString() ?? "Raw Materials"
+                            });
+                        }
                     }
                 }
             }
-
-            return View("~/Views/Admin/Inventory.cshtml", items);
+            return View("~/Views/Admin/Inventory.cshtml", inventoryList);
+            // Note: I routed this to use your existing Admin Inventory view so you don't have to duplicate the HTML file!
         }
 
-        private string ExtractValue(string description, string key)
+        [HttpPost]
+        public IActionResult UpdateInventory(InventoryItems model)
         {
-            if (string.IsNullOrEmpty(description) || !description.Contains(key))
-                return "";
+            if (!IsManager()) return RedirectToAction("Index", "Home");
 
-            int start = description.IndexOf(key) + key.Length;
-            int end = description.IndexOf(";", start);
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                string sql = "UPDATE products SET stock_quantity = @qty, cost_price = @price WHERE product_id = @id";
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@qty", model.Quantity);
+                    cmd.Parameters.AddWithValue("@price", model.PurchasePrice);
+                    cmd.Parameters.AddWithValue("@id", model.ProductId);
 
-            if (end == -1)
-                end = description.Length;
-
-            return description.Substring(start, end - start).Trim();
+                    conn.Open();
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            return RedirectToAction("Inventory");
         }
+
+        public IActionResult Analytics() => View();
+        public IActionResult Products() => View();
     }
 }

@@ -3,7 +3,6 @@
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "Admin";
     var currentRole = currentController == "Manager" ? "Manager" : "Admin";
 }
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -36,6 +35,7 @@
                 <nav class="sidebar-menu">
                     <a asp-controller="@currentController" asp-action="Dashboard" class="menu-btn">❖ Dashboard</a>
                     <a asp-controller="@currentController" asp-action="Analytics" class="menu-btn active">📊 Analytics</a>
+                    <a asp-controller="@currentController" asp-action="Products" class="menu-btn">🏷️ Products</a>
                     <a asp-controller="@currentController" asp-action="Inventory" class="menu-btn">📦 Inventory</a>
 
                     @if (currentController == "Admin")
@@ -76,7 +76,7 @@
             <div class="analytics-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px;">
                 
                 <div class="chart-column">
-                    <div class="chart-card" style="background: #ffffff; border-radius: 16px; padding: 30px; box-shadow: 0 4px 20px rgba(74, 37, 17, 0.04); height: 450px;">
+                    <div class="chart-card" style="background: #ffffff; border-radius: 16px; padding: 30px; box-shadow: 0 4px 20px rgba(74, 37, 17, 0.04); height: 450px; position: relative;">
                         <h2 class="widget-title" style="font-size: 20px; font-weight: 800; color: #4a2511; margin-bottom: 20px;">Sales Analytics</h2>
                         <canvas id="salesChart"></canvas>
                     </div>
@@ -103,7 +103,7 @@
 
                     <div class="chart-card" style="background: #ffffff; border-radius: 16px; padding: 30px; box-shadow: 0 4px 20px rgba(74, 37, 17, 0.04);">
                         <h2 class="widget-title" style="font-size: 20px; font-weight: 800; color: #4a2511; margin-bottom: 20px;">Payment Methods</h2>
-                        <div class="pie-chart-container" style="height: 200px;">
+                        <div class="pie-chart-container" style="height: 200px; position: relative;">
                             <canvas id="paymentChart"></canvas>
                         </div>
                     </div>
@@ -113,7 +113,12 @@
     </div>
 
     <script>
-        const ctx = document.getElementById('salesChart').getContext('2d');
+        // Wrapping everything so it waits for the page to finish loading!
+        document.addEventListener('DOMContentLoaded', function () {
+            
+        const salesCanvas = document.getElementById('salesChart');
+        if (salesCanvas) {
+        const ctx = salesCanvas.getContext('2d');
         new Chart(ctx, {
         type: 'bar',
         data: {
@@ -135,8 +140,11 @@
         }
         }
         });
+        }
 
-        const paymentCtx = document.getElementById('paymentChart').getContext('2d');
+        const paymentCanvas = document.getElementById('paymentChart');
+        if (paymentCanvas) {
+        const paymentCtx = paymentCanvas.getContext('2d');
         new Chart(paymentCtx, {
         type: 'doughnut',
         data: {
@@ -154,13 +162,15 @@
         cutout: '70%'
         }
         });
+        }
 
         // Event listener for the dropdown menu
-        document.getElementById('analyticsTimeframe').addEventListener('change', function() {
-        // For now, this just logs to the console, but later you can use this
-        // to fetch new data from your server using AJAX/Fetch!
+        const timeframeSelect = document.getElementById('analyticsTimeframe');
+        if (timeframeSelect) {
+        timeframeSelect.addEventListener('change', function() {
         console.log("Timeframe changed to: " + this.value);
         });
-    </script>
-</body>
+        }
+        });
+    </script></body>
 </html>
