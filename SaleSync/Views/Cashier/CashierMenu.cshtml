@@ -123,65 +123,41 @@
     </div>
 
     <script>
-            const menuData = {
-                "COFFEE": ["Americano", "Cappuccino", "Hot Choco", "Hot Latte", "Iced Latte", "Spanish Latte", "Hot Matcha Latte", "Iced Matcha Latte"],
-                "MILKTEA": ["Wintermelon", "Okinawa", "Cookies and Cream", "Salted Caramel", "Hokkaido", "Matcha", "Thai"],
-                "FRUIT TEA": ["Green Apple", "Strawberry", "Blueberry", "Mango", "Lychee", "Peach"],
-                "RICE MEAL": ["Silog", "Hot Silog", "Long Silog", "Ham Silog", "Shanghai Silog", "Embotido Silog"],
-                "BREAD & PASTRY": ["Chocolate Cookies", "Croissant", "Cheese Ensaymada", "Yema Ensaymada", "Ube Ensaymada", "Chocolate Donut", "Cinnamon"],
-                "SNACKS & PASTA": ["Flavored Fries", "Nachos", "Siomai 4pcs", "Carbonara", "Pesto Pasta", "Gambas Pasta"]
-            };
+            // 1. DYNAMIC DATA: Automatically pulls Categories, Names, IDs, and Prices from your SQL DB!
+            const menuData = {};
+            const productIdMap = {};
+            const basePrices = {};
+
+            @if (Model != null)
+            {
+                    foreach (var item in Model)
+                    {
+                            // Group by Category
+                            @:var cat = "@item.CategoryName.ToUpper()";
+                            @:if (!menuData[cat]) menuData[cat] = [];
+
+                            // Smart Filter: Strips " - Small" or " - Large" so the visual menu isn't cluttered with duplicates
+                            @:var rawName = "@Html.Raw(item.ProductName)";
+                            @:var baseName = rawName.replace(" - Small", "").replace(" - Large", "").replace(" - Regular", "");
+                
+                            @:if (!menuData[cat].includes(baseName)) menuData[cat].push(baseName);
+                
+                            // Map the Product IDs so the SQL Checkout works correctly
+                            @:productIdMap[rawName] = @item.ProductId;
+                            @:productIdMap[baseName] = @item.ProductId;
+                
+                            // Save the real database prices for the receipt
+                            @:basePrices[rawName] = parseFloat(@item.Price);
+                            @:basePrices[baseName] = parseFloat(@item.Price);
+                    }
+            }
 
             const sizedCategories = ["COFFEE", "MILKTEA", "FRUIT TEA"];
-
-            const productIdMap = {
-                "Americano - Small": 17,       "Americano - Large": 18,
-                "Cappuccino - Small": 19,      "Cappuccino - Large": 20,
-                "Hot Choco - Small": 21,       "Hot Choco - Large": 22,
-                "Hot Latte - Small": 23,       "Hot Latte - Large": 24,
-                "Iced Latte - Small": 25,      "Iced Latte - Large": 26,
-                "Spanish Latte - Small": 27,   "Spanish Latte - Large": 28,
-                "Hot Matcha Latte - Small": 29,"Hot Matcha Latte - Large": 30,
-                "Iced Matcha Latte - Small": 31,"Iced Matcha Latte - Large": 32,
-                "Wintermelon - Small": 33,     "Wintermelon - Large": 34,
-                "Okinawa - Small": 35,         "Okinawa - Large": 36,
-                "Cookies and Cream - Small": 37,"Cookies and Cream - Large": 38,
-                "Salted Caramel - Small": 39,  "Salted Caramel - Large": 40,
-                "Hokkaido - Small": 41,        "Hokkaido - Large": 42,
-                "Matcha - Small": 43,          "Matcha - Large": 44,
-                "Thai - Small": 45,            "Thai - Large": 46,
-                "Green Apple - Small": 47,     "Green Apple - Large": 48,
-                "Strawberry - Small": 49,      "Strawberry - Large": 50,
-                "Blueberry - Small": 51,       "Blueberry - Large": 52,
-                "Mango - Small": 53,           "Mango - Large": 54,
-                "Lychee - Small": 55,          "Lychee - Large": 56,
-                "Peach - Small": 57,           "Peach - Large": 58,
-                "Silog": 59,
-                "Hot Silog": 60,
-                "Long Silog": 61,
-                "Ham Silog": 62,
-                "Shanghai Silog": 63,
-                "Embotido Silog": 64,
-                "Chocolate Cookies": 65,
-                "Croissant": 66,
-                "Cheese Ensaymada": 67,
-                "Yema Ensaymada": 68,
-                "Ube Ensaymada": 69,
-                "Chocolate Donut": 70,
-                "Cinnamon": 71,
-                "Flavored Fries": 72,
-                "Nachos": 73,
-                "Siomai (4 pcs)": 74,
-                "Carbonara": 75,
-                "Pesto Pasta": 76,
-                "Gambas Pasta": 77
-            };
-
             let cart = [], selectedReceiptIndex = -1, activeItemName = "", currentCategory = "";
 
             function openSubMenu(cat) {
                 currentCategory = cat;
-                const items = menuData[cat];
+                const items = menuData[cat] || []; // Added fallback in case a category is empty
                 const grid = document.getElementById('subItemsGrid');
                 const customImg = localStorage.getItem(`cat_img_${cat}`);
 
@@ -262,11 +238,13 @@
             function addToCart() {
                 let size = document.querySelector('input[name="size"]:checked').value;
                 let qty = parseInt(document.getElementById("qty").value);
-                let price = (size === "Small") ? 75 : (size === "Large") ? 95 : 75;
-
+            
                 let dbKey = sizedCategories.includes(currentCategory)
                     ? `${activeItemName} - ${size}`
                     : activeItemName;
+
+                // Uses the real price from DB! Falls back to defaults only if a price is missing.
+                let price = basePrices[dbKey] || basePrices[activeItemName] || ((size === "Small") ? 75 : (size === "Large") ? 95 : 75);
 
                 cart.push({ name: activeItemName, dbKey: dbKey, size: size, qty: qty, price: price });
                 alert(qty + "x " + activeItemName + " added to receipt!");
@@ -277,7 +255,7 @@
                 let receipt = document.getElementById("receiptList");
                 let totalEl = document.getElementById("total");
                 if (cart.length === 0) { receipt.innerHTML = "<tr><td colspan='6' style='text-align: center; padding: 40px;'>No items in receipt.</td></tr>"; totalEl.textContent = "₱0.00"; return; }
-            
+        
                 let html = "", total = 0;
                 cart.forEach((item, index) => {
                     let sub = item.qty * item.price;
@@ -305,7 +283,7 @@
 
                 const unknown = cart.filter((item, i) => payload[i].productId === 0);
                 if (unknown.length > 0) {
-                    alert("Could not match product ID for: " + unknown.map(i => i.dbKey).join(", "));
+                    alert("Could not match product ID in the database for: " + unknown.map(i => i.dbKey).join(", "));
                     return;
                 }
 
