@@ -2,7 +2,6 @@
 @{
     Layout = null;
 }
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -32,6 +31,9 @@
                 <nav class="sidebar-menu">
                     <a asp-controller="Admin" asp-action="Dashboard" class="menu-btn">❖ Dashboard</a>
                     <a asp-controller="Admin" asp-action="Analytics" class="menu-btn">📊 Analytics</a>
+                    
+                    <a asp-controller="Admin" asp-action="Products" class="menu-btn">🏷️ Products</a>
+                    
                     <a asp-controller="Admin" asp-action="Inventory" class="menu-btn">📦 Inventory</a>
                     <a asp-controller="Admin" asp-action="ManageAccounts" class="menu-btn active">💳 Accounts</a>
                 </nav>
@@ -94,7 +96,7 @@
                         <div class="form-actions-row">
                             <button type="submit" formaction="/Admin/UpdateAccount" class="btn update-btn">Update Selected</button>
                             <button type="submit" formaction="/Admin/DeleteAccount" class="btn delete-btn" onclick="return prepareDelete();">Delete Selected</button>
-                            <button type="submit" formaction="/Admin/SaveAccount" class="btn save-btn">+ Add Account</button>
+                            <button type="submit" formaction="/Admin/AddAccount" class="btn save-btn">+ Add Account</button>
                         </div>
                     </form>
                 </div>
@@ -164,6 +166,5 @@
                 }
                 return confirm('Are you sure you want to permanently delete this account?');
             }
-    </script>
-</body>
+    </script></body>
 </html>

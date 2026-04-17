@@ -1,16 +1,42 @@
-﻿@{
+﻿@model SaleSync.Models.CashierDashboardViewModel
+@{
     Layout = null;
-}
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
+}<!DOCTYPE html><html lang="en"><head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Admin Dashboard - SyncScale</title>
     <link rel="stylesheet" href="~/css/AdminDashboard.css" asp-append-version="true" />
+    <style>
+        /* Security Modal Styles */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+        .auth-modal { background: white; padding: 25px; border-radius: 15px; width: 320px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .auth-modal input { width: 100%; padding: 10px; margin: 15px 0; border: 1px solid #ddd; border-radius: 8px; }
+        .auth-btn { background: #f46a05; color: white; border: none; padding: 10px; width: 100%; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        
+        /* Action Button Styles */
+        .action-btn-group { display: flex; gap: 8px; justify-content: center; }
+        .btn-mini { width: 28px; height: 28px; border-radius: 50%; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+        .btn-confirm-mini { background: #d1fae5; color: #065f46; }
+        .btn-confirm-mini:hover { background: #065f46; color: white; }
+        .btn-void-mini { background: #fee2e2; color: #b91c1c; }
+        .btn-void-mini:hover { background: #b91c1c; color: white; }
+        
+        /* Badges */
+        .status-voided { background: #fee2e2; color: #b91c1c; padding: 4px 12px; border-radius: 15px; font-size: 11px; font-weight: 700; display: inline-block; }
+    </style>
 </head>
 <body>
+
+    <div id="voidModal" class="modal-overlay">
+        <div class="auth-modal">
+            <h3 style="color: #4a2511;">Authorize Void</h3>
+            <p style="font-size: 12px; color: #8c5b3e; margin-top: 5px;">Enter your Admin password to void <br><strong>Order #ORD-<span id="displayId"></span></strong></p>
+            <input type="password" id="adminPass" placeholder="Admin Password" />
+            <button class="auth-btn" onclick="confirmAdminVoid()">Verify & Void</button>
+            <p onclick="closeModal()" style="margin-top:15px; cursor:pointer; font-size:12px; color:#999;">Cancel</p>
+        </div>
+    </div>
+
     <div class="dashboard-container">
 
         <aside class="sidebar">
@@ -30,13 +56,9 @@
 
                 <nav class="sidebar-menu">
                     <a asp-controller="Admin" asp-action="Dashboard" class="menu-btn active">❖ Dashboard</a>
-    
                     <a asp-controller="Admin" asp-action="Analytics" class="menu-btn">📊 Analytics</a>
-    
                     <a asp-controller="Admin" asp-action="Products" class="menu-btn">🏷️ Products</a>
-    
                     <a asp-controller="Admin" asp-action="Inventory" class="menu-btn">📦 Inventory</a>
-
                     <a asp-controller="Admin" asp-action="ManageAccounts" class="menu-btn">💳 Accounts</a>
                 </nav>
             </div>
@@ -66,15 +88,15 @@
                 <div class="summary-card">
                     <div class="card-icon-box icon-green">📈</div>
                     <div class="card-label">Total Sales Today</div>
-                    <div class="card-value">₱650.00</div>
-                    <span class="trend-badge trend-green">+ 8% from yesterday</span>
+                    <div class="card-value">₱@Model.TodayTotalSales.ToString("N2")</div>
+                    <span class="trend-badge trend-green">Real-time sync</span>
                 </div>
 
                 <div class="summary-card">
                     <div class="card-icon-box icon-light-orange">📁</div>
-                    <div class="card-label">Active Categories</div>
-                    <div class="card-value">24</div>
-                    <span class="trend-badge trend-orange">3 new this week</span>
+                    <div class="card-label">Total Transactions</div>
+                    <div class="card-value">@Model.TodayTransactionCount</div>
+                    <span class="trend-badge trend-orange">Updated today</span>
                 </div>
 
                 <div class="summary-card">
@@ -104,41 +126,48 @@
                                 <th>Items</th>
                                 <th>Total Amount</th>
                                 <th>Status</th>
+                                <th style="text-align: center;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td class="order-id">#ORD-1025</td>
-                                <td>10:45 AM</td>
-                                <td><span class="cashier-badge">Cashier_01</span></td>
-                                <td>2x Spanish Latte, 1x Croissant</td>
-                                <td>₱265.00</td>
-                                <td><span class="status-badge status-completed">Completed</span></td>
-                            </tr>
-                            <tr>
-                                <td class="order-id">#ORD-1024</td>
-                                <td>10:32 AM</td>
-                                <td><span class="cashier-badge">Cashier_02</span></td>
-                                <td>1x Matcha Milk Tea</td>
-                                <td>₱95.00</td>
-                                <td><span class="status-badge status-completed">Completed</span></td>
-                            </tr>
-                            <tr>
-                                <td class="order-id">#ORD-1023</td>
-                                <td>10:15 AM</td>
-                                <td><span class="cashier-badge">Cashier_01</span></td>
-                                <td>1x Silog Meal, 1x Americano</td>
-                                <td>₱150.00</td>
-                                <td><span class="status-badge status-completed">Completed</span></td>
-                            </tr>
-                            <tr>
-                                <td class="order-id">#ORD-1022</td>
-                                <td>09:50 AM</td>
-                                <td><span class="cashier-badge">Cashier_01</span></td>
-                                <td>3x Cheese Ensaymada</td>
-                                <td>₱135.00</td>
-                                <td><span class="status-badge status-pending">Pending</span></td>
-                            </tr>
+                            @if (Model.RecentSales != null && Model.RecentSales.Any())
+                            {
+                                foreach (var sale in Model.RecentSales)
+                                {
+                                    <tr>
+                                        <td class="order-id">#ORD-@sale.SaleId</td>
+                                        <td>@sale.SaleDate.ToString("hh:mm tt")</td>
+                                        <td><span class="cashier-badge">@sale.CashierName</span></td>
+                                        <td>@sale.ItemsSummary</td>
+                                        <td style="font-weight: 800; color: #4a2511;">₱@sale.TotalAmount.ToString("N2")</td>
+                                        <td>
+                                            @if (string.Equals(sale.Status, "Completed", StringComparison.OrdinalIgnoreCase)) { <span class="status-badge status-completed">Completed</span> }
+                                            else if (string.Equals(sale.Status, "Voided", StringComparison.OrdinalIgnoreCase)) { <span class="status-voided">Voided</span> }
+                                            else { <span class="status-badge status-pending">Pending</span> }
+                                        </td>
+                                        <td style="text-align: center;">
+                                            <div class="action-btn-group">
+                                                @* FIX: Case-insensitive check and null check to prevent "LOCKED" error *@
+                                                @if (string.IsNullOrEmpty(sale.Status) || string.Equals(sale.Status, "Pending", StringComparison.OrdinalIgnoreCase))
+                                                {
+                                                    <button class="btn-mini btn-confirm-mini" onclick="updateStatus(@sale.SaleId, 'Completed')" title="Complete Order">✓</button>
+                                                    <button class="btn-mini btn-void-mini" onclick="openVoidModal(@sale.SaleId)" title="Void Order">✕</button>
+                                                }
+                                                else
+                                                {
+                                                    <span style="color: #ccc; font-size: 10px; font-weight: 800;">LOCKED</span>
+                                                }
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="7" style="text-align: center; padding: 30px; color: #8c5b3e;">No sales records found for today.</td>
+                                </tr>
+                            }
                         </tbody>
                     </table>
                 </div>
@@ -146,5 +175,46 @@
 
         </main>
     </div>
-</body>
-</html>
+
+    <script>
+        let selectedSaleId = null;
+
+        function updateStatus(saleId, status) {
+            if(!confirm(`Confirm Order #ORD-${saleId} as ${status}?`)) return;
+            fetch('/Admin/UpdateSaleStatus', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ saleId: saleId, status: status })
+            }).then(res => res.ok ? location.reload() : alert("Update failed"));
+        }
+
+        function openVoidModal(saleId) {
+            selectedSaleId = saleId;
+            document.getElementById('displayId').innerText = saleId;
+            document.getElementById('voidModal').style.display = 'flex';
+        }
+
+        function closeModal() { document.getElementById('voidModal').style.display = 'none'; }
+
+        function confirmAdminVoid() {
+    const passValue = document.getElementById('adminPass').value;
+    if(!passValue) return alert("Please enter your password");
+
+    fetch('/Admin/VerifyAndVoid', { // <--- Points to Admin
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+            saleId: selectedSaleId, 
+            pass: passValue // <--- Must be 'pass' to match AdminVoidRequest
+        })
+    }).then(async res => {
+        if(res.ok) {
+            location.reload();
+        } else {
+            const err = await res.json();
+            alert(err.message || "Unauthorized");
+        }
+    });
+}
+    </script>
+</body></html>
