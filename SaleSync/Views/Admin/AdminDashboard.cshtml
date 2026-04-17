@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Admin Dashboard - SyncScale</title>
     <link rel="stylesheet" href="~/css/AdminDashboard.css" asp-append-version="true" />
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <style>
         /* Security Modal Styles */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
@@ -20,9 +23,6 @@
         .btn-confirm-mini:hover { background: #065f46; color: white; }
         .btn-void-mini { background: #fee2e2; color: #b91c1c; }
         .btn-void-mini:hover { background: #b91c1c; color: white; }
-        
-        /* Badges */
-        .status-voided { background: #fee2e2; color: #b91c1c; padding: 4px 12px; border-radius: 15px; font-size: 11px; font-weight: 700; display: inline-block; }
     </style>
 </head>
 <body>
@@ -38,14 +38,12 @@
     </div>
 
     <div class="dashboard-container">
-
         <aside class="sidebar">
             <div>
                 <div class="logo-section">
                     <div class="logo-title">Cafero</div>
                     <div class="logo-subtitle">Coffee & Pastries</div>
                 </div>
-
                 <div class="profile-section">
                     <div class="profile-circle">👤</div>
                     <div>
@@ -53,7 +51,6 @@
                         <div class="admin-role">Administrator</div>
                     </div>
                 </div>
-
                 <nav class="sidebar-menu">
                     <a asp-controller="Admin" asp-action="Dashboard" class="menu-btn active">❖ Dashboard</a>
                     <a asp-controller="Admin" asp-action="Analytics" class="menu-btn">📊 Analytics</a>
@@ -62,7 +59,6 @@
                     <a asp-controller="Admin" asp-action="ManageAccounts" class="menu-btn">💳 Accounts</a>
                 </nav>
             </div>
-
             <div class="logout-section">
                 <form method="post" action="/Home/Logout">
                     <button type="submit" class="menu-btn logout-btn">⎋ Log Out</button>
@@ -71,7 +67,6 @@
         </aside>
 
         <main class="main-content">
-            
             <div class="page-header">
                 <h1 class="greeting-title">Good Morning! ☕</h1>
                 <p class="greeting-subtitle">Welcome back! Here's what's brewing today.</p>
@@ -82,28 +77,21 @@
                     <div class="card-icon-box icon-orange">📦</div>
                     <div class="card-label">Total Inventory Items</div>
                     <div class="card-value">1,247</div>
-                    <span class="trend-badge trend-yellow">+ 12% from last month</span>
                 </div>
-
                 <div class="summary-card">
                     <div class="card-icon-box icon-green">📈</div>
                     <div class="card-label">Total Sales Today</div>
                     <div class="card-value">₱@Model.TodayTotalSales.ToString("N2")</div>
-                    <span class="trend-badge trend-green">Real-time sync</span>
                 </div>
-
                 <div class="summary-card">
                     <div class="card-icon-box icon-light-orange">📁</div>
                     <div class="card-label">Total Transactions</div>
                     <div class="card-value">@Model.TodayTransactionCount</div>
-                    <span class="trend-badge trend-orange">Updated today</span>
                 </div>
-
                 <div class="summary-card">
                     <div class="card-icon-box icon-red">⚠️</div>
                     <div class="card-label">Low Stock Alerts</div>
                     <div class="card-value">7</div>
-                    <span class="trend-badge trend-red">Requires attention</span>
                 </div>
             </div>
 
@@ -180,11 +168,10 @@
                                 </tr>
                             }
                         }
-                    </tbody>
+                        </tbody>
                     </table>
                 </div>
             </div>
-
         </main>
     </div>
 
@@ -192,12 +179,26 @@
         let selectedSaleId = null;
 
         function updateStatus(saleId, status) {
-            if(!confirm(`Confirm Order #ORD-${saleId} as ${status}?`)) return;
-            fetch('/Admin/UpdateSaleStatus', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ saleId: saleId, status: status })
-            }).then(res => res.ok ? location.reload() : alert("Update failed"));
+            Swal.fire({
+                title: 'Complete Order?',
+                text: `Mark Order #ORD-${saleId} as ${status}?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#f46a05',
+                cancelButtonColor: '#4a2511',
+                confirmButtonText: 'Yes, complete it'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('/Admin/UpdateSaleStatus', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ saleId: saleId, status: status })
+                    }).then(res => {
+                        if(res.ok) location.reload();
+                        else Swal.fire('Error', 'Update failed.', 'error');
+                    });
+                }
+            });
         }
 
         function openVoidModal(saleId) {
@@ -210,7 +211,10 @@
 
         function confirmAdminVoid() {
             const passValue = document.getElementById('adminPass').value;
-            if(!passValue) return alert("Please enter your password");
+            if(!passValue) {
+                Swal.fire('Required', 'Please enter your password', 'warning');
+                return;
+            }
 
             fetch('/Admin/VerifyAndVoid', {
                 method: 'POST',
@@ -221,40 +225,36 @@
                 })
             }).then(async res => {
                 if(res.ok) {
-                    location.reload();
+                    Swal.fire({
+                        title: 'Voided!',
+                        text: 'The order has been voided.',
+                        icon: 'success',
+                        confirmButtonColor: '#f46a05'
+                    }).then(() => location.reload());
                 } else {
                     const err = await res.json();
-                    alert(err.message || "Unauthorized");
+                    Swal.fire('Denied', err.message || "Unauthorized", 'error');
                 }
             });
-        } // <--- THIS CLOSING BRACE WAS MISSING!
+        }
 
-        // Opens the row and fetches the live ingredient deduction math
         async function toggleDetails(saleId) {
             const row = document.getElementById(`details-${saleId}`);
             const isExpanding = row.style.display === 'none';
-            
-            // Auto-close any other open rows
             document.querySelectorAll('.details-row').forEach(r => r.style.display = 'none');
             
             if (isExpanding) {
                 row.style.display = 'table-row';
-                
                 try {
-                    // Fetching from the Admin Controller!
                     const res = await fetch(`/Admin/GetOrderDetails?saleId=${saleId}`);
                     if(res.ok) {
                         const data = await res.json();
-                        
                         const itemsUl = document.getElementById(`items-list-${saleId}`);
                         itemsUl.innerHTML = data.items.map(i => `<li>${i}</li>`).join('');
-                        
                         const ingUl = document.getElementById(`ing-list-${saleId}`);
-                        if (data.ingredients.length > 0) {
-                            ingUl.innerHTML = data.ingredients.map(i => `<li>${i}</li>`).join('');
-                        } else {
-                            ingUl.innerHTML = `<li style="color: #999; list-style: none; margin-left: -20px;">No ingredients tied to this order.</li>`;
-                        }
+                        ingUl.innerHTML = data.ingredients.length > 0 ? 
+                            data.ingredients.map(i => `<li>${i}</li>`).join('') : 
+                            `<li style="color: #999; list-style: none; margin-left: -20px;">No ingredients tied to this order.</li>`;
                     }
                 } catch (err) {
                     console.error("Failed to load details");

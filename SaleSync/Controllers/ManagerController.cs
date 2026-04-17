@@ -11,7 +11,7 @@ namespace SaleSync.Controllers
     public class ManagerController : Controller
     {
         private readonly IConfiguration _configuration;
-        private readonly string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+        private readonly string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
 
         public ManagerController(IConfiguration configuration)
         {
@@ -253,7 +253,12 @@ namespace SaleSync.Controllers
             }
         }
 
-        public IActionResult Analytics() => View();
+        // Inside ManagerController.cs
+        public IActionResult Analytics()
+        {
+            // This tells the Manager controller to go look in the Admin folder for the view
+            return View("~/Views/Admin/Analytics.cshtml");
+        }
 
         [HttpGet]
         public IActionResult Products()
