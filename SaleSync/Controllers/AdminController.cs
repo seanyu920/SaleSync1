@@ -33,7 +33,8 @@ namespace SaleSync.Controllers
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 string totalSql = @"SELECT ISNULL(SUM(total_amount), 0) as Total, COUNT(sale_id) as Count 
-                                    FROM sales WHERE CAST(sale_date AS DATE) = CAST(GETDATE() AS DATE)";
+                    FROM sales WHERE CAST(sale_date AS DATE) = CAST(GETDATE() AS DATE) 
+                    AND status = 'Completed'";
 
                 string historySql = @"
                     SELECT TOP 10 s.sale_id, s.sale_date, s.total_amount, s.status, u.username,
@@ -79,16 +80,115 @@ namespace SaleSync.Controllers
         {
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                string sql = "UPDATE sales SET status = @status WHERE sale_id = @id";
-                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                conn.Open();
+
+                // 1. Check current status so we don't accidentally deduct ingredients twice!
+                string currentStatus = "";
+                using (SqlCommand checkCmd = new SqlCommand("SELECT status FROM sales WHERE sale_id = @id", conn))
                 {
-                    cmd.Parameters.AddWithValue("@status", request.Status);
-                    cmd.Parameters.AddWithValue("@id", request.SaleId);
-                    conn.Open();
-                    cmd.ExecuteNonQuery();
+                    checkCmd.Parameters.AddWithValue("@id", request.SaleId);
+                    var result = checkCmd.ExecuteScalar();
+                    if (result != null) currentStatus = result.ToString();
+                }
+
+                if (currentStatus == request.Status) return Ok(); // Already completed, do nothing.
+
+                using (SqlTransaction transaction = conn.BeginTransaction())
+                {
+                    try
+                    {
+                        // 2. Update the status in the database
+                        string sql = "UPDATE sales SET status = @status WHERE sale_id = @id";
+                        using (SqlCommand cmd = new SqlCommand(sql, conn, transaction))
+                        {
+                            cmd.Parameters.AddWithValue("@status", request.Status);
+                            cmd.Parameters.AddWithValue("@id", request.SaleId);
+                            cmd.ExecuteNonQuery();
+                        }
+
+                        // 3. ⭐ If marking as 'Completed', deduct the ingredients NOW ⭐
+                        if (request.Status == "Completed" && currentStatus != "Completed")
+                        {
+                            string getItemsSql = "SELECT product_id, quantity FROM sale_items WHERE sale_id = @id";
+                            var itemsList = new List<(int pId, int qty)>();
+
+                            using (SqlCommand getCmd = new SqlCommand(getItemsSql, conn, transaction))
+                            {
+                                getCmd.Parameters.AddWithValue("@id", request.SaleId);
+                                using (SqlDataReader r = getCmd.ExecuteReader())
+                                {
+                                    while (r.Read()) itemsList.Add((Convert.ToInt32(r["product_id"]), Convert.ToInt32(r["quantity"])));
+                                }
+                            }
+
+                            // Loop through the original order and run the deduction math
+                            foreach (var item in itemsList)
+                            {
+                                DeductIngredients(conn, transaction, item.pId, item.qty);
+                            }
+                        }
+
+                        transaction.Commit();
+                    }
+                    catch (Exception ex)
+                    {
+                        // If stock goes below zero, it cancels the 'Completed' status to protect your data!
+                        transaction.Rollback();
+                        return BadRequest(new { message = ex.Message });
+                    }
                 }
             }
             return Ok();
+        }
+        // ⭐ ADDED: Fetches the exact items and ingredient deductions for the Admin/Manager dashboard
+        [HttpGet]
+        public IActionResult GetOrderDetails(int saleId)
+        {
+            // Security check: Only Admins and Managers can pull this backend data
+            var role = HttpContext.Session.GetString("Role");
+            if (role != "Admin" && role != "Manager") return Unauthorized();
+
+            var itemsSold = new List<string>();
+            var ingredientsDeducted = new List<string>();
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+
+                string itemsSql = @"
+                    SELECT si.quantity, p.product_name 
+                    FROM sale_items si 
+                    JOIN products p ON si.product_id = p.product_id 
+                    WHERE si.sale_id = @id";
+
+                using (SqlCommand cmd = new SqlCommand(itemsSql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@id", saleId);
+                    using (SqlDataReader r = cmd.ExecuteReader())
+                    {
+                        while (r.Read()) itemsSold.Add($"{r["quantity"]}x {r["product_name"]}");
+                    }
+                }
+
+                string ingSql = @"
+                    SELECT SUM(si.quantity * pi.quantity_required) as TotalQty, ing.product_name, ing.sku
+                    FROM sale_items si
+                    JOIN product_ingredients pi ON si.product_id = pi.product_id
+                    JOIN products ing ON pi.ingredient_id = ing.product_id
+                    WHERE si.sale_id = @id
+                    GROUP BY ing.product_name, ing.sku";
+
+                using (SqlCommand cmd = new SqlCommand(ingSql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@id", saleId);
+                    using (SqlDataReader r = cmd.ExecuteReader())
+                    {
+                        while (r.Read()) ingredientsDeducted.Add($"{r["TotalQty"]} of {r["product_name"]} (ID: {r["sku"]})");
+                    }
+                }
+            }
+
+            return Json(new { items = itemsSold, ingredients = ingredientsDeducted });
         }
 
         [HttpPost]
@@ -628,6 +728,50 @@ namespace SaleSync.Controllers
                         transaction.Rollback();
                         return BadRequest("Cannot delete item used in sales.");
                     }
+                }
+            }
+        }
+        // ⭐ ADDED: The helper method to calculate and deduct recipe stock!
+        private void DeductIngredients(SqlConnection conn, SqlTransaction transaction, int productId, int qty)
+        {
+            string recipeQuery = @"
+                SELECT ingredient_id, quantity_required
+                FROM   product_ingredients
+                WHERE  product_id = @product_id";
+
+            using SqlCommand cmd = new SqlCommand(recipeQuery, conn, transaction);
+            cmd.Parameters.AddWithValue("@product_id", productId);
+
+            var ingredients = new List<(int id, double qtyReq)>();
+
+            using (SqlDataReader reader = cmd.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    ingredients.Add((
+                        Convert.ToInt32(reader["ingredient_id"]),
+                        Convert.ToDouble(reader["quantity_required"])
+                    ));
+                }
+            }
+
+            foreach (var ing in ingredients)
+            {
+                double totalDeduct = ing.qtyReq * qty;
+                string updateQuery = @"
+                    UPDATE products
+                    SET    stock_quantity = stock_quantity - @deduct
+                    WHERE  product_id     = @ingredient_id
+                      AND  stock_quantity >= @deduct";
+
+                using SqlCommand updateCmd = new SqlCommand(updateQuery, conn, transaction);
+                updateCmd.Parameters.AddWithValue("@deduct", totalDeduct);
+                updateCmd.Parameters.AddWithValue("@ingredient_id", ing.id);
+
+                int rows = updateCmd.ExecuteNonQuery();
+                if (rows == 0)
+                {
+                    throw new Exception($"Stock for ingredient ID {ing.id} became insufficient.");
                 }
             }
         }

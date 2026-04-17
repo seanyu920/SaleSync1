@@ -114,37 +114,47 @@
                         {
                             @foreach (var sale in Model.RecentSales)
                             {
-                                <tr>
+                                <tr onclick="toggleDetails(@sale.SaleId)" style="cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#fcf9f5'" onmouseout="this.style.background='transparent'">
                                     <td class="td-bold">#ORD-@sale.SaleId</td>
                                     <td>@sale.SaleDate.ToString("hh:mm tt")</td>
                                     <td><span class="badge-cashier">@sale.CashierName</span></td>
                                     <td>@sale.ItemsSummary</td>
                                     <td class="td-price">₱@sale.TotalAmount.ToString("N2")</td>
                                     <td>
-                                        @if (sale.Status == "Completed")
-                                        {
-                                            <span class="badge-completed">Completed</span>
-                                        }
-                                        else if (sale.Status == "Voided")
-                                        {
-                                            <span class="status-voided">Voided</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge-pending">Pending</span>
-                                        }
+                                        @if (sale.Status == "Completed") { <span class="badge-completed">Completed</span> }
+                                        else if (sale.Status == "Voided") { <span class="status-voided">Voided</span> }
+                                        else { <span class="badge-pending">Pending</span> }
                                     </td>
                                     <td style="text-align: center;">
                                         <div class="action-btn-group">
                                             @if (sale.Status == "Pending" || string.IsNullOrEmpty(sale.Status))
                                             {
-                                                <button class="btn-action btn-confirm" onclick="updateStatus(@sale.SaleId, 'Completed')">✓</button>
-                                                <button class="btn-action btn-void" onclick="openVoidModal(@sale.SaleId)">✕</button>
+                                                <button class="btn-mini btn-confirm-mini" onclick="event.stopPropagation(); updateStatus(@sale.SaleId, 'Completed')">✓</button>
+                                                <button class="btn-mini btn-void-mini" onclick="event.stopPropagation(); openVoidModal(@sale.SaleId)">✕</button>
                                             }
                                             else
                                             {
                                                 <span style="color: #dcbca5; font-size: 11px;">No Actions</span>
                                             }
+                                        </div>
+                                    </td>
+                                </tr>
+                                
+                                <tr id="details-@sale.SaleId" class="details-row" style="display: none; background: #faf8f5;">
+                                    <td colspan="7" style="padding: 0;">
+                                        <div style="padding: 15px 25px; border-left: 4px solid #f46a05; display: flex; gap: 50px; text-align: left; margin: 5px 15px 15px 15px; background: white; border-radius: 8px; box-shadow: inset 0 0 10px rgba(0,0,0,0.02);">
+                                            <div style="flex: 1;">
+                                                <h4 style="margin: 0 0 8px 0; color: #8c5b3e; font-size: 13px; text-transform: uppercase;">📦 Items Sold</h4>
+                                                <ul id="items-list-@sale.SaleId" style="margin: 0; padding-left: 20px; font-size: 14px; color: #4a2511; line-height: 1.6;">
+                                                    <li>Loading...</li>
+                                                </ul>
+                                            </div>
+                                            <div style="flex: 1.5;">
+                                                <h4 style="margin: 0 0 8px 0; color: #8c5b3e; font-size: 13px; text-transform: uppercase;">📉 Ingredients Deducted</h4>
+                                                <ul id="ing-list-@sale.SaleId" style="margin: 0; padding-left: 20px; font-size: 14px; color: #4a2511; line-height: 1.6;">
+                                                    <li>Loading...</li>
+                                                </ul>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>
@@ -198,6 +208,39 @@
                     alert(data.message || "Unauthorized access");
                 }
             });
+        }
+        // ⭐ ADDED: Opens the row and fetches the live ingredient deduction math
+        async function toggleDetails(saleId) {
+            const row = document.getElementById(`details-${saleId}`);
+            const isExpanding = row.style.display === 'none';
+            
+            // Auto-close any other open rows so the screen doesn't get cluttered
+            document.querySelectorAll('.details-row').forEach(r => r.style.display = 'none');
+            
+            if (isExpanding) {
+                row.style.display = 'table-row';
+                
+                try {
+                    const res = await fetch(`/Cashier/GetOrderDetails?saleId=${saleId}`);
+                    if(res.ok) {
+                        const data = await res.json();
+                        
+                        // Populate Items Sold
+                        const itemsUl = document.getElementById(`items-list-${saleId}`);
+                        itemsUl.innerHTML = data.items.map(i => `<li>${i}</li>`).join('');
+                        
+                        // Populate Ingredients Deducted
+                        const ingUl = document.getElementById(`ing-list-${saleId}`);
+                        if (data.ingredients.length > 0) {
+                            ingUl.innerHTML = data.ingredients.map(i => `<li>${i}</li>`).join('');
+                        } else {
+                            ingUl.innerHTML = `<li style="color: #999; list-style: none; margin-left: -20px;">No ingredients tied to this order.</li>`;
+                        }
+                    }
+                } catch (err) {
+                    console.error("Failed to load details");
+                }
+            }
         }
     </script>
 </body>
