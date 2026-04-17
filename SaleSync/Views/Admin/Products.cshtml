@@ -1,4 +1,5 @@
-﻿@{
+﻿@model List<SaleSync.Models.MenuItemModel>
+@{
     Layout = null;
     
     // Dynamically check if this is an Admin or Manager based on the current URL route
@@ -13,6 +14,7 @@
     <title>Menu Management - SyncScale</title>
     <link rel="stylesheet" href="~/css/AdminDashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/Products.css" asp-append-version="true" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
     <div class="dashboard-container">
@@ -97,74 +99,323 @@
         </main>
     </div>
 
-    <div id="recipeModal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="recipeItemName">Recipe</h2>
-                <button onclick="closeRecipe()" class="close-btn">&times;</button>
+    <div id="recipeModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+        <div class="modal-content" style="background: white; padding: 25px; border-radius: 15px; width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 id="recipeItemName" style="margin: 0;">Edit Recipe</h2>
+                <button onclick="closeRecipe()" class="close-btn" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
             </div>
-            <div class="form-group">
-                <label>Ingredients & Proportions</label>
-                <textarea rows="6" placeholder="List ingredients for inventory deduction..."></textarea>
+            
+            <div class="form-group" style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <select id="ingredientSelect" style="flex: 2; padding: 10px; border-radius: 6px; border: 1px solid #ddd;">
+                    <option value="">Select Ingredient...</option>
+                </select>
+                <input type="number" id="ingredientQty" placeholder="Qty (e.g. 15)" style="flex: 1; padding: 10px; border-radius: 6px; border: 1px solid #ddd;">
+                <button type="button" onclick="addIngredientToUI()" style="background: #4a2511; color: white; border: none; border-radius: 6px; padding: 0 15px; cursor: pointer;">Add</button>
             </div>
+
+            <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; min-height: 150px; margin-bottom: 15px;">
+                <h4 style="margin-top: 0; color: #8c5b3e;">Current Recipe</h4>
+                <ul id="recipeList" style="list-style: none; padding: 0; margin: 0;">
+                </ul>
+            </div>
+
             <div class="modal-actions">
-                <button type="button" onclick="closeRecipe()" class="btn-primary" style="background: #f46a05; color: white; padding: 10px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Save Recipe</button>
+                <button type="button" onclick="saveRecipeToDB()" class="btn-primary" style="background: #f46a05; width: 100%; color: white; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Save Recipe to Database</button>
             </div>
         </div>
     </div>
 
     <script>
-            const menuData = {
-                "COFFEE": ["Americano", "Cappuccino", "Hot Choco", "Hot Latte", "Iced Latte", "Spanish Latte", "Hot Matcha Latte", "Iced Matcha Latte"],
-                "MILKTEA": ["Wintermelon", "Okinawa", "Cookies and Cream", "Salted Caramel", "Hokkaido", "Matcha", "Thai"],
-                "FRUIT TEA": ["Green Apple", "Strawberry", "Blueberry", "Mango", "Lychee", "Peach"],
-                "RICE MEAL": ["Silog", "Hot Silog", "Long Silog", "Ham Silog", "Shanghai Silog", "Embotido Silog"],
-                "BREAD & PASTRY": ["Chocolate Cookies", "Croissant", "Cheese Ensaymada", "Yema Ensaymada", "Ube Ensaymada", "Chocolate Donut", "Cinnamon"],
-                "SNACKS & PASTA": ["Flavored Fries", "Nachos", "Siomai 4pcs", "Carbonara", "Pesto Pasta", "Gambas Pasta"]
-            };
+        // ==========================================
+        // 1. DYNAMIC DATA LOADING
+        // ==========================================
+        const menuData = {};
+        
+        @if (Model != null)
+        {
+            foreach (var item in Model)
+            {
+                @:if(!menuData["@item.CategoryName.ToUpper()"]) menuData["@item.CategoryName.ToUpper()"] = [];
+                @:menuData["@item.CategoryName.ToUpper()"].push({ id: @item.ProductId, name: "@Html.Raw(item.ProductName)" });
+            }
+        }
 
-            function openSubMenu(cat) {
-                const items = menuData[cat];
-                const container = document.getElementById('subItemsContainer');
-                const catImg = localStorage.getItem(`cat_img_${cat}`) || "";
+        let currentCategory = "";
+
+        // ==========================================
+        // 2. UI NAVIGATION
+        // ==========================================
+        function openSubMenu(cat) {
+        currentCategory = cat;
+        const items = menuData[cat] || [];
+        const container = document.getElementById('subItemsContainer');
+        const catImg = localStorage.getItem(`cat_img_${cat}`) || "";
+        
+        document.getElementById('pageTitle').innerText = cat;
+        document.getElementById('pageSubtitle').innerText = "Managing recipes for " + cat;
+        
+        container.innerHTML = "";
+        items.forEach(item => {
+        let imgTag = catImg ? `<img src="${catImg}" style="width:100%;height:100%;object-fit:cover;">` : `<span style="font-size:40px;">📦</span>`;
             
-                document.getElementById('pageTitle').innerText = cat;
-                document.getElementById('pageSubtitle').innerText = "Managing recipes for " + cat;
+        container.innerHTML += `
+        <div class="menu-item-card">
+        <div class="item-image-placeholder" style="height:120px;">${imgTag}</div>
+        <div class="item-details">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+                            
+        <div class="item-title" style="font-size:15px; padding-right: 10px;">${item.name}</div>
+                            
+        <button type="button"
+        onclick="event.stopPropagation(); deleteItem(${item.id})"
+        style="background:none; border:none; color:red; cursor:pointer; font-weight:bold; font-size: 16px; padding: 5px; flex-shrink: 0; z-index: 10;">
+        X
+        </button>
+
+        </div>
+                        
+        <button type="button"
+        class="btn-primary"
+        style="width:100%; font-size:11px; background:#4a2511; color: white; padding: 8px; border: none; border-radius: 6px; cursor: pointer;"
+        onclick="event.stopPropagation(); openRecipe(${item.id}, '${item.name.replace(/'/g, "\\'")}')">
+        Edit Recipe
+        </button>
+        </div>
+        </div>`;
+        });
+
+        document.getElementById('categoryContainer').style.display = 'none';
+        document.getElementById('subItemsContainer').style.display = 'grid';
+        document.getElementById('backBtn').style.display = 'block';
+        }
+
+        function showCategories() {
+        currentCategory = "";
+        document.getElementById('pageTitle').innerText = "Menu Categories 🏷️";
+        document.getElementById('categoryContainer').style.display = 'grid';
+        document.getElementById('subItemsContainer').style.display = 'none';
+        document.getElementById('backBtn').style.display = 'none';
+        }
+
+        // ==========================================
+        // 3. THE ALL-IN-ONE CRUD ACTION (ADD)
+        // ==========================================
+        document.querySelector('.btn-primary').addEventListener('click', async function() {
+        if(!currentCategory) {
+        Swal.fire({ icon: 'warning', title: 'Oops...', text: 'Please open a category (like COFFEE) first before adding an item.' });
+        return;
+        }
             
-                container.innerHTML = "";
-                items.forEach(item => {
-                    let imgTag = catImg ? `<img src="${catImg}" style="width:100%;height:100%;object-fit:cover;">` : `<span style="font-size:40px;">📦</span>`;
-                
-                    container.innerHTML += `
-                        <div class="menu-item-card">
-                            <div class="item-image-placeholder" style="height:120px;">${imgTag}</div>
-                            <div class="item-details">
-                                <div class="item-title" style="font-size:15px; margin-bottom:10px;">${item}</div>
-                                <button class="btn-primary" style="width:100%; font-size:11px; background:#4a2511; color: white; padding: 8px; border: none; border-radius: 6px; cursor: pointer;" onclick="openRecipe('${item}')">Edit Recipe</button>
-                            </div>
-                        </div>`;
-                });
+        // Generate the dropdown options for the ingredients
+        let ingOptions = '<option value="">Select Ingredient...</option>';
+        allIngredients.forEach(i => ingOptions += `<option value="${i.id}">${i.name}</option>`);
+            
+        const { value: formValues } = await Swal.fire({
+        title: `Add to ${currentCategory}`,
+        width: '600px', // Made it slightly wider to fit everything nicely
+        html: `
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+        <input id="swal-name" class="swal2-input" placeholder="Name (e.g. Mocha)" style="flex: 2; margin:0;">
+        <select id="swal-size" class="swal2-input" style="flex: 1; margin:0; font-size: 14px;">
+        <option value="">No Size</option>
+        <option value=" - Small">Small</option>
+        <option value=" - Large">Large</option>
+        </select>
+        <input id="swal-price" type="number" class="swal2-input" placeholder="Price ₱" style="flex: 1; margin:0;">
+        </div>
+                    
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
+        <h4 style="text-align:left; color:#8c5b3e; margin-bottom: 10px;">Recipe Ingredients (Optional)</h4>
+                    
+        <div id="swal-recipe-rows" style="display:flex; flex-direction:column; gap:10px;">
+        <div style="display: flex; gap: 10px;" class="swal-ing-row">
+        <select class="swal2-input swal-ing-id" style="flex: 2; margin:0; font-size: 14px;">${ingOptions}</select>
+        <input type="number" class="swal2-input swal-ing-qty" placeholder="Qty" style="flex: 1; margin:0;">
+        </div>
+        <div style="display: flex; gap: 10px;" class="swal-ing-row">
+        <select class="swal2-input swal-ing-id" style="flex: 2; margin:0; font-size: 14px;">${ingOptions}</select>
+        <input type="number" class="swal2-input swal-ing-qty" placeholder="Qty" style="flex: 1; margin:0;">
+        </div>
+        <div style="display: flex; gap: 10px;" class="swal-ing-row">
+        <select class="swal2-input swal-ing-id" style="flex: 2; margin:0; font-size: 14px;">${ingOptions}</select>
+        <input type="number" class="swal2-input swal-ing-qty" placeholder="Qty" style="flex: 1; margin:0;">
+        </div>
+        </div>
+        `,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonColor: '#f46a05',
+        confirmButtonText: 'Save Complete Item',
+        preConfirm: () => {
+        const name = document.getElementById('swal-name').value.trim();
+        const size = document.getElementById('swal-size').value;
+        const price = document.getElementById('swal-price').value;
+                    
+        if (!name || !price) {
+        Swal.showValidationMessage('Please enter the Name and Price.');
+        return false;
+        }
 
-                document.getElementById('categoryContainer').style.display = 'none';
-                document.getElementById('subItemsContainer').style.display = 'grid';
-                document.getElementById('backBtn').style.display = 'block';
-            }
+        // Scrape the 3 ingredient rows to see which ones they filled out
+        const ingredients = [];
+        const rows = document.querySelectorAll('.swal-ing-row');
+        rows.forEach(row => {
+        const ingId = row.querySelector('.swal-ing-id').value;
+        const ingQty = row.querySelector('.swal-ing-qty').value;
+        if (ingId && ingQty > 0) {
+        ingredients.push({ IngredientId: parseInt(ingId), Quantity: parseFloat(ingQty) });
+        }
+        });
 
-            function showCategories() {
-                document.getElementById('pageTitle').innerText = "Menu Categories 🏷️";
-                document.getElementById('categoryContainer').style.display = 'grid';
-                document.getElementById('subItemsContainer').style.display = 'none';
-                document.getElementById('backBtn').style.display = 'none';
-            }
+        return {
+        ProductName: name,
+        Size: size,
+        Price: parseFloat(price),
+        CategoryName: currentCategory,
+        Ingredients: ingredients
+        };
+        }
+        });
+            
+        if (formValues) {
+        fetch('/Admin/AddFullProduct', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formValues)
+        }).then(res => {
+        if(res.ok) {
+        Swal.fire({ title: 'Saved!', text: 'Product and recipe routed to database.', icon: 'success', timer: 1500, showConfirmButton: false })
+        .then(() => location.reload());
+        } else {
+        Swal.fire('Error', 'Failed to save item. Check your database connection.', 'error');
+        }
+        });
+        }
+        });
+        function deleteItem(id) {
+        Swal.fire({
+        title: 'Are you sure?',
+        text: "This will remove the item from the menu!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+        if (result.isConfirmed) {
+        fetch('/Admin/DeleteMenuItem', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(id)
+        }).then(res => {
+        if(res.ok) {
+        Swal.fire({ title: 'Deleted!', text: 'Item removed.', icon: 'success', timer: 1500, showConfirmButton: false })
+        .then(() => location.reload());
+        } else {
+        Swal.fire('Cannot Delete', 'This item is tied to past sales records.', 'error');
+        }
+        });
+        }
+        });
+        }
+        // ==========================================
+        // 4. RECIPE BUILDER LOGIC
+        // ==========================================
+        let currentRecipeProductId = 0;
+        let currentRecipeItems = [];
+        let allIngredients = [];
 
-            function openRecipe(name) {
-                document.getElementById('recipeItemName').innerText = name + " Recipe";
-                document.getElementById('recipeModal').classList.add('show');
-            }
+        window.addEventListener('DOMContentLoaded', async () => {
+        const res = await fetch('/Admin/GetIngredients');
+        allIngredients = await res.json();
+            
+        const select = document.getElementById('ingredientSelect');
+        allIngredients.forEach(ing => {
+        select.innerHTML += `<option value="${ing.id}">${ing.name}</option>`;
+        });
+        });
 
-            function closeRecipe() {
-                document.getElementById('recipeModal').classList.remove('show');
-            }
+        async function openRecipe(productId, productName) {
+        currentRecipeProductId = productId;
+        currentRecipeItems = [];
+        document.getElementById('recipeItemName').innerText = productName + " Recipe";
+            
+        const res = await fetch(`/Admin/GetRecipe?productId=${productId}`);
+        const existingData = await res.json();
+            
+        existingData.forEach(item => {
+        currentRecipeItems.push({ id: item.id, name: item.name, qty: item.qty });
+        });
+            
+        renderRecipeList();
+        document.getElementById('recipeModal').style.display = 'flex';
+        }
+
+        function closeRecipe() {
+        document.getElementById('recipeModal').style.display = 'none';
+        }
+
+        function addIngredientToUI() {
+        const select = document.getElementById('ingredientSelect');
+        const qtyInput = document.getElementById('ingredientQty');
+            
+        const id = parseInt(select.value);
+        const name = select.options[select.selectedIndex]?.text;
+        const qty = parseFloat(qtyInput.value);
+            
+        if(!id || !qty || qty <= 0) return Swal.fire('Wait!', 'Select an ingredient and enter a valid quantity.', 'warning');
+        if(currentRecipeItems.find(i => i.id === id)) return Swal.fire('Oops', 'This ingredient is already in the recipe!', 'error');
+
+        currentRecipeItems.push({ id: id, name: name, qty: qty });
+        renderRecipeList();
+            
+        select.value = "";
+        qtyInput.value = "";
+        }
+
+        function removeIngredientFromUI(id) {
+        currentRecipeItems = currentRecipeItems.filter(i => i.id !== id);
+        renderRecipeList();
+        }
+
+        function renderRecipeList() {
+        const list = document.getElementById('recipeList');
+        list.innerHTML = "";
+            
+        if(currentRecipeItems.length === 0) {
+        list.innerHTML = "<li style='color: #999; font-size: 13px; text-align: center; margin-top: 20px;'>No ingredients added yet.</li>";
+        return;
+        }
+
+        currentRecipeItems.forEach(item => {
+        list.innerHTML += `
+        <li style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee;">
+        <span><strong>${item.qty}</strong> x ${item.name}</span>
+        <button onclick="removeIngredientFromUI(${item.id})" style="color: red; border: none; background: none; cursor: pointer; font-weight: bold;">X</button>
+        </li>`;
+        });
+        }
+
+        function saveRecipeToDB() {
+        const payload = {
+        ProductId: currentRecipeProductId,
+        Ingredients: currentRecipeItems.map(i => ({ IngredientId: i.id, Quantity: i.qty }))
+        };
+
+        fetch('/Admin/SaveRecipe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+        }).then(res => {
+        if(res.ok) {
+        Swal.fire('Saved!', 'Recipe successfully linked to inventory.', 'success');
+        closeRecipe();
+        } else {
+        Swal.fire('Error', 'Failed to save recipe.', 'error');
+        }
+        });
+        }
     </script>
 </body>
 </html>

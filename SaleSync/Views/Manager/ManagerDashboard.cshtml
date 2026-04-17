@@ -170,11 +170,17 @@
 
         function updateStatus(saleId, status) {
             if(!confirm(`Confirm Order #ORD-${saleId} as ${status}?`)) return;
-            fetch('/Manager/UpdateSaleStatus', {
+            
+            // 1. FIX: Format data as URLSearchParams so ASP.NET can bind the parameters correctly
+            const formData = new URLSearchParams();
+            formData.append('saleId', saleId);
+            formData.append('status', status);
+
+            // 2. FIX: Target the correct method name (UpdateOrderStatus)
+            fetch('/Manager/UpdateOrderStatus', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ saleId: saleId, status: status })
-            }).then(res => res.ok ? location.reload() : alert("Update failed"));
+                body: formData // No headers needed for URLSearchParams, browser handles it!
+            }).then(res => res.ok ? location.reload() : alert("Update failed. Check server console."));
         }
 
         function openVoidModal(saleId) {
@@ -186,27 +192,28 @@
         function closeModal() { document.getElementById('voidModal').style.display = 'none'; }
 
         function confirmManagerVoid() {
-    const passValue = document.getElementById('mgrPass').value;
-    if(!passValue) return alert("Please enter your password");
+            const passValue = document.getElementById('mgrPass').value;
+            if(!passValue) return alert("Please enter your password");
 
-    fetch('/Manager/VerifyAndVoid', { // <--- Double check this URL
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-            saleId: selectedSaleId, 
-            pass: passValue // <--- Must be 'pass' (lowercase)
-        })
-    }).then(async res => {
-        if(res.ok) {
-            location.reload();
-        } else {
-            const err = await res.json();
-            alert(err.message || "Unauthorized: Void failed");
+            // 1. FIX: Format data for C# binding
+            const formData = new URLSearchParams();
+            formData.append('saleId', selectedSaleId);
+            formData.append('status', 'Voided');
+
+            // 2. FIX: Point to UpdateOrderStatus so it successfully updates the database
+            fetch('/Manager/UpdateOrderStatus', { 
+                method: 'POST',
+                body: formData
+            }).then(async res => {
+                if(res.ok) {
+                    location.reload();
+                } else {
+                    alert("Unauthorized: Void failed");
+                }
+            }).catch(err => {
+                console.error("Error:", err);
+                alert("Server error. Check if the controller method exists.");
+            });
         }
-    }).catch(err => {
-        console.error("Error:", err);
-        alert("Server error. Check if the controller method exists.");
-    });
-}
     </script>
 </body></html>

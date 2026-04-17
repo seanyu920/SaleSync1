@@ -10,7 +10,7 @@ namespace SaleSync.Controllers
     public class CashierController : Controller
     {
         private readonly string connectionString =
-            "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
+            "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
 
         public IActionResult Dashboard()
         {
@@ -70,13 +70,44 @@ namespace SaleSync.Controllers
         }
 
         // ⭐ ADD THIS METHOD TO FIX THE 404 ERROR ⭐
+        // ⭐ UPDATED: Now fetches live products from the database for the Cashier
         public IActionResult CashierMenu()
         {
             var role = HttpContext.Session.GetString("Role");
             if (string.IsNullOrEmpty(role) || role != "Cashier")
                 return RedirectToAction("Index", "Home");
 
-            return View(); // This looks for CashierMenu.cshtml in Views/Cashier/
+            var menuList = new List<MenuItemModel>();
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                // Fetch only finished products (is_ingredient is 0 or NULL)
+                string sql = @"
+                    SELECT p.product_id, p.product_name, c.category_name, p.selling_price
+                    FROM products p
+                    LEFT JOIN categories c ON p.category_id = c.category_id
+                    WHERE p.is_ingredient = 0 OR p.is_ingredient IS NULL";
+
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                {
+                    conn.Open();
+                    using (SqlDataReader r = cmd.ExecuteReader())
+                    {
+                        while (r.Read())
+                        {
+                            menuList.Add(new MenuItemModel
+                            {
+                                ProductId = Convert.ToInt32(r["product_id"]),
+                                ProductName = r["product_name"].ToString(),
+                                CategoryName = r["category_name"]?.ToString() ?? "Uncategorized",
+                                Price = r["selling_price"] != DBNull.Value ? Convert.ToDecimal(r["selling_price"]) : 0
+                            });
+                        }
+                    }
+                }
+            }
+
+            return View(menuList);
         }
 
         [HttpPost]
