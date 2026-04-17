@@ -1,6 +1,9 @@
 ﻿@{
     Layout = null;
-    var currentRole = "Admin";
+    
+    // Dynamically check if this is an Admin or Manager based on the current URL route
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "Admin";
+    var currentRole = currentController == "Manager" ? "Manager" : "Admin";
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -13,25 +16,41 @@
 </head>
 <body>
     <div class="dashboard-container">
+        
         <aside class="sidebar">
             <div>
                 <div class="logo-section">
                     <div class="logo-title">SyncScale</div>
                     <div class="logo-subtitle">Coffee & Pastries</div>
                 </div>
+                
                 <div class="profile-section" style="display: flex; align-items: center; gap: 15px; margin-bottom: 40px; padding: 0 10px;">
                     <div class="profile-circle" style="width: 45px; height: 45px; background: #f46a05; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #fff;">👤</div>
                     <div>
-                        <h2 class="admin-name" style="font-size: 16px; font-weight: 700; color: #ffffff; margin: 0;">Admin</h2>
-                        <div style="font-size: 12px; color: #dcbca5;">Administrator</div>
+                        <h2 class="admin-name" style="font-size: 16px; font-weight: 700; color: #ffffff; margin: 0;">@currentRole</h2>
+                        <div style="font-size: 12px; color: #dcbca5;">System Access</div>
                     </div>
                 </div>
+                
                 <nav class="sidebar-menu">
-                    <a href="#" class="menu-btn">❖ Dashboard</a>
-                    <a href="#" class="menu-btn">📊 Analytics</a>
-                    <a href="#" class="menu-btn active">🏷️ Products</a>
-                    <a href="#" class="menu-btn">📦 Inventory</a>
+                    <a asp-controller="@currentController" asp-action="Dashboard" class="menu-btn">❖ Dashboard</a>
+                    <a asp-controller="@currentController" asp-action="Analytics" class="menu-btn">📊 Analytics</a>
+                    <a asp-controller="@currentController" asp-action="Products" class="menu-btn active">🏷️ Products</a>
+                    <a asp-controller="@currentController" asp-action="Inventory" class="menu-btn">📦 Inventory</a>
+
+                    @if (currentController == "Admin")
+                    {
+                        <a asp-controller="Admin" asp-action="ManageAccounts" class="menu-btn">💳 Accounts</a>
+                    }
                 </nav>
+            </div>
+
+            <div class="logout-section" style="margin-top: auto;">
+                <form method="post" action="/Home/Logout">
+                    <button type="submit" class="menu-btn logout-btn" style="background: transparent; border: none; width: 100%; text-align: left; cursor: pointer; color: #dcbca5; padding: 14px 20px; font-size: 15px; font-weight: 600;">
+                        ⎋ Log Out
+                    </button>
+                </form>
             </div>
         </aside>
 
@@ -43,7 +62,7 @@
                 </div>
                 <div style="display: flex; gap: 10px;">
                     <button id="backBtn" class="btn-secondary" style="display: none;" onclick="showCategories()">← Back to Categories</button>
-                    <button class="btn-primary">+ Add New</button>
+                    <button class="btn-primary" style="background: #f46a05; color: white; padding: 10px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">+ Add New</button>
                 </div>
             </div>
 
@@ -89,7 +108,7 @@
                 <textarea rows="6" placeholder="List ingredients for inventory deduction..."></textarea>
             </div>
             <div class="modal-actions">
-                <button type="button" onclick="closeRecipe()" class="btn-primary">Save Recipe</button>
+                <button type="button" onclick="closeRecipe()" class="btn-primary" style="background: #f46a05; color: white; padding: 10px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Save Recipe</button>
             </div>
         </div>
     </div>
@@ -121,7 +140,7 @@
                             <div class="item-image-placeholder" style="height:120px;">${imgTag}</div>
                             <div class="item-details">
                                 <div class="item-title" style="font-size:15px; margin-bottom:10px;">${item}</div>
-                                <button class="btn-primary" style="width:100%; font-size:11px; background:#4a2511;" onclick="openRecipe('${item}')">Edit Recipe</button>
+                                <button class="btn-primary" style="width:100%; font-size:11px; background:#4a2511; color: white; padding: 8px; border: none; border-radius: 6px; cursor: pointer;" onclick="openRecipe('${item}')">Edit Recipe</button>
                             </div>
                         </div>`;
                 });

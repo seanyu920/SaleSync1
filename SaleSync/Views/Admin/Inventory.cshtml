@@ -53,6 +53,10 @@
                        class="menu-btn">📊 Analytics</a>
 
                     <a asp-controller="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Manager" ? "Manager" : "Admin")"
+                       asp-action="Products"
+                       class="menu-btn">🏷️ Products</a>
+
+                    <a asp-controller="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Manager" ? "Manager" : "Admin")"
                        asp-action="Inventory"
                        class="menu-btn active">📦 Inventory</a>
 
@@ -207,12 +211,10 @@
                                                     }
                                                     else if (qty <= 30)
                                                     {
-
                                                         <span class="stock-badge badge-medium">Medium</span>
                                                     }
                                                     else
                                                     {
-
                                                         <span class="stock-badge badge-high">High</span>
                                                     }
                                                 }
