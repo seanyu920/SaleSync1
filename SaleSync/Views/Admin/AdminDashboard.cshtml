@@ -130,45 +130,57 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @if (Model.RecentSales != null && Model.RecentSales.Any())
+                        @if (Model.RecentSales != null && Model.RecentSales.Any())
+                        {
+                            @foreach (var sale in Model.RecentSales)
                             {
-                                foreach (var sale in Model.RecentSales)
-                                {
-                                    <tr>
-                                        <td class="order-id">#ORD-@sale.SaleId</td>
-                                        <td>@sale.SaleDate.ToString("hh:mm tt")</td>
-                                        <td><span class="cashier-badge">@sale.CashierName</span></td>
-                                        <td>@sale.ItemsSummary</td>
-                                        <td style="font-weight: 800; color: #4a2511;">₱@sale.TotalAmount.ToString("N2")</td>
-                                        <td>
-                                            @if (string.Equals(sale.Status, "Completed", StringComparison.OrdinalIgnoreCase)) { <span class="status-badge status-completed">Completed</span> }
-                                            else if (string.Equals(sale.Status, "Voided", StringComparison.OrdinalIgnoreCase)) { <span class="status-voided">Voided</span> }
-                                            else { <span class="status-badge status-pending">Pending</span> }
-                                        </td>
-                                        <td style="text-align: center;">
-                                            <div class="action-btn-group">
-                                                @* FIX: Case-insensitive check and null check to prevent "LOCKED" error *@
-                                                @if (string.IsNullOrEmpty(sale.Status) || string.Equals(sale.Status, "Pending", StringComparison.OrdinalIgnoreCase))
-                                                {
-                                                    <button class="btn-mini btn-confirm-mini" onclick="updateStatus(@sale.SaleId, 'Completed')" title="Complete Order">✓</button>
-                                                    <button class="btn-mini btn-void-mini" onclick="openVoidModal(@sale.SaleId)" title="Void Order">✕</button>
-                                                }
-                                                else
-                                                {
-                                                    <span style="color: #ccc; font-size: 10px; font-weight: 800;">LOCKED</span>
-                                                }
+                                <tr onclick="toggleDetails(@sale.SaleId)" style="cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#fcf9f5'" onmouseout="this.style.background='transparent'">
+                                    <td class="td-bold">#ORD-@sale.SaleId</td>
+                                    <td>@sale.SaleDate.ToString("hh:mm tt")</td>
+                                    <td><span class="badge-cashier">@sale.CashierName</span></td>
+                                    <td>@sale.ItemsSummary</td>
+                                    <td class="td-price">₱@sale.TotalAmount.ToString("N2")</td>
+                                    <td>
+                                        @if (sale.Status == "Completed") { <span class="badge-completed" style="background: #d1fae5; color: #065f46; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;">Completed</span> }
+                                        else if (sale.Status == "Voided") { <span class="status-voided" style="background: #fee2e2; color: #b91c1c; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;">Voided</span> }
+                                        else { <span class="badge-pending" style="background: #fef3c7; color: #92400e; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;">Pending</span> }
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <div class="action-btn-group">
+                                            @if (sale.Status == "Pending" || string.IsNullOrEmpty(sale.Status))
+                                            {
+                                              <button class="btn-mini btn-confirm-mini" onclick="event.stopPropagation(); updateStatus(@sale.SaleId, 'Completed')">✓</button>
+                                              <button class="btn-mini btn-void-mini" onclick="event.stopPropagation(); openVoidModal(@sale.SaleId)">✕</button>
+                                            }
+                                            else
+                                            {
+                                                <span style="color: #dcbca5; font-size: 11px; font-weight: bold;">LOCKED</span>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                                
+                                <tr id="details-@sale.SaleId" class="details-row" style="display: none; background: #faf8f5;">
+                                    <td colspan="7" style="padding: 0;">
+                                        <div style="padding: 15px 25px; border-left: 4px solid #f46a05; display: flex; gap: 50px; text-align: left; margin: 5px 15px 15px 15px; background: white; border-radius: 8px; box-shadow: inset 0 0 10px rgba(0,0,0,0.02);">
+                                            <div style="flex: 1;">
+                                                <h4 style="margin: 0 0 8px 0; color: #8c5b3e; font-size: 13px; text-transform: uppercase;">📦 Items Sold</h4>
+                                                <ul id="items-list-@sale.SaleId" style="margin: 0; padding-left: 20px; font-size: 14px; color: #4a2511; line-height: 1.6;">
+                                                    <li>Loading...</li>
+                                                </ul>
                                             </div>
-                                        </td>
-                                    </tr>
-                                }
-                            }
-                            else
-                            {
-                                <tr>
-                                    <td colspan="7" style="text-align: center; padding: 30px; color: #8c5b3e;">No sales records found for today.</td>
+                                            <div style="flex: 1.5;">
+                                                <h4 style="margin: 0 0 8px 0; color: #8c5b3e; font-size: 13px; text-transform: uppercase;">📉 Ingredients Deducted</h4>
+                                                <ul id="ing-list-@sale.SaleId" style="margin: 0; padding-left: 20px; font-size: 14px; color: #4a2511; line-height: 1.6;">
+                                                    <li>Loading...</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </td>
                                 </tr>
                             }
-                        </tbody>
+                        }
+                    </tbody>
                     </table>
                 </div>
             </div>
@@ -197,24 +209,57 @@
         function closeModal() { document.getElementById('voidModal').style.display = 'none'; }
 
         function confirmAdminVoid() {
-    const passValue = document.getElementById('adminPass').value;
-    if(!passValue) return alert("Please enter your password");
+            const passValue = document.getElementById('adminPass').value;
+            if(!passValue) return alert("Please enter your password");
 
-    fetch('/Admin/VerifyAndVoid', { // <--- Points to Admin
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-            saleId: selectedSaleId, 
-            pass: passValue // <--- Must be 'pass' to match AdminVoidRequest
-        })
-    }).then(async res => {
-        if(res.ok) {
-            location.reload();
-        } else {
-            const err = await res.json();
-            alert(err.message || "Unauthorized");
+            fetch('/Admin/VerifyAndVoid', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    saleId: selectedSaleId, 
+                    pass: passValue 
+                })
+            }).then(async res => {
+                if(res.ok) {
+                    location.reload();
+                } else {
+                    const err = await res.json();
+                    alert(err.message || "Unauthorized");
+                }
+            });
+        } // <--- THIS CLOSING BRACE WAS MISSING!
+
+        // Opens the row and fetches the live ingredient deduction math
+        async function toggleDetails(saleId) {
+            const row = document.getElementById(`details-${saleId}`);
+            const isExpanding = row.style.display === 'none';
+            
+            // Auto-close any other open rows
+            document.querySelectorAll('.details-row').forEach(r => r.style.display = 'none');
+            
+            if (isExpanding) {
+                row.style.display = 'table-row';
+                
+                try {
+                    // Fetching from the Admin Controller!
+                    const res = await fetch(`/Admin/GetOrderDetails?saleId=${saleId}`);
+                    if(res.ok) {
+                        const data = await res.json();
+                        
+                        const itemsUl = document.getElementById(`items-list-${saleId}`);
+                        itemsUl.innerHTML = data.items.map(i => `<li>${i}</li>`).join('');
+                        
+                        const ingUl = document.getElementById(`ing-list-${saleId}`);
+                        if (data.ingredients.length > 0) {
+                            ingUl.innerHTML = data.ingredients.map(i => `<li>${i}</li>`).join('');
+                        } else {
+                            ingUl.innerHTML = `<li style="color: #999; list-style: none; margin-left: -20px;">No ingredients tied to this order.</li>`;
+                        }
+                    }
+                } catch (err) {
+                    console.error("Failed to load details");
+                }
+            }
         }
-    });
-}
     </script>
 </body></html>

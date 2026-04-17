@@ -8,7 +8,6 @@ using System.Collections.Generic;
 
 namespace SaleSync.Controllers
 {
-    // ⭐ CRITICAL: This must say ManagerController, NOT AdminController
     public class ManagerController : Controller
     {
         private readonly IConfiguration _configuration;
@@ -34,8 +33,10 @@ namespace SaleSync.Controllers
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
+                // ⭐ FIXED: Now only counts 'Completed' sales in the Dashboard math
                 string totalSql = @"SELECT ISNULL(SUM(total_amount), 0) as Total, COUNT(sale_id) as Count 
-                                    FROM sales WHERE CAST(sale_date AS DATE) = CAST(GETDATE() AS DATE)";
+                    FROM sales WHERE CAST(sale_date AS DATE) = CAST(GETDATE() AS DATE) 
+                    AND status = 'Completed'";
 
                 string historySql = @"
                     SELECT TOP 10 s.sale_id, s.sale_date, s.total_amount, s.status, u.username,
@@ -73,7 +74,6 @@ namespace SaleSync.Controllers
                     }
                 }
             }
-            // Ensure you have a ManagerDashboard.cshtml view, or route them to a shared one
             return View("ManagerDashboard", model);
         }
 
@@ -87,10 +87,10 @@ namespace SaleSync.Controllers
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 string sql = @"
-    SELECT p.product_id, p.product_name, p.stock_quantity, p.cost_price, p.sku, c.category_name 
-    FROM products p
-    LEFT JOIN categories c ON p.category_id = c.category_id
-    WHERE p.is_ingredient = 1";
+                    SELECT p.product_id, p.product_name, p.stock_quantity, p.cost_price, p.sku, c.category_name 
+                    FROM products p
+                    LEFT JOIN categories c ON p.category_id = c.category_id
+                    WHERE p.is_ingredient = 1";
 
                 using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
@@ -113,7 +113,6 @@ namespace SaleSync.Controllers
                 }
             }
             return View("~/Views/Admin/Inventory.cshtml", inventoryList);
-            // Note: I routed this to use your existing Admin Inventory view so you don't have to duplicate the HTML file!
         }
 
         [HttpPost]
@@ -136,38 +135,170 @@ namespace SaleSync.Controllers
             }
             return RedirectToAction("Inventory");
         }
+
+        // ==========================================
+        // ⭐ UPGRADED: The Checkmark / Status Logic
+        // ==========================================
         [HttpPost]
-        public IActionResult UpdateOrderStatus(int saleId, string status)
+        public IActionResult UpdateSaleStatus([FromBody] StatusUpdateModel request)
         {
-            // 1. Security Check: Ensure only Managers/Admins can do this
-            if (!IsManager()) return RedirectToAction("Index", "Home");
+            if (!IsManager()) return Unauthorized();
 
-            // 2. Optional but recommended: Validate the status string
-            if (status != "Completed" && status != "Void" && status != "Voided")
-            {
-                TempData["Error"] = "Invalid status update.";
-                return RedirectToAction("Dashboard");
-            }
-
-            // 3. Update the database
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                string sql = "UPDATE sales SET status = @status WHERE sale_id = @id";
-                using (SqlCommand cmd = new SqlCommand(sql, conn))
-                {
-                    cmd.Parameters.AddWithValue("@status", status);
-                    cmd.Parameters.AddWithValue("@id", saleId);
+                conn.Open();
 
-                    conn.Open();
-                    cmd.ExecuteNonQuery();
+                string currentStatus = "";
+                using (SqlCommand checkCmd = new SqlCommand("SELECT status FROM sales WHERE sale_id = @id", conn))
+                {
+                    checkCmd.Parameters.AddWithValue("@id", request.SaleId);
+                    var result = checkCmd.ExecuteScalar();
+                    if (result != null) currentStatus = result.ToString();
+                }
+
+                // If it's already marked as Completed/Voided, do nothing.
+                if (currentStatus == request.Status) return Ok();
+
+                using (SqlTransaction transaction = conn.BeginTransaction())
+                {
+                    try
+                    {
+                        string sql = "UPDATE sales SET status = @status WHERE sale_id = @id";
+                        using (SqlCommand cmd = new SqlCommand(sql, conn, transaction))
+                        {
+                            cmd.Parameters.AddWithValue("@status", request.Status);
+                            cmd.Parameters.AddWithValue("@id", request.SaleId);
+                            cmd.ExecuteNonQuery();
+                        }
+
+                        // ⭐ THE MAGIC: If marking as 'Completed', deduct the ingredients NOW
+                        if (request.Status == "Completed" && currentStatus != "Completed")
+                        {
+                            string getItemsSql = "SELECT product_id, quantity FROM sale_items WHERE sale_id = @id";
+                            var itemsList = new List<(int pId, int qty)>();
+
+                            using (SqlCommand getCmd = new SqlCommand(getItemsSql, conn, transaction))
+                            {
+                                getCmd.Parameters.AddWithValue("@id", request.SaleId);
+                                using (SqlDataReader r = getCmd.ExecuteReader())
+                                {
+                                    while (r.Read()) itemsList.Add((Convert.ToInt32(r["product_id"]), Convert.ToInt32(r["quantity"])));
+                                }
+                            }
+
+                            // Loop through the items and do the ingredient math
+                            foreach (var item in itemsList)
+                            {
+                                DeductIngredients(conn, transaction, item.pId, item.qty);
+                            }
+                        }
+
+                        transaction.Commit();
+                    }
+                    catch (Exception ex)
+                    {
+                        // Protects database if stock falls below zero
+                        transaction.Rollback();
+                        return BadRequest(new { message = ex.Message });
+                    }
+                }
+            }
+            return Ok();
+        }
+
+        // ==========================================
+        // ⭐ ADDED: The Math Helper Formula
+        // ==========================================
+        private void DeductIngredients(SqlConnection conn, SqlTransaction transaction, int productId, int qty)
+        {
+            string recipeQuery = @"
+                SELECT ingredient_id, quantity_required
+                FROM   product_ingredients
+                WHERE  product_id = @product_id";
+
+            using SqlCommand cmd = new SqlCommand(recipeQuery, conn, transaction);
+            cmd.Parameters.AddWithValue("@product_id", productId);
+
+            var ingredients = new List<(int id, double qtyReq)>();
+
+            using (SqlDataReader reader = cmd.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    ingredients.Add((
+                        Convert.ToInt32(reader["ingredient_id"]),
+                        Convert.ToDouble(reader["quantity_required"])
+                    ));
                 }
             }
 
-            // 4. Refresh the page to show the updated log
-            return RedirectToAction("Dashboard");
+            foreach (var ing in ingredients)
+            {
+                double totalDeduct = ing.qtyReq * qty;
+                string updateQuery = @"
+                    UPDATE products
+                    SET    stock_quantity = stock_quantity - @deduct
+                    WHERE  product_id     = @ingredient_id
+                      AND  stock_quantity >= @deduct";
+
+                using SqlCommand updateCmd = new SqlCommand(updateQuery, conn, transaction);
+                updateCmd.Parameters.AddWithValue("@deduct", totalDeduct);
+                updateCmd.Parameters.AddWithValue("@ingredient_id", ing.id);
+
+                int rows = updateCmd.ExecuteNonQuery();
+                if (rows == 0)
+                {
+                    throw new Exception($"Stock for ingredient ID {ing.id} became insufficient.");
+                }
+            }
         }
 
         public IActionResult Analytics() => View();
-        public IActionResult Products() => View();
+
+        [HttpGet]
+        public IActionResult Products()
+        {
+            if (HttpContext.Session.GetString("Role") != "Manager")
+                return RedirectToAction("Index", "Home");
+
+            var menuList = new List<SaleSync.Models.MenuItemModel>();
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                string sql = @"
+                    SELECT p.product_id, p.product_name, c.category_name, p.selling_price
+                    FROM products p
+                    LEFT JOIN categories c ON p.category_id = c.category_id
+                    WHERE p.is_ingredient = 0 OR p.is_ingredient IS NULL";
+
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                {
+                    conn.Open();
+                    using (SqlDataReader r = cmd.ExecuteReader())
+                    {
+                        while (r.Read())
+                        {
+                            menuList.Add(new SaleSync.Models.MenuItemModel
+                            {
+                                ProductId = Convert.ToInt32(r["product_id"]),
+                                ProductName = r["product_name"].ToString(),
+                                CategoryName = r["category_name"]?.ToString() ?? "Uncategorized",
+                                Price = r["selling_price"] != DBNull.Value ? Convert.ToDecimal(r["selling_price"]) : 0
+                            });
+                        }
+                    }
+                }
+            }
+
+            return View("~/Views/Admin/Products.cshtml", menuList);
+        }
+
+    } // End of ManagerController
+
+    // ⭐ ADDED: Support class placed securely outside the controller braces
+    public class StatusUpdateModel
+    {
+        public int SaleId { get; set; }
+        public string Status { get; set; }
     }
 }
