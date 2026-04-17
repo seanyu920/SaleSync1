@@ -12,7 +12,7 @@ namespace SaleSync.Controllers
     public class ManagerController : Controller
     {
         private readonly IConfiguration _configuration;
-        private readonly string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
+        private readonly string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
 
         public ManagerController(IConfiguration configuration)
         {
@@ -135,6 +135,36 @@ namespace SaleSync.Controllers
                 }
             }
             return RedirectToAction("Inventory");
+        }
+        [HttpPost]
+        public IActionResult UpdateOrderStatus(int saleId, string status)
+        {
+            // 1. Security Check: Ensure only Managers/Admins can do this
+            if (!IsManager()) return RedirectToAction("Index", "Home");
+
+            // 2. Optional but recommended: Validate the status string
+            if (status != "Completed" && status != "Void" && status != "Voided")
+            {
+                TempData["Error"] = "Invalid status update.";
+                return RedirectToAction("Dashboard");
+            }
+
+            // 3. Update the database
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                string sql = "UPDATE sales SET status = @status WHERE sale_id = @id";
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@status", status);
+                    cmd.Parameters.AddWithValue("@id", saleId);
+
+                    conn.Open();
+                    cmd.ExecuteNonQuery();
+                }
+            }
+
+            // 4. Refresh the page to show the updated log
+            return RedirectToAction("Dashboard");
         }
 
         public IActionResult Analytics() => View();

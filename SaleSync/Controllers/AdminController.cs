@@ -1,17 +1,18 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using SaleSync.Models;
-using System;
-using System.Collections.Generic;
+using static SaleSync.Models.MenuItemModel;
 
 namespace SaleSync.Controllers
 {
     public class AdminController : Controller
     {
         private readonly IConfiguration _configuration;
-        private readonly string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
+        private readonly string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
 
         public AdminController(IConfiguration configuration)
         {
@@ -124,7 +125,70 @@ namespace SaleSync.Controllers
         }
 
         public IActionResult Analytics() => View();
-        public IActionResult Products() => IsAdmin() ? View() : RedirectToAction("Index", "Home");
+        [HttpGet]
+        public IActionResult Products()
+        {
+            if (!IsAdmin() && HttpContext.Session.GetString("Role") != "Manager")
+                return RedirectToAction("Index", "Home");
+
+            var menuList = new List<MenuItemModel>();
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                // Fetch only finished products (is_ingredient is 0 or NULL)
+                string sql = @"
+                    SELECT p.product_id, p.product_name, c.category_name, p.selling_price
+                    FROM products p
+                    LEFT JOIN categories c ON p.category_id = c.category_id
+                    WHERE p.is_ingredient = 0 OR p.is_ingredient IS NULL";
+
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                {
+                    conn.Open();
+                    using (SqlDataReader r = cmd.ExecuteReader())
+                    {
+                        while (r.Read())
+                        {
+                            menuList.Add(new MenuItemModel
+                            {
+                                ProductId = Convert.ToInt32(r["product_id"]),
+                                ProductName = r["product_name"].ToString(),
+                                CategoryName = r["category_name"]?.ToString() ?? "Uncategorized",
+                                Price = r["selling_price"] != DBNull.Value ? Convert.ToDecimal(r["selling_price"]) : 0
+                            });
+                        }
+                    }
+                }
+            }
+            return View(menuList);
+        }
+        [HttpPost]
+        public IActionResult AddMenuItem([FromBody] MenuItemModel model)
+        {
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                // ADDED: sku and barcode generation using NEWID() so they never duplicate!
+                // Using 'PRD-' to stand for Product, so you can tell them apart from your 'ING-' ingredients.
+                string sql = @"
+                    INSERT INTO products (product_name, selling_price, is_ingredient, category_id, sku, barcode)
+                    VALUES (@name, @price, 0, 
+                            (SELECT TOP 1 category_id FROM categories WHERE category_name = @catName),
+                            'PRD-' + LEFT(CAST(NEWID() AS VARCHAR(36)), 8),
+                            'BC-' + LEFT(CAST(NEWID() AS VARCHAR(36)), 8))";
+
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@name", model.ProductName);
+                    cmd.Parameters.AddWithValue("@price", model.Price);
+                    cmd.Parameters.AddWithValue("@catName", model.CategoryName);
+
+                    conn.Open();
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            return Ok();
+        }
+
 
         [HttpGet]
         public IActionResult Inventory()
@@ -139,7 +203,8 @@ namespace SaleSync.Controllers
     SELECT p.product_id, p.product_name, p.stock_quantity, p.cost_price, p.sku, c.category_name 
     FROM products p
     LEFT JOIN categories c ON p.category_id = c.category_id
-    WHERE p.is_ingredient = 1";
+    WHERE p.is_ingredient = 1
+    ORDER BY c.category_name ASC, p.product_name ASC";
 
                 using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
@@ -183,6 +248,69 @@ namespace SaleSync.Controllers
                     cmd.ExecuteNonQuery();
                 }
             }
+            return RedirectToAction("Inventory");
+        }
+        // ⭐ ADDED: This catches the data when you add a new item to inventory
+        [HttpPost]
+        public IActionResult AddInventory(InventoryItems model)
+        {
+            // 1. Security Check
+            if (!CanAccessInventory()) return RedirectToAction("Index", "Home");
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                // 2. Insert into the database. 
+                // Note: Defaults to category 99 (Raw Materials) and sets is_ingredient = 1
+                string sql = @"
+                    INSERT INTO products (product_name, stock_quantity, cost_price, is_ingredient, category_id, sku, barcode)
+                    VALUES (@name, @qty, @price, 1, 99, 
+                            'ING-' + LEFT(CAST(NEWID() AS VARCHAR(36)), 8),
+                            'BC-' + LEFT(CAST(NEWID() AS VARCHAR(36)), 8))";
+
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@name", model.ItemName ?? "New Ingredient");
+                    cmd.Parameters.AddWithValue("@qty", model.Quantity);
+                    cmd.Parameters.AddWithValue("@price", model.PurchasePrice);
+
+                    conn.Open();
+                    cmd.ExecuteNonQuery();
+                }
+            }
+
+            // 3. Refresh the inventory page to show the new item
+            return RedirectToAction("Inventory");
+        }
+        // ⭐ ADDED: This catches the data when you click "Delete" on an item
+        [HttpPost]
+        public IActionResult DeleteInventory(int ProductId)
+        {
+            // 1. Security Check
+            if (!CanAccessInventory()) return RedirectToAction("Index", "Home");
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                // 2. SQL to delete the specific item
+                string sql = "DELETE FROM products WHERE product_id = @id";
+
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@id", ProductId);
+
+                    conn.Open();
+                    try
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+                    catch (SqlException)
+                    {
+                        // Safely catches the error if the item is tied to an existing sale
+                        TempData["ErrorMessage"] = "Cannot delete item: It is already linked to past sales records.";
+                    }
+                }
+            }
+
+            // 3. Refresh the inventory page
             return RedirectToAction("Inventory");
         }
 
@@ -316,6 +444,192 @@ namespace SaleSync.Controllers
                 }
             }
             return RedirectToAction("ManageAccounts");
+        }
+        // 1. Fetches all raw materials for the dropdown
+        [HttpGet]
+        public IActionResult GetIngredients()
+        {
+            var list = new List<object>();
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                string sql = "SELECT product_id, product_name FROM products WHERE is_ingredient = 1 ORDER BY product_name";
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                {
+                    conn.Open();
+                    using (SqlDataReader r = cmd.ExecuteReader())
+                    {
+                        while (r.Read())
+                            list.Add(new { id = r["product_id"], name = r["product_name"] });
+                    }
+                }
+            }
+            return Json(list);
+        }
+
+        // 2. Fetches an existing recipe so you can edit it
+        [HttpGet]
+        public IActionResult GetRecipe(int productId)
+        {
+            var list = new List<object>();
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                string sql = @"
+                    SELECT pi.ingredient_id, p.product_name, pi.quantity_required 
+                    FROM product_ingredients pi
+                    JOIN products p ON pi.ingredient_id = p.product_id
+                    WHERE pi.product_id = @id";
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@id", productId);
+                    conn.Open();
+                    using (SqlDataReader r = cmd.ExecuteReader())
+                    {
+                        while (r.Read())
+                            list.Add(new { id = r["ingredient_id"], name = r["product_name"], qty = r["quantity_required"] });
+                    }
+                }
+            }
+            return Json(list);
+        }
+
+        // 3. Saves the recipe to the database
+        [HttpPost]
+        public IActionResult SaveRecipe([FromBody] RecipeSaveRequest request)
+        {
+            if (!IsAdmin()) return Unauthorized();
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+                // Step A: Delete the old recipe so we don't get duplicates
+                string delSql = "DELETE FROM product_ingredients WHERE product_id = @id";
+                using (SqlCommand delCmd = new SqlCommand(delSql, conn))
+                {
+                    delCmd.Parameters.AddWithValue("@id", request.ProductId);
+                    delCmd.ExecuteNonQuery();
+                }
+
+                // Step B: Insert the new recipe ingredients
+                if (request.Ingredients != null && request.Ingredients.Count > 0)
+                {
+                    string insSql = "INSERT INTO product_ingredients (product_id, ingredient_id, quantity_required) VALUES (@pid, @iid, @qty)";
+                    foreach (var item in request.Ingredients)
+                    {
+                        using (SqlCommand insCmd = new SqlCommand(insSql, conn))
+                        {
+                            insCmd.Parameters.AddWithValue("@pid", request.ProductId);
+                            insCmd.Parameters.AddWithValue("@iid", item.IngredientId);
+                            insCmd.Parameters.AddWithValue("@qty", item.Quantity);
+                            insCmd.ExecuteNonQuery();
+                        }
+                    }
+                }
+            }
+            return Ok();
+        }
+        [HttpPost]
+        public IActionResult AddFullProduct([FromBody] ComprehensiveItemModel model)
+        {
+            if (!IsAdmin()) return Unauthorized();
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+                // Start a transaction so it all saves at the exact same time
+                using (SqlTransaction transaction = conn.BeginTransaction())
+                {
+                    try
+                    {
+                        // 1. Save the Product details first
+                        string fullName = model.ProductName + (string.IsNullOrEmpty(model.Size) ? "" : model.Size);
+
+                        string insertProd = @"
+                            INSERT INTO products (product_name, selling_price, is_ingredient, category_id, sku, barcode) 
+                            OUTPUT INSERTED.product_id 
+                            VALUES (@name, @price, 0, 
+                                   (SELECT TOP 1 category_id FROM categories WHERE category_name = @cat), 
+                                   'PRD-' + LEFT(CAST(NEWID() AS VARCHAR(36)), 8), 
+                                   'BC-' + LEFT(CAST(NEWID() AS VARCHAR(36)), 8))";
+
+                        int newProductId;
+                        using (SqlCommand cmd = new SqlCommand(insertProd, conn, transaction))
+                        {
+                            cmd.Parameters.AddWithValue("@name", fullName);
+                            cmd.Parameters.AddWithValue("@price", model.Price);
+                            cmd.Parameters.AddWithValue("@cat", model.CategoryName);
+                            newProductId = (int)cmd.ExecuteScalar(); // Grabs the new ID instantly
+                        }
+
+                        // 2. Route the ingredients straight to the ingredients table
+                        if (model.Ingredients != null && model.Ingredients.Count > 0)
+                        {
+                            string insertIng = "INSERT INTO product_ingredients (product_id, ingredient_id, quantity_required) VALUES (@pid, @iid, @qty)";
+                            foreach (var ing in model.Ingredients)
+                            {
+                                using (SqlCommand ingCmd = new SqlCommand(insertIng, conn, transaction))
+                                {
+                                    ingCmd.Parameters.AddWithValue("@pid", newProductId);
+                                    ingCmd.Parameters.AddWithValue("@iid", ing.IngredientId);
+                                    ingCmd.Parameters.AddWithValue("@qty", ing.Quantity);
+                                    ingCmd.ExecuteNonQuery();
+                                }
+                            }
+                        }
+
+                        // 3. Save everything permanently
+                        transaction.Commit();
+                        return Ok();
+                    }
+                    catch (Exception)
+                    {
+                        // If anything goes wrong, undo the whole thing to protect the database!
+                        transaction.Rollback();
+                        return BadRequest("Failed to save comprehensive item.");
+                    }
+                }
+            }
+        }
+        [HttpPost]
+        public IActionResult DeleteMenuItem([FromBody] int productId)
+        {
+            // 1. Security check
+            if (!IsAdmin()) return Unauthorized();
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+                using (SqlTransaction transaction = conn.BeginTransaction())
+                {
+                    try
+                    {
+                        // Step A: Safely wipe out any attached recipe ingredients FIRST
+                        string deleteRecipeSql = "DELETE FROM product_ingredients WHERE product_id = @id";
+                        using (SqlCommand recipeCmd = new SqlCommand(deleteRecipeSql, conn, transaction))
+                        {
+                            recipeCmd.Parameters.AddWithValue("@id", productId);
+                            recipeCmd.ExecuteNonQuery();
+                        }
+
+                        // Step B: Now that it's unlinked, delete the actual product
+                        string deleteProductSql = "DELETE FROM products WHERE product_id = @id";
+                        using (SqlCommand productCmd = new SqlCommand(deleteProductSql, conn, transaction))
+                        {
+                            productCmd.Parameters.AddWithValue("@id", productId);
+                            productCmd.ExecuteNonQuery();
+                        }
+
+                        // Save the changes permanently
+                        transaction.Commit();
+                        return Ok();
+                    }
+                    catch (SqlException)
+                    {
+                        // If it fails here, it means the item has already been sold to a customer!
+                        transaction.Rollback();
+                        return BadRequest("Cannot delete item used in sales.");
+                    }
+                }
+            }
         }
 
         public class AdminVoidRequest { public int SaleId { get; set; } public string Pass { get; set; } }
