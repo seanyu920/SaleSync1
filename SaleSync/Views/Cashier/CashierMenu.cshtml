@@ -6,7 +6,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Cashier Menu - Cafero</title>
+    <title>Point of Sale - Cafero</title>
     <link rel="stylesheet" href="~/css/CashierMenu.css" asp-append-version="true" />
     
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
@@ -27,28 +27,27 @@
                 <h2 style="font-size: 16px; font-weight: 700; color: #ffffff; margin: 0;">Cashier</h2>
                 <div style="font-size: 12px; color: #dcbca5;">Front Desk Access</div>
             </div>
+
             <nav class="sidebar-menu">
                 <a href="/Cashier/Dashboard" class="menu-btn">❖ Dashboard</a>
-                <a href="javascript:void(0)" onclick="showMenu()" id="btnMenu" class="menu-btn active">📋 Menu</a>
-                <a href="javascript:void(0)" onclick="showCart()" id="btnCart" class="menu-btn">📄 Receipt</a>
+                <a href="javascript:void(0)" class="menu-btn active">📋 Point of Sale</a>
             </nav>
 
             <div style="margin-top: auto;">
                 <form method="post" action="/Home/Logout">
-                    <button type="submit" class="menu-btn">⎋ Log Out</button>
+                    <button type="submit" class="menu-btn logout-btn" style="background:transparent; border:none; color:#dcbca5; text-align:left; cursor:pointer; width:100%; padding:14px 20px;">⎋ Log Out</button>
                 </form>
             </div>
         </aside>
 
-        <main class="main-content">
-            
+        <main class="menu-side">
             <div id="menuSection">
                 <div class="page-header">
                     <div>
-                        <h1 class="form-title" id="cashierTitle" style="margin-bottom:5px;">Menu Categories</h1>
-                        <p id="cashierSubtitle" style="color:#8c5b3e; font-size:14px;">Select a category to view items.</p>
+                        <h1 class="form-title" id="cashierTitle">Menu Categories</h1>
+                        <p id="cashierSubtitle" style="color:#8c5b3e; font-size:14px;">Select an item to add to the order.</p>
                     </div>
-                    <button id="backBtn" class="btn-secondary" style="display: none;" onclick="backToCategories()">← Back</button>
+                    <button id="backBtn" class="btn-secondary" style="display: none;" onclick="backToCategories()">← Back to Categories</button>
                 </div>
 
                 <div id="categoryGrid" class="product-grid">
@@ -79,49 +78,98 @@
                 </div>
 
                 <div id="subItemsGrid" class="product-grid" style="display:none;"></div>
-
-                <div class="form-card" id="selectionDetails" style="display:none; margin-top:30px;">
-                    <div class="item-display-flex">
-                        <div class="item-image-container" id="detailImageContainer"></div>
-                        <div class="item-details-controls">
-                            <h2 id="displayName" class="item-name-display">Product Name</h2>
-                            <div class="size-selector-grid" id="sizeSelector"></div>
-                            
-                            <div class="qty-flex">
-                                <button type="button" onclick="decreaseQty()">-</button>
-                                <input id="qty" value="1" readonly />
-                                <button type="button" onclick="increaseQty()">+</button>
-                            </div>
-                            
-                            <button type="button" class="add-btn-large" onclick="addToCart()">Add to Receipt</button>
-                        </div>
-                    </div>
-                </div>
             </div>
-
-            <div id="cartSection" style="display:none;">
-                <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-                    <h1 class="form-title" style="margin-bottom:0;">Current Order</h1>
-                    <div style="display:flex; gap:12px;">
-                        <button type="button" onclick="removeSelectedItem()" class="action-btn delete-btn">Remove Item</button>
-                        <button type="button" onclick="checkoutOrder()" class="action-btn btn-checkout">Complete Checkout</button>
-                    </div>
-                </div>
-                <div class="table-card">
-                    <table>
-                        <thead>
-                            <tr><th>Sel</th><th>Item Name</th><th>Size</th><th>Qty</th><th>Price</th><th>Subtotal</th></tr>
-                        </thead>
-                        <tbody id="receiptList"></tbody>
-                    </table>
-                    <div class="total-footer">
-                        <div style="font-size: 14px; color: #8c5b3e; font-weight: 600;">Grand Total</div>
-                        <div id="total">₱0.00</div>
-                    </div>
-                </div>
-            </div>
-
         </main>
+
+        <aside class="receipt-side">
+            <h2 class="widget-title" style="margin-bottom: 5px;">🛒 Current Order</h2>
+            <p style="font-size: 12px; color: #b58361; margin-bottom: 15px;">Tap an item to select for removal</p>
+            
+            <div class="order-items-list" id="receiptList">
+                <div class="empty-msg">No items in order</div>
+            </div>
+
+            <div class="checkout-footer">
+                <div class="total-row">
+                    <span style="font-size: 14px; color: #8c5b3e; font-weight: 600;">Grand Total</span>
+                    <span id="total">₱0.00</span>
+                </div>
+                
+                <button type="button" onclick="openPaymentModal()" class="payment-select-btn">
+                    <span style="color: #8c5b3e; font-weight: 600;">Payment Method</span>
+                    <span id="activePaymentLabel">💵 Cash</span>
+                </button>
+                
+                <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                    <button type="button" onclick="removeSelectedItem()" class="delete-btn" style="flex: 1;">Remove Item</button>
+                </div>
+                
+                <button type="button" onclick="checkoutOrder()" class="btn-checkout">
+                    Complete Checkout
+                </button>
+            </div>
+        </aside>
+    </div>
+
+    <div id="selectionModal" class="modal-overlay" style="display:none;">
+        <div class="form-card" style="margin: 0; position: relative; width: 460px; max-width: 90%; z-index: 2001; padding: 25px;">
+            <button type="button" onclick="closeSelectionModal()" style="position: absolute; top: 12px; right: 18px; background: transparent; border: none; font-size: 28px; color: #8c5b3e; cursor: pointer; line-height: 1;">&times;</button>
+            
+            <div class="item-display-flex" style="flex-direction: row; text-align: left; gap: 25px;">
+                <div class="item-image-container" id="detailImageContainer" style="width: 130px; height: 130px; flex-shrink: 0; margin: 0; font-size: 60px;"></div>
+                
+                <div class="item-details-controls" style="align-items: flex-start; width: 100%; gap: 8px;">
+                    <h2 id="displayName" class="item-name-display" style="margin-bottom: 0; font-size: 22px;">Product Name</h2>
+                    
+                    <div class="size-selector-grid" id="sizeSelector" style="justify-content: flex-start;"></div>
+                    
+                    <div class="qty-flex" style="justify-content: flex-start; margin: 5px 0;">
+                        <button type="button" onclick="decreaseQty()" style="width: 35px; height: 35px;">-</button>
+                        <input id="qty" value="1" readonly style="width: 45px; height: 35px; font-size: 16px;" />
+                        <button type="button" onclick="increaseQty()" style="width: 35px; height: 35px;">+</button>
+                    </div>
+                    
+                    <button type="button" class="add-btn-large" onclick="addToCart()" style="padding: 12px; font-size: 15px;">Add to Receipt</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="paymentModal" class="modal-overlay" style="display:none;">
+        <div class="form-card" style="margin: 0; position: relative; width: 500px; max-width: 90%; z-index: 2001; padding: 30px;">
+            <button type="button" onclick="closePaymentModal()" style="position: absolute; top: 15px; right: 20px; background: transparent; border: none; font-size: 28px; color: #8c5b3e; cursor: pointer; line-height: 1;">&times;</button>
+            
+            <h2 class="widget-title" style="text-align: center; margin-bottom: 25px;">Select Payment Method</h2>
+            
+            <div class="payment-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 25px;">
+                <label class="custom-radio-card">
+                    <input type="radio" name="paymentOption" value="Cash" checked />
+                    <span class="radio-tile" style="display: block; text-align: center; width: 100%; padding: 15px;">💵 Cash</span>
+                </label>
+                <label class="custom-radio-card">
+                    <input type="radio" name="paymentOption" value="GCash" />
+                    <span class="radio-tile" style="display: block; text-align: center; width: 100%; padding: 15px;">🔵 GCash</span>
+                </label>
+                <label class="custom-radio-card">
+                    <input type="radio" name="paymentOption" value="Maya" />
+                    <span class="radio-tile" style="display: block; text-align: center; width: 100%; padding: 15px;">🟢 Maya</span>
+                </label>
+                <label class="custom-radio-card">
+                    <input type="radio" name="paymentOption" value="Card" />
+                    <span class="radio-tile" style="display: block; text-align: center; width: 100%; padding: 15px;">💳 Credit/Debit Card</span>
+                </label>
+                <label class="custom-radio-card">
+                    <input type="radio" name="paymentOption" value="QR Ph" />
+                    <span class="radio-tile" style="display: block; text-align: center; width: 100%; padding: 15px;">🔳 QR Ph</span>
+                </label>
+                <label class="custom-radio-card">
+                    <input type="radio" name="paymentOption" value="Google Pay" />
+                    <span class="radio-tile" style="display: block; text-align: center; width: 100%; padding: 15px;">📱 Google Pay</span>
+                </label>
+            </div>
+            
+            <button type="button" class="add-btn-large" onclick="confirmPaymentMethod()">Confirm Selection</button>
+        </div>
     </div>
 
     <script>
@@ -147,6 +195,32 @@
 
         const sizedCategories = ["COFFEE", "MILKTEA", "FRUIT TEA"];
         let cart = [], selectedReceiptIndex = -1, activeItemName = "", currentCategory = "";
+        let finalPaymentMethod = "Cash"; // Default payment
+
+        function openPaymentModal() {
+        document.getElementById('paymentModal').style.display = 'flex';
+        }
+
+        function closePaymentModal() {
+        document.getElementById('paymentModal').style.display = 'none';
+        }
+
+        function confirmPaymentMethod() {
+        const selectedOption = document.querySelector('input[name="paymentOption"]:checked');
+        if (selectedOption) {
+        finalPaymentMethod = selectedOption.value;
+                
+        let emoji = "💵";
+        if (finalPaymentMethod === "GCash") emoji = "🔵";
+        else if (finalPaymentMethod === "Maya") emoji = "🟢";
+        else if (finalPaymentMethod === "Card") emoji = "💳";
+        else if (finalPaymentMethod === "QR Ph") emoji = "🔳";
+        else if (finalPaymentMethod === "Google Pay") emoji = "📱";
+
+        document.getElementById('activePaymentLabel').innerText = `${emoji} ${finalPaymentMethod}`;
+        }
+        closePaymentModal();
+        }
 
         function openSubMenu(cat) {
         currentCategory = cat;
@@ -155,7 +229,9 @@
         const customImg = localStorage.getItem(`cat_img_${cat}`);
 
         document.getElementById('cashierTitle').innerText = cat;
-        document.getElementById('cashierSubtitle').innerText = "Select an item to customize";
+        document.getElementById('backBtn').style.display = 'block';
+        document.getElementById('categoryGrid').style.display = 'none';
+        document.getElementById('subItemsGrid').style.display = 'grid';
 
         grid.innerHTML = "";
         items.forEach(item => {
@@ -166,10 +242,6 @@
         <div class="product-info"><h3>${item}</h3></div>
         </div>`;
         });
-
-        document.getElementById('categoryGrid').style.display = 'none';
-        document.getElementById('subItemsGrid').style.display = 'grid';
-        document.getElementById('backBtn').style.display = 'block';
         }
 
         function backToCategories() {
@@ -177,18 +249,19 @@
         document.getElementById('categoryGrid').style.display = 'grid';
         document.getElementById('subItemsGrid').style.display = 'none';
         document.getElementById('backBtn').style.display = 'none';
-        document.getElementById('selectionDetails').style.display = 'none';
         }
 
         function selectProductItem(name) {
         activeItemName = name;
-        document.getElementById('selectionDetails').style.display = 'block';
+            
+        document.getElementById('selectionModal').style.display = 'flex';
+            
         document.getElementById('displayName').innerText = name;
         document.getElementById('qty').value = 1;
 
         const sizeSelector = document.getElementById('sizeSelector');
         if (sizedCategories.includes(currentCategory)) {
-        sizeSelector.style.display = '';
+        sizeSelector.style.display = 'flex';
         sizeSelector.innerHTML = `
         <label class="custom-radio-card"><input type="radio" name="size" value="Small" checked /><span class="radio-tile">Small</span></label>
         <label class="custom-radio-card"><input type="radio" name="size" value="Large" /><span class="radio-tile">Large</span></label>`;
@@ -200,29 +273,15 @@
         const customImg = localStorage.getItem(`cat_img_${currentCategory}`);
         const container = document.getElementById('detailImageContainer');
         container.innerHTML = customImg ? `<img src="${customImg}">` : `${getCategoryEmoji(currentCategory)}`;
+        }
 
-        document.getElementById('selectionDetails').scrollIntoView({ behavior: 'smooth' });
+        function closeSelectionModal() {
+        document.getElementById('selectionModal').style.display = 'none';
         }
 
         function getCategoryEmoji(cat) {
         const emojis = { "MILKTEA": "🧋", "RICE MEAL": "🍱", "BREAD & PASTRY": "🥐", "FRUIT TEA": "🍹", "SNACKS & PASTA": "🍝" };
         return emojis[cat] || "☕";
-        }
-
-        function showMenu() {
-        backToCategories();
-        document.getElementById("menuSection").style.display = "block";
-        document.getElementById("cartSection").style.display = "none";
-        document.getElementById("btnMenu").classList.add("active");
-        document.getElementById("btnCart").classList.remove("active");
-        }
-
-        function showCart() {
-        document.getElementById("menuSection").style.display = "none";
-        document.getElementById("cartSection").style.display = "block";
-        document.getElementById("btnCart").classList.add("active");
-        document.getElementById("btnMenu").classList.remove("active");
-        renderReceipt();
         }
 
         function increaseQty() { let q = document.getElementById("qty"); q.value = parseInt(q.value) + 1; }
@@ -235,39 +294,60 @@
         let price = basePrices[dbKey] || basePrices[activeItemName] || 75;
 
         cart.push({ name: activeItemName, dbKey: dbKey, size: size, qty: qty, price: price });
-                
-        // CHANGE: Replaced alert with Toastify for "Added to Receipt"
+            
         Toastify({
         text: `☕ ${qty}x ${activeItemName} added!`,
-        duration: 2500,
+        duration: 1500,
         gravity: "top",
         position: "right",
         style: { background: "linear-gradient(to right, #f46a05, #ab4a03)", borderRadius: "10px" }
         }).showToast();
 
-        backToCategories();
+        renderReceipt();
+        closeSelectionModal();
         }
 
         function renderReceipt() {
         let receipt = document.getElementById("receiptList");
         let totalEl = document.getElementById("total");
-        if (cart.length === 0) { receipt.innerHTML = "<tr><td colspan='6' style='text-align: center; padding: 40px;'>No items in receipt.</td></tr>"; totalEl.textContent = "₱0.00"; return; }
-                
+            
+        if (cart.length === 0) {
+        receipt.innerHTML = `<div class="empty-msg">No items in order</div>`;
+        totalEl.textContent = "₱0.00";
+        return;
+        }
+
         let html = "", total = 0;
         cart.forEach((item, index) => {
         let sub = item.qty * item.price;
         total += sub;
-        html += `<tr onclick="selectReceiptItem(${index})" class="${selectedReceiptIndex === index ? 'selected-row' : ''}">
-        <td><input type="radio" name="cartSel" ${selectedReceiptIndex === index ? 'checked' : ''}></td>
-        <td>${item.name}</td><td>${item.size}</td><td>${item.qty}</td><td>₱${item.price.toFixed(2)}</td><td style="color:#f46a05;">₱${sub.toFixed(2)}</td>
-        </tr>`;
+        html += `
+        <div class="order-item-row ${selectedReceiptIndex === index ? 'selected-row' : ''}" onclick="selectReceiptItem(${index})">
+        <div>
+        <div style="font-weight: 700; color: #4a2511;">${item.qty}x ${item.name}</div>
+        <div style="font-size: 11px; color: #8c5b3e;">${item.size} • ₱${item.price.toFixed(2)}</div>
+        </div>
+        <div style="font-weight: 800; color: #f46a05;">₱${sub.toFixed(2)}</div>
+        </div>`;
         });
         receipt.innerHTML = html;
         totalEl.textContent = "₱" + total.toFixed(2);
         }
 
-        function selectReceiptItem(index) { selectedReceiptIndex = index; renderReceipt(); }
-        function removeSelectedItem() { if (selectedReceiptIndex === -1) return; cart.splice(selectedReceiptIndex, 1); selectedReceiptIndex = -1; renderReceipt(); }
+        function selectReceiptItem(index) {
+        selectedReceiptIndex = (selectedReceiptIndex === index) ? -1 : index;
+        renderReceipt();
+        }
+
+        function removeSelectedItem() {
+        if (selectedReceiptIndex === -1) {
+        Swal.fire({ text: "Select an item in the list first", icon: "warning", timer: 1500, showConfirmButton: false });
+        return;
+        }
+        cart.splice(selectedReceiptIndex, 1);
+        selectedReceiptIndex = -1;
+        renderReceipt();
+        }
 
         async function checkoutOrder() {
         if (cart.length === 0) return;
@@ -278,14 +358,7 @@
         price:     item.price
         }));
 
-        const unknown = cart.filter((item, i) => payload[i].productId === 0);
-        if (unknown.length > 0) {
-        // CHANGE: Replaced alert with Swal
-        Swal.fire("Database Error", "Unknown items: " + unknown.map(i => i.dbKey).join(", "), "error");
-        return;
-        }
-
-        const btn = document.querySelector('button[onclick="checkoutOrder()"]');
+        const btn = document.querySelector('.btn-checkout');
         btn.disabled = true;
         btn.textContent = "Processing…";
 
@@ -293,22 +366,18 @@
         const response = await fetch('/Cashier/Checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: payload, paymentMethod: "cash", amountPaid: 0 })
+        body: JSON.stringify({ items: payload, paymentMethod: finalPaymentMethod, amountPaid: 0 })
         });
 
         if (response.ok) {
-        // CHANGE: Replaced alert with Swal
-        Swal.fire({ title: "Success!", text: "Checkout Done!", icon: "success", confirmButtonColor: "#f46a05" });
+        Swal.fire({ title: "Success!", text: "Order recorded successfully.", icon: "success", confirmButtonColor: "#f46a05" });
         cart = [];
-        selectedReceiptIndex = -1;
-        showMenu();
+        renderReceipt();
+        backToCategories();
         } else {
-        const text = await response.text();
-        // CHANGE: Replaced alert with Swal
-        Swal.fire("Checkout Failed", text, "error");
+        Swal.fire("Checkout Failed", "Could not complete transaction.", "error");
         }
         } catch (err) {
-        // CHANGE: Replaced alert with Swal
         Swal.fire("Network Error", err.message, "error");
         } finally {
         btn.disabled = false;
