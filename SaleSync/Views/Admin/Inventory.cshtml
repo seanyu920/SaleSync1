@@ -22,6 +22,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Inventory Management - SyncScale</title>
     <link rel="stylesheet" href="~/css/Inventory.css" asp-append-version="true" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
     <div class="dashboard-container">
@@ -248,59 +249,78 @@
     </form>
 
     <script>
-            function fillForm(productId, itemCategory, itemName, itemID, purchasePrice, quantity, stockSupplier, dateAcquired, expirationDate) {
-                document.getElementById("ProductId").value = productId;
-                document.querySelector('input[name="ItemCategory"]').value = itemCategory;
-                document.querySelector('input[name="ItemName"]').value = itemName;
-                document.querySelector('input[name="ItemID"]').value = itemID;
-                document.querySelector('input[name="PurchasePrice"]').value = purchasePrice;
-                document.querySelector('input[name="Quantity"]').value = quantity;
-                document.querySelector('input[name="StockSupplier"]').value = stockSupplier;
-                document.querySelector('input[name="DateAcquired"]').value = dateAcquired;
-                document.querySelector('input[name="ExpirationDate"]').value = expirationDate;
-            }
+        function fillForm(productId, itemCategory, itemName, itemID, purchasePrice, quantity, stockSupplier, dateAcquired, expirationDate) {
+        document.getElementById("ProductId").value = productId;
+        document.querySelector('input[name="ItemCategory"]').value = itemCategory;
+        document.querySelector('input[name="ItemName"]').value = itemName;
+        document.querySelector('input[name="ItemID"]').value = itemID;
+        document.querySelector('input[name="PurchasePrice"]').value = purchasePrice;
+        document.querySelector('input[name="Quantity"]').value = quantity;
+        document.querySelector('input[name="StockSupplier"]').value = stockSupplier;
+        document.querySelector('input[name="DateAcquired"]').value = dateAcquired;
+        document.querySelector('input[name="ExpirationDate"]').value = expirationDate;
+        }
 
-            function getSelectedId() {
-                const selected = document.querySelector('input[name="selectedItem"]:checked');
-                if (!selected) {
-                    alert("Select an item first.");
-                    return null;
-                }
-                return selected.value;
-            }
+        function getSelectedId() {
+        const selected = document.querySelector('input[name="selectedItem"]:checked');
+        if (!selected) {
+        // CHANGE: Replaced browser alert with SweetAlert
+        Swal.fire({
+        title: 'No Selection',
+        text: 'Please select an item from the table first.',
+        icon: 'warning',
+        confirmButtonColor: '#f46a05'
+        });
+        return null;
+        }
+        return selected.value;
+        }
 
-            function deleteItem() {
-                const id = getSelectedId();
-                if (!id) return;
-                if (!confirm("Delete this inventory item?")) return;
-                document.getElementById("deleteId").value = id;
-                document.getElementById("deleteForm").submit();
-            }
+        function deleteItem() {
+        const id = getSelectedId();
+        if (!id) return;
 
-            function filterInventory() {
-                const searchInput = document.getElementById("inventorySearch").value.toLowerCase().trim();
-                const categoryDropdown = document.getElementById("categoryFilter").value;
-                const rows = document.querySelectorAll(".inventory-row");
-                const noResultsRow = document.getElementById("noResultsRow");
-                let visibleCount = 0;
+        // CHANGE: Replaced browser confirm with SweetAlert
+        Swal.fire({
+        title: 'Are you sure?',
+        text: "Do you want to permanently delete this inventory item?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#4a2511',
+        confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+        if (result.isConfirmed) {
+        document.getElementById("deleteId").value = id;
+        document.getElementById("deleteForm").submit();
+        }
+        });
+        }
 
-                rows.forEach(function (row) {
-                    const rowText = row.textContent.toLowerCase();
-                    const categoryCellText = row.cells[1].textContent.trim();
-                    const matchesSearch = rowText.includes(searchInput);
-                    const matchesCategory = (categoryDropdown === "ALL" || categoryCellText === categoryDropdown);
+        function filterInventory() {
+        const searchInput = document.getElementById("inventorySearch").value.toLowerCase().trim();
+        const categoryDropdown = document.getElementById("categoryFilter").value;
+        const rows = document.querySelectorAll(".inventory-row");
+        const noResultsRow = document.getElementById("noResultsRow");
+        let visibleCount = 0;
 
-                    if (matchesSearch && matchesCategory) {
-                        row.style.display = "";
-                        visibleCount++;
-                    } else {
-                        row.style.display = "none";
-                    }
-                });
-                if (noResultsRow) {
-                    noResultsRow.style.display = visibleCount === 0 ? "" : "none";
-                }
-            }
+        rows.forEach(function (row) {
+        const rowText = row.textContent.toLowerCase();
+        const categoryCellText = row.cells[1].textContent.trim();
+        const matchesSearch = rowText.includes(searchInput);
+        const matchesCategory = (categoryDropdown === "ALL" || categoryCellText === categoryDropdown);
+
+        if (matchesSearch && matchesCategory) {
+        row.style.display = "";
+        visibleCount++;
+        } else {
+        row.style.display = "none";
+        }
+        });
+        if (noResultsRow) {
+        noResultsRow.style.display = visibleCount === 0 ? "" : "none";
+        }
+        }
     </script>
 </body>
 </html>
