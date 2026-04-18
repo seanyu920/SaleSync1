@@ -95,9 +95,9 @@
                         </div>
 
                         <div class="form-actions-row">
-                            <button type="submit" formaction="/Admin/UpdateAccount" class="btn update-btn">Update Selected</button>
+                            <button type="button" onclick="confirmUpdate()" class="btn update-btn">Update Selected</button>
                             <button type="button" class="btn delete-btn" onclick="prepareDelete()">Delete Selected</button>
-                            <button type="submit" formaction="/Admin/AddAccount" class="btn save-btn">+ Add Account</button>
+                            <button type="button" onclick="confirmAdd()" class="btn save-btn">+ Add Account</button>
                         </div>
                     </form>
                 </div>
@@ -159,7 +159,58 @@
         document.getElementById('Role').value = role;
         }
 
-        // CHANGE: Replaced browser alert and confirm with SweetAlert2
+        // ⭐ NEW: Confirmation for Add Action
+        function confirmAdd() {
+        const fullName = document.getElementById('FullName').value;
+        if (!fullName || !document.getElementById('Username').value) {
+        Swal.fire({ title: 'Missing Info', text: 'Please fill in the required fields.', icon: 'warning', confirmButtonColor: '#f46a05' });
+        return;
+        }
+
+        Swal.fire({
+        title: 'Add New Account?',
+        text: `Create a system account for ${fullName}?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#f46a05',
+        cancelButtonColor: '#4a2511',
+        confirmButtonText: 'Yes, add it!'
+        }).then((result) => {
+        if (result.isConfirmed) {
+        const form = document.getElementById('accountForm');
+        form.action = "/Admin/AddAccount";
+        form.submit();
+        }
+        });
+        }
+
+        // ⭐ NEW: Confirmation for Update Action
+        function confirmUpdate() {
+        const userId = document.getElementById('UserId').value;
+        const fullName = document.getElementById('FullName').value;
+
+        if (!userId) {
+        Swal.fire({ title: 'No Selection', text: 'Please select an account from the table to update.', icon: 'warning', confirmButtonColor: '#f46a05' });
+        return;
+        }
+
+        Swal.fire({
+        title: 'Update Account?',
+        text: `Save changes for ${fullName}?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#ab4a03',
+        cancelButtonColor: '#4a2511',
+        confirmButtonText: 'Yes, update it!'
+        }).then((result) => {
+        if (result.isConfirmed) {
+        const form = document.getElementById('accountForm');
+        form.action = "/Admin/UpdateAccount";
+        form.submit();
+        }
+        });
+        }
+
         function prepareDelete() {
         const userId = document.getElementById('UserId').value;
         if (!userId) {
