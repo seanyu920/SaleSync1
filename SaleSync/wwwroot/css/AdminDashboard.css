@@ -342,3 +342,65 @@ body {
     background: #ffebd9;
     color: #cc5500;
 }
+
+/* --- SWEETALERT2 OVERRIDES --- */
+/* These only target the SweetAlert popups, leaving your dashboard styles exactly as they are */
+
+.swal2-popup {
+    border-radius: 20px !important;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+    padding: 2rem !important; /* Gives the text more breathing room */
+    border: 2px solid #fcfaf6 !important; /* Blends with your background */
+}
+
+.swal2-title {
+    color: #4a2511 !important; /* Your brand brown */
+    font-weight: 800 !important;
+    font-size: 1.6rem !important;
+}
+
+.swal2-html-container {
+    color: #8c5b3e !important; /* Your brand muted brown */
+    font-size: 15px !important;
+    margin-top: 10px !important;
+}
+
+/* Adds spacing between the buttons */
+.swal2-actions {
+    gap: 15px !important;
+    margin-top: 25px !important;
+}
+
+.swal2-confirm {
+    background-color: #f46a05 !important; /* Your brand orange */
+    color: white !important;
+    border-radius: 12px !important;
+    padding: 12px 30px !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 12px rgba(244, 106, 5, 0.2) !important; /* Subtle orange glow */
+}
+
+.swal2-cancel {
+    background-color: #4a2511 !important; /* Your brand brown */
+    color: white !important;
+    border-radius: 12px !important;
+    padding: 12px 25px !important;
+    font-weight: 600 !important;
+}
+
+/* Icon Colors */
+.swal2-icon.swal2-warning,
+.swal2-icon.swal2-question {
+    border-color: #f46a05 !important;
+    color: #f46a05 !important;
+}
+
+.swal2-icon.swal2-success {
+    border-color: #0b8a53 !important;
+    color: #0b8a53 !important;
+}
+
+.swal2-icon.swal2-error {
+    border-color: #e02424 !important;
+    color: #e02424 !important;
+}

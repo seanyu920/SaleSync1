@@ -9,6 +9,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Cashier Dashboard - Cafero</title>
     <link rel="stylesheet" href="~/css/CashierDashboard.css" asp-append-version="true" />
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <style>
         /* Modal Styles for Admin Verification */
         .modal-overlay {
@@ -170,13 +173,31 @@
         let currentSaleId = null;
 
         function updateStatus(saleId, status) {
-            if(!confirm(`Mark Order #ORD-${saleId} as ${status}?`)) return;
-            
-            fetch('/Cashier/UpdateSaleStatus', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ saleId: saleId, status: status })
-            }).then(res => res.ok ? location.reload() : alert("Update failed"));
+            // CHANGE: Replaced confirm() with Swal.fire()
+            Swal.fire({
+                title: 'Confirm Order?',
+                text: `Mark Order #ORD-${saleId} as ${status}?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#f46a05',
+                cancelButtonColor: '#4a2511',
+                confirmButtonText: 'Yes, update it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('/Cashier/UpdateSaleStatus', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ saleId: saleId, status: status })
+                    }).then(res => {
+                        if (res.ok) {
+                            location.reload();
+                        } else {
+                            // CHANGE: Replaced alert() with Swal.fire()
+                            Swal.fire('Error', 'Update failed.', 'error');
+                        }
+                    });
+                }
+            });
         }
 
         function openVoidModal(saleId) {
@@ -186,11 +207,18 @@
 
         function closeModal() {
             document.getElementById('voidModal').style.display = 'none';
+            document.getElementById('adminUser').value = '';
+            document.getElementById('adminPass').value = '';
         }
 
         function verifyAndVoid() {
             const user = document.getElementById('adminUser').value;
             const pass = document.getElementById('adminPass').value;
+
+            if (!user || !pass) {
+                Swal.fire('Required', 'Please enter credentials.', 'warning');
+                return;
+            }
 
             fetch('/Cashier/VerifyAndVoid', {
                 method: 'POST',
@@ -202,19 +230,25 @@
                 })
             }).then(async res => {
                 if (res.ok) {
-                    location.reload();
+                    // CHANGE: Added success popup before reload
+                    Swal.fire({
+                        title: 'Voided!',
+                        text: 'The order has been voided.',
+                        icon: 'success',
+                        confirmButtonColor: '#4a2511'
+                    }).then(() => location.reload());
                 } else {
                     const data = await res.json();
-                    alert(data.message || "Unauthorized access");
+                    // CHANGE: Replaced alert() with Swal.fire()
+                    Swal.fire('Unauthorized', data.message || "Unauthorized access", 'error');
                 }
             });
         }
-        // ⭐ ADDED: Opens the row and fetches the live ingredient deduction math
+
         async function toggleDetails(saleId) {
             const row = document.getElementById(`details-${saleId}`);
             const isExpanding = row.style.display === 'none';
             
-            // Auto-close any other open rows so the screen doesn't get cluttered
             document.querySelectorAll('.details-row').forEach(r => r.style.display = 'none');
             
             if (isExpanding) {
@@ -225,11 +259,9 @@
                     if(res.ok) {
                         const data = await res.json();
                         
-                        // Populate Items Sold
                         const itemsUl = document.getElementById(`items-list-${saleId}`);
                         itemsUl.innerHTML = data.items.map(i => `<li>${i}</li>`).join('');
                         
-                        // Populate Ingredients Deducted
                         const ingUl = document.getElementById(`ing-list-${saleId}`);
                         if (data.ingredients.length > 0) {
                             ingUl.innerHTML = data.ingredients.map(i => `<li>${i}</li>`).join('');

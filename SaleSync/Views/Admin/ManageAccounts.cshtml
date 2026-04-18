@@ -9,6 +9,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Manage Accounts - SyncScale</title>
     <link rel="stylesheet" href="~/css/ManageAccounts.css" asp-append-version="true" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
     <div class="dashboard-container">
@@ -95,7 +96,7 @@
 
                         <div class="form-actions-row">
                             <button type="submit" formaction="/Admin/UpdateAccount" class="btn update-btn">Update Selected</button>
-                            <button type="submit" formaction="/Admin/DeleteAccount" class="btn delete-btn" onclick="return prepareDelete();">Delete Selected</button>
+                            <button type="button" class="btn delete-btn" onclick="prepareDelete()">Delete Selected</button>
                             <button type="submit" formaction="/Admin/AddAccount" class="btn save-btn">+ Add Account</button>
                         </div>
                     </form>
@@ -149,22 +150,43 @@
     </div>
 
     <script>
-            function selectUser(userId, fullName, username, email, password, role) {
-                document.getElementById('UserId').value = userId;
-                document.getElementById('FullName').value = fullName;
-                document.getElementById('Username').value = username;
-                document.getElementById('Email').value = email;
-                document.getElementById('Password').value = password;
-                document.getElementById('Role').value = role;
-            }
+        function selectUser(userId, fullName, username, email, password, role) {
+        document.getElementById('UserId').value = userId;
+        document.getElementById('FullName').value = fullName;
+        document.getElementById('Username').value = username;
+        document.getElementById('Email').value = email;
+        document.getElementById('Password').value = password;
+        document.getElementById('Role').value = role;
+        }
 
-            function prepareDelete() {
-                const userId = document.getElementById('UserId').value;
-                if (!userId) {
-                    alert('Please select an account from the table first.');
-                    return false;
-                }
-                return confirm('Are you sure you want to permanently delete this account?');
-            }
+        // CHANGE: Replaced browser alert and confirm with SweetAlert2
+        function prepareDelete() {
+        const userId = document.getElementById('UserId').value;
+        if (!userId) {
+        Swal.fire({
+        title: 'No Selection',
+        text: 'Please select an account from the table first.',
+        icon: 'warning',
+        confirmButtonColor: '#f46a05'
+        });
+        return;
+        }
+
+        Swal.fire({
+        title: 'Are you sure?',
+        text: "You want to permanently delete this account?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#4a2511',
+        confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+        if (result.isConfirmed) {
+        const form = document.getElementById('accountForm');
+        form.action = "/Admin/DeleteAccount";
+        form.submit();
+        }
+        });
+        }
     </script></body>
 </html>

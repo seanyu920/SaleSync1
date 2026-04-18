@@ -342,3 +342,80 @@ body {
     background: #e0f2fe;
     color: #0369a1;
 }
+
+/* --- SWEETALERT2 OVERRIDES (CAFERO THEME) --- */
+/* Target the SweetAlert container to match dashboard cards */
+.swal2-popup {
+    border-radius: 20px !important;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+    padding: 2rem !important; /* Extra padding for breathing room */
+    border: 2px solid #fcfaf6 !important; /* Blends with your background */
+    box-shadow: 0 10px 30px rgba(74, 37, 17, 0.1) !important;
+}
+
+/* Style the main Title */
+.swal2-title {
+    color: #4a2511 !important; /* Your brand dark mocha */
+    font-weight: 800 !important;
+    font-size: 1.6rem !important;
+}
+
+/* Style the subtext */
+.swal2-html-container {
+    color: #8c5b3e !important; /* Your brand muted brown */
+    font-size: 15px !important;
+    margin-top: 10px !important;
+}
+
+/* Add a gap between the action buttons so they aren't touching */
+.swal2-actions {
+    gap: 15px !important;
+    margin-top: 25px !important;
+}
+
+/* The Primary Confirm/Yes Button (Orange) */
+.swal2-confirm {
+    background-color: #f46a05 !important; /* Your brand orange */
+    color: white !important;
+    border-radius: 12px !important;
+    padding: 12px 30px !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 12px rgba(244, 106, 5, 0.2) !important; /* Subtle orange glow */
+    border: none !important;
+}
+
+/* The Cancel Button (Brown) */
+.swal2-cancel {
+    background-color: #4a2511 !important; /* Your brand dark mocha */
+    color: white !important;
+    border-radius: 12px !important;
+    padding: 12px 25px !important;
+    font-weight: 600 !important;
+    border: none !important;
+}
+
+/* Fix Hover States */
+.swal2-confirm:hover {
+    background-color: #cc5500 !important;
+}
+
+.swal2-cancel:hover {
+    background-color: #381c0d !important;
+}
+
+/* Colorize the Icons to match your theme */
+.swal2-icon.swal2-warning,
+.swal2-icon.swal2-question {
+    border-color: #f46a05 !important;
+    color: #f46a05 !important;
+}
+
+.swal2-icon.swal2-success {
+    border-color: #0b8a53 !important;
+    color: #0b8a53 !important;
+}
+
+.swal2-icon.swal2-error {
+    border-color: #e02424 !important;
+    color: #e02424 !important;
+}
