@@ -184,7 +184,7 @@
                                             <td style="text-align:center;">
                                                 <input type="radio"
                                                        name="selectedItem"
-                                                       value="@item.ItemID"
+                                                       value="@item.ProductId"
                                                        onclick="fillForm(
                                                 '@item.ProductId',
                                                 '@Html.Raw((item.ItemCategory ?? "").Replace("'", "\\'"))',
@@ -245,7 +245,7 @@
     </div>
 
     <form id="deleteForm" method="post" action="/Admin/DeleteInventory">
-        <input type="hidden" name="id" id="deleteId" />
+        <input type="hidden" name="ProductId" id="deleteId" />
     </form>
 
     <script>
