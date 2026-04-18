@@ -12,7 +12,7 @@ namespace SaleSync.Controllers
     public class AdminController : Controller
     {
         private readonly IConfiguration _configuration;
-        private readonly string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
+        private readonly string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
 
         public AdminController(IConfiguration configuration)
         {
@@ -21,7 +21,7 @@ namespace SaleSync.Controllers
 
         private bool IsAdmin() => HttpContext.Session.GetString("Role") == "Admin";
         private bool CanAccessInventory() => IsAdmin() || HttpContext.Session.GetString("Role") == "Manager";
-
+        //Dashboard
         public IActionResult Dashboard()
         {
             var role = HttpContext.Session.GetString("Role");
@@ -74,7 +74,7 @@ namespace SaleSync.Controllers
             }
             return View("AdminDashboard", model);
         }
-
+        //SALES UPDATE
         [HttpPost]
         public IActionResult UpdateSaleStatus([FromBody] StatusUpdateModel request)
         {
@@ -82,7 +82,7 @@ namespace SaleSync.Controllers
             {
                 conn.Open();
 
-                // 1. Check current status so we don't accidentally deduct ingredients twice!
+
                 string currentStatus = "";
                 using (SqlCommand checkCmd = new SqlCommand("SELECT status FROM sales WHERE sale_id = @id", conn))
                 {
@@ -91,13 +91,13 @@ namespace SaleSync.Controllers
                     if (result != null) currentStatus = result.ToString();
                 }
 
-                if (currentStatus == request.Status) return Ok(); // Already completed, do nothing.
+                if (currentStatus == request.Status) return Ok(); 
 
                 using (SqlTransaction transaction = conn.BeginTransaction())
                 {
                     try
                     {
-                        // 2. Update the status in the database
+
                         string sql = "UPDATE sales SET status = @status WHERE sale_id = @id";
                         using (SqlCommand cmd = new SqlCommand(sql, conn, transaction))
                         {
@@ -106,7 +106,7 @@ namespace SaleSync.Controllers
                             cmd.ExecuteNonQuery();
                         }
 
-                        // 3. ⭐ If marking as 'Completed', deduct the ingredients NOW ⭐
+     
                         if (request.Status == "Completed" && currentStatus != "Completed")
                         {
                             string getItemsSql = "SELECT product_id, quantity FROM sale_items WHERE sale_id = @id";
@@ -121,7 +121,7 @@ namespace SaleSync.Controllers
                                 }
                             }
 
-                            // Loop through the original order and run the deduction math
+              
                             foreach (var item in itemsList)
                             {
                                 DeductIngredients(conn, transaction, item.pId, item.qty);
@@ -132,7 +132,7 @@ namespace SaleSync.Controllers
                     }
                     catch (Exception ex)
                     {
-                        // If stock goes below zero, it cancels the 'Completed' status to protect your data!
+
                         transaction.Rollback();
                         return BadRequest(new { message = ex.Message });
                     }
@@ -140,11 +140,11 @@ namespace SaleSync.Controllers
             }
             return Ok();
         }
-        // ⭐ ADDED: Fetches the exact items and ingredient deductions for the Admin/Manager dashboard
+        // ORDER DETAILS
         [HttpGet]
         public IActionResult GetOrderDetails(int saleId)
         {
-            // Security check: Only Admins and Managers can pull this backend data
+
             var role = HttpContext.Session.GetString("Role");
             if (role != "Admin" && role != "Manager") return Unauthorized();
 
@@ -190,7 +190,7 @@ namespace SaleSync.Controllers
 
             return Json(new { items = itemsSold, ingredients = ingredientsDeducted });
         }
-
+        // VOID FUNCTION
         [HttpPost]
         public IActionResult VerifyAndVoid([FromBody] AdminVoidRequest request)
         {
@@ -225,6 +225,7 @@ namespace SaleSync.Controllers
         }
 
         public IActionResult Analytics() => View();
+        // PRODUCTS MANAGEMENT
         [HttpGet]
         public IActionResult Products()
         {
@@ -235,7 +236,7 @@ namespace SaleSync.Controllers
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                // Fetch only finished products (is_ingredient is 0 or NULL)
+
                 string sql = @"
                     SELECT p.product_id, p.product_name, c.category_name, p.selling_price
                     FROM products p
@@ -262,13 +263,13 @@ namespace SaleSync.Controllers
             }
             return View(menuList);
         }
+        //ADD MENU ITEM 
         [HttpPost]
         public IActionResult AddMenuItem([FromBody] MenuItemModel model)
         {
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                // ADDED: sku and barcode generation using NEWID() so they never duplicate!
-                // Using 'PRD-' to stand for Product, so you can tell them apart from your 'ING-' ingredients.
+
                 string sql = @"
                     INSERT INTO products (product_name, selling_price, is_ingredient, category_id, sku, barcode)
                     VALUES (@name, @price, 0, 
@@ -289,7 +290,7 @@ namespace SaleSync.Controllers
             return Ok();
         }
 
-
+        // INVENTORY MANAGEMENT
         [HttpGet]
         public IActionResult Inventory()
         {
@@ -300,11 +301,11 @@ namespace SaleSync.Controllers
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 string sql = @"
-    SELECT p.product_id, p.product_name, p.stock_quantity, p.cost_price, p.sku, c.category_name 
-    FROM products p
-    LEFT JOIN categories c ON p.category_id = c.category_id
-    WHERE p.is_ingredient = 1
-    ORDER BY c.category_name ASC, p.product_name ASC";
+                      SELECT p.product_id, p.product_name, p.stock_quantity, p.cost_price, p.sku, c.category_name 
+                      FROM products p
+                      LEFT JOIN categories c ON p.category_id = c.category_id
+                      WHERE p.is_ingredient = 1
+                      ORDER BY c.category_name ASC, p.product_name ASC";
 
                 using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
@@ -329,7 +330,7 @@ namespace SaleSync.Controllers
             return View(inventoryList);
         }
 
-        // ⭐ ADDED: This connects your HTML Update button to the Database
+        // UPDATE INVENTORY
         [HttpPost]
         public IActionResult UpdateInventory(InventoryItems model)
         {
@@ -350,17 +351,16 @@ namespace SaleSync.Controllers
             }
             return RedirectToAction("Inventory");
         }
-        // ⭐ ADDED: This catches the data when you add a new item to inventory
+        // ADD INVENTORY
         [HttpPost]
         public IActionResult AddInventory(InventoryItems model)
         {
-            // 1. Security Check
+
             if (!CanAccessInventory()) return RedirectToAction("Index", "Home");
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                // 2. Insert into the database. 
-                // Note: Defaults to category 99 (Raw Materials) and sets is_ingredient = 1
+
                 string sql = @"
                     INSERT INTO products (product_name, stock_quantity, cost_price, is_ingredient, category_id, sku, barcode)
                     VALUES (@name, @qty, @price, 1, 99, 
@@ -378,42 +378,55 @@ namespace SaleSync.Controllers
                 }
             }
 
-            // 3. Refresh the inventory page to show the new item
+
             return RedirectToAction("Inventory");
         }
-        // ⭐ ADDED: This catches the data when you click "Delete" on an item
+        // DELETE INVENTORY
         [HttpPost]
         public IActionResult DeleteInventory(int ProductId)
         {
-            // 1. Security Check
+
             if (!CanAccessInventory()) return RedirectToAction("Index", "Home");
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                // 2. SQL to delete the specific item
-                string sql = "DELETE FROM products WHERE product_id = @id";
-
-                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                conn.Open();
+                using (SqlTransaction transaction = conn.BeginTransaction())
                 {
-                    cmd.Parameters.AddWithValue("@id", ProductId);
-
-                    conn.Open();
                     try
                     {
-                        cmd.ExecuteNonQuery();
+
+                        string deleteFromRecipes = "DELETE FROM product_ingredients WHERE ingredient_id = @id";
+                        using (SqlCommand cmdRecipe = new SqlCommand(deleteFromRecipes, conn, transaction))
+                        {
+                            cmdRecipe.Parameters.AddWithValue("@id", ProductId);
+                            cmdRecipe.ExecuteNonQuery();
+                        }
+
+
+                        string deleteProduct = "DELETE FROM products WHERE product_id = @id";
+                        using (SqlCommand cmdProduct = new SqlCommand(deleteProduct, conn, transaction))
+                        {
+                            cmdProduct.Parameters.AddWithValue("@id", ProductId);
+                            cmdProduct.ExecuteNonQuery();
+                        }
+
+
+                        transaction.Commit();
                     }
                     catch (SqlException)
                     {
-                        // Safely catches the error if the item is tied to an existing sale
+
+                        transaction.Rollback();
                         TempData["ErrorMessage"] = "Cannot delete item: It is already linked to past sales records.";
                     }
                 }
             }
 
-            // 3. Refresh the inventory page
+
             return RedirectToAction("Inventory");
         }
-
+        // ACCOUNT MANAGEMENT
         [HttpGet]
         public IActionResult ManageAccounts()
         {
@@ -423,7 +436,7 @@ namespace SaleSync.Controllers
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                // Added u.password_hash to match your database and HTML table
+
                 string sql = @"
             SELECT u.user_id, u.username, u.full_name, u.email, u.password_hash, r.role_name 
             FROM users u
@@ -442,7 +455,7 @@ namespace SaleSync.Controllers
                                 FullName = r["full_name"]?.ToString() ?? "",
                                 Username = r["username"]?.ToString() ?? "",
                                 Email = r["email"]?.ToString() ?? "",
-                                Password = r["password_hash"]?.ToString() ?? "", // <-- Passing it to the View
+                                Password = r["password_hash"]?.ToString() ?? "", 
                                 Role = r["role_name"]?.ToString() ?? "Unknown"
                             });
                         }
@@ -451,17 +464,16 @@ namespace SaleSync.Controllers
             }
             return View(accountList);
         }
-        // ⭐ ADDED: This catches the data when you click "Update Selected"
+        // UPDATE ACCOUNT
         [HttpPost]
         public IActionResult UpdateAccount(UserAccount model)
         {
-            // Security check: Only Admins can update accounts
+           
             if (!IsAdmin()) return RedirectToAction("Index", "Home");
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                // This updates the user details. 
-                // The sub-query handles converting the text Role (like "Cashier") back into the correct role_id for your database!
+               
                 string sql = @"
                     UPDATE users 
                     SET full_name = @fullName, 
@@ -484,14 +496,14 @@ namespace SaleSync.Controllers
                     cmd.ExecuteNonQuery();
                 }
             }
-            // Refreshes the page so you can instantly see your updates in the table
+           
             return RedirectToAction("ManageAccounts");
         }
-        // ⭐ ADDED: This catches the data when you click "+ Add Account"
+        // ADD ACCOUNT
         [HttpPost]
         public IActionResult AddAccount(UserAccount model)
         {
-            // Security check
+
             if (!IsAdmin()) return RedirectToAction("Index", "Home");
 
             using (SqlConnection conn = new SqlConnection(connectionString))
@@ -500,7 +512,7 @@ namespace SaleSync.Controllers
                     INSERT INTO users (full_name, username, email, password_hash, role_id)
                     VALUES (@fullName, @username, @email, @password, 
                             ISNULL((SELECT TOP 1 role_id FROM roles WHERE role_name = @role), 2))";
-                // Note: Defaults to role_id 2 (Cashier) if they forget to select a role
+                
 
                 using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
@@ -516,18 +528,18 @@ namespace SaleSync.Controllers
             }
             return RedirectToAction("ManageAccounts");
         }
-        // ⭐ ADDED: This catches the data when you click "Delete Selected"
+        // DELETE ACCOUNT
         [HttpPost]
         public IActionResult DeleteAccount(int UserId)
         {
-            // Security check
+            
             if (!IsAdmin()) return RedirectToAction("Index", "Home");
 
-            // Prevent the Admin from accidentally deleting themselves!
+            
             var currentUserId = HttpContext.Session.GetInt32("UserId");
             if (currentUserId == UserId)
             {
-                // Optionally return a warning, but for now, just cancel the delete
+                
                 return RedirectToAction("ManageAccounts");
             }
 
@@ -545,7 +557,7 @@ namespace SaleSync.Controllers
             }
             return RedirectToAction("ManageAccounts");
         }
-        // 1. Fetches all raw materials for the dropdown
+        // GET INGREDIENTS FOR RECIPE CREATION/EDITING
         [HttpGet]
         public IActionResult GetIngredients()
         {
@@ -565,8 +577,7 @@ namespace SaleSync.Controllers
             }
             return Json(list);
         }
-
-        // 2. Fetches an existing recipe so you can edit it
+        // GET RECIPE DETAILS FOR A PRODUCT
         [HttpGet]
         public IActionResult GetRecipe(int productId)
         {
@@ -592,7 +603,7 @@ namespace SaleSync.Controllers
             return Json(list);
         }
 
-        // 3. Saves the recipe to the database
+        // SAVE RECIPE DETAILS FOR A PRODUCT
         [HttpPost]
         public IActionResult SaveRecipe([FromBody] RecipeSaveRequest request)
         {
@@ -601,7 +612,7 @@ namespace SaleSync.Controllers
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
-                // Step A: Delete the old recipe so we don't get duplicates
+             
                 string delSql = "DELETE FROM product_ingredients WHERE product_id = @id";
                 using (SqlCommand delCmd = new SqlCommand(delSql, conn))
                 {
@@ -609,7 +620,7 @@ namespace SaleSync.Controllers
                     delCmd.ExecuteNonQuery();
                 }
 
-                // Step B: Insert the new recipe ingredients
+                
                 if (request.Ingredients != null && request.Ingredients.Count > 0)
                 {
                     string insSql = "INSERT INTO product_ingredients (product_id, ingredient_id, quantity_required) VALUES (@pid, @iid, @qty)";
@@ -627,6 +638,7 @@ namespace SaleSync.Controllers
             }
             return Ok();
         }
+        // ADD A NEW PRODUCT WITH ITS RECIPE IN ONE GO
         [HttpPost]
         public IActionResult AddFullProduct([FromBody] ComprehensiveItemModel model)
         {
@@ -635,12 +647,12 @@ namespace SaleSync.Controllers
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
-                // Start a transaction so it all saves at the exact same time
+              
                 using (SqlTransaction transaction = conn.BeginTransaction())
                 {
                     try
                     {
-                        // 1. Save the Product details first
+
                         string fullName = model.ProductName + (string.IsNullOrEmpty(model.Size) ? "" : model.Size);
 
                         string insertProd = @"
@@ -657,10 +669,10 @@ namespace SaleSync.Controllers
                             cmd.Parameters.AddWithValue("@name", fullName);
                             cmd.Parameters.AddWithValue("@price", model.Price);
                             cmd.Parameters.AddWithValue("@cat", model.CategoryName);
-                            newProductId = (int)cmd.ExecuteScalar(); // Grabs the new ID instantly
+                            newProductId = (int)cmd.ExecuteScalar(); 
                         }
 
-                        // 2. Route the ingredients straight to the ingredients table
+                        
                         if (model.Ingredients != null && model.Ingredients.Count > 0)
                         {
                             string insertIng = "INSERT INTO product_ingredients (product_id, ingredient_id, quantity_required) VALUES (@pid, @iid, @qty)";
@@ -676,23 +688,24 @@ namespace SaleSync.Controllers
                             }
                         }
 
-                        // 3. Save everything permanently
+                       
                         transaction.Commit();
                         return Ok();
                     }
                     catch (Exception)
                     {
-                        // If anything goes wrong, undo the whole thing to protect the database!
+
                         transaction.Rollback();
                         return BadRequest("Failed to save comprehensive item.");
                     }
                 }
             }
         }
+        // DELETE A PRODUCT AND ITS RECIPE (ONLY IF NOT USED IN SALES)
         [HttpPost]
         public IActionResult DeleteMenuItem([FromBody] int productId)
         {
-            // 1. Security check
+            
             if (!IsAdmin()) return Unauthorized();
 
             using (SqlConnection conn = new SqlConnection(connectionString))
@@ -702,7 +715,7 @@ namespace SaleSync.Controllers
                 {
                     try
                     {
-                        // Step A: Safely wipe out any attached recipe ingredients FIRST
+                        
                         string deleteRecipeSql = "DELETE FROM product_ingredients WHERE product_id = @id";
                         using (SqlCommand recipeCmd = new SqlCommand(deleteRecipeSql, conn, transaction))
                         {
@@ -710,7 +723,7 @@ namespace SaleSync.Controllers
                             recipeCmd.ExecuteNonQuery();
                         }
 
-                        // Step B: Now that it's unlinked, delete the actual product
+                       
                         string deleteProductSql = "DELETE FROM products WHERE product_id = @id";
                         using (SqlCommand productCmd = new SqlCommand(deleteProductSql, conn, transaction))
                         {
@@ -718,20 +731,20 @@ namespace SaleSync.Controllers
                             productCmd.ExecuteNonQuery();
                         }
 
-                        // Save the changes permanently
+
                         transaction.Commit();
                         return Ok();
                     }
                     catch (SqlException)
                     {
-                        // If it fails here, it means the item has already been sold to a customer!
+                        
                         transaction.Rollback();
                         return BadRequest("Cannot delete item used in sales.");
                     }
                 }
             }
         }
-        // ⭐ ADDED: The helper method to calculate and deduct recipe stock!
+       
         private void DeductIngredients(SqlConnection conn, SqlTransaction transaction, int productId, int qty)
         {
             string recipeQuery = @"
@@ -778,5 +791,6 @@ namespace SaleSync.Controllers
 
         public class AdminVoidRequest { public int SaleId { get; set; } public string Pass { get; set; } }
         public class StatusUpdateModel { public int SaleId { get; set; } public string Status { get; set; } }
+
     }
 }

@@ -10,8 +10,8 @@ namespace SaleSync.Controllers
     public class CashierController : Controller
     {
         private readonly string connectionString =
-            "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
-
+            "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+        // DASHBOARD
         public IActionResult Dashboard()
         {
             var role = HttpContext.Session.GetString("Role");
@@ -22,12 +22,12 @@ namespace SaleSync.Controllers
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                // 1. Fetch Today's Totals
+
                 string totalSql = @"SELECT ISNULL(SUM(total_amount), 0) as Total, COUNT(sale_id) as Count 
                     FROM sales WHERE CAST(sale_date AS DATE) = CAST(GETDATE() AS DATE) 
                     AND status = 'Completed'";
 
-                // 2. Fetch Recent Sales - Added s.status to the SELECT
+
                 string historySql = @"
     SELECT TOP 10 
         s.sale_id, s.sale_date, s.total_amount, s.status, u.username,
@@ -70,8 +70,7 @@ namespace SaleSync.Controllers
             return View("CashierDashboard", model);
         }
 
-        // ⭐ ADD THIS METHOD TO FIX THE 404 ERROR ⭐
-        // ⭐ UPDATED: Now fetches live products from the database for the Cashier
+        // MENU 
         public IActionResult CashierMenu()
         {
             var role = HttpContext.Session.GetString("Role");
@@ -82,7 +81,7 @@ namespace SaleSync.Controllers
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                // Fetch only finished products (is_ingredient is 0 or NULL)
+
                 string sql = @"
                     SELECT p.product_id, p.product_name, c.category_name, p.selling_price
                     FROM products p
@@ -110,6 +109,7 @@ namespace SaleSync.Controllers
 
             return View(menuList);
         }
+        // CHECKOUT
 
         [HttpPost]
         public IActionResult Checkout([FromBody] CheckoutRequest request)
@@ -184,7 +184,7 @@ namespace SaleSync.Controllers
                     }
                 }
 
-                // --- INSERT sales row with 'Pending' status ---
+
                 int saleId;
                 string saleQuery = @"
     INSERT INTO sales
@@ -225,7 +225,7 @@ namespace SaleSync.Controllers
                         cmd.ExecuteNonQuery();
                     }
 
-                    //DeductIngredients(conn, transaction, item.ProductId, item.Quantity);
+
                 }
 
                 transaction.Commit();
@@ -237,7 +237,7 @@ namespace SaleSync.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
-
+        // DEDUCTION LOGICV
         private void DeductIngredients(SqlConnection conn, SqlTransaction transaction,
                                        int productId, int qty)
         {
@@ -282,6 +282,7 @@ namespace SaleSync.Controllers
                 }
             }
         }
+        //UPDATESALESTATUS
         [HttpPost]
         public IActionResult UpdateSaleStatus([FromBody] StatusUpdateModel request)
         {
@@ -289,7 +290,7 @@ namespace SaleSync.Controllers
             {
                 conn.Open();
 
-                // 1. Check current status so we don't accidentally deduct ingredients twice!
+
                 string currentStatus = "";
                 using (SqlCommand checkCmd = new SqlCommand("SELECT status FROM sales WHERE sale_id = @id", conn))
                 {
@@ -298,13 +299,13 @@ namespace SaleSync.Controllers
                     if (result != null) currentStatus = result.ToString();
                 }
 
-                if (currentStatus == request.Status) return Ok(); // Already completed, do nothing.
+                if (currentStatus == request.Status) return Ok(); 
 
                 using (SqlTransaction transaction = conn.BeginTransaction())
                 {
                     try
                     {
-                        // 2. Update the status in the database
+
                         string sql = "UPDATE sales SET status = @status WHERE sale_id = @id";
                         using (SqlCommand cmd = new SqlCommand(sql, conn, transaction))
                         {
@@ -313,7 +314,7 @@ namespace SaleSync.Controllers
                             cmd.ExecuteNonQuery();
                         }
 
-                        // 3. ⭐ If marking as 'Completed', deduct the ingredients NOW ⭐
+
                         if (request.Status == "Completed" && currentStatus != "Completed")
                         {
                             string getItemsSql = "SELECT product_id, quantity FROM sale_items WHERE sale_id = @id";
@@ -328,7 +329,7 @@ namespace SaleSync.Controllers
                                 }
                             }
 
-                            // Loop through the original order and run the deduction math
+
                             foreach (var item in itemsList)
                             {
                                 DeductIngredients(conn, transaction, item.pId, item.qty);
@@ -339,7 +340,7 @@ namespace SaleSync.Controllers
                     }
                     catch (Exception ex)
                     {
-                        // If stock goes below zero, it cancels the 'Completed' status to protect your data!
+
                         transaction.Rollback();
                         return BadRequest(new { message = ex.Message });
                     }
@@ -347,6 +348,7 @@ namespace SaleSync.Controllers
             }
             return Ok();
         }
+        //VERIFY N VOID
 
         [HttpPost]
         public IActionResult VerifyAndVoid([FromBody] VoidRequestModel request)
@@ -354,7 +356,7 @@ namespace SaleSync.Controllers
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
-                // Check if user is Admin or Manager and password matches
+
                 string checkAuth = @"
             SELECT r.role_name 
             FROM users u 
@@ -371,7 +373,7 @@ namespace SaleSync.Controllers
                     if (role == null)
                         return Unauthorized(new { message = "Invalid Admin/Manager credentials" });
 
-                    // If authorized, void the sale
+ 
                     string voidSql = "UPDATE sales SET status = 'Voided' WHERE sale_id = @id";
                     using (SqlCommand voidCmd = new SqlCommand(voidSql, conn))
                     {
@@ -382,7 +384,7 @@ namespace SaleSync.Controllers
             }
             return Ok();
         }
-        // ⭐ ADDED: Fetches the exact items and ingredient deductions for an expandable row
+        // ORDER DETAILS
         [HttpGet]
         public IActionResult GetOrderDetails(int saleId)
         {
@@ -393,7 +395,6 @@ namespace SaleSync.Controllers
             {
                 conn.Open();
 
-                // 1. Get the exact items sold in this transaction
                 string itemsSql = @"
                     SELECT si.quantity, p.product_name 
                     FROM sale_items si 
@@ -410,7 +411,6 @@ namespace SaleSync.Controllers
                     }
                 }
 
-                // 2. Calculate the total ingredients deducted (groups identical items together!)
                 string ingSql = @"
                     SELECT 
                         SUM(si.quantity * pi.quantity_required) as TotalQty,
@@ -436,7 +436,7 @@ namespace SaleSync.Controllers
             return Json(new { items = itemsSold, ingredients = ingredientsDeducted });
         }
 
-        // Support Classes
+
         public class StatusUpdateModel { public int SaleId { get; set; } public string Status { get; set; } }
         public class VoidRequestModel
         {
