@@ -132,8 +132,8 @@
                                         <div class="action-btn-group">
                                             @if (sale.Status == "Pending" || string.IsNullOrEmpty(sale.Status))
                                             {
-                                                <button class="btn-mini btn-confirm-mini" onclick="event.stopPropagation(); updateStatus(@sale.SaleId, 'Completed')">✓</button>
-                                                <button class="btn-mini btn-void-mini" onclick="event.stopPropagation(); openVoidModal(@sale.SaleId)">✕</button>
+                                              <button class="btn-action btn-confirm" onclick="event.stopPropagation(); updateStatus(@sale.SaleId, 'Completed')">✓</button>
+                                              <button class="btn-action btn-void" onclick="event.stopPropagation(); openVoidModal(@sale.SaleId)">✕</button>
                                             }
                                             else
                                             {

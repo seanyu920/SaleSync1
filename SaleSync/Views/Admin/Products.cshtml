@@ -136,8 +136,9 @@
         {
             foreach (var item in Model)
             {
-                @:if(!menuData["@item.CategoryName.ToUpper()"]) menuData["@item.CategoryName.ToUpper()"] = [];
-                @:menuData["@item.CategoryName.ToUpper()"].push({ id: @item.ProductId, name: "@Html.Raw(item.ProductName)" });
+
+                @:if(!menuData["@Html.Raw(item.CategoryName.ToUpper())"]) menuData["@Html.Raw(item.CategoryName.ToUpper())"] = [];
+                @:menuData["@Html.Raw(item.CategoryName.ToUpper())"].push({ id: @item.ProductId, name: "@Html.Raw(item.ProductName)" });
             }
         }
 

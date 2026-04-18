@@ -11,20 +11,20 @@ namespace SaleSync.Controllers
     public class ManagerController : Controller
     {
         private readonly IConfiguration _configuration;
-        private readonly string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
+        private readonly string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
 
         public ManagerController(IConfiguration configuration)
         {
             _configuration = configuration;
         }
 
-        // Authorization helper
+        // Authorization 
         private bool IsManager()
         {
             var role = HttpContext.Session.GetString("Role");
             return role == "Manager" || role == "Admin";
         }
-
+        // DASHBOARD
         public IActionResult Dashboard()
         {
             if (!IsManager()) return RedirectToAction("Index", "Home");
@@ -33,7 +33,7 @@ namespace SaleSync.Controllers
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                // ⭐ FIXED: Now only counts 'Completed' sales in the Dashboard math
+
                 string totalSql = @"SELECT ISNULL(SUM(total_amount), 0) as Total, COUNT(sale_id) as Count 
                     FROM sales WHERE CAST(sale_date AS DATE) = CAST(GETDATE() AS DATE) 
                     AND status = 'Completed'";
@@ -76,6 +76,7 @@ namespace SaleSync.Controllers
             }
             return View("ManagerDashboard", model);
         }
+        // INVENTORY MANAGEMENT
 
         [HttpGet]
         public IActionResult Inventory()
@@ -114,6 +115,7 @@ namespace SaleSync.Controllers
             }
             return View("~/Views/Admin/Inventory.cshtml", inventoryList);
         }
+        // UPDATE INVENTORY
 
         [HttpPost]
         public IActionResult UpdateInventory(InventoryItems model)
@@ -136,9 +138,7 @@ namespace SaleSync.Controllers
             return RedirectToAction("Inventory");
         }
 
-        // ==========================================
-        // ⭐ UPGRADED: The Checkmark / Status Logic
-        // ==========================================
+        // SALE STATUS UPDATE (MARK AS COMPLETED/VOIDED)
         [HttpPost]
         public IActionResult UpdateSaleStatus([FromBody] StatusUpdateModel request)
         {
@@ -156,7 +156,7 @@ namespace SaleSync.Controllers
                     if (result != null) currentStatus = result.ToString();
                 }
 
-                // If it's already marked as Completed/Voided, do nothing.
+
                 if (currentStatus == request.Status) return Ok();
 
                 using (SqlTransaction transaction = conn.BeginTransaction())
@@ -171,7 +171,7 @@ namespace SaleSync.Controllers
                             cmd.ExecuteNonQuery();
                         }
 
-                        // ⭐ THE MAGIC: If marking as 'Completed', deduct the ingredients NOW
+ 
                         if (request.Status == "Completed" && currentStatus != "Completed")
                         {
                             string getItemsSql = "SELECT product_id, quantity FROM sale_items WHERE sale_id = @id";
@@ -186,7 +186,7 @@ namespace SaleSync.Controllers
                                 }
                             }
 
-                            // Loop through the items and do the ingredient math
+
                             foreach (var item in itemsList)
                             {
                                 DeductIngredients(conn, transaction, item.pId, item.qty);
@@ -197,7 +197,7 @@ namespace SaleSync.Controllers
                     }
                     catch (Exception ex)
                     {
-                        // Protects database if stock falls below zero
+
                         transaction.Rollback();
                         return BadRequest(new { message = ex.Message });
                     }
@@ -205,10 +205,7 @@ namespace SaleSync.Controllers
             }
             return Ok();
         }
-
-        // ==========================================
-        // ⭐ ADDED: The Math Helper Formula
-        // ==========================================
+        // DEDUCTION FEATURE
         private void DeductIngredients(SqlConnection conn, SqlTransaction transaction, int productId, int qty)
         {
             string recipeQuery = @"
@@ -253,10 +250,10 @@ namespace SaleSync.Controllers
             }
         }
 
-        // Inside ManagerController.cs
+
         public IActionResult Analytics()
         {
-            // This tells the Manager controller to go look in the Admin folder for the view
+
             return View("~/Views/Admin/Analytics.cshtml");
         }
 
@@ -298,9 +295,9 @@ namespace SaleSync.Controllers
             return View("~/Views/Admin/Products.cshtml", menuList);
         }
 
-    } // End of ManagerController
+    } 
 
-    // ⭐ ADDED: Support class placed securely outside the controller braces
+   
     public class StatusUpdateModel
     {
         public int SaleId { get; set; }
