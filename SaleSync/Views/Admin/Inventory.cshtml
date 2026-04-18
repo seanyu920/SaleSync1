@@ -85,7 +85,7 @@
             <div class="inventory-content">
 
                 <div class="form-card">
-                    <h2 class="widget-title">Add Inventory Item</h2>
+                    <h2 class="widget-title">Inventory Item Details</h2>
 
                     <form id="inventoryForm" method="post">
                         <input type="hidden" name="ProductId" id="ProductId" />
@@ -139,8 +139,8 @@
                         </div>
 
                         <div class="action-buttons">
-                            <button type="submit" form="inventoryForm" formaction="/Admin/AddInventory" class="action-btn add-btn">Add Item</button>
-                            <button type="submit" form="inventoryForm" formaction="/Admin/UpdateInventory" class="action-btn update-btn">Update Item</button>
+                            <button type="button" onclick="confirmAdd()" class="action-btn add-btn">Add Item</button>
+                            <button type="button" onclick="confirmUpdate()" class="action-btn update-btn">Update Item</button>
                             <button type="button" onclick="deleteItem()" class="action-btn delete-btn">Delete Item</button>
                         </div>
                     </form>
@@ -261,16 +261,60 @@
         document.querySelector('input[name="ExpirationDate"]').value = expirationDate;
         }
 
+        // ⭐ NEW: Confirmation for Add Action
+        function confirmAdd() {
+        const itemName = document.querySelector('input[name="ItemName"]').value;
+        if (!itemName) {
+        Swal.fire({ title: 'Missing Info', text: 'Please enter an Item Name.', icon: 'warning', confirmButtonColor: '#f46a05' });
+        return;
+        }
+
+        Swal.fire({
+        title: 'Add New Item?',
+        text: `Add "${itemName}" to the inventory?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#f46a05',
+        cancelButtonColor: '#4a2511',
+        confirmButtonText: 'Yes, add it!'
+        }).then((result) => {
+        if (result.isConfirmed) {
+        const form = document.getElementById("inventoryForm");
+        form.action = "/Admin/AddInventory";
+        form.submit();
+        }
+        });
+        }
+
+        // ⭐ NEW: Confirmation for Update Action
+        function confirmUpdate() {
+        const productId = document.getElementById("ProductId").value;
+        if (!productId) {
+        Swal.fire({ title: 'No Selection', text: 'Please select an item to update.', icon: 'warning', confirmButtonColor: '#f46a05' });
+        return;
+        }
+
+        Swal.fire({
+        title: 'Update Item?',
+        text: "Save changes to this inventory item?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#ab4a03',
+        cancelButtonColor: '#4a2511',
+        confirmButtonText: 'Yes, update it!'
+        }).then((result) => {
+        if (result.isConfirmed) {
+        const form = document.getElementById("inventoryForm");
+        form.action = "/Admin/UpdateInventory";
+        form.submit();
+        }
+        });
+        }
+
         function getSelectedId() {
         const selected = document.querySelector('input[name="selectedItem"]:checked');
         if (!selected) {
-        // CHANGE: Replaced browser alert with SweetAlert
-        Swal.fire({
-        title: 'No Selection',
-        text: 'Please select an item from the table first.',
-        icon: 'warning',
-        confirmButtonColor: '#f46a05'
-        });
+        Swal.fire({ title: 'No Selection', text: 'Please select an item from the table first.', icon: 'warning', confirmButtonColor: '#f46a05' });
         return null;
         }
         return selected.value;
@@ -280,10 +324,9 @@
         const id = getSelectedId();
         if (!id) return;
 
-        // CHANGE: Replaced browser confirm with SweetAlert
         Swal.fire({
         title: 'Are you sure?',
-        text: "Do you want to permanently delete this inventory item?",
+        text: "Permanently delete this inventory item?",
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#d33',
