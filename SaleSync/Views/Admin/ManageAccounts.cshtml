@@ -10,6 +10,11 @@
     <title>Manage Accounts - SyncScale</title>
     <link rel="stylesheet" href="~/css/ManageAccounts.css" asp-append-version="true" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .status-active { background: #d1fae5; color: #065f46; padding: 4px 12px; border-radius: 15px; font-size: 11px; font-weight: 700; display: inline-block; }
+        .status-inactive { background: #fee2e2; color: #b91c1c; padding: 4px 12px; border-radius: 15px; font-size: 11px; font-weight: 700; display: inline-block; }
+        .deactivated-card { margin-top: 25px; border-top: 4px solid #fee2e2; }
+    </style>
 </head>
 <body>
     <div class="dashboard-container">
@@ -32,9 +37,7 @@
                 <nav class="sidebar-menu">
                     <a asp-controller="Admin" asp-action="Dashboard" class="menu-btn">❖ Dashboard</a>
                     <a asp-controller="Admin" asp-action="Analytics" class="menu-btn">📊 Analytics</a>
-                    
                     <a asp-controller="Admin" asp-action="Products" class="menu-btn">🏷️ Products</a>
-                    
                     <a asp-controller="Admin" asp-action="Inventory" class="menu-btn">📦 Inventory</a>
                     <a asp-controller="Admin" asp-action="ManageAccounts" class="menu-btn active">💳 Accounts</a>
                 </nav>
@@ -48,10 +51,9 @@
         </aside>
 
         <main class="main-content">
-
             <div class="page-header">
                 <h1 class="greeting-title">User Accounts 💳</h1>
-                <p class="greeting-subtitle">Add, update, or remove system access.</p>
+                <p class="greeting-subtitle">Add, update, or deactivate system access.</p>
             </div>
 
             <div class="accounts-content">
@@ -96,148 +98,263 @@
 
                         <div class="form-actions-row">
                             <button type="button" onclick="confirmUpdate()" class="btn update-btn">Update Selected</button>
-                            <button type="button" class="btn delete-btn" onclick="prepareDelete()">Delete Selected</button>
+                            <button type="button" id="toggleStatusBtn" class="btn delete-btn" style="background:#b91c1c;" onclick="prepareToggleStatus()">Deactivate Selected</button>
                             <button type="button" onclick="confirmAdd()" class="btn save-btn">+ Add Account</button>
                         </div>
                     </form>
                 </div>
 
                 <div class="table-card">
-                    <h2 class="widget-title">Active Directory</h2>
+                    <h2 class="widget-title">Active Accounts</h2>
                     <div class="table-wrap">
                         <table class="accounts-table">
                             <thead>
                                 <tr>
+                                    <th style="width: 50px;">Select</th>
                                     <th>Full Name</th>
                                     <th>Username</th>
                                     <th>Email</th>
-                                    <th>Password</th>
                                     <th>Role</th>
+                                    <th>Status</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @if (Model != null && Model.Count > 0)
+                                @if (Model != null && Model.Any(u => u.IsActive))
                                 {
-                                    foreach (var user in Model)
+                                    foreach (var user in Model.Where(u => u.IsActive))
                                     {
                                         <tr class="clickable-row"
-                                            onclick="selectUser('@user.UserId', '@user.FullName', '@user.Username', '@user.Email', '@user.Password', '@user.Role')">
+                                            onclick="selectUser('@user.UserId', '@Html.Raw(user.FullName.Replace("'", "\\'"))', '@Html.Raw(user.Username.Replace("'", "\\'"))', '@Html.Raw(user.Email.Replace("'", "\\'"))', '@Html.Raw(user.Password.Replace("'", "\\'"))', '@user.Role', '@user.IsActive.ToString().ToLower()')">
+                                            
+                                            <td style="text-align: center;">
+                                                <input type="radio" name="selectedAccount" id="radio_@user.UserId" style="cursor:pointer;" />
+                                            </td>
                                             <td><strong>@user.FullName</strong></td>
                                             <td>@user.Username</td>
                                             <td>@user.Email</td>
-                                            <td style="color: #b58361;">••••••••</td>
                                             <td>
-                                                @{
-                                                    string badgeClass = user.Role == "Admin" ? "role-admin" : (user.Role == "Manager" ? "role-manager" : "role-cashier");
-                                                }
+                                                @{ string badgeClass = user.Role == "Admin" ? "role-admin" : (user.Role == "Manager" ? "role-manager" : "role-cashier"); }
                                                 <span class="role-badge @badgeClass">@user.Role</span>
                                             </td>
+                                            <td><span class="status-active">Active</span></td>
                                         </tr>
                                     }
                                 }
                                 else
                                 {
                                     <tr>
-                                        <td colspan="5" style="text-align: center; padding: 40px; color: #b58361;">No accounts found.</td>
+                                        <td colspan="6" style="text-align: center; padding: 40px; color: #b58361;">No active accounts found.</td>
                                     </tr>
                                 }
                             </tbody>
                         </table>
                     </div>
                 </div>
+
+                <div class="table-card deactivated-card">
+                    <h2 class="widget-title" style="color: #b91c1c;">Deactivated Accounts</h2>
+                    <div class="table-wrap">
+                        <table class="accounts-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50px;">Select</th>
+                                    <th>Full Name</th>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model != null && Model.Any(u => !u.IsActive))
+                                {
+                                    foreach (var user in Model.Where(u => !u.IsActive))
+                                    {
+                                        <tr class="clickable-row" style="background-color: #fafafa; opacity: 0.8;"
+                                            onclick="selectUser('@user.UserId', '@Html.Raw(user.FullName.Replace("'", "\\'"))', '@Html.Raw(user.Username.Replace("'", "\\'"))', '@Html.Raw(user.Email.Replace("'", "\\'"))', '@Html.Raw(user.Password.Replace("'", "\\'"))', '@user.Role', '@user.IsActive.ToString().ToLower()')">
+                                            
+                                            <td style="text-align: center;">
+                                                <input type="radio" name="selectedAccount" id="radio_@user.UserId" style="cursor:pointer;" />
+                                            </td>
+                                            <td style="color: #666;"><strong>@user.FullName</strong></td>
+                                            <td style="color: #666;">@user.Username</td>
+                                            <td style="color: #666;">@user.Email</td>
+                                            <td>
+                                                @{ string badgeClass = user.Role == "Admin" ? "role-admin" : (user.Role == "Manager" ? "role-manager" : "role-cashier"); }
+                                                <span class="role-badge @badgeClass" style="filter: grayscale(100%);">@user.Role</span>
+                                            </td>
+                                            <td><span class="status-inactive">Inactive</span></td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="6" style="text-align: center; padding: 30px; color: #999;">No deactivated accounts.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
             </div>
         </main>
     </div>
 
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                Swal.fire('Error', '@TempData["ErrorMessage"]', 'error');
+            });
+        </script>
+    }
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                Swal.fire('Success', '@TempData["SuccessMessage"]', 'success');
+            });
+        </script>
+    }
+
     <script>
-        function selectUser(userId, fullName, username, email, password, role) {
-        document.getElementById('UserId').value = userId;
-        document.getElementById('FullName').value = fullName;
-        document.getElementById('Username').value = username;
-        document.getElementById('Email').value = email;
-        document.getElementById('Password').value = password;
-        document.getElementById('Role').value = role;
+        let originalData = {};
+        let selectedUserIsActive = true;
+
+        function selectUser(userId, fullName, username, email, password, role, isActive) {
+            const radioBtn = document.getElementById('radio_' + userId);
+            if (radioBtn) radioBtn.checked = true;
+
+            document.getElementById('UserId').value = userId;
+            document.getElementById('FullName').value = fullName;
+            document.getElementById('Username').value = username;
+            document.getElementById('Email').value = email;
+            document.getElementById('Password').value = password;
+            document.getElementById('Role').value = role;
+
+            originalData = {
+                fullName: fullName,
+                username: username,
+                email: email,
+                password: password,
+                role: role
+            };
+
+            selectedUserIsActive = (isActive === 'true');
+            const btn = document.getElementById('toggleStatusBtn');
+            
+            if(btn) {
+                if(selectedUserIsActive) {
+                    btn.textContent = "Deactivate Selected";
+                    btn.style.background = "#b91c1c"; 
+                } else {
+                    btn.textContent = "Reactivate Selected";
+                    btn.style.background = "#065f46"; 
+                }
+            }
         }
 
-        // ⭐ NEW: Confirmation for Add Action
-        function confirmAdd() {
-        const fullName = document.getElementById('FullName').value;
-        if (!fullName || !document.getElementById('Username').value) {
-        Swal.fire({ title: 'Missing Info', text: 'Please fill in the required fields.', icon: 'warning', confirmButtonColor: '#f46a05' });
-        return;
-        }
-
-        Swal.fire({
-        title: 'Add New Account?',
-        text: `Create a system account for ${fullName}?`,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#f46a05',
-        cancelButtonColor: '#4a2511',
-        confirmButtonText: 'Yes, add it!'
-        }).then((result) => {
-        if (result.isConfirmed) {
-        const form = document.getElementById('accountForm');
-        form.action = "/Admin/AddAccount";
-        form.submit();
-        }
-        });
-        }
-
-        // ⭐ NEW: Confirmation for Update Action
         function confirmUpdate() {
-        const userId = document.getElementById('UserId').value;
-        const fullName = document.getElementById('FullName').value;
+            const userId = document.getElementById('UserId').value;
+            const currentFullName = document.getElementById('FullName').value;
+            const currentUsername = document.getElementById('Username').value;
+            const currentEmail = document.getElementById('Email').value;
+            const currentPassword = document.getElementById('Password').value;
+            const currentRole = document.getElementById('Role').value;
 
-        if (!userId) {
-        Swal.fire({ title: 'No Selection', text: 'Please select an account from the table to update.', icon: 'warning', confirmButtonColor: '#f46a05' });
-        return;
+            if (!userId) {
+                Swal.fire({ title: 'No Selection', text: 'Please select an account from the table to update.', icon: 'warning', confirmButtonColor: '#f46a05' });
+                return;
+            }
+
+            if (currentFullName === originalData.fullName &&
+                currentUsername === originalData.username &&
+                currentEmail === originalData.email &&
+                currentPassword === originalData.password &&
+                currentRole === originalData.role) 
+            {
+                Swal.fire({
+                    title: 'No Changes Detected',
+                    text: 'You have not modified any information for this account.',
+                    icon: 'info',
+                    confirmButtonColor: '#f46a05'
+                });
+                return; 
+            }
+
+            Swal.fire({
+                title: 'Update Account?',
+                text: `Save changes for ${currentFullName}?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#ab4a03',
+                cancelButtonColor: '#4a2511',
+                confirmButtonText: 'Yes, update it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.getElementById('accountForm');
+                    form.action = "/Admin/UpdateAccount";
+                    form.submit();
+                }
+            });
         }
 
-        Swal.fire({
-        title: 'Update Account?',
-        text: `Save changes for ${fullName}?`,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#ab4a03',
-        cancelButtonColor: '#4a2511',
-        confirmButtonText: 'Yes, update it!'
-        }).then((result) => {
-        if (result.isConfirmed) {
-        const form = document.getElementById('accountForm');
-        form.action = "/Admin/UpdateAccount";
-        form.submit();
-        }
-        });
+        function confirmAdd() {
+            const fullName = document.getElementById('FullName').value;
+            if (!fullName || !document.getElementById('Username').value) {
+                Swal.fire({ title: 'Missing Info', text: 'Please fill in the required fields.', icon: 'warning', confirmButtonColor: '#f46a05' });
+                return;
+            }
+
+            Swal.fire({
+                title: 'Add New Account?',
+                text: `Create a system account for ${fullName}?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#f46a05',
+                cancelButtonColor: '#4a2511',
+                confirmButtonText: 'Yes, add it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.getElementById('accountForm');
+                    form.action = "/Admin/AddAccount";
+                    form.submit();
+                }
+            });
         }
 
-        function prepareDelete() {
-        const userId = document.getElementById('UserId').value;
-        if (!userId) {
-        Swal.fire({
-        title: 'No Selection',
-        text: 'Please select an account from the table first.',
-        icon: 'warning',
-        confirmButtonColor: '#f46a05'
-        });
-        return;
-        }
+        function prepareToggleStatus() {
+            const userId = document.getElementById('UserId').value;
+            if (!userId) {
+                Swal.fire({ title: 'No Selection', text: 'Please select an account first.', icon: 'warning', confirmButtonColor: '#f46a05' });
+                return;
+            }
 
-        Swal.fire({
-        title: 'Are you sure?',
-        text: "You want to permanently delete this account?",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#4a2511',
-        confirmButtonText: 'Yes, delete it!'
-        }).then((result) => {
-        if (result.isConfirmed) {
-        const form = document.getElementById('accountForm');
-        form.action = "/Admin/DeleteAccount";
-        form.submit();
+            const actionName = selectedUserIsActive ? "Deactivate" : "Reactivate";
+            const warningText = selectedUserIsActive 
+                ? "This user will no longer be able to log into the system." 
+                : "This user will regain full access to the system.";
+            const targetUrl = selectedUserIsActive ? "/Admin/DeactivateAccount" : "/Admin/ReactivateAccount";
+            const btnColor = selectedUserIsActive ? "#d33" : "#065f46";
+
+            Swal.fire({
+                title: `${actionName} Account?`,
+                text: warningText,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: btnColor,
+                cancelButtonColor: '#4a2511',
+                confirmButtonText: `Yes, ${actionName.toLowerCase()} them!`
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.getElementById('accountForm');
+                    form.action = targetUrl;
+                    form.submit();
+                }
+            });
         }
-        });
-        }
-    </script></body>
+    </script>
+</body>
 </html>
