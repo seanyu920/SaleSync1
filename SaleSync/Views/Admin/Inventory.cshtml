@@ -118,8 +118,18 @@
                             </div>
 
                             <div class="input-group">
-                                <label>Quantity</label>
-                                <input type="number" name="Quantity" placeholder="0" required />
+                                <label>Quantity & Unit</label>
+                                <div style="display: flex; gap: 10px;">
+                                    <input type="number" name="Quantity" placeholder="0" required style="flex: 2;" />
+                                    <select name="Unit" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #ddd; background-color: #fff; color: #4a2511; font-family: inherit;">
+                                        <option value="pcs">pcs (Pieces)</option>
+                                        <option value="g">g (Grams)</option>
+                                        <option value="kg">kg (Kilograms)</option>
+                                        <option value="ml">ml (Milliliters)</option>
+                                        <option value="L">L (Liters)</option>
+                                        <option value="oz">oz (Ounces)</option>
+                                    </select>
+                                </div>
                             </div>
                             
                             <div class="input-group">
@@ -192,6 +202,7 @@
                                                 '@Html.Raw((item.ItemID ?? "").Replace("'", "\\'"))',
                                                 '@item.PurchasePrice',
                                                 '@item.Quantity',
+                                                '@item.Unit',
                                                 '@Html.Raw((item.StockSupplier ?? "").Replace("'", "\\'"))',
                                                 '@item.DateAcquired',
                                                 '@item.ExpirationDate'
@@ -201,7 +212,9 @@
                                             <td>@item.ItemName</td>
                                             <td>@item.ItemID</td>
                                             <td>₱@item.PurchasePrice.ToString("0.00")</td>
-                                            <td>@item.Quantity</td>
+                                            
+                                            <td>@item.Quantity <span style="color: #8c5b3e; font-size: 12px; font-weight: bold;">@item.Unit</span></td>
+                                            
                                             <td>
                                                 @{
                                                     int qty = 0;
@@ -249,19 +262,20 @@
     </form>
 
     <script>
-        function fillForm(productId, itemCategory, itemName, itemID, purchasePrice, quantity, stockSupplier, dateAcquired, expirationDate) {
+        // ⭐ UPDATED: Added 'unit' parameter and selection logic
+        function fillForm(productId, itemCategory, itemName, itemID, purchasePrice, quantity, unit, stockSupplier, dateAcquired, expirationDate) {
         document.getElementById("ProductId").value = productId;
         document.querySelector('input[name="ItemCategory"]').value = itemCategory;
         document.querySelector('input[name="ItemName"]').value = itemName;
         document.querySelector('input[name="ItemID"]').value = itemID;
         document.querySelector('input[name="PurchasePrice"]').value = purchasePrice;
         document.querySelector('input[name="Quantity"]').value = quantity;
+        document.querySelector('select[name="Unit"]').value = unit || "pcs"; // Selects the right unit from the dropdown
         document.querySelector('input[name="StockSupplier"]').value = stockSupplier;
         document.querySelector('input[name="DateAcquired"]').value = dateAcquired;
         document.querySelector('input[name="ExpirationDate"]').value = expirationDate;
         }
 
-        // ⭐ NEW: Confirmation for Add Action
         function confirmAdd() {
         const itemName = document.querySelector('input[name="ItemName"]').value;
         if (!itemName) {
@@ -286,7 +300,6 @@
         });
         }
 
-        // ⭐ NEW: Confirmation for Update Action
         function confirmUpdate() {
         const productId = document.getElementById("ProductId").value;
         if (!productId) {
