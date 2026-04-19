@@ -1,0 +1,148 @@
+﻿@model SaleSync.Models.DailyReportViewModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Daily Report - SyncScale</title>
+    <link rel="stylesheet" href="~/css/AdminDashboard.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="dashboard-container">
+        
+        <aside class="sidebar">
+            <div>
+                <div class="logo-section">
+                    <div class="logo-title">SyncScale</div>
+                    <div class="logo-subtitle">Coffee & Pastries</div>
+                </div>
+                <nav class="sidebar-menu">
+                    <a href="/Admin/Dashboard" class="menu-btn">← Back to Dashboard</a>
+                </nav>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header" style="margin-bottom: 20px;">
+                <h1 class="greeting-title">End of Day Report 📊</h1>
+                <p class="greeting-subtitle">Sales and Profit analysis for @DateTime.Now.ToString("MMMM dd, yyyy")</p>
+            </div>
+
+            <div class="summary-dashboard" style="grid-template-columns: repeat(3, 1fr);">
+                <div class="summary-card" style="background: #fff;">
+                    <div class="card-icon-box icon-green">💵</div>
+                    <div class="card-label">Gross Sales</div>
+                    <div class="card-value">₱@Model.TotalSales.ToString("N2")</div>
+                    <span class="trend-badge" style="color: #666;">Money taken in today</span>
+                </div>
+
+                <div class="summary-card" style="background: #fff;">
+                    <div class="card-icon-box icon-red">📉</div>
+                    <div class="card-label">Cost of Goods (COGS)</div>
+                    <div class="card-value" style="color: #b91c1c;">- ₱@Model.TotalCost.ToString("N2")</div>
+                    <span class="trend-badge" style="color: #666;">Total cost of ingredients used</span>
+                </div>
+
+                <div class="summary-card" style="background: #f46a05; color: white;">
+                    <div class="card-icon-box" style="background: rgba(255,255,255,0.2);">💎</div>
+                    <div class="card-label" style="color: #ffe0cc;">Net Profit</div>
+                    <div class="card-value" style="color: white;">₱@Model.NetProfit.ToString("N2")</div>
+                    <span class="trend-badge" style="background: rgba(255,255,255,0.2); color: white;">Actual money earned</span>
+                </div>
+            </div>
+
+            <div class="recent-sales-card" style="margin-top: 20px;">
+                <div class="card-header-flex">
+                    <div>
+                        <h2 class="widget-title">Products Sold Today</h2>
+                        <p class="widget-subtitle">Total Transactions: @Model.TransactionCount</p>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="recent-sales-table">
+                        <thead>
+                            <tr>
+                                <th>Product Name</th>
+                                <th style="text-align: center;">Quantity Sold</th>
+                                <th style="text-align: right;">Total Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.ProductsSold != null && Model.ProductsSold.Any())
+                            {
+                                foreach (var item in Model.ProductsSold)
+                                {
+                                    <tr>
+                                        <td class="td-bold">@item.ProductName</td>
+                                        <td style="text-align: center;">
+                                            <span style="background: #fdf5f0; color: #f46a05; padding: 4px 12px; border-radius: 20px; font-weight: bold;">
+                                                @item.QuantitySold
+                                            </span>
+                                        </td>
+                                        <td class="td-price" style="text-align: right;">₱@item.TotalRevenue.ToString("N2")</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="3" style="text-align: center; padding: 30px; color: #999;">No products sold yet today.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="recent-sales-card" style="margin-top: 30px; border-top: 4px solid #f46a05;">
+                <div class="card-header-flex">
+                    <div>
+                        <h2 class="widget-title">Inventory Purchased Today</h2>
+                        <p class="widget-subtitle">Total Cash Spent on Supplies: <strong style="color: #b91c1c;">₱@Model.TotalInventorySpend.ToString("N2")</strong></p>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="recent-sales-table">
+                        <thead>
+                            <tr>
+                                <th>Ingredient Name</th>
+                                <th style="text-align: center;">Quantity Added</th>
+                                <th style="text-align: right;">Total Cost</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.IngredientsBought != null && Model.IngredientsBought.Any())
+                            {
+                                foreach (var item in Model.IngredientsBought)
+                                {
+                                    <tr style="background: #faf8f5;">
+                                        <td class="td-bold" style="color: #8c5b3e;">@item.ItemName</td>
+                                        <td style="text-align: center;">
+                                            <span style="background: #fee2e2; color: #b91c1c; padding: 4px 12px; border-radius: 20px; font-weight: bold;">
+                                                +@item.QuantityBought
+                                            </span>
+                                        </td>
+                                        <td class="td-price" style="text-align: right; color: #b91c1c;">₱@item.TotalCost.ToString("N2")</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="3" style="text-align: center; padding: 30px; color: #999;">No inventory was purchased today.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</body>
+</html>

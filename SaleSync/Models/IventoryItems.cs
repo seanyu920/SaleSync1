@@ -11,5 +11,6 @@
         public string StockSupplier { get; set; } = "";
         public string DateAcquired { get; set; } = "";
         public string ExpirationDate { get; set; } = "";
+        public string Unit { get; set; }
     }
 }
