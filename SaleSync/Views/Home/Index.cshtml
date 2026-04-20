@@ -7,6 +7,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Cafero | Coffee & Connection</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    
     <link rel="stylesheet" href="~/css/HomePage.css" asp-append-version="true" />
 </head>
 <body>
@@ -16,14 +21,22 @@
             <span>Cafero</span>
         </div>
 
-        <nav class="nav-menu">
-            <a href="#home">Home</a>
-            <a href="#about">About</a>
-            <a href="#contact">Contact</a>
-        </nav>
+        <button class="hamburger" id="hamburger" onclick="toggleNav()">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+        </button>
 
-        <div class="nav-login">
-            <a asp-controller="Home" asp-action="Login" class="login-btn">Log In</a>
+        <div class="nav-container" id="navContainer">
+            <nav class="nav-menu">
+                <a href="#home" onclick="closeNav()">Home</a>
+                <a href="#about" onclick="closeNav()">About</a>
+                <a href="#contact" onclick="closeNav()">Contact</a>
+            </nav>
+
+            <div class="nav-login">
+                <a asp-controller="Home" asp-action="Login" class="login-btn">Log In</a>
+            </div>
         </div>
     </header>
 
@@ -49,58 +62,144 @@
                 <div class="section-divider"></div>
                 <p>
                     Cafero specializes in the art of craft coffee, offering a space purposefully designed for connection.
-                    Every item on our menu tells a unique story of flavor.
                 </p>
             </div>
 
             <div class="feature-grid">
-                <div class="feature-card">
-                    <div class="card-icon">
-                        <img src="/images/Coffee.png" alt="Coffee" />
+                
+                <div class="feature-card" onclick="this.classList.toggle('is-flipped')">
+                    <div class="card-inner">
+                        <div class="card-front">
+                            <div class="card-icon"><img src="/images/Coffee.png" alt="Coffee" /></div>
+                            <h3>Coffee</h3>
+                            <p>Artisan blends brewed to perfection by our expert baristas.</p>
+                        </div>
+                        <div class="card-back">
+                            <h3 class="back-title">Coffee Menu</h3>
+                            <div class="menu-size-header"><span>Item</span><span>S | L</span></div>
+                            <ul class="flip-menu-list">
+                                <li><span>Americano</span> <span>₱79 | ₱89</span></li>
+                                <li><span>Cappuccino</span> <span>₱79 | ₱89</span></li>
+                                <li><span>Hot Choco</span> <span>₱79 | ₱89</span></li>
+                                <li><span>Hot Latte</span> <span>₱79 | ₱89</span></li>
+                                <li><span>Iced Latte</span> <span>₱89 | ₱99</span></li>
+                                <li><span>Spanish Latte</span> <span>₱89 | ₱99</span></li>
+                                <li><span>Hot Matcha Latte</span> <span>₱89 | ₱99</span></li>
+                                <li><span>Iced Matcha Latte</span> <span>₱89 | ₱99</span></li>
+                            </ul>
+                        </div>
                     </div>
-                    <h3>Coffee</h3>
-                    <p>Artisan blends brewed to perfection by our expert baristas.</p>
                 </div>
                 
-                <div class="feature-card">
-                    <div class="card-icon">
-                        <img src="/images/MilkTea.png" alt="Milk Tea" />
+                <div class="feature-card" onclick="this.classList.toggle('is-flipped')">
+                    <div class="card-inner">
+                        <div class="card-front">
+                            <div class="card-icon"><img src="/images/MilkTea.png" alt="Milk Tea" /></div>
+                            <h3>Milk Tea</h3>
+                            <p>Perfectly balanced sweetness with premium tea leaves.</p>
+                        </div>
+                        <div class="card-back">
+                            <h3 class="back-title">Milk Tea Menu</h3>
+                            <div class="menu-size-header"><span>Item</span><span>S | L</span></div>
+                            <ul class="flip-menu-list">
+                                <li><span>Wintermelon</span> <span>₱49 | ₱59</span></li>
+                                <li><span>Okinawa</span> <span>₱49 | ₱59</span></li>
+                                <li><span>Cookies and Cream</span> <span>₱49 | ₱59</span></li>
+                                <li><span>Salted Caramel</span> <span>₱49 | ₱59</span></li>
+                                <li><span>Hokkaido</span> <span>₱49 | ₱59</span></li>
+                                <li><span>Matcha</span> <span>₱49 | ₱59</span></li>
+                                <li><span>Thai</span> <span>₱49 | ₱59</span></li>
+                            </ul>
+                        </div>
                     </div>
-                    <h3>Milk Tea</h3>
-                    <p>Perfectly balanced sweetness with premium tea leaves.</p>
                 </div>
                 
-                <div class="feature-card">
-                    <div class="card-icon">
-                        <img src="/images/FruitTea.png" alt="Fruit Tea" />
+                <div class="feature-card" onclick="this.classList.toggle('is-flipped')">
+                    <div class="card-inner">
+                        <div class="card-front">
+                            <div class="card-icon"><img src="/images/FruitTea.png" alt="Fruit Tea" /></div>
+                            <h3>Fruit Tea</h3>
+                            <p>Refreshing infusions of real fruit and natural botanicals.</p>
+                        </div>
+                        <div class="card-back">
+                            <h3 class="back-title">Fruit Tea Menu</h3>
+                            <div class="menu-size-header"><span>Item</span><span>S | L</span></div>
+                            <ul class="flip-menu-list">
+                                <li><span>Green Apple</span> <span>₱49 | ₱59</span></li>
+                                <li><span>Strawberry</span> <span>₱49 | ₱59</span></li>
+                                <li><span>Blueberry</span> <span>₱49 | ₱59</span></li>
+                                <li><span>Mango</span> <span>₱49 | ₱59</span></li>
+                                <li><span>Lychee</span> <span>₱49 | ₱59</span></li>
+                                <li><span>Peach</span> <span>₱49 | ₱59</span></li>
+                            </ul>
+                        </div>
                     </div>
-                    <h3>Fruit Tea</h3>
-                    <p>Refreshing infusions of real fruit and natural botanicals.</p>
                 </div>
                 
-                <div class="feature-card">
-                    <div class="card-icon">
-                        <img src="/images/Silog.png" alt="Rice Meals" />
+                <div class="feature-card" onclick="this.classList.toggle('is-flipped')">
+                    <div class="card-inner">
+                        <div class="card-front">
+                            <div class="card-icon"><img src="/images/Silog.png" alt="Rice Meals" /></div>
+                            <h3>Rice Meals</h3>
+                            <p>Hearty, savory meals that provide comfort in every bite.</p>
+                        </div>
+                        <div class="card-back">
+                            <h3 class="back-title">Rice Meals</h3>
+                            <ul class="flip-menu-list">
+                                <li><span>Silog</span> <span>₱49</span></li>
+                                <li><span>Hot Silog</span> <span>₱79</span></li>
+                                <li><span>Long Silog</span> <span>₱79</span></li>
+                                <li><span>Ham Silog</span> <span>₱79</span></li>
+                                <li><span>Shanghai Silog</span> <span>₱89</span></li>
+                                <li><span>Embotido Silog</span> <span>₱99</span></li>
+                            </ul>
+                        </div>
                     </div>
-                    <h3>Rice Meals</h3>
-                    <p>Hearty, savory meals that provide comfort in every bite.</p>
                 </div>
                 
-                <div class="feature-card">
-                    <div class="card-icon">
-                        <img src="/images/Pasta.jpg" alt="Pasta & Snacks" />
+                <div class="feature-card" onclick="this.classList.toggle('is-flipped')">
+                    <div class="card-inner">
+                        <div class="card-front">
+                            <div class="card-icon"><img src="/images/Pasta.jpg" alt="Pasta & Snacks" /></div>
+                            <h3>Pasta & Snacks</h3>
+                            <p>Classic favorites reimagined for your mid-day escape.</p>
+                        </div>
+                        <div class="card-back">
+                            <h3 class="back-title">Pasta & Snacks</h3>
+                            <ul class="flip-menu-list">
+                                <li><span>Flavored Fries</span> <span>₱59</span></li>
+                                <li><span>Nachos</span> <span>₱59</span></li>
+                                <li><span>Siomai 4pcs</span> <span>₱39</span></li>
+                                <li><span>Carbonara</span> <span>₱109</span></li>
+                                <li><span>Pesto Pasta</span> <span>₱119</span></li>
+                                <li><span>Gambas Pasta</span> <span>₱129</span></li>
+                            </ul>
+                        </div>
                     </div>
-                    <h3>Pasta & Snacks</h3>
-                    <p>Classic favorites reimagined for your mid-day escape.</p>
                 </div>
                 
-                <div class="feature-card">
-                    <div class="card-icon">
-                        <img src="/images/Pastry.jpg" alt="Bread & Pastries" />
+                <div class="feature-card" onclick="this.classList.toggle('is-flipped')">
+                    <div class="card-inner">
+                        <div class="card-front">
+                            <div class="card-icon"><img src="/images/Pastry.jpg" alt="Bread & Pastries" /></div>
+                            <h3>Bread & Pastries</h3>
+                            <p>Baked fresh daily with high-quality, local ingredients.</p>
+                        </div>
+                        <div class="card-back">
+                            <h3 class="back-title">Bread & Pastries</h3>
+                            <ul class="flip-menu-list">
+                                <li><span>Chocolate Cookies</span> <span>₱49</span></li>
+                                <li><span>Croissant</span> <span>₱59</span></li>
+                                <li><span>Cheese Ensaymada</span> <span>₱39</span></li>
+                                <li><span>Yema Ensaymada</span> <span>₱39</span></li>
+                                <li><span>Ube Ensaymada</span> <span>₱39</span></li>
+                                <li><span>Chocolate Donut</span> <span>₱29</span></li>
+                                <li><span>Cinnamon</span> <span>₱39</span></li>
+                            </ul>
+                        </div>
                     </div>
-                    <h3>Bread & Pastries</h3>
-                    <p>Baked fresh daily with high-quality, local ingredients.</p>
                 </div>
+
             </div>
         </div>
     </section>
@@ -109,29 +208,57 @@
         <div class="contact-container">
             <div class="contact-info">
                 <h2>Visit Our Escape</h2>
-                <div class="contact-item">
-                    <strong>📍 Location</strong>
-                    <p>B.A Cruz Street near Brgy Hall, Sta.Ana, Taytay, 1920</p>
-                </div>
-                <div class="contact-item">
-                    <strong>✉️ Email</strong>
-                    <p>Cafero@gmail.com</p>
-                </div>
-                <div class="contact-item">
-                    <strong>📞 Phone</strong>
-                    <p>+63 912 345 6789</p>
+                <p class="contact-sub">Drop by for a cup, stay for the connection.</p>
+                <div class="contact-card-list">
+                    <div class="contact-item">
+                        <div class="contact-icon">📍</div>
+                        <div class="contact-details">
+                            <strong>Location</strong>
+                            <p>B.A Cruz Street near Brgy Hall, Sta.Ana, Taytay, 1920</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">✉️</div>
+                        <div class="contact-details">
+                            <strong>Email</strong>
+                            <p>Cafero@gmail.com</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">📞</div>
+                        <div class="contact-details">
+                            <strong>Phone</strong>
+                            <p>+63 912 345 6789</p>
+                        </div>
+                    </div>
                 </div>
             </div>
-            
-            <div class="contact-map-placeholder">
-                <img src="/images/payment.jpg" alt="Cafero Location" class="location-photo" />
+            <div class="contact-image-wrapper">
+                <img src="/images/payment.jpg" alt="Accepted Payments" class="payment-photo" />
             </div>
-            
         </div>
     </section>
 
     <footer class="footer">
-        <p>&copy; 2026 Cafero. Crafted for connection.</p>
+        <div class="footer-content">
+            <p>&copy; 2026 Cafero. Crafted for connection.</p>
+            <p class="salesync-badge">Powered by <strong>SaleSync</strong></p>
+        </div>
     </footer>
+
+    <script>
+            function toggleNav() {
+                const nav = document.getElementById('navContainer');
+                const hamburger = document.getElementById('hamburger');
+                nav.classList.toggle('active');
+                hamburger.classList.toggle('active');
+            }
+            function closeNav() {
+                if (window.innerWidth <= 768) {
+                    document.getElementById('navContainer').classList.remove('active');
+                    document.getElementById('hamburger').classList.remove('active');
+                }
+            }
+    </script>
 </body>
 </html>

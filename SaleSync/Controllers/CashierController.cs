@@ -9,7 +9,7 @@ namespace SaleSync.Controllers
 {
     public class CashierController : Controller
     {
-        private readonly string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+        private readonly string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
 
         // DASHBOARD
         public IActionResult Dashboard()
