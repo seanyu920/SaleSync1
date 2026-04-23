@@ -99,9 +99,29 @@ namespace SaleSync.Controllers
             return RedirectToAction("Index");
         }
 
+        public IActionResult LogInSelection()
+        {
+            return View();
+        }
+
+        // 2. The Staff Login Screen
         [HttpGet]
         public IActionResult Login()
         {
+            return View();
+        }
+
+        // 3. ADD THIS: The Customer Login Screen
+        [HttpGet]
+        public IActionResult CustomerLogIn()
+        {
+            // This tells it to look for Views/Home/CustomerLogIn.cshtml
+            return View();
+        }
+        [HttpGet]
+        public IActionResult Register()
+        {
+            // This looks for Views/Home/Register.cshtml
             return View();
         }
     }
