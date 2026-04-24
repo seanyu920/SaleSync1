@@ -1,0 +1,430 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Order Now | Cafero</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/CustomerOrdering.css" asp-append-version="true" />
+</head>
+<body>
+
+    <header>
+        <div class="brand">
+            <span class="brand-icon">☕</span>
+            <span class="brand-name">Cafero</span>
+        </div>
+        <div class="header-actions">
+            <a href="/Home/LogInSelection" class="logout-btn"><span>🚪</span> Log Out</a>
+            <a href="#" class="cart-icon-btn">🛒</a>
+        </div>
+    </header>
+
+    <div class="menu-intro">
+        <p>Handcrafted beverages and meals made with love</p>
+        
+        <nav class="category-nav">
+            <button class="cat-btn active" onclick="filterMenu('all')">All</button>
+            <button class="cat-btn" onclick="filterMenu('coffee')">Coffee</button>
+            <button class="cat-btn" onclick="filterMenu('milktea')">Milktea</button>
+            <button class="cat-btn" onclick="filterMenu('fruittea')">Fruit Tea</button>
+            <button class="cat-btn" onclick="filterMenu('rice')">Rice Meals</button>
+            <button class="cat-btn" onclick="filterMenu('pastry')">Bread & Pastry</button>
+            <button class="cat-btn" onclick="filterMenu('snacks')">Snacks & Pasta</button>
+        </nav>
+    </div>
+
+    <main class="product-container" id="menuGrid">
+        
+        <div class="product-card" data-category="coffee">
+            <img src="/images/americano.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Americano</h3><span class="price">₱85</span></div>
+                <p class="description">Smooth and bold black coffee.</p>
+                <button class="btn-add-order" onclick="openModal('Americano', 85)">+ Add to Order</button>
+            </div>
+        </div>
+        <div class="product-card" data-category="coffee">
+            <img src="/images/cappuccino.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Cappuccino</h3><span class="price">₱110</span></div>
+                <p class="description">Espresso with velvety milk foam.</p>
+                <button class="btn-add-order" onclick="openModal('Cappuccino', 110)">+ Add to Order</button>
+            </div>
+        </div>
+        <div class="product-card" data-category="coffee">
+            <img src="/images/hot-choco.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Hot Choco</h3><span class="price">₱95</span></div>
+                <p class="description">Rich, creamy chocolate comfort.</p>
+                <button class="btn-add-order" onclick="openModal('Hot Choco', 95)">+ Add to Order</button>
+            </div>
+        </div>
+        <div class="product-card" data-category="coffee">
+            <img src="/images/latte.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Hot Latte</h3><span class="price">₱115</span></div>
+                <p class="description">Classic espresso with steamed milk.</p>
+                <button class="btn-add-order" onclick="openModal('Hot Latte', 115)">+ Add to Order</button>
+            </div>
+        </div>
+        <div class="product-card" data-category="coffee">
+            <img src="/images/iced-latte.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Iced Latte</h3><span class="price">₱120</span></div>
+                <p class="description">Chilled espresso with fresh milk.</p>
+                <button class="btn-add-order" onclick="openModal('Iced Latte', 120)">+ Add to Order</button>
+            </div>
+        </div>
+        <div class="product-card" data-category="coffee">
+            <img src="/images/spanish-latte.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Spanish Latte</h3><span class="price">₱130</span></div>
+                <p class="description">Sweetened creamy espresso delight.</p>
+                <button class="btn-add-order" onclick="openModal('Spanish Latte', 130)">+ Add to Order</button>
+            </div>
+        </div>
+        <div class="product-card" data-category="coffee">
+            <img src="/images/matcha.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Hot Matcha Latte</h3><span class="price">₱125</span></div>
+                <p class="description">Pure ceremonial matcha and milk.</p>
+                <button class="btn-add-order" onclick="openModal('Hot Matcha Latte', 125)">+ Add to Order</button>
+            </div>
+        </div>
+        <div class="product-card" data-category="coffee">
+            <img src="/images/matcha.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Iced Matcha Latte</h3><span class="price">₱130</span></div>
+                <p class="description">Chilled matcha over ice and milk.</p>
+                <button class="btn-add-order" onclick="openModal('Iced Matcha Latte', 130)">+ Add to Order</button>
+            </div>
+        </div>
+
+        <div class="product-card" data-category="milktea">
+            <img src="/images/wintermelon.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Wintermelon</h3><span class="price">₱95</span></div>
+                <button class="btn-add-order" onclick="openModal('Wintermelon', 95)">+ Add to Order</button>
+            </div>
+        </div>
+        <div class="product-card" data-category="milktea">
+            <img src="/images/okinawa.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Okinawa</h3><span class="price">₱95</span></div>
+                <button class="btn-add-order" onclick="openModal('Okinawa', 95)">+ Add to Order</button>
+            </div>
+        </div>
+        <div class="product-card" data-category="milktea">
+            <img src="/images/cookies-cream.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Cookies and Cream</h3><span class="price">₱105</span></div>
+                <button class="btn-add-order" onclick="openModal('Cookies and Cream', 105)">+ Add to Order</button>
+            </div>
+        </div>
+        <div class="product-card" data-category="milktea">
+            <img src="/images/salted-caramel.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Salted Caramel</h3><span class="price">₱105</span></div>
+                <button class="btn-add-order" onclick="openModal('Salted Caramel', 105)">+ Add to Order</button>
+            </div>
+        </div>
+        <div class="product-card" data-category="milktea">
+            <img src="/images/hokkaido.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Hokkaido</h3><span class="price">₱95</span></div>
+                <button class="btn-add-order" onclick="openModal('Hokkaido', 95)">+ Add to Order</button>
+            </div>
+        </div>
+        <div class="product-card" data-category="milktea">
+            <img src="/images/matcha-milktea.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Matcha Milktea</h3><span class="price">₱105</span></div>
+                <button class="btn-add-order" onclick="openModal('Matcha Milktea', 105)">+ Add to Order</button>
+            </div>
+        </div>
+        <div class="product-card" data-category="milktea">
+            <img src="/images/thai.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Thai Milktea</h3><span class="price">₱95</span></div>
+                <button class="btn-add-order" onclick="openModal('Thai Milktea', 95)">+ Add to Order</button>
+            </div>
+        </div>
+
+        <div class="product-card" data-category="fruittea">
+            <img src="/images/green-apple.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Green Apple</h3><span class="price">₱85</span></div>
+                <button class="btn-add-order" onclick="openModal('Green Apple', 85)">+ Add to Order</button>
+            </div>
+        </div>
+        <div class="product-card" data-category="fruittea">
+            <img src="/images/strawberry.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Strawberry</h3><span class="price">₱85</span></div>
+                <button class="btn-add-order" onclick="openModal('Strawberry', 85)">+ Add to Order</button>
+            </div>
+        </div>
+        <div class="product-card" data-category="fruittea">
+            <img src="/images/blueberry.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Blueberry</h3><span class="price">₱85</span></div>
+                <button class="btn-add-order" onclick="openModal('Blueberry', 85)">+ Add to Order</button>
+            </div>
+        </div>
+        <div class="product-card" data-category="fruittea">
+            <img src="/images/mango.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Mango</h3><span class="price">₱85</span></div>
+                <button class="btn-add-order" onclick="openModal('Mango', 85)">+ Add to Order</button>
+            </div>
+        </div>
+        <div class="product-card" data-category="fruittea">
+            <img src="/images/lychee.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Lychee</h3><span class="price">₱85</span></div>
+                <button class="btn-add-order" onclick="openModal('Lychee', 85)">+ Add to Order</button>
+            </div>
+        </div>
+        <div class="product-card" data-category="fruittea">
+            <img src="/images/peach.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Peach</h3><span class="price">₱85</span></div>
+                <button class="btn-add-order" onclick="openModal('Peach', 85)">+ Add to Order</button>
+            </div>
+        </div>
+
+        <div class="product-card" data-category="rice">
+            <img src="/images/silog.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Silog</h3><span class="price">₱110</span></div>
+                <button class="btn-add-order" onclick="openModal('Silog', 110)">+ Add to Order</button>
+            </div>
+        </div>
+        <div class="product-card" data-category="rice">
+            <img src="/images/tapsilog.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Hot Silog</h3><span class="price">₱125</span></div>
+                <button class="btn-add-order" onclick="openModal('Hot Silog', 125)">+ Add to Order</button>
+            </div>
+        </div>
+        <div class="product-card" data-category="rice">
+            <img src="/images/longsilog.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Long Silog</h3><span class="price">₱115</span></div>
+                <button class="btn-add-order" onclick="openModal('Long Silog', 115)">+ Add to Order</button>
+            </div>
+        </div>
+        <div class="product-card" data-category="rice">
+            <img src="/images/hamsilog.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Ham Silog</h3><span class="price">₱110</span></div>
+                <button class="btn-add-order" onclick="openModal('Ham Silog', 110)">+ Add to Order</button>
+            </div>
+        </div>
+        <div class="product-card" data-category="rice">
+            <img src="/images/shanghai.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Shanghai Silog</h3><span class="price">₱115</span></div>
+                <button class="btn-add-order" onclick="openModal('Shanghai Silog', 115)">+ Add to Order</button>
+            </div>
+        </div>
+        <div class="product-card" data-category="rice">
+            <img src="/images/embotido.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Embotido Silog</h3><span class="price">₱120</span></div>
+                <button class="btn-add-order" onclick="openModal('Embotido Silog', 120)">+ Add to Order</button>
+            </div>
+        </div>
+
+        <div class="product-card" data-category="pastry">
+            <img src="/images/cookies.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Chocolate Cookies</h3><span class="price">₱45</span></div>
+                <button class="btn-add-order" onclick="openModal('Chocolate Cookies', 45)">+ Add to Order</button>
+            </div>
+        </div>
+        <div class="product-card" data-category="pastry">
+            <img src="/images/croissant.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Croissant</h3><span class="price">₱75</span></div>
+                <button class="btn-add-order" onclick="openModal('Croissant', 75)">+ Add to Order</button>
+            </div>
+        </div>
+        <div class="product-card" data-category="pastry">
+            <img src="/images/ensaymada.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Cheese Ensaymada</h3><span class="price">₱60</span></div>
+                <button class="btn-add-order" onclick="openModal('Cheese Ensaymada', 60)">+ Add to Order</button>
+            </div>
+        </div>
+        <div class="product-card" data-category="pastry">
+            <img src="/images/ensaymada.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Yema Ensaymada</h3><span class="price">₱65</span></div>
+                <button class="btn-add-order" onclick="openModal('Yema Ensaymada', 65)">+ Add to Order</button>
+            </div>
+        </div>
+        <div class="product-card" data-category="pastry">
+            <img src="/images/ensaymada.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Ube Ensaymada</h3><span class="price">₱65</span></div>
+                <button class="btn-add-order" onclick="openModal('Ube Ensaymada', 65)">+ Add to Order</button>
+            </div>
+        </div>
+        <div class="product-card" data-category="pastry">
+            <img src="/images/donut.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Chocolate Donut</h3><span class="price">₱55</span></div>
+                <button class="btn-add-order" onclick="openModal('Chocolate Donut', 55)">+ Add to Order</button>
+            </div>
+        </div>
+        <div class="product-card" data-category="pastry">
+            <img src="/images/cinnamon.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Cinnamon</h3><span class="price">₱70</span></div>
+                <button class="btn-add-order" onclick="openModal('Cinnamon', 70)">+ Add to Order</button>
+            </div>
+        </div>
+
+        <div class="product-card" data-category="snacks">
+            <img src="/images/fries.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Flavored Fries</h3><span class="price">₱85</span></div>
+                <button class="btn-add-order" onclick="openModal('Flavored Fries', 85)">+ Add to Order</button>
+            </div>
+        </div>
+        <div class="product-card" data-category="snacks">
+            <img src="/images/nachos.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Nachos</h3><span class="price">₱120</span></div>
+                <button class="btn-add-order" onclick="openModal('Nachos', 120)">+ Add to Order</button>
+            </div>
+        </div>
+        <div class="product-card" data-category="snacks">
+            <img src="/images/siomai.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Siomai 4pcs</h3><span class="price">₱60</span></div>
+                <button class="btn-add-order" onclick="openModal('Siomai 4pcs', 60)">+ Add to Order</button>
+            </div>
+        </div>
+        <div class="product-card" data-category="snacks">
+            <img src="/images/carbonara.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Carbonara</h3><span class="price">₱165</span></div>
+                <button class="btn-add-order" onclick="openModal('Carbonara', 165)">+ Add to Order</button>
+            </div>
+        </div>
+        <div class="product-card" data-category="snacks">
+            <img src="/images/pesto.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Pesto Pasta</h3><span class="price">₱155</span></div>
+                <button class="btn-add-order" onclick="openModal('Pesto Pasta', 155)">+ Add to Order</button>
+            </div>
+        </div>
+        <div class="product-card" data-category="snacks">
+            <img src="/images/gambas.jpg" class="product-image" />
+            <div class="product-info">
+                <div class="info-top"><h3>Gambas Pasta</h3><span class="price">₱175</span></div>
+                <button class="btn-add-order" onclick="openModal('Gambas Pasta', 175)">+ Add to Order</button>
+            </div>
+        </div>
+
+    </main>
+
+    <div id="sizeModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2 id="modalItemName">Item Name</h2>
+                <button class="close-modal" onclick="closeModal()">✕</button>
+            </div>
+            
+            <div class="modal-body">
+                <p class="modal-label">Select Size:</p>
+                <div class="size-options">
+                    <label class="size-box">
+                        <input type="radio" name="itemSize" value="Small" checked>
+                        <div class="size-content">
+                            <span class="size-icon">☕</span>
+                            <span class="size-label">Small</span>
+                            <span class="size-price-mod" id="smallPrice">₱0</span>
+                        </div>
+                    </label>
+                    <label class="size-box">
+                        <input type="radio" name="itemSize" value="Large">
+                        <div class="size-content">
+                            <span class="size-icon">🥤</span>
+                            <span class="size-label">Large</span>
+                            <span class="size-price-mod" id="largePrice">₱0</span>
+                        </div>
+                    </label>
+                </div>
+
+                <p class="modal-label">Quantity:</p>
+                <div class="quantity-selector">
+                    <button type="button" class="qty-btn" onclick="updateQty(-1)">−</button>
+                    <input type="number" id="itemQty" value="1" min="1" readonly>
+                    <button type="button" class="qty-btn" onclick="updateQty(1)">+</button>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-confirm-add" onclick="confirmAddToCart()">Add to Cart</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+            function filterMenu(category) {
+                const btns = document.querySelectorAll('.cat-btn');
+                btns.forEach(btn => btn.classList.remove('active'));
+                if(event) event.currentTarget.classList.add('active');
+
+                const cards = document.querySelectorAll('.product-card');
+                cards.forEach(card => {
+                    if (category === 'all' || card.getAttribute('data-category') === category) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            }
+
+            function openModal(itemName, price) {
+                document.getElementById('modalItemName').innerText = itemName;
+                document.getElementById('smallPrice').innerText = "₱" + price;
+                document.getElementById('largePrice').innerText = "₱" + (price + 20);
+                document.getElementById('itemQty').value = 1;
+                document.getElementById('sizeModal').style.display = 'flex';
+            }
+
+            function closeModal() {
+                document.getElementById('sizeModal').style.display = 'none';
+            }
+
+            function updateQty(change) {
+                const qtyInput = document.getElementById('itemQty');
+                let currentQty = parseInt(qtyInput.value);
+                currentQty += change;
+                if (currentQty < 1) currentQty = 1;
+                qtyInput.value = currentQty;
+            }
+
+            function confirmAddToCart() {
+                const selectedSize = document.querySelector('input[name="itemSize"]:checked').value;
+                const quantity = document.getElementById('itemQty').value;
+                const item = document.getElementById('modalItemName').innerText;
+                alert(`${quantity}x ${item} (${selectedSize}) added to cart!`);
+                closeModal();
+            }
+
+            window.onclick = function(event) {
+                const modal = document.getElementById('sizeModal');
+                if (event.target == modal) closeModal();
+            }
+    </script>
+</body>
+</html>
