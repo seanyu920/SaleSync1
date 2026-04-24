@@ -18,7 +18,7 @@ body {
     background-color: var(--cream);
     color: var(--dark);
     height: 100vh;
-    overflow: hidden; /* Prevents scrolling on the login screen */
+    overflow: hidden;
 }
 
 /* --- SPLIT SCREEN LAYOUT --- */
@@ -44,13 +44,36 @@ body {
     text-align: center;
 }
 
+/* ⭐ BRAND LOCKUP & SALESYNC TAG ⭐ */
+.brand-lockup {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
 .login-logo {
     font-family: 'Playfair Display', serif;
     font-size: 64px;
     font-weight: 800;
-    margin-bottom: 20px;
+    margin-bottom: 5px;
     letter-spacing: -2px;
 }
+
+.software-tag {
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.7);
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    margin-top: -10px;
+    margin-bottom: 10px;
+}
+
+    .software-tag strong {
+        color: var(--accent);
+        font-weight: 800;
+    }
 
 .brand-content p {
     font-size: 18px;
@@ -78,17 +101,24 @@ body {
     text-align: center;
 }
 
-    .login-header h2 {
-        font-size: 32px;
-        font-weight: 800;
-        color: var(--dark);
-        margin-bottom: 8px;
-    }
+.top-user-icon {
+    font-size: 64px;
+    display: block;
+    margin-bottom: 10px;
+    line-height: 1;
+}
 
-    .login-header p {
-        color: #8c5b3e;
-        font-size: 15px;
-    }
+.login-header h2 {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 8px;
+}
+
+.login-header p {
+    color: #8c5b3e;
+    font-size: 15px;
+}
 
 /* --- INPUT FIELDS --- */
 .input-group {
@@ -176,7 +206,7 @@ body {
         color: var(--accent);
     }
 
-/* --- RESPONSIVE DESIGN (For Mobile) --- */
+/* --- RESPONSIVE DESIGN --- */
 @media (max-width: 768px) {
     .login-split-container {
         flex-direction: column;
@@ -190,11 +220,9 @@ body {
     .login-logo {
         font-size: 42px;
     }
-}
-/* --- NEW EMOJI ICON CSS --- */
-.top-user-icon {
-    font-size: 64px; /* Makes the emoji nice and big */
-    display: block; /* Ensures it sits on its own line above the text */
-    margin-bottom: 10px; /* Adds a little breathing room below it */
-    line-height: 1; /* Keeps the spacing tight */
+
+    .software-tag {
+        font-size: 11px;
+        letter-spacing: 2px;
+    }
 }

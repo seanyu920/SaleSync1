@@ -1,0 +1,76 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Create Account - Cafero</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Playfair+Display:wght@800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/CustomerLogIn.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="customer-split-container">
+        
+        <div class="customer-left">
+            <div class="customer-brand-content">
+                <div class="brand-lockup-block">
+                    <h1 class="brand-title">Cafero</h1>
+                    <div class="branding-sync-tag">Powered by <strong>SaleSync</strong></div>
+                </div>
+                <p>Start your journey with Cafero today. Create an account to earn points, save your favorite brews, and enjoy a faster checkout experience.</p>
+            </div>
+        </div>
+
+        <div class="customer-right">
+            <div class="customer-card">
+                <div class="customer-header-block">
+                    <span class="user-profile-icon">📝</span>
+                    <h2>Join Us</h2>
+                    <p>Create your account to start earning rewards.</p>
+                </div>
+
+                <form asp-controller="Home" asp-action="Register" method="post">
+                    <div class="customer-form-actions">
+                        
+                        <div class="input-container-group">
+                            <label for="FullName">Full Name</label>
+                            <div class="input-field-wrapper">
+                                <span class="input-icon-glyph">👤</span>
+                                <input type="text" id="FullName" name="FullName" placeholder="Enter your full name" required />
+                            </div>
+                        </div>
+
+                        <div class="input-container-group">
+                            <label for="Email">Email Address</label>
+                            <div class="input-field-wrapper">
+                                <span class="input-icon-glyph">✉️</span>
+                                <input type="email" id="Email" name="Email" placeholder="hello@example.com" required />
+                            </div>
+                        </div>
+
+                        <div class="input-container-group">
+                            <label for="Password">Password</label>
+                            <div class="input-field-wrapper">
+                                <span class="input-icon-glyph">🔒</span>
+                                <input type="password" id="Password" name="Password" placeholder="Create a password" required />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="customer-actions-wrapper">
+                        <button type="submit" class="btn-primary-orange">CREATE ACCOUNT</button>
+                    </div>
+                </form>
+
+                <div class="new-account-register">
+                    Already have an account? <a href="/Home/CustomerLogIn">Log In here</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

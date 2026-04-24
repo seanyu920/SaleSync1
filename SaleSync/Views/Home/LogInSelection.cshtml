@@ -1,0 +1,50 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cafero | Select Role</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/LogInSelection.css" asp-append-version="true" />
+</head>
+<body>
+
+    <div class="gateway-wrapper">
+        <header class="gateway-header">
+            <div class="brand-lockup">
+                <div class="brand-icon">c</div>
+                <span class="brand-name">Cafero</span>
+            </div>
+            <h1 class="gateway-title">Who's joining us today?</h1>
+            <p class="gateway-subtitle">Select your role to continue to the ordering system</p>
+        </header>
+
+        <main class="role-cards">
+            <div class="role-card">
+                <div class="role-icon-wrapper">
+                    <span class="role-icon">☕</span>
+                </div>
+                <h2 class="role-title">Customer</h2>
+                <p class="role-desc">Browse the menu and place your order</p>
+                <a href="/Home/CustomerLogIn" class="btn-role btn-primary">Order now</a>
+            </div>
+
+            <div class="role-card">
+                <div class="role-icon-wrapper">
+                    <span class="role-icon">🧾</span>
+                </div>
+                <h2 class="role-title">Cafero Staff</h2>
+                <p class="role-desc">Manage orders and the kitchen queue</p>
+                <a href="/Home/LogIn" class="btn-role btn-secondary">Staff login</a>
+            </div>
+        </main>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,292 @@
+﻿/* --- CSS VARIABLES (Syncing with your Staff Page Theme) --- */
+:root {
+    /* Rich, warm coffee brown from the image overlay */
+    --cafe-dark: #3b2319;
+    /* The vibrant orange from your buttons */
+    --cafe-accent: #f46a05;
+    /* Light cream for inputs and backgrounds */
+    --cafe-cream: #FAF7F2;
+    /* Medium brown for text and subtitles */
+    --cafe-text-sub: #8D6E63;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #ffffff;
+    color: var(--cafe-dark);
+    height: 100vh;
+    overflow: hidden;
+    font-family: 'Outfit', sans-serif;
+}
+
+/* --- SPLIT SCREEN LAYOUT --- */
+.customer-split-container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+}
+
+/* --- LEFT SIDE: THE OVERLAY BANNER --- */
+.customer-left {
+    flex: 1.2;
+    /* This uses the same warm brown gradient and overlay technique as your image */
+    background: linear-gradient(rgba(74, 37, 17, 0.7), rgba(74, 37, 17, 0.8)), url('/images/HomePage2.jpg') center/cover no-repeat;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px;
+    color: white;
+}
+
+.customer-brand-content {
+    max-width: 500px;
+    text-align: center;
+}
+
+/* BRAND LOGO (Matches Staff Page branding block) */
+.brand-lockup-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.brand-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 72px;
+    font-weight: 800;
+    letter-spacing: -2px;
+}
+
+.branding-sync-tag {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.7);
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    margin-top: -10px;
+}
+
+    .branding-sync-tag strong {
+        color: var(--cafe-accent);
+        font-weight: 800;
+    }
+
+/* CUSTOMER MARKETING TEXT (NEW) */
+.customer-brand-content p {
+    font-size: 19px;
+    line-height: 1.7;
+    opacity: 0.95;
+    font-weight: 400;
+}
+
+/* --- RIGHT SIDE: FORM CONTAINER --- */
+.customer-right {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+    padding: 50px;
+}
+
+.customer-card {
+    width: 100%;
+    max-width: 420px;
+}
+
+/* CUSTOMER HEADER (Matches Staff Page icon header style) */
+.customer-header-block {
+    margin-bottom: 40px;
+    text-align: center;
+}
+
+.user-profile-icon {
+    font-size: 64px;
+    display: block;
+    margin-bottom: 12px;
+    line-height: 1;
+}
+
+.customer-header-block h2 {
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--cafe-dark);
+    margin-bottom: 10px;
+}
+
+.customer-header-block p {
+    color: var(--cafe-text-sub);
+    font-size: 16px;
+    font-weight: 400;
+}
+
+/* --- INPUT FIELDS --- */
+.customer-form-actions {
+    margin-top: 15px;
+}
+
+.input-container-group {
+    margin-bottom: 25px;
+}
+
+    .input-container-group label {
+        display: block;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--cafe-dark);
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+.input-field-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-icon-glyph {
+    position: absolute;
+    left: 18px;
+    font-size: 17px;
+    opacity: 0.6;
+}
+
+.input-field-wrapper input {
+    width: 100%;
+    padding: 18px 18px 18px 50px;
+    background: var(--cafe-cream);
+    border: 2px solid #EFEBE5;
+    border-radius: 12px;
+    font-size: 15px;
+    color: var(--cafe-dark);
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+    .input-field-wrapper input:focus {
+        border-color: var(--cafe-accent);
+        background: #ffffff;
+        box-shadow: 0 0 0 5px rgba(244, 106, 5, 0.1);
+    }
+
+/* --- BUTTONS & LINKS --- */
+.customer-actions-wrapper {
+    margin-top: 35px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.btn-primary-orange {
+    width: 100%;
+    padding: 18px;
+    background: var(--cafe-accent);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 17px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(244, 106, 5, 0.25);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+    .btn-primary-orange:hover {
+        background: #d45b04; /* Slightly darker orange on hover */
+        transform: translateY(-2px);
+        box-shadow: 0 7px 20px rgba(244, 106, 5, 0.35);
+    }
+
+.btn-guest-outline {
+    width: 100%;
+    padding: 18px;
+    background: transparent;
+    color: var(--cafe-text-sub);
+    border: 2px solid #EFEBE5;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    display: inline-block;
+    text-decoration: none;
+}
+
+    .btn-guest-outline:hover {
+        background: var(--cafe-cream);
+        border-color: var(--cafe-text-sub);
+        color: var(--cafe-dark);
+    }
+
+/* FOOTER LINKS */
+.customer-aux-links {
+    text-align: center;
+    margin-top: 20px;
+}
+
+    .customer-aux-links .customer-forgot-link {
+        color: var(--cafe-text-sub);
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+        .customer-aux-links .customer-forgot-link:hover {
+            color: var(--cafe-accent);
+            text-decoration: underline;
+        }
+
+.new-account-register {
+    margin-top: 30px;
+    font-size: 15px;
+    color: var(--cafe-text-sub);
+    text-align: center;
+}
+
+    .new-account-register a {
+        color: var(--cafe-accent);
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+        .new-account-register a:hover {
+            text-decoration: underline;
+        }
+
+/* --- RESPONSIVE DESIGN (Matching Staff page break) --- */
+@media (max-width: 768px) {
+    .customer-split-container {
+        flex-direction: column;
+    }
+
+    .customer-left {
+        flex: 0.5;
+        padding: 40px 20px;
+    }
+
+    .brand-title {
+        font-size: 48px;
+    }
+
+    .branding-sync-tag {
+        font-size: 11px;
+        letter-spacing: 2px;
+    }
+
+    .customer-brand-content p {
+        font-size: 16px;
+    }
+
+    .customer-right {
+        padding: 40px 20px;
+    }
+}
