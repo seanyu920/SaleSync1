@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
@@ -9,26 +11,26 @@ using static SaleSync.Models.MenuItemModel;
 
 namespace SaleSync.Controllers
 {
+    // ⭐ THE MASTER PADLOCK ⭐
+    // Nobody gets into this Controller unless they have an Admin or Manager Cookie.
+    [Authorize(Roles = "Admin,Manager")]
     public class AdminController : Controller
     {
         private readonly IConfiguration _configuration;
-        private readonly string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
+
+        // ⭐ UPDATED TO YOUR ACTUAL PC DATABASE ⭐
+        private readonly string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
 
         public AdminController(IConfiguration configuration)
         {
             _configuration = configuration;
         }
 
-        private bool IsAdmin() => HttpContext.Session.GetString("Role") == "Admin";
-        private bool CanAccessInventory() => IsAdmin() || HttpContext.Session.GetString("Role") == "Manager";
-
         // Dashboard
         public IActionResult Dashboard()
         {
-            var role = HttpContext.Session.GetString("Role");
-            if (string.IsNullOrEmpty(role) || (role != "Admin" && role != "Manager"))
-                return RedirectToAction("Index", "Home");
-
+            // ⭐ NO MORE SESSION CHECKS HERE! 
+            // If ASP.NET let them reach this line, they are officially authorized.
             var model = new CashierDashboardViewModel { RecentSales = new List<SaleHistoryItem>() };
 
             using (SqlConnection conn = new SqlConnection(connectionString))
@@ -142,9 +144,6 @@ namespace SaleSync.Controllers
         [HttpGet]
         public IActionResult GetOrderDetails(int saleId)
         {
-            var role = HttpContext.Session.GetString("Role");
-            if (role != "Admin" && role != "Manager") return Unauthorized();
-
             var itemsSold = new List<string>();
             var ingredientsDeducted = new List<string>();
 
@@ -228,14 +227,10 @@ namespace SaleSync.Controllers
         [HttpGet]
         public IActionResult Products()
         {
-            if (!IsAdmin() && HttpContext.Session.GetString("Role") != "Manager")
-                return RedirectToAction("Index", "Home");
-
             var menuList = new List<MenuItemModel>();
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-
                 string sql = @"
                     SELECT p.product_id, p.product_name, c.category_name, p.selling_price
                     FROM products p
@@ -269,7 +264,6 @@ namespace SaleSync.Controllers
         {
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-
                 string sql = @"
                     INSERT INTO products (product_name, selling_price, is_ingredient, category_id, sku, barcode)
                     VALUES (@name, @price, 0, 
@@ -290,12 +284,10 @@ namespace SaleSync.Controllers
             return Ok();
         }
 
-        // ⭐ INVENTORY MANAGEMENT (Updated with Unit)
+        // INVENTORY MANAGEMENT
         [HttpGet]
         public IActionResult Inventory()
         {
-            if (!CanAccessInventory()) return RedirectToAction("Index", "Home");
-
             var inventoryList = new List<InventoryItems>();
 
             using (SqlConnection conn = new SqlConnection(connectionString))
@@ -320,7 +312,7 @@ namespace SaleSync.Controllers
                                 ItemID = r["sku"]?.ToString() ?? "N/A",
                                 ItemName = r["product_name"].ToString(),
                                 Quantity = Convert.ToInt32(r["stock_quantity"]),
-                                Unit = r["unit"]?.ToString() ?? "pcs", // ⭐ Catch the unit from the DB!
+                                Unit = r["unit"]?.ToString() ?? "pcs",
                                 PurchasePrice = Convert.ToDecimal(r["cost_price"]),
                                 ItemCategory = r["category_name"]?.ToString() ?? "Raw Materials"
                             });
@@ -331,17 +323,14 @@ namespace SaleSync.Controllers
             return View(inventoryList);
         }
 
-        // ⭐ UPDATE INVENTORY (Updated with Unit)
+        // UPDATE INVENTORY 
         [HttpPost]
         public IActionResult UpdateInventory(InventoryItems model)
         {
-            if (!CanAccessInventory()) return RedirectToAction("Index", "Home");
-
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
 
-                // Figure out exactly how much NEW stock was added
                 int currentStock = 0;
                 string checkSql = "SELECT stock_quantity FROM products WHERE product_id = @id";
                 using (SqlCommand checkCmd = new SqlCommand(checkSql, conn))
@@ -353,18 +342,16 @@ namespace SaleSync.Controllers
 
                 int addedQuantity = model.Quantity - currentStock;
 
-                // ⭐ Update the main database (Now includes the Unit update!)
                 string sql = "UPDATE products SET stock_quantity = @qty, cost_price = @price, unit = @unit WHERE product_id = @id";
                 using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
                     cmd.Parameters.AddWithValue("@qty", model.Quantity);
                     cmd.Parameters.AddWithValue("@price", model.PurchasePrice);
-                    cmd.Parameters.AddWithValue("@unit", model.Unit ?? "pcs"); // ⭐
+                    cmd.Parameters.AddWithValue("@unit", model.Unit ?? "pcs");
                     cmd.Parameters.AddWithValue("@id", model.ProductId);
                     cmd.ExecuteNonQuery();
                 }
 
-                // If we ADDED stock, log the purchase!
                 if (addedQuantity > 0)
                 {
                     decimal totalCost = addedQuantity * model.PurchasePrice;
@@ -381,18 +368,15 @@ namespace SaleSync.Controllers
             return RedirectToAction("Inventory");
         }
 
-        // ⭐ ADD INVENTORY (Updated with Unit)
+        // ADD INVENTORY
         [HttpPost]
         public IActionResult AddInventory(InventoryItems model)
         {
-            if (!CanAccessInventory()) return RedirectToAction("Index", "Home");
-
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
                 string itemName = model.ItemName ?? "New Ingredient";
 
-                // ⭐ Added Unit to the Insert Statement
                 string sql = @"
                     INSERT INTO products (product_name, stock_quantity, cost_price, is_ingredient, category_id, sku, barcode, unit)
                     VALUES (@name, @qty, @price, 1, 99, 
@@ -404,11 +388,10 @@ namespace SaleSync.Controllers
                     cmd.Parameters.AddWithValue("@name", itemName);
                     cmd.Parameters.AddWithValue("@qty", model.Quantity);
                     cmd.Parameters.AddWithValue("@price", model.PurchasePrice);
-                    cmd.Parameters.AddWithValue("@unit", model.Unit ?? "pcs"); // ⭐
+                    cmd.Parameters.AddWithValue("@unit", model.Unit ?? "pcs");
                     cmd.ExecuteNonQuery();
                 }
 
-                // LOG THE PURCHASE!
                 if (model.Quantity > 0)
                 {
                     decimal totalCost = model.Quantity * model.PurchasePrice;
@@ -429,8 +412,6 @@ namespace SaleSync.Controllers
         [HttpPost]
         public IActionResult DeleteInventory(int ProductId)
         {
-            if (!CanAccessInventory()) return RedirectToAction("Index", "Home");
-
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
@@ -464,17 +445,18 @@ namespace SaleSync.Controllers
             return RedirectToAction("Inventory");
         }
 
-        // ACCOUNT MANAGEMENT
+        // ====================================================================
+        // ⭐ ACCOUNT MANAGEMENT (RESTRICTED TO ADMINS ONLY) ⭐
+        // ====================================================================
+
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public IActionResult ManageAccounts()
         {
-            if (!IsAdmin()) return RedirectToAction("Index", "Home");
-
             var accountList = new List<UserAccount>();
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-
                 string sql = @"
             SELECT u.user_id, u.username, u.full_name, u.email, u.password_hash, r.role_name, u.is_active 
             FROM users u
@@ -504,12 +486,10 @@ namespace SaleSync.Controllers
             return View(accountList);
         }
 
-        // UPDATE ACCOUNT
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public IActionResult UpdateAccount(UserAccount model)
         {
-            if (!IsAdmin()) return RedirectToAction("Index", "Home");
-
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 string sql = @"
@@ -537,12 +517,10 @@ namespace SaleSync.Controllers
             return RedirectToAction("ManageAccounts");
         }
 
-        // ADD ACCOUNT
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public IActionResult AddAccount(UserAccount model)
         {
-            if (!IsAdmin()) return RedirectToAction("Index", "Home");
-
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
@@ -582,13 +560,13 @@ namespace SaleSync.Controllers
             return RedirectToAction("ManageAccounts");
         }
 
-        // DEACTIVATE ACCOUNT
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public IActionResult DeactivateAccount(int UserId)
         {
-            if (!IsAdmin()) return RedirectToAction("Index", "Home");
+            string currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            int currentUserId = string.IsNullOrEmpty(currentUserIdStr) ? 0 : int.Parse(currentUserIdStr);
 
-            var currentUserId = HttpContext.Session.GetInt32("UserId");
             if (currentUserId == UserId) return RedirectToAction("ManageAccounts");
 
             using (SqlConnection conn = new SqlConnection(connectionString))
@@ -604,12 +582,10 @@ namespace SaleSync.Controllers
             return RedirectToAction("ManageAccounts");
         }
 
-        // Reactivate Account
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public IActionResult ReactivateAccount(int UserId)
         {
-            if (!IsAdmin()) return RedirectToAction("Index", "Home");
-
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 string sql = "UPDATE users SET is_active = 1 WHERE user_id = @id";
@@ -622,6 +598,8 @@ namespace SaleSync.Controllers
             }
             return RedirectToAction("ManageAccounts");
         }
+
+        // ====================================================================
 
         [HttpGet]
         public IActionResult GetIngredients()
@@ -643,7 +621,6 @@ namespace SaleSync.Controllers
             return Json(list);
         }
 
-        // GET RECIPE DETAILS FOR A PRODUCT
         [HttpGet]
         public IActionResult GetRecipe(int productId)
         {
@@ -669,12 +646,9 @@ namespace SaleSync.Controllers
             return Json(list);
         }
 
-        // SAVE RECIPE DETAILS FOR A PRODUCT
         [HttpPost]
         public IActionResult SaveRecipe([FromBody] RecipeSaveRequest request)
         {
-            if (!IsAdmin()) return Unauthorized();
-
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
@@ -704,12 +678,9 @@ namespace SaleSync.Controllers
             return Ok();
         }
 
-        // ADD A NEW PRODUCT WITH ITS RECIPE IN ONE GO
         [HttpPost]
         public IActionResult AddFullProduct([FromBody] ComprehensiveItemModel model)
         {
-            if (!IsAdmin()) return Unauthorized();
-
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
@@ -764,12 +735,9 @@ namespace SaleSync.Controllers
             }
         }
 
-        // DELETE A PRODUCT AND ITS RECIPE
         [HttpPost]
         public IActionResult DeleteMenuItem([FromBody] int productId)
         {
-            if (!IsAdmin()) return Unauthorized();
-
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
@@ -851,9 +819,6 @@ namespace SaleSync.Controllers
         [HttpGet]
         public IActionResult DailyReport()
         {
-            var role = HttpContext.Session.GetString("Role");
-            if (role != "Admin" && role != "Manager") return RedirectToAction("Index", "Home");
-
             var report = new DailyReportViewModel();
 
             using (SqlConnection conn = new SqlConnection(connectionString))
