@@ -12,15 +12,15 @@ body {
 }
 
 /* --- SPLIT LAYOUT --- */
-.login-split-container {
+.register-split-container {
     display: flex;
     min-height: 100vh;
 }
 
 /* --- LEFT SIDE (Branding) --- */
-.login-left {
+.register-left {
     flex: 1;
-    /* Swap 'storefront.jpg' with your actual image name if needed */
+    /* UPDATE THIS IMAGE URL IF NEEDED */
     background: linear-gradient(rgba(42, 24, 17, 0.85), rgba(42, 24, 17, 0.85)), url('/images/HomePage2.jpg') center/cover no-repeat;
     display: flex;
     align-items: center;
@@ -34,7 +34,7 @@ body {
     max-width: 400px;
 }
 
-.login-logo {
+.register-logo {
     font-family: 'Playfair Display', serif;
     font-size: 64px;
     font-weight: 800;
@@ -61,7 +61,7 @@ body {
 }
 
 /* --- RIGHT SIDE (Form) --- */
-.login-right {
+.register-right {
     flex: 1;
     display: flex;
     align-items: center;
@@ -70,31 +70,31 @@ body {
     padding: 40px;
 }
 
-.login-card {
+.register-card {
     width: 100%;
     max-width: 400px;
 }
 
-.login-header {
+.register-header {
     text-align: center;
-    margin-bottom: 35px;
+    margin-bottom: 30px;
 }
 
 .top-user-icon {
-    font-size: 50px;
+    font-size: 45px;
     display: block;
     margin-bottom: 15px;
     color: #573e35;
 }
 
-.login-header h2 {
+.register-header h2 {
     font-size: 32px;
     font-weight: 800;
     color: #3b2319;
     margin-bottom: 8px;
 }
 
-.login-header p {
+.register-header p {
     color: #8D6E63;
     font-size: 15px;
 }
@@ -103,7 +103,7 @@ body {
 form {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 18px;
 }
 
 .input-group label {
@@ -138,7 +138,7 @@ form {
 
 .input-wrapper input {
     width: 100%;
-    padding: 16px 0;
+    padding: 14px 0;
     border: none;
     background: transparent;
     font-size: 15px;
@@ -157,7 +157,7 @@ form {
     margin-top: 10px;
 }
 
-.btn-login {
+.btn-register {
     width: 100%;
     padding: 16px;
     background-color: #f46a05;
@@ -169,40 +169,27 @@ form {
     cursor: pointer;
     box-shadow: 0 4px 15px rgba(244, 106, 5, 0.25);
     transition: background-color 0.3s;
-    margin-bottom: 20px;
 }
 
-    .btn-login:hover {
+    .btn-register:hover {
         background-color: #d45b04;
     }
 
-.forgot-link {
-    color: #8D6E63;
-    text-decoration: none;
-    font-size: 14px;
-    font-weight: 600;
-    transition: color 0.3s;
-}
-
-    .forgot-link:hover {
-        color: #f46a05;
-    }
-
-/* --- NEW REGISTRATION PROMPT --- */
-.register-prompt {
-    margin-top: 35px;
+/* --- LOGIN PROMPT (Bottom) --- */
+.login-prompt {
+    margin-top: 30px;
     padding-top: 25px;
     border-top: 1px solid #EFEBE5;
     text-align: center;
 }
 
-    .register-prompt p {
+    .login-prompt p {
         color: #8D6E63;
         font-size: 15px;
         margin-bottom: 8px;
     }
 
-.register-link {
+.login-link {
     color: #f46a05;
     font-weight: 800;
     text-decoration: none;
@@ -210,23 +197,23 @@ form {
     transition: color 0.3s;
 }
 
-    .register-link:hover {
+    .login-link:hover {
         color: #d45b04;
         text-decoration: underline;
     }
 
 /* --- RESPONSIVE --- */
 @media (max-width: 850px) {
-    .login-split-container {
+    .register-split-container {
         flex-direction: column;
     }
 
-    .login-left {
-        padding: 60px 20px;
+    .register-left {
+        padding: 50px 20px;
         flex: none;
     }
 
-    .login-right {
+    .register-right {
         padding: 40px 20px;
     }
 }
