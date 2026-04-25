@@ -6,68 +6,83 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Create Account - Cafero</title>
+    <title>Register - Cafero</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Playfair+Display:wght@800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="~/css/CustomerLogIn.css" asp-append-version="true" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Playfair+Display:wght@800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/Register.css" asp-append-version="true" />
 </head>
 <body>
-    <div class="customer-split-container">
+    <div class="register-split-container">
         
-        <div class="customer-left">
-            <div class="customer-brand-content">
-                <div class="brand-lockup-block">
-                    <h1 class="brand-title">Cafero</h1>
-                    <div class="branding-sync-tag">Powered by <strong>SaleSync</strong></div>
+        <div class="register-left">
+            <div class="brand-content">
+                <div class="brand-lockup">
+                    <h1 class="register-logo">Cafero</h1>
+                    <div class="software-tag">POWERED BY <strong>SALESYNC</strong></div>
                 </div>
-                <p>Start your journey with Cafero today. Create an account to earn points, save your favorite brews, and enjoy a faster checkout experience.</p>
+                <p>Join the Cafero family! Create an account to order ahead, customize your drinks, and skip the line.</p>
             </div>
         </div>
 
-        <div class="customer-right">
-            <div class="customer-card">
-                <div class="customer-header-block">
-                    <span class="user-profile-icon">📝</span>
-                    <h2>Join Us</h2>
-                    <p>Create your account to start earning rewards.</p>
+        <div class="register-right">
+            <div class="register-card">
+                <div class="register-header">
+                    <span class="top-user-icon">📝</span>
+                    <h2>Create Account</h2>
+                    <p>Fill in your details to get started.</p>
                 </div>
 
                 <form asp-controller="Home" asp-action="Register" method="post">
-                    <div class="customer-form-actions">
-                        
-                        <div class="input-container-group">
-                            <label for="FullName">Full Name</label>
-                            <div class="input-field-wrapper">
-                                <span class="input-icon-glyph">👤</span>
-                                <input type="text" id="FullName" name="FullName" placeholder="Enter your full name" required />
-                            </div>
-                        </div>
-
-                        <div class="input-container-group">
-                            <label for="Email">Email Address</label>
-                            <div class="input-field-wrapper">
-                                <span class="input-icon-glyph">✉️</span>
-                                <input type="email" id="Email" name="Email" placeholder="hello@example.com" required />
-                            </div>
-                        </div>
-
-                        <div class="input-container-group">
-                            <label for="Password">Password</label>
-                            <div class="input-field-wrapper">
-                                <span class="input-icon-glyph">🔒</span>
-                                <input type="password" id="Password" name="Password" placeholder="Create a password" required />
-                            </div>
+                    
+                    <div class="input-group">
+                        <label for="fullName">FULL NAME</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">👤</span>
+                            <input type="text" id="fullName" name="fullName" placeholder="e.g. Juan Dela Cruz" required />
                         </div>
                     </div>
 
-                    <div class="customer-actions-wrapper">
-                        <button type="submit" class="btn-primary-orange">CREATE ACCOUNT</button>
+                    <div class="input-group">
+                        <label for="username">USERNAME</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">&#64;</span>
+                            <input type="text" id="username" name="username" placeholder="Choose a username" required />
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="password">PASSWORD</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">🔒</span>
+                            <input type="password" id="password" name="password" placeholder="Create a password" required />
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="confirmPassword">CONFIRM PASSWORD</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">🔐</span>
+                            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Repeat password" required />
+                        </div>
+                    </div>
+
+                    @if (ViewBag.Message != null)
+                    {
+                        <p style="color:#e02424; font-size:14px; font-weight:600; margin-bottom:15px; text-align:center;">
+                            @ViewBag.Message
+                        </p>
+                    }
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-register">Create Account</button>
                     </div>
                 </form>
 
-                <div class="new-account-register">
-                    Already have an account? <a href="/Home/CustomerLogIn">Log In here</a>
+                <div class="login-prompt">
+                    <p>Already have an account?</p>
+                    <a href="/Home/Login" class="login-link">Log In here</a>
                 </div>
+
             </div>
         </div>
 
