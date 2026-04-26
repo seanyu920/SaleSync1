@@ -1,0 +1,112 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Activity Log - Cafero</title>
+    
+    <link rel="stylesheet" href="~/css/ActivityLog.css" asp-append-version="true" />
+</head>
+<body>
+
+    <div class="dashboard-container">
+        
+        <aside class="sidebar">
+            <div>
+                <div class="logo-section">
+                    <div class="logo-title">Cafero</div>
+                    <div class="logo-subtitle">Coffee & Pastries</div>
+                </div>
+                <div class="profile-section">
+                    <div class="profile-circle">👤</div>
+                    <div>
+                        <div class="admin-name">Admin</div>
+                        <div class="admin-role">Administrator</div>
+                    </div>
+                </div>
+                <nav class="sidebar-menu">
+                    <a asp-controller="Admin" asp-action="Dashboard" class="menu-btn">❖ Dashboard</a>
+                    <a asp-controller="Admin" asp-action="ActivityLog" class="menu-btn active">📋 Activity Log</a>
+                    <a asp-controller="Admin" asp-action="Analytics" class="menu-btn">📊 Analytics</a>
+                    <a asp-controller="Admin" asp-action="Products" class="menu-btn">🏷️ Products</a>
+                    <a asp-controller="Admin" asp-action="Inventory" class="menu-btn">📦 Inventory</a>
+                    <a asp-controller="Admin" asp-action="ManageAccounts" class="menu-btn">💳 Accounts</a>
+                </nav>
+            </div>
+            <div class="logout-section">
+                <form method="post" action="/Home/Logout">
+                    <button type="submit" class="menu-btn logout-btn">⎋ Log Out</button>
+                </form>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            
+            <div class="page-header">
+                <h1 class="greeting-title">System Activity Log 📋</h1>
+                <p class="greeting-subtitle">Complete audit trail of all system actions and user behavior.</p>
+            </div>
+
+            <div class="log-container">
+                <div class="filter-bar">
+                    <input type="date" class="filter-input" title="Filter by Date">
+                    <select class="filter-input" title="Filter by User">
+                        <option value="">All Users</option>
+                        <option value="admin">Admin</option>
+                        <option value="Sean">Sean</option>
+                    </select>
+                    <select class="filter-input" title="Filter by Action Type">
+                        <option value="">All Actions</option>
+                        <option value="login">System Access</option>
+                        <option value="void">Order Voided</option>
+                        <option value="inventory">Inventory Update</option>
+                    </select>
+                    <button class="btn-filter">▼ Apply Filters</button>
+                </div>
+
+                <table class="activity-table">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>User</th>
+                            <th>Action Type</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="font-weight: bold;">Today, 08:15 AM</td>
+                            <td><strong>Admin</strong></td>
+                            <td><span class="badge badge-update">Inventory Update</span></td>
+                            <td>Updated stock for <strong>Chocolate Syrup</strong> from 10 to 50 bottles.</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: bold;">Yesterday, 05:25 PM</td>
+                            <td><strong>Sean</strong> (Cashier)</td>
+                            <td><span class="badge badge-void">Order Voided</span></td>
+                            <td>Voided Order <strong>#ORD-7012</strong> (₱147.00). Reason: Customer canceled.</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: bold;">Yesterday, 11:00 AM</td>
+                            <td><strong>cashier1</strong> (Cashier)</td>
+                            <td><span class="badge badge-access">System Access</span></td>
+                            <td>Logged into the POS system successfully.</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: bold;">April 24, 02:30 PM</td>
+                            <td><strong>Admin</strong></td>
+                            <td><span class="badge badge-edit">Product Edit</span></td>
+                            <td>Changed price of <strong>Salted Caramel - Small</strong> from ₱140 to ₱147.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </main>
+    </div>
+
+</body>
+</html>

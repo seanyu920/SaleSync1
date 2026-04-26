@@ -1,4 +1,153 @@
-﻿/* --- CATEGORY FILTERS --- */
+﻿/* =========================================
+   BASE LAYOUT & SIDEBAR (Matched to AdminDashboard)
+   ========================================= */
+
+/* --- RESET & BASE --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #fcfaf6;
+    color: #4a2511;
+}
+
+.dashboard-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* --- MOCHA SIDEBAR --- */
+.sidebar {
+    width: 260px;
+    background: #4a2511;
+    padding: 30px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    color: #ffffff;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+.logo-section {
+    margin-bottom: 30px;
+}
+
+.logo-title {
+    font-size: 24px;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: 0.5px;
+}
+
+.logo-subtitle {
+    font-size: 13px;
+    color: #dcbca5;
+    margin-top: 4px;
+}
+
+.profile-section {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 40px;
+}
+
+.profile-circle {
+    width: 45px;
+    height: 45px;
+    background: #f46a05;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: #fff;
+}
+
+.admin-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.admin-role {
+    font-size: 12px;
+    color: #dcbca5;
+}
+
+.sidebar-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.menu-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    text-align: left;
+    text-decoration: none;
+    color: #dcbca5;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 14px 20px;
+    border-radius: 10px;
+    background: transparent;
+    border: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+    .menu-btn:hover {
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .menu-btn.active {
+        background: #f46a05;
+        color: #ffffff;
+    }
+
+.logout-section {
+    margin-top: auto;
+}
+
+/* --- MAIN CONTENT --- */
+.main-content {
+    flex: 1;
+    padding: 40px 50px;
+    overflow-y: auto;
+}
+
+.page-header {
+    margin-bottom: 30px;
+}
+
+.greeting-title {
+    font-size: 32px;
+    font-weight: 800;
+    color: #4a2511;
+    margin-bottom: 8px;
+}
+
+.greeting-subtitle {
+    font-size: 15px;
+    color: #b58361;
+}
+
+/* =========================================
+   PRODUCTS SPECIFIC STYLES
+   ========================================= */
+
+/* --- CATEGORY FILTERS --- */
 .product-filters {
     display: flex;
     gap: 12px;

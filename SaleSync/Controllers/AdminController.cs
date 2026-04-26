@@ -19,6 +19,11 @@ namespace SaleSync.Controllers
             _configuration = configuration;
         }
 
+        public IActionResult ActivityLog()
+        {
+            return View();
+        }
+
         private bool IsAdmin() => HttpContext.Session.GetString("Role") == "Admin";
         private bool CanAccessInventory() => IsAdmin() || HttpContext.Session.GetString("Role") == "Manager";
 
