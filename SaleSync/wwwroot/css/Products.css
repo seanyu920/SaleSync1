@@ -266,8 +266,8 @@ body {
     font-weight: 600;
 }
 
-/* --- PHOTO MANAGEMENT --- */
-.change-photo-btn, .change-photo-badge {
+/* --- PHOTO MANAGEMENT BUTTON --- */
+.change-photo-btn {
     position: absolute;
     bottom: 10px;
     background: rgba(74, 37, 17, 0.7);
@@ -279,6 +279,7 @@ body {
     cursor: pointer;
     z-index: 10;
     transition: 0.2s;
+    border: none; /* Keeps the button perfectly clean without an outline */
 }
 
     .change-photo-btn:hover {
