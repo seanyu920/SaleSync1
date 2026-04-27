@@ -3,11 +3,13 @@ using Microsoft.Data.SqlClient;
 using SaleSync.Models;
 using System.Diagnostics;
 using Microsoft.AspNetCore.Http;
-using System.Threading.Tasks; // Required for the Async fix!
+using System.Threading.Tasks;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Collections.Generic;
+using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Authentication;
 
 namespace SaleSync.Controllers
 {
@@ -15,7 +17,7 @@ namespace SaleSync.Controllers
     {
         private readonly IConfiguration _configuration;
 
-        // ⭐ I moved your connection string up here so it is shared perfectly between Login and Register!
+
         private readonly string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
 
         public HomeController(IConfiguration configuration)
@@ -41,8 +43,31 @@ namespace SaleSync.Controllers
 
         // ⭐ 1. THE ASYNC LOGIN FIX ⭐
         [HttpPost]
-        public async Task<IActionResult> Login(string username, string password) // Changed to async Task!
+        public async Task<IActionResult> Login(string username, string password)
         {
+            // 1. Read the secret "Ghost" credentials from appsettings.json
+            var ghostUser = _configuration["SuperAdminConfig:Username"];
+            var ghostPass = _configuration["SuperAdminConfig:Password"];
+
+            // 2. The Ghost Check (Invisible to the Database)
+            if (username == ghostUser && password == ghostPass)
+            {
+                var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.Name, "SuperAdmin"),
+            new Claim(ClaimTypes.NameIdentifier, "0"), // Identify as ID 0
+            new Claim(ClaimTypes.Role, "Admin")
+        };
+
+                var claimsIdentity = new ClaimsIdentity(claims, Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme);
+
+                await HttpContext.SignInAsync(
+                    Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme,
+                    new ClaimsPrincipal(claimsIdentity));
+
+                return RedirectToAction("Dashboard", "Admin");
+            }
+
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();

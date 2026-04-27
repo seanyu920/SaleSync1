@@ -4,15 +4,25 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
-builder.Services.AddSession();
 
-// ⭐ 1. ADD THE SECURITY ENGINE HERE ⭐
+// ⭐ 1. UPDATED SESSION SETTINGS
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromHours(12); // Matches the login duration
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
+// ⭐ 2. UPDATED AUTHENTICATION ENGINE
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
-        options.LoginPath = "/Home/Login"; // Where they go if they get kicked out
-        options.AccessDeniedPath = "/Home/Index"; // Where they go if they try to access unauthorized pages
-        options.ExpireTimeSpan = TimeSpan.FromHours(12); // Logs them out after a 12-hour shift
+        options.LoginPath = "/Home/Login";
+        options.AccessDeniedPath = "/Home/Index";
+        options.ExpireTimeSpan = TimeSpan.FromHours(12); // Shift-long login
+
+        // ⭐ THE BUG FIX: Resets the 12-hour clock every time the cashier interacts with the POS
+        options.SlidingExpiration = true;
     });
 
 var app = builder.Build();
@@ -27,11 +37,11 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRouting();
 
-// ⭐ 2. TURN ON THE SECURITY ENGINE HERE (Order is critical!) ⭐
-app.UseAuthentication();
-app.UseAuthorization();
+// ⭐ 3. SECURITY MIDDLEWARE (Order is critical!)
+app.UseAuthentication(); // Bouncer checks ID
+app.UseAuthorization();  // Bouncer checks Role permissions
 
-// Session usually goes after Authorization
+// Session must come after Routing and usually after Authorization
 app.UseSession();
 
 app.MapStaticAssets();

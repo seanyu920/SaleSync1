@@ -181,21 +181,26 @@
         {
             foreach (var item in Model)
             {
-                @:var cat = "@item.CategoryName.ToUpper()";
+                // ⭐ THE FIX: Using Html.Raw and Trim to ensure 'BREAD & PASTRY' matches exactly
+                @:var cat = "@Html.Raw(item.CategoryName?.Trim().ToUpper())";
                 @:if (!menuData[cat]) menuData[cat] = [];
+                
                 @:var rawName = "@Html.Raw(item.ProductName)";
+                // This cleans the size names so they group under one menu card
                 @:var baseName = rawName.replace(" - Small", "").replace(" - Large", "").replace(" - Regular", "");
+                
                 @:if (!menuData[cat].includes(baseName)) menuData[cat].push(baseName);
+                
+                // Map both the full name (for price/id) and the base name
                 @:productIdMap[rawName] = @item.ProductId;
-                @:productIdMap[baseName] = @item.ProductId;
-                @:basePrices[rawName] = parseFloat(@item.Price);
-                @:basePrices[baseName] = parseFloat(@item.Price);
+                @:basePrices[rawName] = parseFloat("@item.Price");
+                @:basePrices[baseName] = parseFloat("@item.Price");
             }
         }
 
         const sizedCategories = ["COFFEE", "MILKTEA", "FRUIT TEA"];
         let cart = [], selectedReceiptIndex = -1, activeItemName = "", currentCategory = "";
-        let finalPaymentMethod = "Cash"; // Default payment
+        let finalPaymentMethod = "Cash";
 
         function openPaymentModal() {
         document.getElementById('paymentModal').style.display = 'flex';
@@ -209,7 +214,6 @@
         const selectedOption = document.querySelector('input[name="paymentOption"]:checked');
         if (selectedOption) {
         finalPaymentMethod = selectedOption.value;
-                
         let emoji = "💵";
         if (finalPaymentMethod === "GCash") emoji = "🔵";
         else if (finalPaymentMethod === "Maya") emoji = "🟢";
@@ -223,22 +227,31 @@
         }
 
         function openSubMenu(cat) {
-        currentCategory = cat;
-        const items = menuData[cat] || [];
+        currentCategory = cat.toUpperCase(); // Force uppercase to match database
+        const items = menuData[currentCategory] || [];
         const grid = document.getElementById('subItemsGrid');
-        const customImg = localStorage.getItem(`cat_img_${cat}`);
+            
+        // Troubleshooting log: Open your browser console (F12) to see if this matches!
+        console.log("Opening category:", currentCategory);
+        console.log("Items found:", items);
 
-        document.getElementById('cashierTitle').innerText = cat;
+        document.getElementById('cashierTitle').innerText = currentCategory;
         document.getElementById('backBtn').style.display = 'block';
         document.getElementById('categoryGrid').style.display = 'none';
         document.getElementById('subItemsGrid').style.display = 'grid';
 
         grid.innerHTML = "";
+            
+        if (items.length === 0) {
+        grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #8c5b3e; padding: 40px;">No products found in ${currentCategory}</div>`;
+        return;
+        }
+
         items.forEach(item => {
-        let imgContent = customImg ? `<img src="${customImg}">` : `${getCategoryEmoji(cat)}`;
+        let emoji = getCategoryEmoji(currentCategory);
         grid.innerHTML += `
         <div class="product-card" onclick="selectProductItem('${item}')">
-        <div class="product-thumb">${imgContent}</div>
+        <div class="product-thumb">${emoji}</div>
         <div class="product-info"><h3>${item}</h3></div>
         </div>`;
         });
@@ -253,9 +266,7 @@
 
         function selectProductItem(name) {
         activeItemName = name;
-            
         document.getElementById('selectionModal').style.display = 'flex';
-            
         document.getElementById('displayName').innerText = name;
         document.getElementById('qty').value = 1;
 
@@ -270,9 +281,8 @@
         sizeSelector.innerHTML = `<input type="radio" name="size" value="Regular" checked style="display:none;">`;
         }
 
-        const customImg = localStorage.getItem(`cat_img_${currentCategory}`);
         const container = document.getElementById('detailImageContainer');
-        container.innerHTML = customImg ? `<img src="${customImg}">` : `${getCategoryEmoji(currentCategory)}`;
+        container.innerHTML = getCategoryEmoji(currentCategory);
         }
 
         function closeSelectionModal() {
@@ -280,8 +290,15 @@
         }
 
         function getCategoryEmoji(cat) {
-        const emojis = { "MILKTEA": "🧋", "RICE MEAL": "🍱", "BREAD & PASTRY": "🥐", "FRUIT TEA": "🍹", "SNACKS & PASTA": "🍝" };
-        return emojis[cat] || "☕";
+        const emojis = {
+        "COFFEE": "☕",
+        "MILKTEA": "🧋",
+        "RICE MEAL": "🍱",
+        "BREAD & PASTRY": "🥐",
+        "FRUIT TEA": "🍹",
+        "SNACKS & PASTA": "🍝"
+        };
+        return emojis[cat] || "🍴";
         }
 
         function increaseQty() { let q = document.getElementById("qty"); q.value = parseInt(q.value) + 1; }
@@ -290,13 +307,18 @@
         function addToCart() {
         let size = document.querySelector('input[name="size"]:checked').value;
         let qty = parseInt(document.getElementById("qty").value);
-        let dbKey = sizedCategories.includes(currentCategory) ? `${activeItemName} - ${size}` : activeItemName;
-        let price = basePrices[dbKey] || basePrices[activeItemName] || 75;
+            
+        // Only add suffix for sized drinks
+        let dbKey = (sizedCategories.includes(currentCategory) && size !== "Regular")
+        ? `${activeItemName} - ${size}`
+        : activeItemName;
+            
+        let price = basePrices[dbKey] || basePrices[activeItemName] || 0;
 
         cart.push({ name: activeItemName, dbKey: dbKey, size: size, qty: qty, price: price });
             
         Toastify({
-        text: `☕ ${qty}x ${activeItemName} added!`,
+        text: `📦 ${qty}x ${activeItemName} added!`,
         duration: 1500,
         gravity: "top",
         position: "right",
@@ -341,7 +363,7 @@
 
         function removeSelectedItem() {
         if (selectedReceiptIndex === -1) {
-        Swal.fire({ text: "Select an item in the list first", icon: "warning", timer: 1500, showConfirmButton: false });
+        Swal.fire({ text: "Select an item to remove", icon: "warning", timer: 1500, showConfirmButton: false });
         return;
         }
         cart.splice(selectedReceiptIndex, 1);
@@ -353,14 +375,14 @@
         if (cart.length === 0) return;
 
         const payload = cart.map(item => ({
-        productId: productIdMap[item.dbKey] ?? 0,
-        quantity:  item.qty,
-        price:     item.price
+        productId: productIdMap[item.dbKey] || productIdMap[item.name] || 0,
+        quantity: item.qty,
+        price: item.price
         }));
 
         const btn = document.querySelector('.btn-checkout');
         btn.disabled = true;
-        btn.textContent = "Processing…";
+        btn.textContent = "Processing...";
 
         try {
         const response = await fetch('/Cashier/Checkout', {
@@ -369,32 +391,39 @@
         body: JSON.stringify({ items: payload, paymentMethod: finalPaymentMethod, amountPaid: 0 })
         });
 
+        const data = await response.json();
+
         if (response.ok) {
-        Swal.fire({ title: "Success!", text: "Order recorded successfully.", icon: "success", confirmButtonColor: "#f46a05" });
+        let deductionHtml = "<div style='text-align: left; background: #f9f9f9; padding: 15px; border-radius: 8px; margin-top: 15px;'>";
+        deductionHtml += "<strong style='color: #4a2511;'>Live Inventory Deductions:</strong><br/>";
+                    
+        if (data.deductions && data.deductions.length > 0) {
+        deductionHtml += "<span style='color: #f46a05; font-weight: bold;'>" + data.deductions.join("<br/>") + "</span>";
+        } else {
+        deductionHtml += "<span style='color: #888;'>No ingredients deducted.</span>";
+        }
+        deductionHtml += "</div>";
+
+        Swal.fire({
+        title: "Sale Complete!",
+        html: "Transaction recorded.<br/>" + deductionHtml,
+        icon: "success",
+        confirmButtonColor: "#f46a05"
+        });
+
         cart = [];
         renderReceipt();
         backToCategories();
         } else {
-        Swal.fire("Checkout Failed", "Could not complete transaction.", "error");
+        Swal.fire("Checkout Failed", data.message || "Error processing sale.", "error");
         }
         } catch (err) {
-        Swal.fire("Network Error", err.message, "error");
+        Swal.fire("Error", "Could not connect to server.", "error");
         } finally {
         btn.disabled = false;
         btn.textContent = "Complete Checkout";
         }
         }
-
-        window.onload = () => {
-        const cats = ['COFFEE', 'MILKTEA', 'FRUIT TEA', 'RICE MEAL', 'BREAD & PASTRY', 'SNACKS & PASTA'];
-        cats.forEach(cat => {
-        const saved = localStorage.getItem(`cat_img_${cat}`);
-        if (saved) {
-        const thumb = document.getElementById(`thumb-${cat}`);
-        if (thumb) thumb.innerHTML = `<img src="${saved}">`;
-        }
-        });
-        };
     </script>
 </body>
 </html>
