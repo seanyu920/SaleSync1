@@ -126,7 +126,7 @@
                             <div class="input-group">
                                 <label>Quantity & Unit</label>
                                 <div style="display: flex; gap: 10px;">
-                                    <input type="number" name="Quantity" placeholder="0" required style="flex: 2;" />
+                                    <input type="number" step="any" name="Quantity" placeholder="0.00" required style="flex: 2;" />
                                     <select name="Unit" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #ddd; background-color: #fff; color: #4a2511; font-family: inherit;">
                                         <option value="pcs">pcs (Pieces)</option>
                                         <option value="g">g (Grams)</option>
@@ -134,6 +134,7 @@
                                         <option value="ml">ml (Milliliters)</option>
                                         <option value="L">L (Liters)</option>
                                         <option value="oz">oz (Ounces)</option>
+                                        <option value="gallon">gallon (Gallons)</option>
                                     </select>
                                 </div>
                             </div>
@@ -219,17 +220,17 @@
                                             <td>@item.ItemID</td>
                                             <td>₱@item.PurchasePrice.ToString("0.00")</td>
                                             
-                                            <td>@item.Quantity <span style="color: #8c5b3e; font-size: 12px; font-weight: bold;">@item.Unit</span></td>
+                                            <td>@item.Quantity.ToString("0.##") <span style="color: #8c5b3e; font-size: 12px; font-weight: bold;">@item.Unit</span></td>
                                             
                                             <td>
                                                 @{
-                                                    int qty = 0;
-                                                    int.TryParse(item.Quantity.ToString(), out qty);
-                                                    if (qty <= 10)
+                                                    double qtyVal = 0;
+                                                    double.TryParse(item.Quantity.ToString(), out qtyVal);
+                                                    if (qtyVal <= 10)
                                                     {
                                                         <span class="stock-badge badge-low">Low</span>
                                                     }
-                                                    else if (qty <= 30)
+                                                    else if (qtyVal <= 30)
                                                     {
                                                         <span class="stock-badge badge-medium">Medium</span>
                                                     }
@@ -268,121 +269,170 @@
     </form>
 
     <script>
-        // ⭐ UPDATED: Added 'unit' parameter and selection logic
+        // ⭐ THE BUG FIX: Variable to track if a form is already being sent
+        let isSubmitting = false;
+
         function fillForm(productId, itemCategory, itemName, itemID, purchasePrice, quantity, unit, stockSupplier, dateAcquired, expirationDate) {
-        document.getElementById("ProductId").value = productId;
-        document.querySelector('input[name="ItemCategory"]').value = itemCategory;
-        document.querySelector('input[name="ItemName"]').value = itemName;
-        document.querySelector('input[name="ItemID"]').value = itemID;
-        document.querySelector('input[name="PurchasePrice"]').value = purchasePrice;
-        document.querySelector('input[name="Quantity"]').value = quantity;
-        document.querySelector('select[name="Unit"]').value = unit || "pcs"; // Selects the right unit from the dropdown
-        document.querySelector('input[name="StockSupplier"]').value = stockSupplier;
-        document.querySelector('input[name="DateAcquired"]').value = dateAcquired;
-        document.querySelector('input[name="ExpirationDate"]').value = expirationDate;
+            document.getElementById("ProductId").value = productId;
+            document.querySelector('input[name="ItemCategory"]').value = itemCategory;
+            document.querySelector('input[name="ItemName"]').value = itemName;
+            document.querySelector('input[name="ItemID"]').value = itemID;
+            document.querySelector('input[name="PurchasePrice"]').value = purchasePrice;
+            document.querySelector('input[name="Quantity"]').value = quantity;
+            document.querySelector('select[name="Unit"]').value = unit || "pcs";
+            document.querySelector('input[name="StockSupplier"]').value = stockSupplier;
+            document.querySelector('input[name="DateAcquired"]').value = dateAcquired;
+            document.querySelector('input[name="ExpirationDate"]').value = expirationDate;
         }
 
         function confirmAdd() {
-        const itemName = document.querySelector('input[name="ItemName"]').value;
-        if (!itemName) {
-        Swal.fire({ title: 'Missing Info', text: 'Please enter an Item Name.', icon: 'warning', confirmButtonColor: '#f46a05' });
-        return;
-        }
+            if (isSubmitting) return;
 
-        Swal.fire({
-        title: 'Add New Item?',
-        text: `Add "${itemName}" to the inventory?`,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#f46a05',
-        cancelButtonColor: '#4a2511',
-        confirmButtonText: 'Yes, add it!'
-        }).then((result) => {
-        if (result.isConfirmed) {
-        const form = document.getElementById("inventoryForm");
-        form.action = "/Admin/AddInventory";
-        form.submit();
-        }
-        });
+            const itemName = document.querySelector('input[name="ItemName"]').value;
+            if (!itemName) {
+                Swal.fire({ title: 'Missing Info', text: 'Please enter an Item Name.', icon: 'warning', confirmButtonColor: '#f46a05' });
+                return;
+            }
+
+            Swal.fire({
+                title: 'Add New Item?',
+                text: `Add "${itemName}" to the inventory?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#f46a05',
+                cancelButtonColor: '#4a2511',
+                confirmButtonText: 'Yes, add it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    isSubmitting = true;
+                    const btn = document.querySelector('.add-btn');
+                    btn.disabled = true;
+                    btn.innerText = "Processing...";
+
+                    const form = document.getElementById("inventoryForm");
+                    form.action = "/Admin/AddInventory";
+                    form.submit();
+                }
+            });
         }
 
         function confirmUpdate() {
-        const productId = document.getElementById("ProductId").value;
-        if (!productId) {
-        Swal.fire({ title: 'No Selection', text: 'Please select an item to update.', icon: 'warning', confirmButtonColor: '#f46a05' });
-        return;
-        }
+            if (isSubmitting) return;
 
-        Swal.fire({
-        title: 'Update Item?',
-        text: "Save changes to this inventory item?",
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#ab4a03',
-        cancelButtonColor: '#4a2511',
-        confirmButtonText: 'Yes, update it!'
-        }).then((result) => {
-        if (result.isConfirmed) {
-        const form = document.getElementById("inventoryForm");
-        form.action = "/Admin/UpdateInventory";
-        form.submit();
-        }
-        });
+            const productId = document.getElementById("ProductId").value;
+            if (!productId) {
+                Swal.fire({ title: 'No Selection', text: 'Please select an item to update.', icon: 'warning', confirmButtonColor: '#f46a05' });
+                return;
+            }
+
+            Swal.fire({
+                title: 'Update Item?',
+                text: "Save changes to this inventory item?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#ab4a03',
+                cancelButtonColor: '#4a2511',
+                confirmButtonText: 'Yes, update it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    isSubmitting = true;
+                    const btn = document.querySelector('.update-btn');
+                    btn.disabled = true;
+                    btn.innerText = "Processing...";
+
+                    const form = document.getElementById("inventoryForm");
+                    form.action = "/Admin/UpdateInventory";
+                    form.submit();
+                }
+            });
         }
 
         function getSelectedId() {
-        const selected = document.querySelector('input[name="selectedItem"]:checked');
-        if (!selected) {
-        Swal.fire({ title: 'No Selection', text: 'Please select an item from the table first.', icon: 'warning', confirmButtonColor: '#f46a05' });
-        return null;
-        }
-        return selected.value;
+            const selected = document.querySelector('input[name="selectedItem"]:checked');
+            if (!selected) {
+                Swal.fire({ title: 'No Selection', text: 'Please select an item from the table first.', icon: 'warning', confirmButtonColor: '#f46a05' });
+                return null;
+            }
+            return selected.value;
         }
 
         function deleteItem() {
-        const id = getSelectedId();
-        if (!id) return;
+            if (isSubmitting) return;
+            const id = getSelectedId();
+            if (!id) return;
 
-        Swal.fire({
-        title: 'Are you sure?',
-        text: "Permanently delete this inventory item?",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#4a2511',
-        confirmButtonText: 'Yes, delete it!'
-        }).then((result) => {
-        if (result.isConfirmed) {
-        document.getElementById("deleteId").value = id;
-        document.getElementById("deleteForm").submit();
-        }
-        });
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "Permanently delete this inventory item?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#4a2511',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    isSubmitting = true;
+                    document.getElementById("deleteId").value = id;
+                    document.getElementById("deleteForm").submit();
+                }
+            });
         }
 
         function filterInventory() {
-        const searchInput = document.getElementById("inventorySearch").value.toLowerCase().trim();
-        const categoryDropdown = document.getElementById("categoryFilter").value;
-        const rows = document.querySelectorAll(".inventory-row");
-        const noResultsRow = document.getElementById("noResultsRow");
-        let visibleCount = 0;
+            const searchInput = document.getElementById("inventorySearch").value.toLowerCase().trim();
+            const categoryDropdown = document.getElementById("categoryFilter").value;
+            const rows = document.querySelectorAll(".inventory-row");
+            const noResultsRow = document.getElementById("noResultsRow");
+            let visibleCount = 0;
 
-        rows.forEach(function (row) {
-        const rowText = row.textContent.toLowerCase();
-        const categoryCellText = row.cells[1].textContent.trim();
-        const matchesSearch = rowText.includes(searchInput);
-        const matchesCategory = (categoryDropdown === "ALL" || categoryCellText === categoryDropdown);
+            rows.forEach(function (row) {
+                const rowText = row.textContent.toLowerCase();
+                const categoryCellText = row.cells[1].textContent.trim();
+                const matchesSearch = rowText.includes(searchInput);
+                const matchesCategory = (categoryDropdown === "ALL" || categoryCellText === categoryDropdown);
 
-        if (matchesSearch && matchesCategory) {
-        row.style.display = "";
-        visibleCount++;
-        } else {
-        row.style.display = "none";
-        }
-        });
-        if (noResultsRow) {
-        noResultsRow.style.display = visibleCount === 0 ? "" : "none";
-        }
+                if (matchesSearch && matchesCategory) {
+                    row.style.display = "";
+                    visibleCount++;
+                } else {
+                    row.style.display = "none";
+                }
+            });
+            if (noResultsRow) {
+                noResultsRow.style.display = visibleCount === 0 ? "" : "none";
+            }
         }
     </script>
+    @if (TempData["ErrorMessage"] != null)
+    {
+        // Force the TempData into a clean C# string first
+        var errorMsg = TempData["ErrorMessage"].ToString();
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+            Swal.fire({
+            title: 'Action Blocked',
+            text: @Html.Raw(Json.Serialize(errorMsg)),
+            icon: 'warning',
+            confirmButtonColor: '#f46a05'
+            });
+            });
+        </script>
+    }
+    
+    @if (TempData["SuccessMessage"] != null)
+    {
+        var successMsg = TempData["SuccessMessage"].ToString();
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+            Swal.fire({
+            title: 'Success!',
+            text: @Html.Raw(Json.Serialize(successMsg)),
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false
+            });
+            });
+        </script>
+    }
 </body>
 </html>

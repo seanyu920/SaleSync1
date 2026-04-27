@@ -1,10 +1,29 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-// ✅ ADD THIS
-builder.Services.AddSession();
+// ⭐ 1. UPDATED SESSION SETTINGS
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromHours(12); // Matches the login duration
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
+// ⭐ 2. UPDATED AUTHENTICATION ENGINE
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Home/Login";
+        options.AccessDeniedPath = "/Home/Index";
+        options.ExpireTimeSpan = TimeSpan.FromHours(12); // Shift-long login
+
+        // ⭐ THE BUG FIX: Resets the 12-hour clock every time the cashier interacts with the POS
+        options.SlidingExpiration = true;
+    });
 
 var app = builder.Build();
 
@@ -18,10 +37,12 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRouting();
 
-// ✅ ADD THIS (must be BEFORE Authorization)
-app.UseSession();
+// ⭐ 3. SECURITY MIDDLEWARE (Order is critical!)
+app.UseAuthentication(); // Bouncer checks ID
+app.UseAuthorization();  // Bouncer checks Role permissions
 
-app.UseAuthorization();
+// Session must come after Routing and usually after Authorization
+app.UseSession();
 
 app.MapStaticAssets();
 
