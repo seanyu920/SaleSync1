@@ -3,7 +3,6 @@
 @{
     Layout = null;
 
-    // Dynamically grab all unique categories currently in the database
     var dbCategories = new List<string>();
     if (Model != null && Model.Any())
     {
@@ -40,32 +39,22 @@
                         <h2 class="admin-name" style="font-size: 16px; font-weight: 700; color: #ffffff; margin: 0;">
                             @(ViewContext.RouteData.Values["controller"]?.ToString() == "Manager" ? "Manager" : "Admin")
                         </h2>
-                        <div style="font-size: 12px; color: #dcbca5;">Administrator</div>
+                        <div style="font-size: 12px; color: #dcbca5;">System Access</div>
                     </div>
                 </div>
 
                 <nav class="sidebar-menu">
                     <a asp-controller="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Manager" ? "Manager" : "Admin")"
-                       asp-action="Dashboard"
-                       class="menu-btn">❖ Dashboard</a>
-
-                    @if (ViewContext.RouteData.Values["controller"]?.ToString() == "Admin")
-                    {
-                        <a asp-controller="Admin" asp-action="ActivityLog" class="menu-btn">📋 Activity Log</a>
-                    }
-                    
+                       asp-action="Dashboard" class="menu-btn">❖ Dashboard</a>
 
                     <a asp-controller="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Manager" ? "Manager" : "Admin")"
-                       asp-action="Analytics"
-                       class="menu-btn">📊 Analytics</a>
+                       asp-action="Analytics" class="menu-btn">📊 Analytics</a>
 
                     <a asp-controller="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Manager" ? "Manager" : "Admin")"
-                       asp-action="Products"
-                       class="menu-btn">🏷️ Products</a>
+                       asp-action="Products" class="menu-btn">🏷️ Products</a>
 
                     <a asp-controller="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Manager" ? "Manager" : "Admin")"
-                       asp-action="Inventory"
-                       class="menu-btn active">📦 Inventory</a>
+                       asp-action="Inventory" class="menu-btn active">📦 Inventory</a>
 
                     @if (ViewContext.RouteData.Values["controller"]?.ToString() == "Admin")
                     {
@@ -124,21 +113,31 @@
                             </div>
 
                             <div class="input-group">
-                                <label>Quantity & Unit</label>
+                                <label>Bulk Qty & Unit</label>
                                 <div style="display: flex; gap: 10px;">
                                     <input type="number" step="any" name="Quantity" placeholder="0.00" required style="flex: 2;" />
                                     <select name="Unit" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #ddd; background-color: #fff; color: #4a2511; font-family: inherit;">
-                                        <option value="pcs">pcs (Pieces)</option>
-                                        <option value="g">g (Grams)</option>
-                                        <option value="kg">kg (Kilograms)</option>
-                                        <option value="ml">ml (Milliliters)</option>
-                                        <option value="L">L (Liters)</option>
-                                        <option value="oz">oz (Ounces)</option>
-                                        <option value="gallon">gallon (Gallons)</option>
+                                        <option value="pcs">pcs</option>
+                                        <option value="g">g</option>
+                                        <option value="kg">kg</option>
+                                        <option value="ml">ml</option>
+                                        <option value="L">L</option>
+                                        <option value="oz">oz</option>
+                                        <option value="gallon">gallon</option>
                                     </select>
                                 </div>
                             </div>
                             
+                            <div class="input-group">
+                                <label>Recipe Unit <span style="font-size: 11px; color: #888;">(Optional)</span></label>
+                                <input type="text" name="RecipeUnit" placeholder="e.g. ml" />
+                            </div>
+
+                            <div class="input-group">
+                                <label>Conversion Factor <span style="font-size: 11px; color: #888;">(Optional)</span></label>
+                                <input type="number" step="any" name="ConversionFactor" placeholder="e.g. 3785.41" />
+                            </div>
+
                             <div class="input-group">
                                 <label>Stock Supplier</label>
                                 <input type="text" name="StockSupplier" placeholder="Supplier" required />
@@ -187,8 +186,6 @@
                                     <th>Qty</th>
                                     <th>Stock Level</th>
                                     <th>Supplier</th>
-                                    <th>Acquired</th>
-                                    <th>Expiration</th>
                                 </tr>
                             </thead>
 
@@ -212,7 +209,9 @@
                                                 '@item.Unit',
                                                 '@Html.Raw((item.StockSupplier ?? "").Replace("'", "\\'"))',
                                                 '@item.DateAcquired',
-                                                '@item.ExpirationDate'
+                                                '@item.ExpirationDate',
+                                                '@Html.Raw((item.RecipeUnit ?? "").Replace("'", "\\'"))',
+                                                '@item.ConversionFactor'
                                                 )" />
                                             </td>
                                             <td><strong>@item.ItemCategory</strong></td>
@@ -241,19 +240,17 @@
                                                 }
                                             </td>
                                             <td>@item.StockSupplier</td>
-                                            <td>@item.DateAcquired</td>
-                                            <td>@item.ExpirationDate</td>
                                         </tr>
                                     }
                                 }
                                 else
                                 {
                                     <tr id="noItemsRow">
-                                        <td colspan="10" style="text-align:center; padding: 20px;">No inventory items found.</td>
+                                        <td colspan="8" style="text-align:center; padding: 20px;">No inventory items found.</td>
                                     </tr>
                                 }
                                 <tr id="noResultsRow" style="display: none;">
-                                    <td colspan="10" style="text-align:center; padding: 20px;">No matching items found.</td>
+                                    <td colspan="8" style="text-align:center; padding: 20px;">No matching items found.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -269,143 +266,181 @@
     </form>
 
     <script>
-        // ⭐ THE BUG FIX: Variable to track if a form is already being sent
+        // ⭐ THE SMART CONVERTER DICTIONARY
+        const standardConversions = {
+        "gallon_ml": 3785.41,
+        "L_ml": 1000,
+        "kg_g": 1000,
+        "oz_ml": 29.57,
+        "gallon_oz": 128
+        };
+
+        // Listen for changes on the Bulk Unit and Recipe Unit dropdowns
+        document.addEventListener('DOMContentLoaded', function() {
+        const bulkUnitSelect = document.querySelector('select[name="Unit"]');
+        const recipeUnitInput = document.querySelector('input[name="RecipeUnit"]');
+        const convFactorInput = document.querySelector('input[name="ConversionFactor"]');
+
+        function calculateConversion() {
+        const bulk = bulkUnitSelect.value;
+        const recipe = recipeUnitInput.value.toLowerCase().trim();
+                
+        // Create a key like "gallon_ml"
+        const key = `${bulk}_${recipe}`;
+
+        // If we know the math, auto-fill it!
+        if (standardConversions[key]) {
+        convFactorInput.value = standardConversions[key];
+        // Optional: Make it green briefly so they know the system did it for them
+        convFactorInput.style.backgroundColor = "#e8f5e9";
+        setTimeout(() => convFactorInput.style.backgroundColor = "", 1000);
+        }
+        }
+
+        // Run the calculator whenever they change the bulk unit or type a recipe unit
+        bulkUnitSelect.addEventListener('change', calculateConversion);
+        recipeUnitInput.addEventListener('keyup', calculateConversion);
+        });
         let isSubmitting = false;
 
-        function fillForm(productId, itemCategory, itemName, itemID, purchasePrice, quantity, unit, stockSupplier, dateAcquired, expirationDate) {
-            document.getElementById("ProductId").value = productId;
-            document.querySelector('input[name="ItemCategory"]').value = itemCategory;
-            document.querySelector('input[name="ItemName"]').value = itemName;
-            document.querySelector('input[name="ItemID"]').value = itemID;
-            document.querySelector('input[name="PurchasePrice"]').value = purchasePrice;
-            document.querySelector('input[name="Quantity"]').value = quantity;
-            document.querySelector('select[name="Unit"]').value = unit || "pcs";
-            document.querySelector('input[name="StockSupplier"]').value = stockSupplier;
-            document.querySelector('input[name="DateAcquired"]').value = dateAcquired;
-            document.querySelector('input[name="ExpirationDate"]').value = expirationDate;
+        function fillForm(productId, itemCategory, itemName, itemID, purchasePrice, quantity, unit, stockSupplier, dateAcquired, expirationDate, recipeUnit, convFactor) {
+        document.getElementById("ProductId").value = productId;
+        document.querySelector('input[name="ItemCategory"]').value = itemCategory;
+        document.querySelector('input[name="ItemName"]').value = itemName;
+        document.querySelector('input[name="ItemID"]').value = itemID;
+        document.querySelector('input[name="PurchasePrice"]').value = purchasePrice;
+        document.querySelector('input[name="Quantity"]').value = quantity;
+        document.querySelector('select[name="Unit"]').value = unit || "pcs";
+        document.querySelector('input[name="StockSupplier"]').value = stockSupplier;
+        document.querySelector('input[name="DateAcquired"]').value = dateAcquired;
+        document.querySelector('input[name="ExpirationDate"]').value = expirationDate;
+            
+        // ⭐ NEW: Fill the new boxes!
+        document.querySelector('input[name="RecipeUnit"]').value = recipeUnit || "";
+        document.querySelector('input[name="ConversionFactor"]').value = convFactor || "1";
         }
 
         function confirmAdd() {
-            if (isSubmitting) return;
+        if (isSubmitting) return;
 
-            const itemName = document.querySelector('input[name="ItemName"]').value;
-            if (!itemName) {
-                Swal.fire({ title: 'Missing Info', text: 'Please enter an Item Name.', icon: 'warning', confirmButtonColor: '#f46a05' });
-                return;
-            }
+        const itemName = document.querySelector('input[name="ItemName"]').value;
+        if (!itemName) {
+        Swal.fire({ title: 'Missing Info', text: 'Please enter an Item Name.', icon: 'warning', confirmButtonColor: '#f46a05' });
+        return;
+        }
 
-            Swal.fire({
-                title: 'Add New Item?',
-                text: `Add "${itemName}" to the inventory?`,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#f46a05',
-                cancelButtonColor: '#4a2511',
-                confirmButtonText: 'Yes, add it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    isSubmitting = true;
-                    const btn = document.querySelector('.add-btn');
-                    btn.disabled = true;
-                    btn.innerText = "Processing...";
+        Swal.fire({
+        title: 'Add New Item?',
+        text: `Add "${itemName}" to the inventory?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#f46a05',
+        cancelButtonColor: '#4a2511',
+        confirmButtonText: 'Yes, add it!'
+        }).then((result) => {
+        if (result.isConfirmed) {
+        isSubmitting = true;
+        const btn = document.querySelector('.add-btn');
+        btn.disabled = true;
+        btn.innerText = "Processing...";
 
-                    const form = document.getElementById("inventoryForm");
-                    form.action = "/Admin/AddInventory";
-                    form.submit();
-                }
-            });
+        const form = document.getElementById("inventoryForm");
+        form.action = "/Admin/AddInventory";
+        form.submit();
+        }
+        });
         }
 
         function confirmUpdate() {
-            if (isSubmitting) return;
+        if (isSubmitting) return;
 
-            const productId = document.getElementById("ProductId").value;
-            if (!productId) {
-                Swal.fire({ title: 'No Selection', text: 'Please select an item to update.', icon: 'warning', confirmButtonColor: '#f46a05' });
-                return;
-            }
+        const productId = document.getElementById("ProductId").value;
+        if (!productId) {
+        Swal.fire({ title: 'No Selection', text: 'Please select an item to update.', icon: 'warning', confirmButtonColor: '#f46a05' });
+        return;
+        }
 
-            Swal.fire({
-                title: 'Update Item?',
-                text: "Save changes to this inventory item?",
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#ab4a03',
-                cancelButtonColor: '#4a2511',
-                confirmButtonText: 'Yes, update it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    isSubmitting = true;
-                    const btn = document.querySelector('.update-btn');
-                    btn.disabled = true;
-                    btn.innerText = "Processing...";
+        Swal.fire({
+        title: 'Update Item?',
+        text: "Save changes to this inventory item?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#ab4a03',
+        cancelButtonColor: '#4a2511',
+        confirmButtonText: 'Yes, update it!'
+        }).then((result) => {
+        if (result.isConfirmed) {
+        isSubmitting = true;
+        const btn = document.querySelector('.update-btn');
+        btn.disabled = true;
+        btn.innerText = "Processing...";
 
-                    const form = document.getElementById("inventoryForm");
-                    form.action = "/Admin/UpdateInventory";
-                    form.submit();
-                }
-            });
+        const form = document.getElementById("inventoryForm");
+        form.action = "/Admin/UpdateInventory";
+        form.submit();
+        }
+        });
         }
 
         function getSelectedId() {
-            const selected = document.querySelector('input[name="selectedItem"]:checked');
-            if (!selected) {
-                Swal.fire({ title: 'No Selection', text: 'Please select an item from the table first.', icon: 'warning', confirmButtonColor: '#f46a05' });
-                return null;
-            }
-            return selected.value;
+        const selected = document.querySelector('input[name="selectedItem"]:checked');
+        if (!selected) {
+        Swal.fire({ title: 'No Selection', text: 'Please select an item from the table first.', icon: 'warning', confirmButtonColor: '#f46a05' });
+        return null;
+        }
+        return selected.value;
         }
 
         function deleteItem() {
-            if (isSubmitting) return;
-            const id = getSelectedId();
-            if (!id) return;
+        if (isSubmitting) return;
+        const id = getSelectedId();
+        if (!id) return;
 
-            Swal.fire({
-                title: 'Are you sure?',
-                text: "Permanently delete this inventory item?",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#4a2511',
-                confirmButtonText: 'Yes, delete it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    isSubmitting = true;
-                    document.getElementById("deleteId").value = id;
-                    document.getElementById("deleteForm").submit();
-                }
-            });
+        Swal.fire({
+        title: 'Are you sure?',
+        text: "Permanently delete this inventory item?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#4a2511',
+        confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+        if (result.isConfirmed) {
+        isSubmitting = true;
+        document.getElementById("deleteId").value = id;
+        document.getElementById("deleteForm").submit();
+        }
+        });
         }
 
         function filterInventory() {
-            const searchInput = document.getElementById("inventorySearch").value.toLowerCase().trim();
-            const categoryDropdown = document.getElementById("categoryFilter").value;
-            const rows = document.querySelectorAll(".inventory-row");
-            const noResultsRow = document.getElementById("noResultsRow");
-            let visibleCount = 0;
+        const searchInput = document.getElementById("inventorySearch").value.toLowerCase().trim();
+        const categoryDropdown = document.getElementById("categoryFilter").value;
+        const rows = document.querySelectorAll(".inventory-row");
+        const noResultsRow = document.getElementById("noResultsRow");
+        let visibleCount = 0;
 
-            rows.forEach(function (row) {
-                const rowText = row.textContent.toLowerCase();
-                const categoryCellText = row.cells[1].textContent.trim();
-                const matchesSearch = rowText.includes(searchInput);
-                const matchesCategory = (categoryDropdown === "ALL" || categoryCellText === categoryDropdown);
+        rows.forEach(function (row) {
+        const rowText = row.textContent.toLowerCase();
+        const categoryCellText = row.cells[1].textContent.trim();
+        const matchesSearch = rowText.includes(searchInput);
+        const matchesCategory = (categoryDropdown === "ALL" || categoryCellText === categoryDropdown);
 
-                if (matchesSearch && matchesCategory) {
-                    row.style.display = "";
-                    visibleCount++;
-                } else {
-                    row.style.display = "none";
-                }
-            });
-            if (noResultsRow) {
-                noResultsRow.style.display = visibleCount === 0 ? "" : "none";
-            }
+        if (matchesSearch && matchesCategory) {
+        row.style.display = "";
+        visibleCount++;
+        } else {
+        row.style.display = "none";
+        }
+        });
+        if (noResultsRow) {
+        noResultsRow.style.display = visibleCount === 0 ? "" : "none";
+        }
         }
     </script>
+
     @if (TempData["ErrorMessage"] != null)
     {
-        // Force the TempData into a clean C# string first
         var errorMsg = TempData["ErrorMessage"].ToString();
         <script>
             document.addEventListener("DOMContentLoaded", function () {

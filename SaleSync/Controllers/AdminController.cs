@@ -11,8 +11,6 @@ using static SaleSync.Models.MenuItemModel;
 
 namespace SaleSync.Controllers
 {
-    // ⭐ THE MASTER PADLOCK ⭐
-    // Nobody gets into this Controller unless they have an Admin or Manager Cookie.
     [Authorize(Roles = "Admin,Manager")]
     public class AdminController : Controller
     {
@@ -187,6 +185,7 @@ namespace SaleSync.Controllers
             return Json(new { items = itemsSold, ingredients = ingredientsDeducted });
         }
 
+
         // VOID FUNCTION
         [HttpPost]
         public IActionResult VerifyAndVoid([FromBody] AdminVoidRequest request)
@@ -222,6 +221,13 @@ namespace SaleSync.Controllers
         }
 
         public IActionResult Analytics() => View();
+
+        // ⭐ THE FIX: Added the Activity Log route
+        [HttpGet]
+        public IActionResult ActivityLog()
+        {
+            return View();
+        }
 
         // PRODUCTS MANAGEMENT
         [HttpGet]
@@ -289,11 +295,10 @@ namespace SaleSync.Controllers
         public IActionResult Inventory()
         {
             var inventoryList = new List<InventoryItems>();
-
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 string sql = @"
-                      SELECT p.product_id, p.product_name, p.stock_quantity, p.cost_price, p.sku, c.category_name, p.unit 
+                      SELECT p.product_id, p.product_name, p.stock_quantity, p.cost_price, p.sku, c.category_name, p.unit, p.recipe_unit, p.conversion_factor 
                       FROM products p
                       LEFT JOIN categories c ON p.category_id = c.category_id
                       WHERE p.is_ingredient = 1
@@ -314,7 +319,9 @@ namespace SaleSync.Controllers
                                 Quantity = Convert.ToDouble(r["stock_quantity"]),
                                 Unit = r["unit"]?.ToString() ?? "pcs",
                                 PurchasePrice = Convert.ToDecimal(r["cost_price"]),
-                                ItemCategory = r["category_name"]?.ToString() ?? "Raw Materials"
+                                ItemCategory = r["category_name"]?.ToString() ?? "Raw Materials",
+                                RecipeUnit = r["recipe_unit"]?.ToString(),
+                                ConversionFactor = r["conversion_factor"] != DBNull.Value ? Convert.ToDouble(r["conversion_factor"]) : 1
                             });
                         }
                     }
@@ -324,7 +331,6 @@ namespace SaleSync.Controllers
         }
 
         // UPDATE INVENTORY 
-        // UPDATE INVENTORY 
         [HttpPost]
         public IActionResult UpdateInventory(InventoryItems model)
         {
@@ -332,32 +338,32 @@ namespace SaleSync.Controllers
             {
                 conn.Open();
 
-                double currentStock = 0; // <-- Changed to double
+                double currentStock = 0;
                 string checkSql = "SELECT stock_quantity FROM products WHERE product_id = @id";
                 using (SqlCommand checkCmd = new SqlCommand(checkSql, conn))
                 {
                     checkCmd.Parameters.AddWithValue("@id", model.ProductId);
                     var result = checkCmd.ExecuteScalar();
-                    if (result != DBNull.Value) currentStock = Convert.ToDouble(result); // <-- Changed to double
+                    if (result != DBNull.Value) currentStock = Convert.ToDouble(result);
                 }
 
-                double addedQuantity = model.Quantity - currentStock; // <-- Changed to double
+                double addedQuantity = model.Quantity - currentStock;
 
-                string sql = "UPDATE products SET stock_quantity = @qty, cost_price = @price, unit = @unit WHERE product_id = @id";
+                string sql = "UPDATE products SET stock_quantity = @qty, cost_price = @price, unit = @unit, recipe_unit = @runit, conversion_factor = @conv WHERE product_id = @id";
                 using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
                     cmd.Parameters.AddWithValue("@qty", model.Quantity);
                     cmd.Parameters.AddWithValue("@price", model.PurchasePrice);
                     cmd.Parameters.AddWithValue("@unit", model.Unit ?? "pcs");
+                    cmd.Parameters.AddWithValue("@runit", string.IsNullOrEmpty(model.RecipeUnit) ? (object)DBNull.Value : model.RecipeUnit);
+                    cmd.Parameters.AddWithValue("@conv", model.ConversionFactor > 0 ? model.ConversionFactor : 1);
                     cmd.Parameters.AddWithValue("@id", model.ProductId);
                     cmd.ExecuteNonQuery();
                 }
 
                 if (addedQuantity > 0)
                 {
-                    // ⭐ THE MATH FIX: We cast addedQuantity to (decimal) before multiplying!
                     decimal totalCost = (decimal)addedQuantity * model.PurchasePrice;
-
                     string logSql = "INSERT INTO inventory_purchases (item_name, quantity_bought, total_cost, purchase_date) VALUES ((SELECT product_name FROM products WHERE product_id = @id), @qty, @cost, GETDATE())";
                     using (SqlCommand logCmd = new SqlCommand(logSql, conn))
                     {
@@ -380,27 +386,23 @@ namespace SaleSync.Controllers
                 conn.Open();
                 string itemName = model.ItemName ?? "New Ingredient";
 
-
                 string checkSql = "SELECT COUNT(*) FROM products WHERE product_name = @name AND is_ingredient = 1";
                 using (SqlCommand checkCmd = new SqlCommand(checkSql, conn))
                 {
                     checkCmd.Parameters.AddWithValue("@name", itemName);
                     int exists = (int)checkCmd.ExecuteScalar();
-
                     if (exists > 0)
                     {
-
                         TempData["ErrorMessage"] = $"'{itemName}' is already in your inventory! Please use the 'Update Item' button instead.";
                         return RedirectToAction("Inventory");
                     }
                 }
 
-  
                 string sql = @"
-            INSERT INTO products (product_name, stock_quantity, cost_price, is_ingredient, category_id, sku, barcode, unit)
+            INSERT INTO products (product_name, stock_quantity, cost_price, is_ingredient, category_id, sku, barcode, unit, recipe_unit, conversion_factor)
             VALUES (@name, @qty, @price, 1, 99, 
                     'ING-' + LEFT(CAST(NEWID() AS VARCHAR(36)), 8),
-                    'BC-' + LEFT(CAST(NEWID() AS VARCHAR(36)), 8), @unit)";
+                    'BC-' + LEFT(CAST(NEWID() AS VARCHAR(36)), 8), @unit, @runit, @conv)";
 
                 using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
@@ -408,14 +410,14 @@ namespace SaleSync.Controllers
                     cmd.Parameters.AddWithValue("@qty", model.Quantity);
                     cmd.Parameters.AddWithValue("@price", model.PurchasePrice);
                     cmd.Parameters.AddWithValue("@unit", model.Unit ?? "pcs");
+                    cmd.Parameters.AddWithValue("@runit", string.IsNullOrEmpty(model.RecipeUnit) ? (object)DBNull.Value : model.RecipeUnit);
+                    cmd.Parameters.AddWithValue("@conv", model.ConversionFactor > 0 ? model.ConversionFactor : 1);
                     cmd.ExecuteNonQuery();
                 }
 
                 if (model.Quantity > 0)
                 {
-
                     decimal totalCost = (decimal)model.Quantity * model.PurchasePrice;
-
                     string logSql = "INSERT INTO inventory_purchases (item_name, quantity_bought, total_cost, purchase_date) VALUES (@name, @qty, @cost, GETDATE())";
                     using (SqlCommand logCmd = new SqlCommand(logSql, conn))
                     {
@@ -426,6 +428,7 @@ namespace SaleSync.Controllers
                     }
                 }
             }
+            TempData["SuccessMessage"] = $"{model.ItemName} added successfully!";
             return RedirectToAction("Inventory");
         }
 
@@ -482,7 +485,7 @@ namespace SaleSync.Controllers
             FROM users u
             LEFT JOIN roles r ON u.role_id = r.role_id
             WHERE u.user_id <> 0 
-            AND (r.role_name IS NULL OR r.role_name != 'Customer')"; 
+            AND (r.role_name IS NULL OR r.role_name != 'Customer')";
 
                 using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
@@ -647,7 +650,7 @@ namespace SaleSync.Controllers
             return RedirectToAction("ManageAccounts");
         }
 
-      
+
 
         [HttpGet]
         public IActionResult GetIngredients()
@@ -655,14 +658,15 @@ namespace SaleSync.Controllers
             var list = new List<object>();
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                string sql = "SELECT product_id, product_name, unit FROM products WHERE is_ingredient = 1 ORDER BY product_name";
+                // ⭐ THE FIX: Pull recipe_unit if it exists, otherwise fall back to bulk unit
+                string sql = "SELECT product_id, product_name, ISNULL(recipe_unit, unit) as display_unit FROM products WHERE is_ingredient = 1 ORDER BY product_name";
                 using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
                     conn.Open();
                     using (SqlDataReader r = cmd.ExecuteReader())
                     {
                         while (r.Read())
-                            list.Add(new { id = r["product_id"], name = r["product_name"], unit = r["unit"] });
+                            list.Add(new { id = r["product_id"], name = r["product_name"], unit = r["display_unit"] });
                     }
                 }
             }
@@ -675,8 +679,9 @@ namespace SaleSync.Controllers
             var list = new List<object>();
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
+                // ⭐ THE FIX: Pull recipe_unit if it exists, otherwise fall back to bulk unit
                 string sql = @"
-                    SELECT pi.ingredient_id, p.product_name, pi.quantity_required, p.unit 
+                    SELECT pi.ingredient_id, p.product_name, pi.quantity_required, ISNULL(p.recipe_unit, p.unit) as display_unit 
                     FROM product_ingredients pi
                     JOIN products p ON pi.ingredient_id = p.product_id
                     WHERE pi.product_id = @id";
@@ -687,7 +692,7 @@ namespace SaleSync.Controllers
                     using (SqlDataReader r = cmd.ExecuteReader())
                     {
                         while (r.Read())
-                            list.Add(new { id = r["ingredient_id"], name = r["product_name"], qty = r["quantity_required"], unit = r["unit"] });
+                            list.Add(new { id = r["ingredient_id"], name = r["product_name"], qty = r["quantity_required"], unit = r["display_unit"] });
                     }
                 }
             }
@@ -821,11 +826,12 @@ namespace SaleSync.Controllers
 
         private void DeductIngredients(SqlConnection conn, SqlTransaction transaction, int productId, int qty)
         {
-            // ⭐ MATH FIX: Now fetching the conversion_factor!
+            // ⭐ THE FIX: Fetch conversion_factor directly from the products table
             string recipeQuery = @"
-        SELECT ingredient_id, quantity_required, ISNULL(conversion_factor, 1) as conversion_factor
-        FROM   product_ingredients
-        WHERE  product_id = @product_id";
+                SELECT pi.ingredient_id, pi.quantity_required, ISNULL(p.conversion_factor, 1) as conversion_factor
+                FROM product_ingredients pi
+                JOIN products p ON pi.ingredient_id = p.product_id
+                WHERE pi.product_id = @product_id";
 
             using SqlCommand cmd = new SqlCommand(recipeQuery, conn, transaction);
             cmd.Parameters.AddWithValue("@product_id", productId);
@@ -846,7 +852,7 @@ namespace SaleSync.Controllers
 
             foreach (var ing in ingredients)
             {
-                // ⭐ MATH FIX: Divide by conversion factor (350 / 3785.41 = 0.09)
+                // ⭐ MATH FIX: Divide by conversion factor (e.g., 350 / 3785.41 = 0.09)
                 double totalDeduct = (ing.qtyReq * qty) / ing.conv;
 
                 string updateQuery = @"
@@ -866,6 +872,7 @@ namespace SaleSync.Controllers
                 }
             }
         }
+
         // SALES REPORT
         [HttpGet]
         public IActionResult DailyReport()
