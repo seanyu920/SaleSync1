@@ -1,14 +1,16 @@
 ﻿@{
     Layout = null;
-    var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "Admin";
-    var currentRole = currentController == "Manager" ? "Manager" : "Admin";
+    // ⭐ THE FIX: Check the secure login ticket, not the URL!
+    bool isManager = User.IsInRole("Manager");
+    string homeController = isManager ? "Manager" : "Admin";
+    string displayRole = isManager ? "Manager" : "Admin";
 }
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>@currentRole Analytics - SyncScale</title>
+    <title>@displayRole Analytics - SyncScale</title>
     <link rel="stylesheet" href="~/css/AdminDashboard.css" asp-append-version="true" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -25,26 +27,28 @@
                 <div class="profile-section" style="display: flex; align-items: center; gap: 15px; margin-bottom: 40px;">
                     <div class="profile-circle" style="width: 45px; height: 45px; background: #f46a05; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #fff;">👤</div>
                     <div>
-                        <h2 class="admin-name" style="font-size: 16px; font-weight: 700; color: #ffffff; margin: 0;">
-                            @currentRole
-                        </h2>
-                        <div style="font-size: 12px; color: #dcbca5;">Administrator</div>
+                        <h2 class="admin-name" style="font-size: 16px; font-weight: 700; color: #ffffff; margin: 0;">@displayRole</h2>
+                        <div style="font-size: 12px; color: #dcbca5;">System Access</div>
                     </div>
                 </div>
 
                 <nav class="sidebar-menu">
-                    <a asp-controller="@currentController" asp-action="Dashboard" class="menu-btn">❖ Dashboard</a>
-                    @if (currentController == "Admin")
-                    {
-                        <a asp-controller="Admin" asp-action="ActivityLog" class="menu-btn">📋 Activity Log</a>
-                    }
-                    <a asp-controller="@currentController" asp-action="Analytics" class="menu-btn active">📊 Analytics</a>
-                    <a asp-controller="@currentController" asp-action="Products" class="menu-btn">🏷️ Products</a>
-                    <a asp-controller="@currentController" asp-action="Inventory" class="menu-btn">📦 Inventory</a>
+                    <a href="/@homeController/Dashboard" class="menu-btn @(ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")">❖ Dashboard</a>
+                    
+                    <a href="/@homeController/PointOfSale" class="menu-btn @(ViewContext.RouteData.Values["action"]?.ToString() == "PointOfSale" ? "active" : "")">🛒 Point of Sale</a>
 
-                    @if (currentController == "Admin")
+                    @if (User.IsInRole("Admin"))
                     {
-                        <a asp-controller="Admin" asp-action="ManageAccounts" class="menu-btn">💳 Accounts</a>
+                        <a href="/Admin/ActivityLog" class="menu-btn @(ViewContext.RouteData.Values["action"]?.ToString() == "ActivityLog" ? "active" : "")">📋 Activity Log</a>
+                    }
+                    
+                    <a href="/Admin/Analytics" class="menu-btn @(ViewContext.RouteData.Values["action"]?.ToString() == "Analytics" ? "active" : "")">📊 Analytics</a>
+                    <a href="/Admin/Products" class="menu-btn @(ViewContext.RouteData.Values["action"]?.ToString() == "Products" ? "active" : "")">🏷️ Products</a>
+                    <a href="/Admin/Inventory" class="menu-btn @(ViewContext.RouteData.Values["action"]?.ToString() == "Inventory" ? "active" : "")">📦 Inventory</a>
+
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a href="/Admin/ManageAccounts" class="menu-btn @(ViewContext.RouteData.Values["action"]?.ToString() == "ManageAccounts" ? "active" : "")">💳 Accounts</a>
                     }
                 </nav>
             </div>
@@ -117,7 +121,6 @@
     </div>
 
     <script>
-        // Wrapping everything so it waits for the page to finish loading!
         document.addEventListener('DOMContentLoaded', function () {
             
         const salesCanvas = document.getElementById('salesChart');
@@ -168,7 +171,6 @@
         });
         }
 
-        // Event listener for the dropdown menu
         const timeframeSelect = document.getElementById('analyticsTimeframe');
         if (timeframeSelect) {
         timeframeSelect.addEventListener('change', function() {
@@ -176,5 +178,6 @@
         });
         }
         });
-    </script></body>
+    </script>
+</body>
 </html>
