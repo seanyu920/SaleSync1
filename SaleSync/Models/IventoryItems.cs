@@ -5,6 +5,8 @@
         public int ProductId { get; set; }
         public string ItemID { get; set; }
         public string ItemName { get; set; }
+        public string RecipeUnit { get; set; }
+        public double ConversionFactor { get; set; }
 
         // Our precise math variable
         public double Quantity { get; set; }

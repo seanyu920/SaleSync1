@@ -182,17 +182,17 @@
         const items = menuData[cat] || [];
         const container = document.getElementById('subItemsContainer');
         const catImg = localStorage.getItem(`cat_img_${cat}`) || "";
-            
+                
         document.getElementById('pageTitle').innerText = cat;
         document.getElementById('pageSubtitle').innerText = "Managing recipes for " + cat;
-            
+                
         // DYNAMIC UI: Change the button text to + Add Item
         document.getElementById('mainAddBtn').innerText = "+ Add Item";
-            
+                
         container.innerHTML = "";
         items.forEach(item => {
         let imgTag = catImg ? `<img src="${catImg}" style="width:100%;height:100%;object-fit:cover;">` : `<span style="font-size:40px;">📦</span>`;
-                
+                        
         container.innerHTML += `
         <div class="menu-item-card">
         <div class="item-image-placeholder" style="height:120px;">
@@ -201,9 +201,9 @@
         </div>
         <div class="item-details">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
-                                            
+                                                                    
         <div class="item-title" style="font-size:15px; padding-right: 10px;">${item.name}</div>
-                                                
+                                                                        
         <button type="button"
         onclick="event.stopPropagation(); deleteItem(${item.id})"
         style="background:none; border:none; color:red; cursor:pointer; font-weight:bold; font-size: 16px; padding: 5px; flex-shrink: 0; z-index: 10;">
@@ -211,7 +211,7 @@
         </button>
 
         </div>
-                                        
+                                                                
         <button type="button"
         class="btn-primary"
         style="width:100%; font-size:11px; background:#4a2511; color: white; padding: 8px; border: none; border-radius: 6px; cursor: pointer;"
@@ -230,10 +230,10 @@
         function showCategories() {
         currentCategory = "";
         document.getElementById('pageTitle').innerText = "Menu Categories 🏷️";
-            
+                
         // DYNAMIC UI: Reset the button text back to + Add Category
         document.getElementById('mainAddBtn').innerText = "+ Add Category";
-            
+                
         document.getElementById('categoryContainer').style.display = 'grid';
         document.getElementById('subItemsContainer').style.display = 'none';
         document.getElementById('backBtn').style.display = 'none';
@@ -264,13 +264,12 @@
         });
         }
 
-
         // ==========================================
         // 3. THE ALL-IN-ONE CRUD ACTION (ADD)
         // ==========================================
         document.querySelector('#mainAddBtn').addEventListener('click', async function() {
             
-        // CHANGED: IF CURRENT CATEGORY IS EMPTY, WE ARE ADDING A CATEGORY
+        // IF CURRENT CATEGORY IS EMPTY, WE ARE ADDING A CATEGORY
         if(!currentCategory) {
         const { value: categoryData } = await Swal.fire({
         title: 'Create New Category',
@@ -307,11 +306,11 @@
         }
         return;
         }
-            
+                
         // IF CURRENT CATEGORY IS SET, WE ARE ADDING AN ITEM TO IT
         let ingOptions = '<option value="">Select Ingredient...</option>';
         allIngredients.forEach(i => ingOptions += `<option value="${i.id}">${i.name}</option>`);
-                
+                    
         const { value: formValues } = await Swal.fire({
         title: `Add Item to ${currentCategory}`,
         width: '600px',
@@ -325,10 +324,10 @@
         </select>
         <input id="swal-price" type="number" class="swal2-input" placeholder="Price ₱" style="flex: 1; margin:0;">
         </div>
-                            
+                                            
         <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
         <h4 style="text-align:left; color:#8c5b3e; margin-bottom: 10px;">Recipe Ingredients (Optional)</h4>
-                            
+                                            
         <div id="swal-recipe-rows" style="display:flex; flex-direction:column; gap:10px;">
         <div style="display: flex; gap: 10px;" class="swal-ing-row">
         <select class="swal2-input swal-ing-id" style="flex: 2; margin:0; font-size: 14px;">${ingOptions}</select>
@@ -352,7 +351,7 @@
         const name = document.getElementById('swal-name').value.trim();
         const size = document.getElementById('swal-size').value;
         const price = document.getElementById('swal-price').value;
-                                
+                                                    
         if (!name || !price) {
         Swal.showValidationMessage('Please enter the Name and Price.');
         return false;
@@ -377,7 +376,7 @@
         };
         }
         });
-                
+                    
         if (formValues) {
         fetch('/Admin/AddFullProduct', {
         method: 'POST',
@@ -420,7 +419,7 @@
         }
         });
         }
-        
+
         // ==========================================
         // 4. RECIPE BUILDER LOGIC
         // ==========================================
@@ -431,10 +430,11 @@
         window.addEventListener('DOMContentLoaded', async () => {
         const res = await fetch('/Admin/GetIngredients');
         allIngredients = await res.json();
-                
+                    
         const select = document.getElementById('ingredientSelect');
         allIngredients.forEach(ing => {
-        select.innerHTML += `<option value="${ing.id}">${ing.name}</option>`;
+        // ⭐ THE FIX: Attach the unit directly as an HTML data attribute
+        select.innerHTML += `<option value="${ing.id}" data-unit="${ing.unit}">${ing.name}</option>`;
         });
         });
 
@@ -442,14 +442,15 @@
         currentRecipeProductId = productId;
         currentRecipeItems = [];
         document.getElementById('recipeItemName').innerText = productName + " Recipe";
-                
+                    
         const res = await fetch(`/Admin/GetRecipe?productId=${productId}`);
         const existingData = await res.json();
-                
+                    
         existingData.forEach(item => {
-        currentRecipeItems.push({ id: item.id, name: item.name, qty: item.qty });
+        // ⭐ THE FIX: Also store the unit when fetching existing recipe data
+        currentRecipeItems.push({ id: item.id, name: item.name, qty: item.qty, unit: item.unit });
         });
-                
+                    
         renderRecipeList();
         document.getElementById('recipeModal').style.display = 'flex';
         }
@@ -461,17 +462,21 @@
         function addIngredientToUI() {
         const select = document.getElementById('ingredientSelect');
         const qtyInput = document.getElementById('ingredientQty');
-                
+                    
         const id = parseInt(select.value);
         const name = select.options[select.selectedIndex]?.text;
+            
+        // ⭐ THE FIX: Extract the unit from the selected dropdown option
+        const unit = select.options[select.selectedIndex]?.getAttribute("data-unit") || "unit(s)";
         const qty = parseFloat(qtyInput.value);
-                
+                    
         if(!id || !qty || qty <= 0) return Swal.fire('Wait!', 'Select an ingredient and enter a valid quantity.', 'warning');
         if(currentRecipeItems.find(i => i.id === id)) return Swal.fire('Oops', 'This ingredient is already in the recipe!', 'error');
 
-        currentRecipeItems.push({ id: id, name: name, qty: qty });
+        // ⭐ THE FIX: Push the unit into the array
+        currentRecipeItems.push({ id: id, name: name, qty: qty, unit: unit });
         renderRecipeList();
-                
+                    
         select.value = "";
         qtyInput.value = "";
         }
@@ -484,16 +489,17 @@
         function renderRecipeList() {
         const list = document.getElementById('recipeList');
         list.innerHTML = "";
-                
+                    
         if(currentRecipeItems.length === 0) {
         list.innerHTML = "<li style='color: #999; font-size: 13px; text-align: center; margin-top: 20px;'>No ingredients added yet.</li>";
         return;
         }
 
         currentRecipeItems.forEach(item => {
+        // ⭐ THE FIX: Render the unit variable dynamically next to the quantity
         list.innerHTML += `
         <li style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee;">
-        <span><strong>${item.qty}</strong> x ${item.name}</span>
+        <span><strong>${item.qty} ${item.unit}</strong> x ${item.name}</span>
         <button onclick="removeIngredientFromUI(${item.id})" style="color: red; border: none; background: none; cursor: pointer; font-weight: bold;">X</button>
         </li>`;
         });
