@@ -18,13 +18,15 @@ namespace SaleSync.Controllers
             _configuration = configuration;
         }
 
-        // Authorization 
+        // ⭐ 1. THE SECURITY BOUNCER
         private bool IsManager()
         {
-            var role = HttpContext.Session.GetString("Role");
-            return role == "Manager" || role == "Admin";
+            return User.IsInRole("Manager") || User.IsInRole("Admin");
         }
-        // DASHBOARD
+
+        // ==========================================
+        // ⭐ 2. MANAGER DASHBOARD DATA
+        // ==========================================
         public IActionResult Dashboard()
         {
             if (!IsManager()) return RedirectToAction("Index", "Home");
@@ -33,7 +35,6 @@ namespace SaleSync.Controllers
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-
                 string totalSql = @"SELECT ISNULL(SUM(total_amount), 0) as Total, COUNT(sale_id) as Count 
                     FROM sales WHERE CAST(sale_date AS DATE) = CAST(GETDATE() AS DATE) 
                     AND status = 'Completed'";
@@ -76,69 +77,103 @@ namespace SaleSync.Controllers
             }
             return View("ManagerDashboard", model);
         }
-        // INVENTORY MANAGEMENT
 
-        [HttpGet]
-        public IActionResult Inventory()
+        // ==========================================
+        // ⭐ 3. FIXED: SECURE VOID ORDER LOGIC
+        // ==========================================
+        [HttpPost]
+        public IActionResult VerifyAndVoid([FromBody] VoidRequest request)
         {
-            if (!IsManager()) return RedirectToAction("Index", "Home");
-
-            var inventoryList = new List<InventoryItems>();
+            if (!IsManager()) return Unauthorized(new { message = "Unauthorized access." });
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                string sql = @"
-                    SELECT p.product_id, p.product_name, p.stock_quantity, p.cost_price, p.sku, c.category_name 
-                    FROM products p
-                    LEFT JOIN categories c ON p.category_id = c.category_id
-                    WHERE p.is_ingredient = 1";
+                conn.Open();
 
-                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                if (userIdClaim == null) return BadRequest(new { message = "Session invalid." });
+
+                if (userIdClaim == "0")
                 {
-                    conn.Open();
+                    var ghostPass = _configuration["SuperAdminConfig:Password"];
+                    if (request.Pass != ghostPass) return BadRequest(new { message = "Incorrect password." });
+                }
+                else
+                {
+                    string checkPassSql = "SELECT password_hash FROM users WHERE user_id = @id";
+                    using (SqlCommand cmd = new SqlCommand(checkPassSql, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@id", userIdClaim);
+                        var dbPass = cmd.ExecuteScalar()?.ToString();
+                        if (dbPass != request.Pass) return BadRequest(new { message = "Incorrect password." });
+                    }
+                }
+
+                // FIX: Renamed SQL variable to @id to match the C# parameter
+                string updateSql = "UPDATE sales SET status = 'Voided' WHERE sale_id = @id AND status != 'Completed'";
+                using (SqlCommand cmd = new SqlCommand(updateSql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@id", request.SaleId);
+                    int rows = cmd.ExecuteNonQuery();
+                    if (rows == 0) return BadRequest(new { message = "Order not found or already completed/voided." });
+                }
+            }
+            return Ok();
+        }
+
+        // ==========================================
+        // ⭐ 4. FIXED: GET DROPDOWN ORDER DETAILS
+        // ==========================================
+        [HttpGet]
+        public IActionResult GetOrderDetails(int saleId)
+        {
+            if (!IsManager()) return Unauthorized();
+
+            var result = new { items = new List<string>(), ingredients = new List<string>() };
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+
+                // FIX: Added cmd.Parameters to provide the @id value
+                string itemSql = @"
+                    SELECT si.quantity, p.product_name 
+                    FROM sale_items si 
+                    JOIN products p ON si.product_id = p.product_id 
+                    WHERE si.sale_id = @id";
+
+                using (SqlCommand cmd = new SqlCommand(itemSql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@id", saleId);
                     using (SqlDataReader r = cmd.ExecuteReader())
                     {
-                        while (r.Read())
-                        {
-                            inventoryList.Add(new InventoryItems
-                            {
-                                ProductId = Convert.ToInt32(r["product_id"]),
-                                ItemID = r["sku"]?.ToString() ?? "N/A",
-                                ItemName = r["product_name"].ToString(),
-                                Quantity = Convert.ToInt32(r["stock_quantity"]),
-                                PurchasePrice = Convert.ToDecimal(r["cost_price"]),
-                                ItemCategory = r["category_name"]?.ToString() ?? "Raw Materials"
-                            });
-                        }
+                        while (r.Read()) result.items.Add($"{r["quantity"]}x {r["product_name"]}");
+                    }
+                }
+
+                // FIX: Added cmd.Parameters to provide the @id value
+                string ingSql = @"
+                    SELECT (pi.quantity_required * si.quantity) as total_req, p.product_name, ISNULL(p.recipe_unit, p.unit) as unit
+                    FROM sale_items si
+                    JOIN product_ingredients pi ON si.product_id = pi.product_id
+                    JOIN products p ON pi.ingredient_id = p.product_id
+                    WHERE si.sale_id = @id";
+
+                using (SqlCommand cmd = new SqlCommand(ingSql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@id", saleId);
+                    using (SqlDataReader r = cmd.ExecuteReader())
+                    {
+                        while (r.Read()) result.ingredients.Add($"{r["total_req"]} {r["unit"]} {r["product_name"]}");
                     }
                 }
             }
-            return View("~/Views/Admin/Inventory.cshtml", inventoryList);
-        }
-        // UPDATE INVENTORY
-
-        [HttpPost]
-        public IActionResult UpdateInventory(InventoryItems model)
-        {
-            if (!IsManager()) return RedirectToAction("Index", "Home");
-
-            using (SqlConnection conn = new SqlConnection(connectionString))
-            {
-                string sql = "UPDATE products SET stock_quantity = @qty, cost_price = @price WHERE product_id = @id";
-                using (SqlCommand cmd = new SqlCommand(sql, conn))
-                {
-                    cmd.Parameters.AddWithValue("@qty", model.Quantity);
-                    cmd.Parameters.AddWithValue("@price", model.PurchasePrice);
-                    cmd.Parameters.AddWithValue("@id", model.ProductId);
-
-                    conn.Open();
-                    cmd.ExecuteNonQuery();
-                }
-            }
-            return RedirectToAction("Inventory");
+            return Json(result);
         }
 
-        // SALE STATUS UPDATE (MARK AS COMPLETED/VOIDED)
+        // ==========================================
+        // ⭐ 5. MARK ORDER COMPLETED & DEDUCT STOCK
+        // ==========================================
         [HttpPost]
         public IActionResult UpdateSaleStatus([FromBody] StatusUpdateModel request)
         {
@@ -156,7 +191,6 @@ namespace SaleSync.Controllers
                     if (result != null) currentStatus = result.ToString();
                 }
 
-
                 if (currentStatus == request.Status) return Ok();
 
                 using (SqlTransaction transaction = conn.BeginTransaction())
@@ -171,7 +205,6 @@ namespace SaleSync.Controllers
                             cmd.ExecuteNonQuery();
                         }
 
- 
                         if (request.Status == "Completed" && currentStatus != "Completed")
                         {
                             string getItemsSql = "SELECT product_id, quantity FROM sale_items WHERE sale_id = @id";
@@ -186,7 +219,6 @@ namespace SaleSync.Controllers
                                 }
                             }
 
-
                             foreach (var item in itemsList)
                             {
                                 DeductIngredients(conn, transaction, item.pId, item.qty);
@@ -197,7 +229,6 @@ namespace SaleSync.Controllers
                     }
                     catch (Exception ex)
                     {
-
                         transaction.Rollback();
                         return BadRequest(new { message = ex.Message });
                     }
@@ -205,7 +236,7 @@ namespace SaleSync.Controllers
             }
             return Ok();
         }
-        // DEDUCTION FEATURE
+
         private void DeductIngredients(SqlConnection conn, SqlTransaction transaction, int productId, int qty)
         {
             string recipeQuery = @"
@@ -250,19 +281,12 @@ namespace SaleSync.Controllers
             }
         }
 
-
-        public IActionResult Analytics()
-        {
-
-            return View("~/Views/Admin/Analytics.cshtml");
-        }
-
+        // ==========================================
+        // ⭐ 6. SHARED POS ACCESS
+        // ==========================================
         [HttpGet]
-        public IActionResult Products()
+        public IActionResult PointOfSale()
         {
-            if (HttpContext.Session.GetString("Role") != "Manager")
-                return RedirectToAction("Index", "Home");
-
             var menuList = new List<SaleSync.Models.MenuItemModel>();
 
             using (SqlConnection conn = new SqlConnection(connectionString))
@@ -292,15 +316,22 @@ namespace SaleSync.Controllers
                 }
             }
 
-            return View("~/Views/Admin/Products.cshtml", menuList);
+            return View("~/Views/Cashier/CashierMenu.cshtml", menuList);
         }
+    }
 
-    } 
-
-   
+    // ==========================================
+    // ⭐ REQUEST MODELS
+    // ==========================================
     public class StatusUpdateModel
     {
         public int SaleId { get; set; }
         public string Status { get; set; }
+    }
+
+    public class VoidRequest
+    {
+        public int SaleId { get; set; }
+        public string Pass { get; set; }
     }
 }
