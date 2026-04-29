@@ -168,8 +168,9 @@
         {
             foreach (var item in Model)
             {
+                // ⭐ THE FIX: We are now passing the item.Price securely to JavaScript!
                 @:if(!menuData["@Html.Raw(item.CategoryName.ToUpper())"]) menuData["@Html.Raw(item.CategoryName.ToUpper())"] = [];
-                @:menuData["@Html.Raw(item.CategoryName.ToUpper())"].push({ id: @item.ProductId, name: "@Html.Raw(item.ProductName)" });
+                @:menuData["@Html.Raw(item.CategoryName.ToUpper())"].push({ id: @item.ProductId, name: "@Html.Raw(item.ProductName)", price: @item.Price });
             }
         }
 
@@ -180,16 +181,16 @@
         const items = menuData[cat] || [];
         const container = document.getElementById('subItemsContainer');
         const catImg = localStorage.getItem(`cat_img_${cat}`) || "";
-                
+                    
         document.getElementById('pageTitle').innerText = cat;
         document.getElementById('pageSubtitle').innerText = "Managing recipes for " + cat;
-                
+                    
         document.getElementById('mainAddBtn').innerText = "+ Add Item";
-                
+                    
         container.innerHTML = "";
         items.forEach(item => {
         let imgTag = catImg ? `<img src="${catImg}" style="width:100%;height:100%;object-fit:cover;">` : `<span style="font-size:40px;">📦</span>`;
-                        
+                                        
         container.innerHTML += `
         <div class="menu-item-card">
         <div class="item-image-placeholder" style="height:120px;">
@@ -198,9 +199,13 @@
         </div>
         <div class="item-details">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
-                                                            
-        <div class="item-title" style="font-size:15px; padding-right: 10px;">${item.name}</div>
-                                                                
+                                                                                                    
+        <div class="item-title" style="font-size:14px; padding-right: 10px;">
+        ${item.name} <br>
+        <span style="font-size:12px; color:#8c5b3e; font-weight:normal;">₱${item.price.toFixed(2)}</span>
+        <button onclick="event.stopPropagation(); editPrice(${item.id}, '${item.name.replace(/'/g, "\\'")}', ${item.price})" style="background:none; border:none; cursor:pointer; font-size:12px; color:#f46a05; text-decoration:underline; padding-left:5px;">Edit</button>
+        </div>
+                                                                                                        
         <button type="button"
         onclick="event.stopPropagation(); deleteItem(${item.id})"
         style="background:none; border:none; color:red; cursor:pointer; font-weight:bold; font-size: 16px; padding: 5px; flex-shrink: 0; z-index: 10;">
@@ -208,7 +213,7 @@
         </button>
 
         </div>
-                                                            
+                                                                                                    
         <button type="button"
         class="btn-primary"
         style="width:100%; font-size:11px; background:#4a2511; color: white; padding: 8px; border: none; border-radius: 6px; cursor: pointer;"
@@ -224,12 +229,41 @@
         document.getElementById('backBtn').style.display = 'block';
         }
 
+        // ⭐ NEW: Edit Price Function ⭐
+        async function editPrice(id, name, currentPrice) {
+        const { value: newPrice } = await Swal.fire({
+        title: `Edit Price`,
+        html: `Current price for <strong>${name}</strong> is ₱${currentPrice.toFixed(2)}`,
+        input: 'number',
+        inputAttributes: { min: 0, step: 0.01 },
+        inputValue: currentPrice,
+        showCancelButton: true,
+        confirmButtonColor: '#f46a05',
+        confirmButtonText: 'Save New Price'
+        });
+
+        if (newPrice && newPrice !== currentPrice.toString()) {
+        fetch('/Admin/UpdateProductPrice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ProductId: id, NewPrice: parseFloat(newPrice) })
+        }).then(res => {
+        if (res.ok) {
+        Swal.fire({ title: 'Saved!', text: 'Price updated successfully.', icon: 'success', timer: 1500, showConfirmButton: false })
+        .then(() => location.reload());
+        } else {
+        Swal.fire('Error', 'Failed to update price.', 'error');
+        }
+        });
+        }
+        }
+
         function showCategories() {
         currentCategory = "";
         document.getElementById('pageTitle').innerText = "Menu Categories 🏷️";
-                
+                    
         document.getElementById('mainAddBtn').innerText = "+ Add Category";
-                
+                    
         document.getElementById('categoryContainer').style.display = 'grid';
         document.getElementById('subItemsContainer').style.display = 'none';
         document.getElementById('backBtn').style.display = 'none';
@@ -295,10 +329,10 @@
         }
         return;
         }
-                
+                    
         let ingOptions = '<option value="">Select Ingredient...</option>';
         allIngredients.forEach(i => ingOptions += `<option value="${i.id}">${i.name}</option>`);
-                    
+                        
         const { value: formValues } = await Swal.fire({
         title: `Add Item to ${currentCategory}`,
         width: '600px',
@@ -312,10 +346,10 @@
         </select>
         <input id="swal-price" type="number" class="swal2-input" placeholder="Price ₱" style="flex: 1; margin:0;">
         </div>
-                                                    
+                                                                    
         <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
         <h4 style="text-align:left; color:#8c5b3e; margin-bottom: 10px;">Recipe Ingredients (Optional)</h4>
-                                                    
+                                                                    
         <div id="swal-recipe-rows" style="display:flex; flex-direction:column; gap:10px;">
         <div style="display: flex; gap: 10px;" class="swal-ing-row">
         <select class="swal2-input swal-ing-id" style="flex: 2; margin:0; font-size: 14px;">${ingOptions}</select>
@@ -339,7 +373,7 @@
         const name = document.getElementById('swal-name').value.trim();
         const size = document.getElementById('swal-size').value;
         const price = document.getElementById('swal-price').value;
-                                                            
+                                                                                        
         if (!name || !price) {
         Swal.showValidationMessage('Please enter the Name and Price.');
         return false;
@@ -364,7 +398,7 @@
         };
         }
         });
-                    
+                        
         if (formValues) {
         fetch('/Admin/AddFullProduct', {
         method: 'POST',
@@ -415,7 +449,7 @@
         window.addEventListener('DOMContentLoaded', async () => {
         const res = await fetch('/Admin/GetIngredients');
         allIngredients = await res.json();
-                    
+                        
         const select = document.getElementById('ingredientSelect');
         allIngredients.forEach(ing => {
         select.innerHTML += `<option value="${ing.id}" data-unit="${ing.unit}">${ing.name}</option>`;
@@ -426,14 +460,14 @@
         currentRecipeProductId = productId;
         currentRecipeItems = [];
         document.getElementById('recipeItemName').innerText = productName + " Recipe";
-                    
+                        
         const res = await fetch(`/Admin/GetRecipe?productId=${productId}`);
         const existingData = await res.json();
-                    
+                        
         existingData.forEach(item => {
         currentRecipeItems.push({ id: item.id, name: item.name, qty: item.qty, unit: item.unit });
         });
-                    
+                        
         renderRecipeList();
         document.getElementById('recipeModal').style.display = 'flex';
         }
@@ -445,19 +479,19 @@
         function addIngredientToUI() {
         const select = document.getElementById('ingredientSelect');
         const qtyInput = document.getElementById('ingredientQty');
-                    
+                        
         const id = parseInt(select.value);
         const name = select.options[select.selectedIndex]?.text;
             
         const unit = select.options[select.selectedIndex]?.getAttribute("data-unit") || "unit(s)";
         const qty = parseFloat(qtyInput.value);
-                    
+                        
         if(!id || !qty || qty <= 0) return Swal.fire('Wait!', 'Select an ingredient and enter a valid quantity.', 'warning');
         if(currentRecipeItems.find(i => i.id === id)) return Swal.fire('Oops', 'This ingredient is already in the recipe!', 'error');
 
         currentRecipeItems.push({ id: id, name: name, qty: qty, unit: unit });
         renderRecipeList();
-                    
+                        
         select.value = "";
         qtyInput.value = "";
         }
@@ -470,7 +504,7 @@
         function renderRecipeList() {
         const list = document.getElementById('recipeList');
         list.innerHTML = "";
-                    
+                        
         if(currentRecipeItems.length === 0) {
         list.innerHTML = "<li style='color: #999; font-size: 13px; text-align: center; margin-top: 20px;'>No ingredients added yet.</li>";
         return;
