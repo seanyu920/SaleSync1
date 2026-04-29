@@ -138,53 +138,54 @@ namespace SaleSync.Controllers
             return Ok();
         }
 
-        // ORDER DETAILS
+        // ==========================================
+        // ⭐ THE FIX: CLEAN ORDER DETAILS LOGIC
+        // ==========================================
         [HttpGet]
         public IActionResult GetOrderDetails(int saleId)
         {
-            var itemsSold = new List<string>();
-            var ingredientsDeducted = new List<string>();
+            var result = new { items = new List<string>(), ingredients = new List<string>() };
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
 
-                string itemsSql = @"
+                // Get the items sold
+                string itemSql = @"
                     SELECT si.quantity, p.product_name 
                     FROM sale_items si 
                     JOIN products p ON si.product_id = p.product_id 
                     WHERE si.sale_id = @id";
 
-                using (SqlCommand cmd = new SqlCommand(itemsSql, conn))
+                using (SqlCommand cmd = new SqlCommand(itemSql, conn))
                 {
                     cmd.Parameters.AddWithValue("@id", saleId);
                     using (SqlDataReader r = cmd.ExecuteReader())
                     {
-                        while (r.Read()) itemsSold.Add($"{r["quantity"]}x {r["product_name"]}");
+                        while (r.Read()) result.items.Add($"{r["quantity"]}x {r["product_name"]}");
                     }
                 }
 
+                // Get the raw ingredients that were mathematically required
                 string ingSql = @"
-                    SELECT SUM(si.quantity * pi.quantity_required) as TotalQty, ing.product_name, ing.sku, ing.unit
+                    SELECT (pi.quantity_required * si.quantity) as total_req, p.product_name, ISNULL(p.recipe_unit, p.unit) as unit
                     FROM sale_items si
                     JOIN product_ingredients pi ON si.product_id = pi.product_id
-                    JOIN products ing ON pi.ingredient_id = ing.product_id
-                    WHERE si.sale_id = @id
-                    GROUP BY ing.product_name, ing.sku, ing.unit";
+                    JOIN products p ON pi.ingredient_id = p.product_id
+                    WHERE si.sale_id = @id";
 
                 using (SqlCommand cmd = new SqlCommand(ingSql, conn))
                 {
                     cmd.Parameters.AddWithValue("@id", saleId);
                     using (SqlDataReader r = cmd.ExecuteReader())
                     {
-                        while (r.Read()) ingredientsDeducted.Add($"{r["TotalQty"]}{r["unit"]} of {r["product_name"]} (ID: {r["sku"]})");
+                        while (r.Read()) result.ingredients.Add($"{r["total_req"]} {r["unit"]} {r["product_name"]}");
                     }
                 }
             }
 
-            return Json(new { items = itemsSold, ingredients = ingredientsDeducted });
+            return Json(result);
         }
-
 
         // VOID FUNCTION
         [HttpPost]
@@ -912,6 +913,46 @@ namespace SaleSync.Controllers
                 using (SqlCommand cmd = new SqlCommand(spendSql, conn)) report.TotalInventorySpend = Convert.ToDecimal(cmd.ExecuteScalar());
             }
             return View(report);
+        }
+        // ==========================================
+        // ⭐ SHARED POS ACCESS
+        // ==========================================
+        [HttpGet]
+        public IActionResult PointOfSale()
+        {
+            var menuList = new List<SaleSync.Models.MenuItemModel>();
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                // Fetch the menu exactly like the Cashier does
+                string sql = @"
+                    SELECT p.product_id, p.product_name, c.category_name, p.selling_price
+                    FROM products p
+                    LEFT JOIN categories c ON p.category_id = c.category_id
+                    WHERE p.is_ingredient = 0 OR p.is_ingredient IS NULL";
+
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                {
+                    conn.Open();
+                    using (SqlDataReader r = cmd.ExecuteReader())
+                    {
+                        while (r.Read())
+                        {
+                            menuList.Add(new SaleSync.Models.MenuItemModel
+                            {
+                                ProductId = Convert.ToInt32(r["product_id"]),
+                                ProductName = r["product_name"].ToString(),
+                                CategoryName = r["category_name"]?.ToString() ?? "Uncategorized",
+                                Price = r["selling_price"] != DBNull.Value ? Convert.ToDecimal(r["selling_price"]) : 0
+                            });
+                        }
+                    }
+                }
+            }
+
+            // ⭐ THE HARD REDIRECT: Borrow the Cashier's POS HTML file
+            // Change "CashierMenu.cshtml" if your file is named something else!
+            return View("~/Views/Cashier/CashierMenu.cshtml", menuList);
         }
 
         public class AdminVoidRequest { public int SaleId { get; set; } public string Pass { get; set; } }

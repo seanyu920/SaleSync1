@@ -10,6 +10,8 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Playfair+Display:wght@800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="~/css/Register.css" asp-append-version="true" />
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
     <div class="register-split-container">
@@ -51,6 +53,14 @@
                     </div>
 
                     <div class="input-group">
+                        <label for="email">EMAIL ADDRESS</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">✉️</span>
+                            <input type="email" id="email" name="email" placeholder="e.g. juan@example.com" required />
+                        </div>
+                    </div>
+
+                    <div class="input-group">
                         <label for="password">PASSWORD</label>
                         <div class="input-wrapper">
                             <span class="input-icon">🔒</span>
@@ -66,15 +76,8 @@
                         </div>
                     </div>
 
-                    @if (ViewBag.Message != null)
-                    {
-                        <p style="color:#e02424; font-size:14px; font-weight:600; margin-bottom:15px; text-align:center;">
-                            @ViewBag.Message
-                        </p>
-                    }
-
                     <div class="form-actions">
-                        <button type="submit" class="btn-register">Create Account</button>
+                        <button type="submit" class="btn-register" style="margin-top: 15px;">Create Account</button>
                     </div>
                 </form>
 
@@ -87,5 +90,59 @@
         </div>
 
     </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+        // Configure the modern "Toast" style
+        const modernToast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 4000,
+        timerProgressBar: true,
+        background: '#fdfaf6',
+        color: '#4a2511',
+        iconColor: '#f46a05',
+        customClass: {
+        popup: 'modern-toast-popup'
+        },
+        didOpen: (toast) => {
+        toast.addEventListener('mouseenter', Swal.stopTimer)
+        toast.addEventListener('mouseleave', Swal.resumeTimer)
+        }
+        });
+
+        // Trigger Error Toast if ViewBag.Message exists
+        @if (ViewBag.Message != null)
+        {
+            <text>
+                modernToast.fire({
+                icon: 'error',
+                title: '@Html.Raw(ViewBag.Message)'
+                });
+            </text>
+        }
+
+        // Trigger Success Toast if TempData exists
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <text>
+                modernToast.fire({
+                icon: 'success',
+                title: '@Html.Raw(TempData["SuccessMessage"])'
+                });
+            </text>
+        }
+        });
+    </script>
+    
+    <style>
+        /* Optional: Add a subtle shadow and border radius to the toast for a cleaner look */
+        .modern-toast-popup {
+        border-radius: 12px !important;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+        border: 1px solid #dcbca5 !important;
+        }
+    </style>
 </body>
 </html>

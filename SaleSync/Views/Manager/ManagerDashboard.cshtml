@@ -1,16 +1,20 @@
 ﻿@model SaleSync.Models.CashierDashboardViewModel
 @{
     Layout = null;
-}<!DOCTYPE html><html lang="en"><head>
+    // ⭐ THE FIX: Define the homeController variable so the sidebar knows where to route!
+    string homeController = "Manager";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Manager Dashboard - SyncScale</title>
+    <title>Manager Dashboard - Cafero</title>
     <link rel="stylesheet" href="~/css/AdminDashboard.css" asp-append-version="true" />
     
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
-        /* Logic-specific styles only, no UI changes */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
         .auth-modal { background: white; padding: 25px; border-radius: 15px; width: 320px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
         .auth-modal input { width: 100%; padding: 10px; margin: 15px 0; border: 1px solid #ddd; border-radius: 8px; }
@@ -23,7 +27,8 @@
         .btn-void-mini:hover { background: #b91c1c; color: white; }
         .status-voided { background: #fee2e2; color: #b91c1c; padding: 4px 12px; border-radius: 15px; font-size: 11px; font-weight: 700; }
     </style>
-</head><body>
+</head>
+<body>
 
     <div id="voidModal" class="modal-overlay">
         <div class="auth-modal">
@@ -40,11 +45,11 @@
         <aside class="sidebar">
             <div>
                 <div class="logo-section">
-                    <div class="logo-title" style="font-size: 24px; font-weight: 800; color: #ffffff;">SyncScale</div>
-                    <div class="logo-subtitle" style="font-size: 13px; color: #dcbca5;">Coffee & Pastries</div>
+                    <div class="logo-title">Cafero</div>
+                    <div class="logo-subtitle">Coffee & Pastries</div>
                 </div>
 
-                <div class="profile-section" style="display: flex; align-items: center; gap: 15px; margin-bottom: 40px;">
+                <div class="profile-section" style="display: flex; align-items: center; gap: 15px; margin-bottom: 40px; padding: 0 10px;">
                     <div class="profile-circle" style="width: 45px; height: 45px; background: #f46a05; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #fff;">👤</div>
                     <div>
                         <h2 class="admin-name" style="font-size: 16px; font-weight: 700; color: #ffffff; margin: 0;">Manager</h2>
@@ -53,10 +58,13 @@
                 </div>
 
                 <nav class="sidebar-menu">
-                    <a asp-controller="Manager" asp-action="Dashboard" class="menu-btn active">❖ Dashboard</a>
-                    <a asp-controller="Manager" asp-action="Analytics" class="menu-btn">📊 Analytics</a>
-                    <a asp-controller="Manager" asp-action="Products" class="menu-btn">🏷️ Products</a>
-                    <a asp-controller="Manager" asp-action="Inventory" class="menu-btn">📦 Inventory</a>
+                    <a href="/@homeController/Dashboard" class="menu-btn active">❖ Dashboard</a>
+                    
+                    <a href="/@homeController/PointOfSale" class="menu-btn">🛒 Point of Sale</a>
+
+                    <a href="/Admin/Analytics" class="menu-btn">📊 Analytics</a>
+                    <a href="/Admin/Products" class="menu-btn">🏷️ Products</a>
+                    <a href="/Admin/Inventory" class="menu-btn">📦 Inventory</a>
                 </nav>
             </div>
 
@@ -107,7 +115,7 @@
                         <h2 class="widget-title">Recent Sales</h2>
                         <div class="widget-subtitle">Latest transactions from today</div>
                     </div>
-                    <a asp-controller="Manager" asp-action="Analytics" class="view-all-link">View Full Report &rarr;</a>
+                    <a href="/Admin/Analytics" class="view-all-link">View Full Report &rarr;</a>
                 </div>
 
                 <div class="table-responsive">
@@ -185,7 +193,6 @@
         let selectedSaleId = null;
 
         function updateStatus(saleId, status) {
-            // CHANGE: Replaced confirm() with Swal.fire()
             Swal.fire({
                 title: 'Confirm Update?',
                 text: `Mark Order #ORD-${saleId} as ${status}?`,
@@ -202,7 +209,7 @@
                         body: JSON.stringify({ saleId: saleId, status: status })
                     }).then(res => {
                         if(res.ok) location.reload();
-                        else Swal.fire('Error', 'Update failed.', 'error'); // CHANGE: Replaced alert()
+                        else Swal.fire('Error', 'Update failed.', 'error');
                     });
                 }
             });
@@ -222,7 +229,7 @@
         function confirmManagerVoid() {
             const passValue = document.getElementById('mgrPass').value;
             if(!passValue) {
-                Swal.fire('Required', 'Please enter your password.', 'warning'); // CHANGE: Replaced alert()
+                Swal.fire('Required', 'Please enter your password.', 'warning');
                 return;
             }
 
@@ -243,7 +250,7 @@
                     }).then(() => location.reload());
                 } else {
                     const err = await res.json();
-                    Swal.fire('Denied', err.message || "Unauthorized access.", 'error'); // CHANGE: Replaced alert()
+                    Swal.fire('Denied', err.message || "Unauthorized access.", 'error'); 
                 }
             });
         }
@@ -272,4 +279,5 @@
             }
         }
     </script>
-</body></html>
+</body>
+</html>

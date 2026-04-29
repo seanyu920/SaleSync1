@@ -137,6 +137,14 @@ namespace SaleSync.Controllers
         [HttpPost]
         public IActionResult Register(string fullName, string username, string email, string password)
         {
+            // ⭐ THE SHIELD: Prevent NULLs from reaching the database!
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(email) ||
+                string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(fullName))
+            {
+                ViewBag.Message = "System Error: One or more fields were blank. Please check your form!";
+                return View();
+            }
+
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
@@ -147,9 +155,8 @@ namespace SaleSync.Controllers
                 int exists = 0;
                 using (SqlCommand checkCmd = new SqlCommand(checkSql, conn))
                 {
-                    // These ?? checks prevent the "Parameter not supplied" crash you just saw
-                    checkCmd.Parameters.AddWithValue("@Username", username ?? (object)DBNull.Value);
-                    checkCmd.Parameters.AddWithValue("@Email", email ?? (object)DBNull.Value);
+                    checkCmd.Parameters.AddWithValue("@Username", username);
+                    checkCmd.Parameters.AddWithValue("@Email", email);
 
                     exists = (int)checkCmd.ExecuteScalar();
                 }
@@ -169,18 +176,17 @@ namespace SaleSync.Controllers
 
                 using (SqlCommand cmd = new SqlCommand(insertSql, conn))
                 {
-                    // Adding null-coalescing here too just to be extra safe
-                    cmd.Parameters.AddWithValue("@FullName", fullName ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@Username", username ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@Email", email ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@Password", password ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@FullName", fullName);
+                    cmd.Parameters.AddWithValue("@Username", username);
+                    cmd.Parameters.AddWithValue("@Email", email);
+                    cmd.Parameters.AddWithValue("@Password", password);
 
                     cmd.ExecuteNonQuery();
                 }
             }
 
             TempData["SuccessMessage"] = "Account created successfully! Please log in.";
-            return View("Views/Customer/CustomerLogIn");
+            return View("Views/Home/LogIn.cshtml");
         }
 
         // ⭐ 3. THE ASYNC LOGOUT FIX ⭐
