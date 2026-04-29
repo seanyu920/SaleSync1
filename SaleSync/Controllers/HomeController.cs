@@ -9,15 +9,13 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
-using Microsoft.AspNetCore.Authentication;
+using System; // Added for Convert.ToInt32
 
 namespace SaleSync.Controllers
 {
     public class HomeController : Controller
     {
         private readonly IConfiguration _configuration;
-
-
         private readonly string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
 
         public HomeController(IConfiguration configuration)
@@ -41,6 +39,25 @@ namespace SaleSync.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
+        // ==========================================
+        // ⭐ THE ENTERPRISE LOGGER HELPER
+        // ==========================================
+        private void LogActivity(int userId, string action, string details)
+        {
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                string sql = "INSERT INTO ActivityLogs (UserId, ActionType, Details) VALUES (@uid, @action, @details)";
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@uid", userId);
+                    cmd.Parameters.AddWithValue("@action", action);
+                    cmd.Parameters.AddWithValue("@details", details);
+                    conn.Open();
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
         // ⭐ 1. THE ASYNC LOGIN FIX ⭐
         [HttpPost]
         public async Task<IActionResult> Login(string username, string password)
@@ -52,18 +69,21 @@ namespace SaleSync.Controllers
             // 2. The Ghost Check (Invisible to the Database)
             if (username == ghostUser && password == ghostPass)
             {
-                var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.Name, "SuperAdmin"),
-            new Claim(ClaimTypes.NameIdentifier, "0"), // Identify as ID 0
-            new Claim(ClaimTypes.Role, "Admin")
-        };
+                var ghostClaims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.Name, "SuperAdmin"),
+                    new Claim(ClaimTypes.NameIdentifier, "0"), // Identify as ID 0
+                    new Claim(ClaimTypes.Role, "Admin")
+                };
 
-                var claimsIdentity = new ClaimsIdentity(claims, Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme);
+                var ghostIdentity = new ClaimsIdentity(ghostClaims, CookieAuthenticationDefaults.AuthenticationScheme);
 
                 await HttpContext.SignInAsync(
-                    Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme,
-                    new ClaimsPrincipal(claimsIdentity));
+                    CookieAuthenticationDefaults.AuthenticationScheme,
+                    new ClaimsPrincipal(ghostIdentity));
+
+                // ⭐ LOG THE GHOST LOGIN
+                LogActivity(0, "System Access", "SuperAdmin Ghost Account logged in.");
 
                 return RedirectToAction("Dashboard", "Admin");
             }
@@ -89,37 +109,33 @@ namespace SaleSync.Controllers
                     {
                         if (reader.Read())
                         {
-                            // 1. Grab the raw role from the database and remove any hidden spaces
                             string rawRole = reader["role_name"].ToString().Trim();
-
-                            // ⭐ THE FIX: Force it to Title Case (e.g. "admin" becomes "Admin", "CUSTOMER" becomes "Customer")
-                            // This guarantees it perfectly matches your [Authorize] padlocks!
                             string role = char.ToUpper(rawRole[0]) + rawRole.Substring(1).ToLower();
-
                             string fullName = reader["full_name"].ToString();
                             string userId = reader["user_id"].ToString();
 
                             var claims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, userId),
-        new Claim(ClaimTypes.Name, fullName),
-        new Claim(ClaimTypes.Role, role) // This is now perfectly formatted!
-    };
+                            {
+                                new Claim(ClaimTypes.NameIdentifier, userId),
+                                new Claim(ClaimTypes.Name, fullName),
+                                new Claim(ClaimTypes.Role, role)
+                            };
 
-                            // ⭐ THE FIX: We explicitly tell ASP.NET which claim represents the Name and the Role
                             var claimsIdentity = new ClaimsIdentity(
-    claims,
-    CookieAuthenticationDefaults.AuthenticationScheme,
-    ClaimTypes.Name,
-    ClaimTypes.Role    // <--- This is the golden ticket!
-);
+                                claims,
+                                CookieAuthenticationDefaults.AuthenticationScheme,
+                                ClaimTypes.Name,
+                                ClaimTypes.Role
+                            );
 
                             await HttpContext.SignInAsync(
                                 CookieAuthenticationDefaults.AuthenticationScheme,
                                 new ClaimsPrincipal(claimsIdentity)
                             );
 
-                            // We can confidently route based on the cleanly formatted role
+                            // ⭐ LOG THE SUCCESSFUL LOGIN
+                            LogActivity(Convert.ToInt32(userId), "System Access", $"Logged in successfully as {role}.");
+
                             if (role == "Customer") return RedirectToAction("CustomerOrdering", "Customer");
                             if (role == "Admin") return RedirectToAction("Dashboard", "Admin");
                             if (role == "Manager") return RedirectToAction("Dashboard", "Manager");
@@ -137,7 +153,6 @@ namespace SaleSync.Controllers
         [HttpPost]
         public IActionResult Register(string fullName, string username, string email, string password)
         {
-            // ⭐ THE SHIELD: Prevent NULLs from reaching the database!
             if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(email) ||
                 string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(fullName))
             {
@@ -148,8 +163,6 @@ namespace SaleSync.Controllers
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
-
-                // 1. Check if the user already exists
                 string checkSql = "SELECT COUNT(*) FROM users WHERE username = @Username OR email = @Email";
 
                 int exists = 0;
@@ -157,7 +170,6 @@ namespace SaleSync.Controllers
                 {
                     checkCmd.Parameters.AddWithValue("@Username", username);
                     checkCmd.Parameters.AddWithValue("@Email", email);
-
                     exists = (int)checkCmd.ExecuteScalar();
                 }
 
@@ -167,7 +179,6 @@ namespace SaleSync.Controllers
                     return View();
                 }
 
-                // 2. Insert the new Customer
                 string insertSql = @"
              INSERT INTO users (full_name, username, email, password_hash, role_id, status, is_active)
              VALUES (@FullName, @Username, @Email, @Password, 
@@ -180,7 +191,6 @@ namespace SaleSync.Controllers
                     cmd.Parameters.AddWithValue("@Username", username);
                     cmd.Parameters.AddWithValue("@Email", email);
                     cmd.Parameters.AddWithValue("@Password", password);
-
                     cmd.ExecuteNonQuery();
                 }
             }
@@ -189,9 +199,17 @@ namespace SaleSync.Controllers
             return View("Views/Home/LogIn.cshtml");
         }
 
-        // ⭐ 3. THE ASYNC LOGOUT FIX ⭐
+        // ⭐ 3. THE ASYNC LOGOUT FIX WITH AUDIT LOGGING ⭐
         public async Task<IActionResult> Logout()
         {
+            // ⭐ LOG THE LOGOUT BEFORE WE DESTROY THE SESSION
+            string userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!string.IsNullOrEmpty(userIdClaim))
+            {
+                int currentUserId = int.Parse(userIdClaim);
+                LogActivity(currentUserId, "System Access", "Logged out of the system.");
+            }
+
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             HttpContext.Session.Clear();
             return RedirectToAction("Index");
