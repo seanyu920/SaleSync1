@@ -1,4 +1,5 @@
-﻿@{
+﻿@model List<SaleSync.Models.ActivityLog>
+@{
     Layout = null;
     string homeController = User.IsInRole("Manager") ? "Manager" : "Admin";
 }
@@ -9,6 +10,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Activity Log - Cafero</title>
     <link rel="stylesheet" href="~/css/ActivityLog.css" asp-append-version="true" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
     <div class="dashboard-container">
@@ -61,22 +63,29 @@
 
             <div class="log-container">
                 <div class="filter-bar">
-                    <input type="date" class="filter-input" title="Filter by Date">
-                    <select class="filter-input" title="Filter by User">
-                        <option value="">All Users</option>
+                    <input type="date" id="filterDate" class="filter-input" title="Filter by Date">
+                    
+                    <select id="filterUser" class="filter-input" title="Filter by User Role">
+                        <option value="">All Roles</option>
                         <option value="admin">Admin</option>
-                        <option value="Sean">Sean</option>
+                        <option value="manager">Manager</option>
+                        <option value="cashier">Cashier</option>
                     </select>
-                    <select class="filter-input" title="Filter by Action Type">
+                    
+                    <select id="filterAction" class="filter-input" title="Filter by Action Type">
                         <option value="">All Actions</option>
-                        <option value="login">System Access</option>
-                        <option value="void">Order Voided</option>
-                        <option value="inventory">Inventory Update</option>
+                        <option value="access">System Access</option>
+                        <option value="voided">Order Voided</option>
+                        <option value="inventory">Inventory Actions</option>
+                        <option value="product">Product Actions</option>
+                        <option value="account">Account Actions</option>
                     </select>
-                    <button class="btn-filter">▼ Apply Filters</button>
+                    
+                    <button class="btn-filter" onclick="applyFilters()">▼ Apply Filters</button>
+                    <button class="btn-filter" style="background: #fdfaf6; color: #8c5b3e; border: 1px solid #dcbca5;" onclick="clearFilters()">✕ Clear</button>
                 </div>
 
-                <table class="activity-table">
+                <table class="activity-table" id="logTable">
                     <thead>
                         <tr>
                             <th>Timestamp</th>
@@ -86,34 +95,155 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td style="font-weight: bold;">Today, 08:15 AM</td>
-                            <td><strong>Admin</strong></td>
-                            <td><span class="badge badge-update">Inventory Update</span></td>
-                            <td>Updated stock for <strong>Chocolate Syrup</strong> from 10 to 50 bottles.</td>
-                        </tr>
-                        <tr>
-                            <td style="font-weight: bold;">Yesterday, 05:25 PM</td>
-                            <td><strong>Sean</strong> (Cashier)</td>
-                            <td><span class="badge badge-void">Order Voided</span></td>
-                            <td>Voided Order <strong>#ORD-7012</strong> (₱147.00). Reason: Customer canceled.</td>
-                        </tr>
-                        <tr>
-                            <td style="font-weight: bold;">Yesterday, 11:00 AM</td>
-                            <td><strong>cashier1</strong> (Cashier)</td>
-                            <td><span class="badge badge-access">System Access</span></td>
-                            <td>Logged into the POS system successfully.</td>
-                        </tr>
-                        <tr>
-                            <td style="font-weight: bold;">April 24, 02:30 PM</td>
-                            <td><strong>Admin</strong></td>
-                            <td><span class="badge badge-edit">Product Edit</span></td>
-                            <td>Changed price of <strong>Salted Caramel - Small</strong> from ₱140 to ₱147.</td>
-                        </tr>
+                        @if (Model != null && Model.Any())
+                        {
+                            @foreach (var log in Model)
+                            {
+                                <tr class="log-row">
+                                    <td style="font-weight: bold;" class="log-date">@log.Timestamp.ToString("MMM dd, yyyy | hh:mm tt")</td>
+                                    <td class="log-user"><strong>@log.Username</strong> <span style="font-size: 11px; color: #888;">(@log.Role)</span></td>
+                                    <td class="log-action">
+                                        @{
+                                            string colorClass = "badge-access";
+                                            if (log.ActionType.Contains("Void") || log.ActionType.Contains("Deactivate") || log.ActionType.Contains("Delete"))
+                                                colorClass = "badge-void";
+                                            else if (log.ActionType.Contains("Edit") || log.ActionType.Contains("Update") || log.ActionType.Contains("Create"))
+                                                colorClass = "badge-update";
+                                        }
+                                        <span class="badge @colorClass">@log.ActionType</span>
+                                    </td>
+                                    <td>
+                                        <div style="color: #4a2511;">@log.Details</div>
+                                        
+                                        @if (!string.IsNullOrWhiteSpace(log.OldValues) || !string.IsNullOrWhiteSpace(log.NewValues))
+                                        {
+                                            <button class="btn-mini"
+                                                    style="width: auto; padding: 4px 10px; margin-top: 8px; background: #fdfaf6; border: 1px solid #dcbca5; color: #8c5b3e; border-radius: 4px; font-size: 11px; cursor: pointer;"
+                                                    data-old="@log.OldValues"
+                                                    data-new="@log.NewValues"
+                                                    onclick="viewChanges(this)">
+                                                🔍 View Data Changes
+                                            </button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr id="emptyRow">
+                                <td colspan="4" style="text-align: center; padding: 40px; color: #b58361;">No activity recorded yet. Start making changes to see them here!</td>
+                            </tr>
+                        }
                     </tbody>
                 </table>
             </div>
         </main>
     </div>
+
+    <script>
+        // ⭐ THE NEW FILTERING LOGIC ⭐
+        function applyFilters() {
+        const dateValue = document.getElementById('filterDate').value; // Format: YYYY-MM-DD
+        const userValue = document.getElementById('filterUser').value.toLowerCase();
+        const actionValue = document.getElementById('filterAction').value.toLowerCase();
+
+        const rows = document.querySelectorAll('.log-row');
+
+        rows.forEach(row => {
+        const dateText = row.querySelector('.log-date').innerText; // "Apr 29, 2026 | 03:07 PM"
+        const userText = row.querySelector('.log-user').innerText.toLowerCase();
+        const actionText = row.querySelector('.log-action').innerText.toLowerCase();
+
+        let showRow = true;
+
+        // 1. Check Date Match
+        if (dateValue) {
+        // Extract just the "Apr 29, 2026" part and convert to Date object
+        const datePart = dateText.split('|')[0].trim();
+        const d = new Date(datePart);
+                    
+        // Format back to YYYY-MM-DD to compare safely without timezone issues
+        const localFormatted = d.getFullYear() + '-' +
+        String(d.getMonth() + 1).padStart(2, '0') + '-' +
+        String(d.getDate()).padStart(2, '0');
+                    
+        if (localFormatted !== dateValue) showRow = false;
+        }
+
+        // 2. Check User Role Match
+        if (userValue && !userText.includes(userValue)) {
+        showRow = false;
+        }
+
+        // 3. Check Action Match
+        if (actionValue && !actionText.includes(actionValue)) {
+        showRow = false;
+        }
+
+        // Toggle the row visibility
+        row.style.display = showRow ? '' : 'none';
+        });
+        }
+
+        // Helper to quickly clear all filters
+        function clearFilters() {
+        document.getElementById('filterDate').value = '';
+        document.getElementById('filterUser').value = '';
+        document.getElementById('filterAction').value = '';
+        applyFilters(); // Re-run to show all rows
+        }
+
+        // The JSON Data Difference Table Viewer
+        function viewChanges(btn) {
+        const oldStr = btn.getAttribute('data-old');
+        const newStr = btn.getAttribute('data-new');
+
+        let oldObj = oldStr ? JSON.parse(oldStr) : {};
+        let newObj = newStr ? JSON.parse(newStr) : {};
+
+        let allKeys = new Set([...Object.keys(oldObj), ...Object.keys(newObj)]);
+
+        let html = '<table style="width:100%; text-align:left; border-collapse: collapse; font-size: 13px; margin-top: 10px;">';
+        html += '<tr style="border-bottom: 2px solid #dcbca5;"><th style="padding: 8px; color: #8c5b3e;">Field / Item</th><th style="padding: 8px; color: #8c5b3e;">Old Value</th><th style="padding: 8px; color: #8c5b3e;">New Value</th></tr>';
+
+        function formatData(val) {
+        if (val === undefined || val === null) return '<i>None</i>';
+        if (typeof val === 'object') {
+        return `<pre style="margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: monospace; font-size: 11px; background: transparent; border: none; padding: 0;">${JSON.stringify(val, null, 2)}</pre>`;
+        }
+        return val;
+        }
+
+        allKeys.forEach(key => {
+        let oldRaw = oldObj[key];
+        let newRaw = newObj[key];
+
+        let hasChanged = JSON.stringify(oldRaw) !== JSON.stringify(newRaw);
+        let bg = hasChanged ? '#fff8f0' : 'transparent';
+                
+        let oldDisplay = formatData(oldRaw);
+        let newDisplay = formatData(newRaw);
+
+        let textDecor = (hasChanged && typeof oldRaw !== 'object') ? 'line-through' : 'none';
+        let textWeight = (hasChanged && typeof newRaw !== 'object') ? 'bold' : 'normal';
+
+        html += `<tr style="border-bottom: 1px solid #eee; background: ${bg}; vertical-align: top;">
+        <td style="padding: 10px; font-weight:bold; color:#4a2511;">${key}</td>
+        <td style="padding: 10px; color: ${hasChanged ? '#b91c1c' : '#666'}; text-decoration: ${textDecor}">${oldDisplay}</td>
+        <td style="padding: 10px; color: ${hasChanged ? '#065f46' : '#666'}; font-weight: ${textWeight}">${newDisplay}</td>
+        </tr>`;
+        });
+            
+        html += '</table>';
+
+        Swal.fire({
+        title: 'Data Audit',
+        html: html,
+        width: '700px',
+        confirmButtonColor: '#f46a05'
+        });
+        }
+    </script>
 </body>
 </html>
