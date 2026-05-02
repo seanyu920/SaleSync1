@@ -12,7 +12,7 @@ namespace SaleSync.Controllers
     public class CustomerController : Controller
     {
         // ⭐ 1. UPDATED TO YOUR ACTUAL PC DATABASE ⭐
-        private readonly string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
+        private readonly string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
 
         // ⭐ 2. RENAMED TO MATCH YOUR HTML FILE ⭐
         [HttpGet]
