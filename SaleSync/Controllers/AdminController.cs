@@ -16,7 +16,7 @@ namespace SaleSync.Controllers
     public class AdminController : Controller
     {
         private readonly IConfiguration _configuration;
-        private readonly string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
+        private readonly string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
 
         public AdminController(IConfiguration configuration)
         {
@@ -276,6 +276,7 @@ namespace SaleSync.Controllers
             return View(logs);
         }
 
+        // ⭐ UPDATE: Added Archive Filter to Products
         [HttpGet]
         public IActionResult Products()
         {
@@ -287,7 +288,8 @@ namespace SaleSync.Controllers
                     SELECT p.product_id, p.product_name, c.category_name, p.selling_price
                     FROM products p
                     LEFT JOIN categories c ON p.category_id = c.category_id
-                    WHERE p.is_ingredient = 0 OR p.is_ingredient IS NULL";
+                    WHERE (p.is_ingredient = 0 OR p.is_ingredient IS NULL)
+                    AND p.is_archived = 0";
 
                 using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
@@ -495,42 +497,33 @@ namespace SaleSync.Controllers
             return RedirectToAction("Inventory");
         }
 
+        // ⭐ UPDATE: Changed from Hard Delete to Soft Delete (Archive)
         [HttpPost]
-        public IActionResult DeleteInventory(int ProductId)
+        public IActionResult DeleteMenuItem([FromBody] int productId)
         {
             int currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
-                using (SqlTransaction transaction = conn.BeginTransaction())
+                try
                 {
-                    try
+                    // Instead of deleting, we flip the archive switch
+                    string archiveSql = "UPDATE products SET is_archived = 1 WHERE product_id = @id";
+                    using (SqlCommand cmd = new SqlCommand(archiveSql, conn))
                     {
-                        string deleteFromRecipes = "DELETE FROM product_ingredients WHERE ingredient_id = @id";
-                        using (SqlCommand cmdRecipe = new SqlCommand(deleteFromRecipes, conn, transaction))
-                        {
-                            cmdRecipe.Parameters.AddWithValue("@id", ProductId);
-                            cmdRecipe.ExecuteNonQuery();
-                        }
-
-                        string deleteProduct = "DELETE FROM products WHERE product_id = @id";
-                        using (SqlCommand cmdProduct = new SqlCommand(deleteProduct, conn, transaction))
-                        {
-                            cmdProduct.Parameters.AddWithValue("@id", ProductId);
-                            cmdProduct.ExecuteNonQuery();
-                        }
-
-                        transaction.Commit();
-                        LogActivity(currentUserId, "Inventory Deleted", $"Deleted Product ID: {ProductId}");
+                        cmd.Parameters.AddWithValue("@id", productId);
+                        cmd.ExecuteNonQuery();
                     }
-                    catch (SqlException)
-                    {
-                        transaction.Rollback();
-                        TempData["ErrorMessage"] = "Cannot delete item: It is already linked to past sales records.";
-                    }
+
+                    LogActivity(currentUserId, "Product Archived", $"Archived Product ID: {productId}");
+                    return Ok();
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest(new { message = $"Failed to archive item: {ex.Message}" });
                 }
             }
-            return RedirectToAction("Inventory");
         }
 
         [Authorize(Roles = "Admin")]
@@ -784,7 +777,6 @@ namespace SaleSync.Controllers
             return Json(list);
         }
 
-        // ⭐ UPDATED SAVE RECIPE (Fixed the decimal -> double issue)
         [HttpPost]
         public IActionResult SaveRecipe([FromBody] RecipeSaveRequest request)
         {
@@ -845,7 +837,6 @@ namespace SaleSync.Controllers
                             if (nameResult != null) ingName = nameResult.ToString();
                         }
 
-                        // ⭐ THE FIX: Converting the item.Quantity to a double before assigning it to the dictionary
                         newRecipe[ingName] = Convert.ToDouble(item.Quantity);
                     }
                 }
@@ -918,45 +909,6 @@ namespace SaleSync.Controllers
                     {
                         transaction.Rollback();
                         return BadRequest("Failed to save comprehensive item.");
-                    }
-                }
-            }
-        }
-
-        [HttpPost]
-        public IActionResult DeleteMenuItem([FromBody] int productId)
-        {
-            int currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
-
-            using (SqlConnection conn = new SqlConnection(connectionString))
-            {
-                conn.Open();
-                using (SqlTransaction transaction = conn.BeginTransaction())
-                {
-                    try
-                    {
-                        string deleteRecipeSql = "DELETE FROM product_ingredients WHERE product_id = @id";
-                        using (SqlCommand recipeCmd = new SqlCommand(deleteRecipeSql, conn, transaction))
-                        {
-                            recipeCmd.Parameters.AddWithValue("@id", productId);
-                            recipeCmd.ExecuteNonQuery();
-                        }
-
-                        string deleteProductSql = "DELETE FROM products WHERE product_id = @id";
-                        using (SqlCommand productCmd = new SqlCommand(deleteProductSql, conn, transaction))
-                        {
-                            productCmd.Parameters.AddWithValue("@id", productId);
-                            productCmd.ExecuteNonQuery();
-                        }
-
-                        transaction.Commit();
-                        LogActivity(currentUserId, "Product Deleted", $"Deleted Product ID: {productId}");
-                        return Ok();
-                    }
-                    catch (SqlException)
-                    {
-                        transaction.Rollback();
-                        return BadRequest("Cannot delete item used in sales.");
                     }
                 }
             }
@@ -1047,6 +999,7 @@ namespace SaleSync.Controllers
             return View(report);
         }
 
+        // ⭐ UPDATE: Added Archive Filter to POS View
         [HttpGet]
         public IActionResult PointOfSale()
         {
@@ -1058,7 +1011,8 @@ namespace SaleSync.Controllers
                     SELECT p.product_id, p.product_name, c.category_name, p.selling_price
                     FROM products p
                     LEFT JOIN categories c ON p.category_id = c.category_id
-                    WHERE p.is_ingredient = 0 OR p.is_ingredient IS NULL";
+                    WHERE (p.is_ingredient = 0 OR p.is_ingredient IS NULL)
+                    AND p.is_archived = 0";
 
                 using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
@@ -1080,7 +1034,7 @@ namespace SaleSync.Controllers
             }
             return View("~/Views/Cashier/CashierMenu.cshtml", menuList);
         }
-        // ⭐ ADD THIS NEW CLASS AND METHOD NEAR THE BOTTOM OF ADMINCONTROLLER
+
         public class UpdatePriceModel { public int ProductId { get; set; } public decimal NewPrice { get; set; } }
 
         [HttpPost]
@@ -1092,7 +1046,6 @@ namespace SaleSync.Controllers
             {
                 conn.Open();
 
-                // 1. Fetch old data for our JSON Audit Log
                 var oldData = new Dictionary<string, object>();
                 string getOldSql = "SELECT product_name, selling_price FROM products WHERE product_id = @id";
                 using (SqlCommand cmd = new SqlCommand(getOldSql, conn))
@@ -1108,7 +1061,6 @@ namespace SaleSync.Controllers
                     }
                 }
 
-                // 2. Update the price in the database
                 string sql = "UPDATE products SET selling_price = @price WHERE product_id = @id";
                 using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
@@ -1117,7 +1069,6 @@ namespace SaleSync.Controllers
                     cmd.ExecuteNonQuery();
                 }
 
-                // 3. Log the change so the owner can see it in the Activity Log
                 var newData = new Dictionary<string, object> {
                     { "ProductName", oldData["ProductName"] },
                     { "Price", request.NewPrice }
@@ -1126,7 +1077,72 @@ namespace SaleSync.Controllers
             }
             return Ok();
         }
+        // ==========================================
+        // ⭐ THE ARCHIVE ROOM
+        // ==========================================
+        [HttpGet]
+        public IActionResult ArchivedProducts()
+        {
+            var menuList = new List<MenuItemModel>();
 
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                // Fetch ONLY items where is_archived = 1
+                string sql = @"
+                    SELECT p.product_id, p.product_name, c.category_name, p.selling_price
+                    FROM products p
+                    LEFT JOIN categories c ON p.category_id = c.category_id
+                    WHERE (p.is_ingredient = 0 OR p.is_ingredient IS NULL)
+                    AND p.is_archived = 1";
+
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                {
+                    conn.Open();
+                    using (SqlDataReader r = cmd.ExecuteReader())
+                    {
+                        while (r.Read())
+                        {
+                            menuList.Add(new MenuItemModel
+                            {
+                                ProductId = Convert.ToInt32(r["product_id"]),
+                                ProductName = r["product_name"].ToString(),
+                                CategoryName = r["category_name"]?.ToString() ?? "Uncategorized",
+                                Price = r["selling_price"] != DBNull.Value ? Convert.ToDecimal(r["selling_price"]) : 0
+                            });
+                        }
+                    }
+                }
+            }
+            return View(menuList);
+        }
+
+        [HttpPost]
+        public IActionResult RestoreMenuItem([FromBody] int productId)
+        {
+            int currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+                try
+                {
+                    // Flip the switch back to 0 (Active)
+                    string restoreSql = "UPDATE products SET is_archived = 0 WHERE product_id = @id";
+                    using (SqlCommand cmd = new SqlCommand(restoreSql, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@id", productId);
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    LogActivity(currentUserId, "Product Restored", $"Restored Product ID: {productId} from Archive");
+                    return Ok();
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest(new { message = $"Failed to restore item: {ex.Message}" });
+                }
+            }
+        }
         public class AdminVoidRequest { public int SaleId { get; set; } public string Pass { get; set; } }
         public class StatusUpdateModel { public int SaleId { get; set; } public string Status { get; set; } }
     }

@@ -221,7 +221,19 @@
                                             <td>@item.ItemID</td>
                                             <td>₱@item.PurchasePrice.ToString("0.00")</td>
                                             
-                                            <td>@item.Quantity.ToString("0.##") <span style="color: #8c5b3e; font-size: 12px; font-weight: bold;">@item.Unit</span></td>
+                                            <!-- ⭐ THE DUAL-UNIT DISPLAY BLOCK ⭐ -->
+                                            <td>
+                                                <div style="font-weight: 700; color: #4a2511; font-size: 14px;">
+                                                    @item.Quantity.ToString("0.##") @item.Unit
+                                                </div>
+                                                
+                                                @if (!string.IsNullOrEmpty(item.RecipeUnit) && item.ConversionFactor > 1)
+                                                {
+                                                    <div style="font-size: 11px; color: #8c5b3e; margin-top: 2px; font-weight: 500;">
+                                                        (approx. @((item.Quantity * item.ConversionFactor).ToString("N0")) @item.RecipeUnit left)
+                                                    </div>
+                                                }
+                                            </td>
                                             
                                             <td>
                                                 @{
@@ -284,7 +296,7 @@
         function calculateConversion() {
         const bulk = bulkUnitSelect.value;
         const recipe = recipeUnitInput.value.toLowerCase().trim();
-                
+            
         const key = `${bulk}_${recipe}`;
 
         if (standardConversions[key]) {

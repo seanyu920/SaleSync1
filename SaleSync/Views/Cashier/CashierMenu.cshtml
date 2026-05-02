@@ -294,13 +294,23 @@
         }
 
         const sizedCategories = ["COFFEE", "MILKTEA", "FRUIT TEA"];
-        let cart = [], selectedReceiptIndex = -1, activeItemName = "", currentCategory = "";
+        
+        // ⭐ Initialize the cart from memory if it exists
+        let cart = JSON.parse(localStorage.getItem('syncScaleCart')) || [];
+        
+        // ⭐ THE ARRAY TRACKER (Multi-Select)
+        let selectedReceiptIndices = [], activeItemName = "", currentCategory = "";
+        
         let finalPaymentMethod = "Cash";
         let currentCartTotal = 0;
         let pendingAmountPaid = 0;
         
         let currentOrderType = "Dine In";
         let currentCustomerName = "";
+
+        document.addEventListener("DOMContentLoaded", () => {
+        renderReceipt();
+        });
 
         function updateOrderType() {
         currentOrderType = document.querySelector('input[name="orderType"]:checked').value;
@@ -380,38 +390,112 @@
         let qty = parseInt(document.getElementById("qty").value);
         let dbKey = (sizedCategories.includes(currentCategory) && size !== "Regular") ? `${activeItemName} - ${size}` : activeItemName;
         let price = basePrices[dbKey] || basePrices[activeItemName] || 0;
+                
         cart.push({ name: activeItemName, dbKey: dbKey, size: size, qty: qty, price: price });
+                
+        localStorage.setItem('syncScaleCart', JSON.stringify(cart));
+                
         Toastify({ text: `📦 ${qty}x ${activeItemName} added!`, duration: 1500, style: { background: "#f46a05" } }).showToast();
         renderReceipt();
         closeSelectionModal();
         }
 
+        // ⭐ THE NEW INLINE QTY EDITOR
+        function updateCartItemQty(index, change) {
+        cart[index].qty += change;
+            
+        // If it drops to 0 or below, remove it entirely
+        if (cart[index].qty <= 0) {
+        cart.splice(index, 1);
+        selectedReceiptIndices = []; // Reset selection so we don't accidentally delete the wrong item next
+        }
+            
+        localStorage.setItem('syncScaleCart', JSON.stringify(cart));
+        renderReceipt();
+        }
+
         function renderReceipt() {
         const receipt = document.getElementById("receiptList");
-        if (cart.length === 0) { receipt.innerHTML = `<div class="empty-msg">No items in order</div>`; document.getElementById("total").textContent = "₱0.00"; currentCartTotal = 0; return; }
+        const deleteBtn = document.querySelector('.delete-btn');
+        
+        if (selectedReceiptIndices.length > 1) {
+        deleteBtn.innerText = `Remove Items (${selectedReceiptIndices.length})`;
+        } else {
+        deleteBtn.innerText = "Remove Item";
+        }
+
+        if (cart.length === 0) {
+        receipt.innerHTML = `<div class="empty-msg">No items in order</div>`;
+        document.getElementById("total").textContent = "₱0.00";
+        currentCartTotal = 0;
+        return;
+        }
+        
         let total = 0;
         receipt.innerHTML = cart.map((item, index) => {
         let sub = item.qty * item.price; total += sub;
-        return `<div class="order-item-row ${selectedReceiptIndex === index ? 'selected-row' : ''}" onclick="selectReceiptItem(${index})">
-        <div><div style="font-weight:700;">${item.qty}x ${item.name}</div><div style="font-size:11px;">${item.size} • ₱${item.price.toFixed(2)}</div></div>
-        <div style="font-weight:800; color:#f46a05;">₱${sub.toFixed(2)}</div></div>`;
+            
+        // Highlights the row if its index is in our array
+        let isSelected = selectedReceiptIndices.includes(index);
+            
+        // ⭐ UPDATED ROW HTML WITH + AND - BUTTONS
+        return `<div class="order-item-row ${isSelected ? 'selected-row' : ''}" onclick="selectReceiptItem(${index})" style="display: flex; align-items: center;">
+                    
+        <div style="flex-grow: 1;">
+        <div style="font-weight:700;">${item.name}</div>
+        <div style="font-size:11px; color: #555;">${item.size} • ₱${item.price.toFixed(2)}/ea</div>
+        </div>
+
+        <!-- The New QTY Buttons (event.stopPropagation stops the row from highlighting when clicking buttons) -->
+        <div style="display: flex; align-items: center; border: 1px solid #eaddd3; border-radius: 4px; background: #fff; margin-right: 12px;" onclick="event.stopPropagation()">
+        <button type="button" onclick="updateCartItemQty(${index}, -1)" style="border: none; background: transparent; padding: 4px 10px; cursor: pointer; color: #8c5b3e; font-weight: bold; font-size: 14px;">-</button>
+        <span style="font-size: 13px; font-weight: 700; min-width: 20px; text-align: center;">${item.qty}</span>
+        <button type="button" onclick="updateCartItemQty(${index}, 1)" style="border: none; background: transparent; padding: 4px 10px; cursor: pointer; color: #8c5b3e; font-weight: bold; font-size: 14px;">+</button>
+        </div>
+
+        <div style="font-weight:800; color:#f46a05; text-align: right; min-width: 60px;">₱${sub.toFixed(2)}</div>
+                    
+        </div>`;
         }).join('');
+        
         document.getElementById("total").textContent = "₱" + total.toFixed(2);
-        currentCartTotal = total; calculateChange();
+        currentCartTotal = total;
+        calculateChange();
         }
 
-        function selectReceiptItem(index) { selectedReceiptIndex = (selectedReceiptIndex === index) ? -1 : index; renderReceipt(); }
-        function removeSelectedItem() { if (selectedReceiptIndex === -1) return; cart.splice(selectedReceiptIndex, 1); selectedReceiptIndex = -1; renderReceipt(); }
+        // ⭐ THE TOGGLE LOGIC (Multi-Select)
+        function selectReceiptItem(index) {
+        const position = selectedReceiptIndices.indexOf(index);
+        if (position > -1) {
+        selectedReceiptIndices.splice(position, 1); // Unselect
+        } else {
+        selectedReceiptIndices.push(index); // Select
+        }
+        renderReceipt();
+        }
+        
+        // ⭐ THE BATCH REMOVE LOGIC
+        function removeSelectedItem() {
+        if (selectedReceiptIndices.length === 0) return;
+        
+        // Keep items NOT selected
+        cart = cart.filter((item, index) => !selectedReceiptIndices.includes(index));
+        
+        selectedReceiptIndices = []; // Reset selection
+        
+        localStorage.setItem('syncScaleCart', JSON.stringify(cart));
+        renderReceipt();
+        }
 
         function checkoutOrder() {
         if (cart.length === 0) return;
         let amountPaid = (finalPaymentMethod === "Cash") ? parseFloat(document.getElementById('amountTendered').value) || 0 : currentCartTotal;
-            
+                
         if (finalPaymentMethod === "Cash" && amountPaid < currentCartTotal) {
         Swal.fire("Insufficient Cash", "Please enter a valid amount tendered.", "warning");
         return;
         }
-            
+                
         pendingAmountPaid = amountPaid;
         currentCustomerName = document.getElementById("customerName").value.trim();
         generateReceiptUI(amountPaid);
@@ -436,7 +520,7 @@
 
         const tbody = document.getElementById("receiptItemsTable");
         tbody.innerHTML = `<tr><th style="text-align:left; padding-bottom:5px;">Qty</th><th style="text-align:left; padding-bottom:5px;">Item</th><th style="text-align:right; padding-bottom:5px;">Total</th></tr>`;
-            
+                
         cart.forEach(item => {
         let sub = item.qty * item.price;
         tbody.innerHTML += `<tr><td style="vertical-align:top; width:40px;">${item.qty}x</td><td style="padding-bottom:5px;">${item.name} <br><small style="font-size:10px; color:#555;">${item.size}</small></td><td style="text-align:right; vertical-align:top;">₱${sub.toFixed(2)}</td></tr>`;
@@ -451,7 +535,7 @@
         document.getElementById("receiptTotal").innerText = "₱" + total.toFixed(2);
         document.getElementById("receiptPayMethod").innerText = finalPaymentMethod;
         document.getElementById("receiptTendered").innerText = "₱" + amountPaid.toFixed(2);
-            
+                
         let change = amountPaid - total;
         document.getElementById("receiptChange").innerText = "₱" + (change > 0 ? change.toFixed(2) : "0.00");
 
@@ -462,11 +546,9 @@
         document.getElementById("receiptModal").style.display = "none";
         }
 
-        // ⭐ UPDATED SMART FINALIZE FUNCTION
         async function finalizeOrder(shouldPrint) {
         const payload = cart.map(item => ({ productId: productIdMap[item.dbKey] || productIdMap[item.name] || 0, quantity: item.qty, price: item.price }));
-            
-        // Disable buttons to prevent double-clicks
+                
         const buttons = document.querySelectorAll('.receipt-modal-actions button');
         buttons.forEach(btn => {
         btn.disabled = true;
@@ -485,23 +567,23 @@
         customerName: currentCustomerName
         })
         });
-                
+                        
         if (response.ok) {
-        // Trigger print only if they clicked the Print button
-        if (shouldPrint) {
-        window.print();
-        }
-                    
+        if (shouldPrint) { window.print(); }
+                            
         document.getElementById("receiptModal").style.display = "none";
         Swal.fire("Order Completed!", "The system is ready for the next customer.", "success");
-                    
+                            
         document.querySelector('input[name="orderType"][value="Dine In"]').checked = true;
         currentOrderType = "Dine In";
-                    
+                            
         document.getElementById("customerName").value = "";
         currentCustomerName = "";
-                    
+                            
         cart = [];
+        selectedReceiptIndices = []; // ⭐ RESET THE SELECTION TRACKER
+        localStorage.removeItem('syncScaleCart');
+                            
         document.getElementById('amountTendered').value = '';
         renderReceipt();
         backToCategories();
@@ -511,7 +593,6 @@
         } catch (err) {
         Swal.fire("Error", "Server error", "error");
         } finally {
-        // Re-enable buttons just in case print is cancelled and modal stays open
         buttons.forEach(btn => {
         btn.disabled = false;
         btn.style.opacity = '1';
