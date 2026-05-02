@@ -75,6 +75,11 @@
                 <div style="display: flex; gap: 10px;">
                     <button id="backBtn" class="btn-secondary" style="display: none;" onclick="showCategories()">← Back to Categories</button>
                     
+                    <!-- ⭐ THE ARCHIVE ROOM BUTTON ⭐ -->
+                    <a href="/Admin/ArchivedProducts" style="background: #fdf0dc; color: #a16c1b; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 700; border: 1px solid #f2d9b6; display: flex; align-items: center;">
+                        🗄️ View Archive
+                    </a>
+                    
                     <button id="mainAddBtn" class="btn-primary" style="background: #f46a05; color: white; padding: 10px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">+ Add Category</button>
                 </div>
             </div>
@@ -199,13 +204,13 @@
         </div>
         <div class="item-details">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
-                                                                                                    
+                                                                                                        
         <div class="item-title" style="font-size:14px; padding-right: 10px;">
         ${item.name} <br>
         <span style="font-size:12px; color:#8c5b3e; font-weight:normal;">₱${item.price.toFixed(2)}</span>
         <button onclick="event.stopPropagation(); editPrice(${item.id}, '${item.name.replace(/'/g, "\\'")}', ${item.price})" style="background:none; border:none; cursor:pointer; font-size:12px; color:#f46a05; text-decoration:underline; padding-left:5px;">Edit</button>
         </div>
-                                                                                                        
+                                                                                                                        
         <button type="button"
         onclick="event.stopPropagation(); deleteItem(${item.id})"
         style="background:none; border:none; color:red; cursor:pointer; font-weight:bold; font-size: 16px; padding: 5px; flex-shrink: 0; z-index: 10;">
@@ -213,7 +218,7 @@
         </button>
 
         </div>
-                                                                                                    
+                                                                                                        
         <button type="button"
         class="btn-primary"
         style="width:100%; font-size:11px; background:#4a2511; color: white; padding: 8px; border: none; border-radius: 6px; cursor: pointer;"
@@ -373,7 +378,7 @@
         const name = document.getElementById('swal-name').value.trim();
         const size = document.getElementById('swal-size').value;
         const price = document.getElementById('swal-price').value;
-                                                                                        
+                                                                                
         if (!name || !price) {
         Swal.showValidationMessage('Please enter the Name and Price.');
         return false;
@@ -417,13 +422,13 @@
 
         function deleteItem(id) {
         Swal.fire({
-        title: 'Are you sure?',
-        text: "This will remove the item from the menu!",
+        title: 'Archive Item?',
+        text: "This will remove the item from the POS menu, but keep its sales history safe.",
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Yes, delete it!'
+        confirmButtonColor: '#b91c1c',
+        cancelButtonColor: '#4a2511',
+        confirmButtonText: 'Yes, archive it!'
         }).then((result) => {
         if (result.isConfirmed) {
         fetch('/Admin/DeleteMenuItem', {
@@ -432,10 +437,10 @@
         body: JSON.stringify(id)
         }).then(res => {
         if(res.ok) {
-        Swal.fire({ title: 'Deleted!', text: 'Item removed.', icon: 'success', timer: 1500, showConfirmButton: false })
+        Swal.fire({ title: 'Archived!', text: 'Item safely removed from the active menu.', icon: 'success', timer: 1500, showConfirmButton: false })
         .then(() => location.reload());
         } else {
-        Swal.fire('Cannot Delete', 'This item is tied to past sales records.', 'error');
+        Swal.fire('Error', 'Failed to archive item.', 'error');
         }
         });
         }

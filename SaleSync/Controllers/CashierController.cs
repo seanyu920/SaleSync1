@@ -11,7 +11,7 @@ namespace SaleSync.Controllers
     [Authorize(Roles = "Cashier,Admin,Manager")]
     public class CashierController : Controller
     {
-        private readonly string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
+        private readonly string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
 
         // --- DASHBOARD ---
         public IActionResult Dashboard()
@@ -120,7 +120,7 @@ namespace SaleSync.Controllers
                 // Structure: AmountToDeduct, RecipeDisplayAmount, IngredientName, InventoryUnit, RecipeUnit
                 var requiredDeductions = new Dictionary<int, (double GallonAmount, double RawRecipeAmount, string Name, string InvUnit, string RecUnit)>();
 
-                // 1. Pre-Check Inventory & Gather Recipes
+                // 1. Pre-Check Inventory & Gather Recipes (Kept this so cashiers can't sell something that is completely gone)
                 foreach (var item in request.Items)
                 {
                     string recipeQuery = @"
@@ -170,7 +170,7 @@ namespace SaleSync.Controllers
                     }
                 }
 
-                // 3. Insert Sale Record
+                // 3. Insert Sale Record (Saves as 'Pending')
                 int saleId;
                 string saleQuery = @"
                     INSERT INTO sales (user_id, sale_date, total_amount, discount, tax, final_amount, payment_method, amount_paid, change_amount, status)
@@ -188,7 +188,7 @@ namespace SaleSync.Controllers
                     saleId = Convert.ToInt32(cmd.ExecuteScalar());
                 }
 
-                // 4. Save Items & Deduct Stock
+                // 4. Save Items to Database (⭐ NO DEDUCTION YET!)
                 foreach (var item in request.Items)
                 {
                     string insertItem = "INSERT INTO sale_items (sale_id, product_id, quantity, price, subtotal) VALUES (@sale_id, @product_id, @quantity, @price, @subtotal)";
@@ -201,7 +201,7 @@ namespace SaleSync.Controllers
                         cmd.Parameters.AddWithValue("@subtotal", item.Quantity * item.Price);
                         cmd.ExecuteNonQuery();
                     }
-                    DeductIngredients(conn, transaction, item.ProductId, item.Quantity);
+                    // ⭐ REMOVED THE DEDUCTION CALL HERE ⭐
                 }
 
                 transaction.Commit();
@@ -209,40 +209,12 @@ namespace SaleSync.Controllers
                 // ⭐ POPUP SUMMARY: Shows raw ml/g to the user, but database is already updated with gallons!
                 var deductionSummary = requiredDeductions.Select(kv => $"- {kv.Value.RawRecipeAmount:F0} {kv.Value.RecUnit} {kv.Value.Name}").ToList();
 
-                return Ok(new { success = true, message = "Checkout complete.", deductions = deductionSummary });
+                return Ok(new { success = true, message = "Checkout complete. Order is Pending.", deductions = deductionSummary });
             }
             catch (Exception ex)
             {
                 transaction.Rollback();
                 return BadRequest(new { message = ex.Message });
-            }
-        }
-
-        private void DeductIngredients(SqlConnection conn, SqlTransaction transaction, int productId, int qty)
-        {
-            string recipeQuery = "SELECT ingredient_id, quantity_required, ISNULL(conversion_factor, 1) as conv FROM product_ingredients WHERE product_id = @p_id";
-            var ingredients = new List<(int id, double req, double conv)>();
-
-            using (SqlCommand cmd = new SqlCommand(recipeQuery, conn, transaction))
-            {
-                cmd.Parameters.AddWithValue("@p_id", productId);
-                using (SqlDataReader r = cmd.ExecuteReader())
-                {
-                    while (r.Read()) ingredients.Add((Convert.ToInt32(r["ingredient_id"]), Convert.ToDouble(r["quantity_required"]), Convert.ToDouble(r["conv"])));
-                }
-            }
-
-            foreach (var ing in ingredients)
-            {
-                string updateSql = "UPDATE products SET stock_quantity = stock_quantity - ((@qty * @req) / @conv) WHERE product_id = @id";
-                using (SqlCommand upCmd = new SqlCommand(updateSql, conn, transaction))
-                {
-                    upCmd.Parameters.AddWithValue("@qty", qty);
-                    upCmd.Parameters.AddWithValue("@req", ing.req);
-                    upCmd.Parameters.AddWithValue("@conv", ing.conv);
-                    upCmd.Parameters.AddWithValue("@id", ing.id);
-                    upCmd.ExecuteNonQuery();
-                }
             }
         }
 

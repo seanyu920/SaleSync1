@@ -72,9 +72,20 @@
 
         <!-- MAIN CONTENT -->
         <main class="main-content">
-            <div class="page-header">
-                <h1 class="greeting-title">Good Morning! ☕</h1>
-                <p class="greeting-subtitle">Welcome back! Here's what's brewing today.</p>
+            
+            <!-- ⭐ THE NEW ENTERPRISE HEADER ⭐ -->
+            <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 25px 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); margin-bottom: 25px; border: 1px solid #eaddd3;">
+                <div>
+                    <p style="margin: 0; font-size: 13px; color: #8c5b3e; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">Today's Net Sales</p>
+                    <h1 style="margin: 5px 0 0 0; font-size: 42px; color: #4a2511; font-weight: 800;">₱@Model.TodayTotalSales.ToString("N2")</h1>
+                </div>
+                <div style="text-align: right;">
+                    <p style="margin: 0; font-size: 13px; color: #8c5b3e; font-weight: 600;">System Status</p>
+                    <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 8px;">
+                        <span style="display: inline-block; width: 10px; height: 10px; background: #0b8a53; border-radius: 50%; box-shadow: 0 0 8px rgba(11, 138, 83, 0.6);"></span>
+                        <span style="font-size: 14px; font-weight: 700; color: #0b8a53;">Online & Syncing</span>
+                    </div>
+                </div>
             </div>
 
             <!-- ⭐ 4 PERFECTLY ALIGNED STAT CARDS -->

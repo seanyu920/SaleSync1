@@ -1,0 +1,113 @@
+﻿@model List<SaleSync.Models.MenuItemModel>
+@{
+    Layout = null;
+    string displayRole = User.IsInRole("Manager") ? "Manager" : "Admin";
+    string homeController = User.IsInRole("Manager") ? "Manager" : "Admin";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Archived Products - SyncScale</title>
+    <link rel="stylesheet" href="~/css/Inventory.css" asp-append-version="true" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .restore-btn {
+            background: #d1fae5; color: #065f46; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer;
+        }
+        .restore-btn:hover { background: #a7f3d0; }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Add your standard Sidebar here (Copy it from your Products.cshtml file) -->
+
+        <main class="main-content">
+            <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <div>
+                    <h1 class="greeting-title" style="font-size: 32px; font-weight: 800; color: #4a2511;">Product Archive 🗄️</h1>
+                    <p style="color: #b58361;">Items hidden from the POS. Restore them to make them active again.</p>
+                </div>
+                <a href="/Admin/Products" style="background: #4a2511; color: #fff; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 700;">
+                    ← Back to Active Products
+                </a>
+            </div>
+
+            <div class="table-card">
+                <div class="table-wrap">
+                    <table class="inventory-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Category</th>
+                                <th>Product Name</th>
+                                <th>Historical Price</th>
+                                <th>Status</th>
+                                <th style="text-align: center;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model != null && Model.Any())
+                            {
+                                @foreach (var item in Model)
+                                {
+                                    <tr class="inventory-row">
+                                        <td><strong>@item.ProductId</strong></td>
+                                        <td>@item.CategoryName</td>
+                                        <td style="color: #666;">@item.ProductName</td>
+                                        <td>₱@item.Price.ToString("0.00")</td>
+                                        <td>
+                                            <span style="background: #fee2e2; color: #b91c1c; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;">Archived</span>
+                                        </td>
+                                        <td style="text-align: center;">
+                                            <button class="restore-btn" onclick="restoreItem(@item.ProductId, '@item.ProductName')">
+                                                ↩️ Restore
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="6" style="text-align:center; padding: 30px; color: #8c5b3e;">No items in the archive.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function restoreItem(id, name) {
+            Swal.fire({
+                title: 'Restore Product?',
+                text: `This will put "${name}" back on the POS menu.`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#0b8a53',
+                cancelButtonColor: '#4a2511',
+                confirmButtonText: 'Yes, restore it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('/Admin/RestoreMenuItem', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(id)
+                    }).then(res => {
+                        if(res.ok) {
+                            Swal.fire('Restored!', `${name} is now active again.`, 'success')
+                                .then(() => location.reload());
+                        } else {
+                            Swal.fire('Error', 'Could not restore item.', 'error');
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+</body>
+</html>
