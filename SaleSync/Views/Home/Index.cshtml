@@ -30,6 +30,20 @@
         <div class="nav-container" id="navContainer">
             <nav class="nav-menu">
                 <a href="#home" onclick="closeNav()">Home</a>
+                
+                <!-- Mega Dropdown Menu -->
+                <div class="nav-dropdown" onclick="toggleDropdown(event)">
+                    <button class="dropbtn">Menu ▾</button>
+                    <div class="dropdown-menu" id="menuDropdown">
+                        <a href="javascript:void(0)" onclick="openCategoryModal('coffee', 'Coffee')">☕ Coffee</a>
+                        <a href="javascript:void(0)" onclick="openCategoryModal('milktea', 'Milktea')">🧋 Milktea</a>
+                        <a href="javascript:void(0)" onclick="openCategoryModal('fruittea', 'Fruit Tea')">🍹 Fruit Tea</a>
+                        <a href="javascript:void(0)" onclick="openCategoryModal('rice', 'Rice Meals')">🍛 Rice Meals</a>
+                        <a href="javascript:void(0)" onclick="openCategoryModal('pastry', 'Bread & Pastry')">🥐 Bread & Pastry</a>
+                        <a href="javascript:void(0)" onclick="openCategoryModal('snacks', 'Snacks & Pasta')">🍝 Snacks & Pasta</a>
+                    </div>
+                </div>
+
                 <a href="#about" onclick="closeNav()">About</a>
                 <a href="#contact" onclick="closeNav()">Contact</a>
             </nav>
@@ -49,12 +63,14 @@
                 Experience a retreat where every sip feels like home.
             </p>
             <div class="hero-actions">
-                <a asp-controller="Home" asp-action="Login" class="hero-btn">Get Started</a>
-                <a href="#about" class="hero-btn btn-outline">Explore Menu</a>
+                <!-- Direct link to login -->
+                <a href="/Home/Login" class="hero-btn">Order Now</a>
+                <a href="javascript:void(0)" onclick="openCategoryModal('coffee', 'Coffee')" class="hero-btn btn-outline">Explore Menu</a>
             </div>
         </div>
     </main>
 
+    <!-- ABOUT SECTION -->
     <section class="about-section" id="about">
         <div class="section-container">
             <div class="section-header">
@@ -204,6 +220,7 @@
         </div>
     </section>
 
+    <!-- CONTACT SECTION -->
     <section class="contact-section" id="contact">
         <div class="contact-container">
             <div class="contact-info">
@@ -246,6 +263,323 @@
         </div>
     </footer>
 
+    <!-- ⭐ THE POPUP MENU CARD ⭐ -->
+    <div id="categoryModal" class="modal-overlay">
+        <div class="modal-card category-modal-card">
+            <div class="modal-header">
+                <h2 id="categoryModalTitle">Menu Category</h2>
+                <button class="close-modal" onclick="closeCategoryModal()">✕</button>
+            </div>
+            
+            <div class="modal-body category-modal-body">
+                <div class="product-container" id="categoryModalGrid">
+                    
+                    <!-- COFFEE -->
+                    <div class="product-card" data-category="coffee">
+                        <img src="/images/americano.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Americano</h3><span class="price">₱85</span></div>
+                            <p class="description">Smooth and bold black coffee.</p>
+                            <!-- ⭐ DIRECT LINK TO LOGIN ⭐ -->
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+                    <div class="product-card" data-category="coffee">
+                        <img src="/images/cappuccino.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Cappuccino</h3><span class="price">₱110</span></div>
+                            <p class="description">Espresso with velvety milk foam.</p>
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+                    <div class="product-card" data-category="coffee">
+                        <img src="/images/hot-choco.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Hot Choco</h3><span class="price">₱95</span></div>
+                            <p class="description">Rich, creamy chocolate comfort.</p>
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+                    <div class="product-card" data-category="coffee">
+                        <img src="/images/latte.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Hot Latte</h3><span class="price">₱115</span></div>
+                            <p class="description">Classic espresso with steamed milk.</p>
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+                    <div class="product-card" data-category="coffee">
+                        <img src="/images/iced-latte.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Iced Latte</h3><span class="price">₱120</span></div>
+                            <p class="description">Chilled espresso with fresh milk.</p>
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+                    <div class="product-card" data-category="coffee">
+                        <img src="/images/spanish-latte.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Spanish Latte</h3><span class="price">₱130</span></div>
+                            <p class="description">Sweetened creamy espresso delight.</p>
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+                    <div class="product-card" data-category="coffee">
+                        <img src="/images/matcha.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Hot Matcha Latte</h3><span class="price">₱125</span></div>
+                            <p class="description">Pure ceremonial matcha and milk.</p>
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+                    <div class="product-card" data-category="coffee">
+                        <img src="/images/matcha.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Iced Matcha Latte</h3><span class="price">₱130</span></div>
+                            <p class="description">Chilled matcha over ice and milk.</p>
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+
+                    <!-- MILKTEA -->
+                    <div class="product-card" data-category="milktea">
+                        <img src="/images/wintermelon.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Wintermelon</h3><span class="price">₱95</span></div>
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+                    <div class="product-card" data-category="milktea">
+                        <img src="/images/okinawa.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Okinawa</h3><span class="price">₱95</span></div>
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+                    <div class="product-card" data-category="milktea">
+                        <img src="/images/cookies-cream.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Cookies & Cream</h3><span class="price">₱105</span></div>
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+                    <div class="product-card" data-category="milktea">
+                        <img src="/images/salted-caramel.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Salted Caramel</h3><span class="price">₱105</span></div>
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+                    <div class="product-card" data-category="milktea">
+                        <img src="/images/hokkaido.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Hokkaido</h3><span class="price">₱95</span></div>
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+                    <div class="product-card" data-category="milktea">
+                        <img src="/images/matcha-milktea.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Matcha Milktea</h3><span class="price">₱105</span></div>
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+                    <div class="product-card" data-category="milktea">
+                        <img src="/images/thai.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Thai Milktea</h3><span class="price">₱95</span></div>
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+
+                    <!-- FRUIT TEA -->
+                    <div class="product-card" data-category="fruittea">
+                        <img src="/images/green-apple.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Green Apple</h3><span class="price">₱85</span></div>
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+                    <div class="product-card" data-category="fruittea">
+                        <img src="/images/strawberry.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Strawberry</h3><span class="price">₱85</span></div>
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+                    <div class="product-card" data-category="fruittea">
+                        <img src="/images/blueberry.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Blueberry</h3><span class="price">₱85</span></div>
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+                    <div class="product-card" data-category="fruittea">
+                        <img src="/images/mango.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Mango</h3><span class="price">₱85</span></div>
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+                    <div class="product-card" data-category="fruittea">
+                        <img src="/images/lychee.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Lychee</h3><span class="price">₱85</span></div>
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+                    <div class="product-card" data-category="fruittea">
+                        <img src="/images/peach.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Peach</h3><span class="price">₱85</span></div>
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+
+                    <!-- RICE MEALS -->
+                    <div class="product-card" data-category="rice">
+                        <img src="/images/silog.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Silog</h3><span class="price">₱110</span></div>
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+                    <div class="product-card" data-category="rice">
+                        <img src="/images/tapsilog.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Hot Silog</h3><span class="price">₱125</span></div>
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+                    <div class="product-card" data-category="rice">
+                        <img src="/images/longsilog.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Long Silog</h3><span class="price">₱115</span></div>
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+                    <div class="product-card" data-category="rice">
+                        <img src="/images/hamsilog.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Ham Silog</h3><span class="price">₱110</span></div>
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+                    <div class="product-card" data-category="rice">
+                        <img src="/images/shanghai.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Shanghai Silog</h3><span class="price">₱115</span></div>
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+                    <div class="product-card" data-category="rice">
+                        <img src="/images/embotido.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Embotido Silog</h3><span class="price">₱120</span></div>
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+
+                    <!-- PASTRY -->
+                    <div class="product-card" data-category="pastry">
+                        <img src="/images/cookies.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Chocolate Cookies</h3><span class="price">₱45</span></div>
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+                    <div class="product-card" data-category="pastry">
+                        <img src="/images/croissant.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Croissant</h3><span class="price">₱75</span></div>
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+                    <div class="product-card" data-category="pastry">
+                        <img src="/images/ensaymada.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Cheese Ensaymada</h3><span class="price">₱60</span></div>
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+                    <div class="product-card" data-category="pastry">
+                        <img src="/images/ensaymada.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Yema Ensaymada</h3><span class="price">₱65</span></div>
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+                    <div class="product-card" data-category="pastry">
+                        <img src="/images/ensaymada.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Ube Ensaymada</h3><span class="price">₱65</span></div>
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+                    <div class="product-card" data-category="pastry">
+                        <img src="/images/donut.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Chocolate Donut</h3><span class="price">₱55</span></div>
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+                    <div class="product-card" data-category="pastry">
+                        <img src="/images/cinnamon.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Cinnamon</h3><span class="price">₱70</span></div>
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+
+                    <!-- SNACKS -->
+                    <div class="product-card" data-category="snacks">
+                        <img src="/images/fries.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Flavored Fries</h3><span class="price">₱85</span></div>
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+                    <div class="product-card" data-category="snacks">
+                        <img src="/images/nachos.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Nachos</h3><span class="price">₱120</span></div>
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+                    <div class="product-card" data-category="snacks">
+                        <img src="/images/siomai.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Siomai 4pcs</h3><span class="price">₱60</span></div>
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+                    <div class="product-card" data-category="snacks">
+                        <img src="/images/carbonara.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Carbonara</h3><span class="price">₱165</span></div>
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+                    <div class="product-card" data-category="snacks">
+                        <img src="/images/pesto.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Pesto Pasta</h3><span class="price">₱155</span></div>
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+                    <div class="product-card" data-category="snacks">
+                        <img src="/images/gambas.jpg" class="product-image" />
+                        <div class="product-info">
+                            <div class="info-top"><h3>Gambas Pasta</h3><span class="price">₱175</span></div>
+                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
             function toggleNav() {
                 const nav = document.getElementById('navContainer');
@@ -253,11 +587,54 @@
                 nav.classList.toggle('active');
                 hamburger.classList.toggle('active');
             }
+        
             function closeNav() {
                 if (window.innerWidth <= 768) {
                     document.getElementById('navContainer').classList.remove('active');
                     document.getElementById('hamburger').classList.remove('active');
                 }
+            }
+
+            function toggleDropdown(event) {
+                event.stopPropagation();
+                const dropdown = document.querySelector('.nav-dropdown');
+                dropdown.classList.toggle('active');
+            }
+
+            window.onclick = function(event) {
+                if (!event.target.matches('.dropbtn')) {
+                    const dropdowns = document.getElementsByClassName("nav-dropdown");
+                    for (let i = 0; i < dropdowns.length; i++) {
+                        if (dropdowns[i].classList.contains('active')) {
+                            dropdowns[i].classList.remove('active');
+                        }
+                    }
+                }
+            
+                const modal = document.getElementById('categoryModal');
+                if (event.target == modal) closeCategoryModal();
+            }
+
+            function openCategoryModal(category, title) {
+                document.getElementById('categoryModalTitle').innerText = title;
+            
+                const cards = document.querySelectorAll('#categoryModalGrid .product-card');
+                cards.forEach(card => {
+                    if (card.getAttribute('data-category') === category) {
+                        card.style.display = 'flex';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+
+                document.getElementById('categoryModal').style.display = 'flex';
+            
+                const dropdown = document.querySelector('.nav-dropdown');
+                dropdown.classList.remove('active');
+            }
+
+            function closeCategoryModal() {
+                document.getElementById('categoryModal').style.display = 'none';
             }
     </script>
 </body>
