@@ -7,9 +7,9 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #fdfaf6; /* Creamy Cafero background */
-    color: #4a2511; /* Dark Mocha text */
-    overflow: hidden; /* Prevents double scrollbars when side-by-side */
+    background: #fdfaf6;
+    color: #4a2511;
+    overflow: hidden;
 }
 
 /* --- POS LAYOUT STRUCTURE --- */
@@ -26,11 +26,12 @@ body {
     padding: 30px 20px;
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
     flex-shrink: 0;
 }
 
 .logo-section {
-    margin-bottom: 40px;
+    margin-bottom: 30px;
 }
 
 .logo-title {
@@ -45,23 +46,36 @@ body {
 }
 
 .profile-section {
-    text-align: center;
+    display: flex;
+    align-items: center;
+    text-align: left;
+    gap: 15px;
     margin-bottom: 40px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid rgba(220, 188, 165, 0.1);
 }
 
 .profile-circle {
-    width: 80px;
-    height: 80px;
-    margin: 0 auto 15px;
+    width: 45px;
+    height: 45px;
+    background: #f46a05;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 40px;
-    background: #f46a05;
-    color: white;
+    font-size: 20px;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.admin-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0;
+}
+
+.admin-role {
+    font-size: 12px;
+    color: #dcbca5;
 }
 
 .sidebar-menu {
@@ -93,20 +107,24 @@ body {
         box-shadow: 0 4px 15px rgba(244, 106, 5, 0.2);
     }
 
+.logout-section {
+    margin-top: auto;
+}
+
+.logout-btn {
+    background: transparent;
+    border: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+}
+
 /* --- MENU SIDE (Center Area) --- */
 .menu-side {
     flex: 1;
     padding: 35px;
     overflow-y: auto;
     background: #fdfaf6;
-}
-
-.form-card {
-    background: #ffffff;
-    border-radius: 20px;
-    padding: 30px;
-    box-shadow: 0 4px 20px rgba(74, 37, 17, 0.04);
-    margin-bottom: 30px;
 }
 
 .form-title {
@@ -116,7 +134,11 @@ body {
     margin-bottom: 5px;
 }
 
-/* Extra Helper for Back Button */
+.form-subtitle {
+    color: #8c5b3e;
+    font-size: 14px;
+}
+
 .page-header {
     display: flex;
     justify-content: space-between;
@@ -182,144 +204,6 @@ body {
         color: #4a2511;
     }
 
-/* --- ⭐ NEW: MODAL OVERLAY --- */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(74, 37, 17, 0.6); /* Dark mocha semi-transparent overlay */
-    z-index: 2000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* --- SELECTION DRAWER (Inside Modal) --- */
-.item-display-flex {
-    display: flex;
-    gap: 40px;
-    align-items: center;
-    padding: 10px;
-}
-
-.item-image-container {
-    flex: 0 0 200px;
-    height: 200px;
-    background: #fdfaf6;
-    border-radius: 20px;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 80px;
-    border: 1px solid #f0e6dd;
-}
-
-    .item-image-container img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-.item-details-controls {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.item-name-display {
-    font-size: 28px;
-    font-weight: 800;
-    color: #4a2511;
-}
-
-/* Size Tiles */
-.size-selector-grid {
-    display: flex;
-    gap: 12px;
-}
-
-.custom-radio-card {
-    cursor: pointer;
-}
-
-    .custom-radio-card input {
-        display: none;
-    }
-
-.radio-tile {
-    display: inline-block;
-    padding: 10px 20px;
-    background: #fdfaf6;
-    border: 2px solid #f0e6dd;
-    border-radius: 10px;
-    font-weight: 700;
-    color: #8c5b3e;
-    transition: 0.2s;
-}
-
-.custom-radio-card input:checked + .radio-tile {
-    background: #f46a05;
-    color: white;
-    border-color: #f46a05;
-}
-
-/* Quantity Controls */
-.qty-flex {
-    display: flex;
-    align-items: center;
-    margin: 10px 0;
-}
-
-    .qty-flex button {
-        width: 40px;
-        height: 40px;
-        background: #4a2511;
-        color: white;
-        border: none;
-        font-size: 18px;
-        cursor: pointer;
-    }
-
-        .qty-flex button:first-child {
-            border-radius: 8px 0 0 8px;
-        }
-
-        .qty-flex button:last-child {
-            border-radius: 0 8px 8px 0;
-        }
-
-    .qty-flex input {
-        width: 50px;
-        height: 40px;
-        text-align: center;
-        border-top: 1px solid #4a2511;
-        border-bottom: 1px solid #4a2511;
-        border-left: none;
-        border-right: none;
-        font-weight: 800;
-        color: #4a2511;
-    }
-
-.add-btn-large {
-    background: #f46a05;
-    color: white;
-    border: none;
-    padding: 15px;
-    border-radius: 12px;
-    font-weight: 800;
-    cursor: pointer;
-    transition: 0.2s;
-    width: 100%;
-}
-
-    .add-btn-large:hover {
-        background: #cc5500;
-    }
-
 /* --- RECEIPT SIDE (Right Sidebar) --- */
 .receipt-side {
     width: 400px;
@@ -335,6 +219,16 @@ body {
     font-size: 20px;
     font-weight: 800;
     color: #4a2511;
+}
+
+.receipt-title {
+    margin-bottom: 5px;
+}
+
+.receipt-subtitle {
+    font-size: 12px;
+    color: #b58361;
+    margin-bottom: 15px;
 }
 
 .order-items-list {
@@ -380,10 +274,22 @@ body {
     margin-bottom: 20px;
 }
 
+.total-label {
+    font-size: 14px;
+    color: #8c5b3e;
+    font-weight: 600;
+}
+
 #total {
     font-size: 32px;
     font-weight: 800;
     color: #4a2511;
+}
+
+.receipt-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
 }
 
 .btn-checkout {
@@ -412,11 +318,287 @@ body {
     cursor: pointer;
     font-weight: 700;
     transition: 0.2s;
+    flex: 1;
 }
 
     .delete-btn:hover {
         background: #b81d1d;
     }
+
+/* --- CASH SECTION & INPUTS --- */
+.cash-section {
+    background: #fdfaf6;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #dcbca5;
+    margin-bottom: 15px;
+    text-align: left;
+    display: block; /* JS overrides this to none when not cash */
+}
+
+.cash-label {
+    font-weight: 600;
+    color: #8c5b3e;
+    display: block;
+    margin-bottom: 5px;
+    font-size: 12px;
+}
+
+.cash-input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #dcbca5;
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+}
+
+.change-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.change-label {
+    font-size: 12px;
+    color: #8c5b3e;
+    font-weight: 600;
+}
+
+.change-amount {
+    font-size: 18px;
+    font-weight: 800;
+    color: #f46a05;
+}
+
+/* --- MODALS & DRAWERS --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(74, 37, 17, 0.6);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.form-card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 4px 20px rgba(74, 37, 17, 0.04);
+}
+
+.modal-card {
+    margin: 0;
+    position: relative;
+    width: 460px;
+    max-width: 90%;
+    z-index: 2001;
+    padding: 25px;
+}
+
+    .modal-card.payment-card {
+        width: 500px;
+        padding: 30px;
+    }
+
+.modal-close-btn {
+    position: absolute;
+    top: 12px;
+    right: 18px;
+    background: transparent;
+    border: none;
+    font-size: 28px;
+    color: #8c5b3e;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.item-display-flex {
+    display: flex;
+    flex-direction: row;
+    text-align: left;
+    gap: 25px;
+    align-items: center;
+}
+
+.item-image-container {
+    flex: 0 0 130px;
+    width: 130px;
+    height: 130px;
+    margin: 0;
+    background: #fdfaf6;
+    border-radius: 20px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 60px;
+    border: 1px solid #f0e6dd;
+    flex-shrink: 0;
+}
+
+    .item-image-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+.item-details-controls {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    gap: 8px;
+}
+
+.item-name-display {
+    margin-bottom: 0;
+    font-size: 22px;
+    font-weight: 800;
+    color: #4a2511;
+}
+
+/* Size & Qty Controls */
+.size-selector-grid {
+    display: flex;
+    justify-content: flex-start;
+    gap: 12px;
+}
+
+.qty-flex {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin: 5px 0;
+}
+
+    .qty-flex button {
+        width: 35px;
+        height: 35px;
+        background: #4a2511;
+        color: white;
+        border: none;
+        font-size: 18px;
+        cursor: pointer;
+    }
+
+        .qty-flex button:first-child {
+            border-radius: 8px 0 0 8px;
+        }
+
+        .qty-flex button:last-child {
+            border-radius: 0 8px 8px 0;
+        }
+
+    .qty-flex input {
+        width: 45px;
+        height: 35px;
+        font-size: 16px;
+        text-align: center;
+        border-top: 1px solid #4a2511;
+        border-bottom: 1px solid #4a2511;
+        border-left: none;
+        border-right: none;
+        font-weight: 800;
+        color: #4a2511;
+    }
+
+.add-btn-large {
+    background: #f46a05;
+    color: white;
+    border: none;
+    padding: 12px;
+    font-size: 15px;
+    border-radius: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: 0.2s;
+    width: 100%;
+}
+
+    .add-btn-large:hover {
+        background: #cc5500;
+    }
+
+/* --- PAYMENT METHOD SELECTOR --- */
+.payment-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.payment-select-btn {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fdfaf6;
+    border: 2px solid #f0e6dd;
+    padding: 18px 20px;
+    border-radius: 12px;
+    font-weight: 800;
+    color: #4a2511;
+    cursor: pointer;
+    font-size: 16px;
+    transition: 0.2s;
+    margin-bottom: 12px;
+}
+
+    .payment-select-btn:hover {
+        border-color: #f46a05;
+        background: #ffffff;
+    }
+
+.payment-label {
+    color: #8c5b3e;
+    font-weight: 600;
+}
+
+#activePaymentLabel {
+    color: #4a2511;
+}
+
+.custom-radio-card {
+    cursor: pointer;
+}
+
+    .custom-radio-card input {
+        display: none;
+    }
+
+.radio-tile {
+    display: block;
+    text-align: center;
+    width: 100%;
+    padding: 15px;
+    background: #fdfaf6;
+    border: 2px solid #f0e6dd;
+    border-radius: 10px;
+    font-weight: 700;
+    color: #8c5b3e;
+    transition: 0.2s;
+}
+
+.custom-radio-card input:checked + .radio-tile {
+    background: #f46a05;
+    color: white;
+    border-color: #f46a05;
+}
+
+/* --- HELPER CLASSES --- */
+.text-center {
+    text-align: center;
+    margin-bottom: 25px;
+}
 
 /* --- SWEETALERT2 OVERRIDES --- */
 .swal2-popup {
@@ -459,29 +641,185 @@ body {
     padding: 12px 25px !important;
     font-weight: 600 !important;
 }
-/* --- NEW: PAYMENT SELECTOR BUTTON --- */
-.payment-select-btn {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #fdfaf6;
-    border: 2px solid #f0e6dd;
-    padding: 18px 20px;
-    border-radius: 12px;
-    font-weight: 800;
-    color: #4a2511;
-    cursor: pointer;
-    font-size: 16px;
-    transition: 0.2s;
-    margin-bottom: 12px;
+/* --- ⭐ NEW: RECEIPT MODAL & PRINT STYLES --- */
+
+.receipt-paper {
+    background: #ffffff;
+    width: 380px;
+    max-width: 95%;
+    margin: 0 auto;
+    padding: 30px;
+    border-radius: 4px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    font-family: 'Courier New', Courier, monospace; /* Classic receipt font */
+    color: #000;
+    position: relative;
+    z-index: 2001;
 }
 
-    .payment-select-btn:hover {
+.receipt-header-print {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+    .receipt-header-print h2 {
+        font-size: 24px;
+        font-weight: 800;
+        margin-bottom: 5px;
+    }
+
+    .receipt-header-print p {
+        font-size: 14px;
+        margin: 2px 0;
+        color: #333;
+    }
+
+.receipt-meta {
+    font-size: 13px;
+    margin-bottom: 15px;
+}
+
+    .receipt-meta p {
+        margin: 4px 0;
+    }
+
+.receipt-divider {
+    border-top: 1px dashed #000;
+    margin: 15px 0;
+}
+
+.receipt-table {
+    width: 100%;
+    font-size: 14px;
+    border-collapse: collapse;
+}
+
+.receipt-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+.receipt-grand-total {
+    font-size: 18px;
+    font-weight: 800;
+    margin-top: 10px;
+}
+
+.receipt-footer-print {
+    text-align: center;
+    font-size: 13px;
+    margin-top: 20px;
+    margin-bottom: 25px;
+}
+
+.receipt-modal-actions {
+    display: flex;
+    gap: 15px;
+}
+
+.btn-print {
+    flex: 1;
+    background: #4a2511;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn-done {
+    flex: 1;
+    background: #f46a05;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* --- THE MAGIC PRINTING RULE --- */
+/* When the user clicks "Print", this hides the dark background and sidebar, and ONLY prints the white receipt! */
+@media print {
+    body {
+        background: white;
+    }
+
+    .no-print {
+        display: none !important;
+    }
+
+    .receipt-paper {
+        box-shadow: none;
+        width: 100%;
+        padding: 0;
+    }
+
+    .modal-overlay {
+        position: static;
+        background: white;
+    }
+}
+.btn-cancel {
+    flex: 1;
+    background: #e02424; /* Red for cancel */
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+    .btn-cancel:hover {
+        background: #b81d1d;
+    }
+
+.btn-confirm {
+    flex: 2; /* Makes the confirm button slightly larger */
+    background: #0b8a53; /* Green for go */
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+    .btn-confirm:hover {
+        background: #096d42;
+    }
+
+    .btn-confirm:disabled {
+        background: #a5d6a7;
+        cursor: not-allowed;
+    }
+/* --- ⭐ NEW: CUSTOMER NAME INPUT --- */
+.customer-name-input {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    border: 2px solid #f0e6dd;
+    font-size: 15px;
+    font-weight: 600;
+    color: #4a2511;
+    background: #fdfaf6;
+    outline: none;
+    transition: 0.2s;
+    font-family: inherit;
+}
+
+    .customer-name-input::placeholder {
+        color: #b58361;
+        font-weight: normal;
+    }
+
+    .customer-name-input:focus {
         border-color: #f46a05;
         background: #ffffff;
     }
-
-#activePaymentLabel {
-    color: #4a2511;
-}

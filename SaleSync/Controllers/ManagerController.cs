@@ -11,7 +11,7 @@ namespace SaleSync.Controllers
     public class ManagerController : Controller
     {
         private readonly IConfiguration _configuration;
-        private readonly string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+        private readonly string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
 
         public ManagerController(IConfiguration configuration)
         {
