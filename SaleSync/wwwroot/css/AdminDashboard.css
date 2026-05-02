@@ -344,51 +344,47 @@ body {
 }
 
 /* --- SWEETALERT2 OVERRIDES --- */
-/* These only target the SweetAlert popups, leaving your dashboard styles exactly as they are */
-
 .swal2-popup {
     border-radius: 20px !important;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
-    padding: 2rem !important; /* Gives the text more breathing room */
-    border: 2px solid #fcfaf6 !important; /* Blends with your background */
+    padding: 2rem !important;
+    border: 2px solid #fcfaf6 !important;
 }
 
 .swal2-title {
-    color: #4a2511 !important; /* Your brand brown */
+    color: #4a2511 !important;
     font-weight: 800 !important;
     font-size: 1.6rem !important;
 }
 
 .swal2-html-container {
-    color: #8c5b3e !important; /* Your brand muted brown */
+    color: #8c5b3e !important;
     font-size: 15px !important;
     margin-top: 10px !important;
 }
 
-/* Adds spacing between the buttons */
 .swal2-actions {
     gap: 15px !important;
     margin-top: 25px !important;
 }
 
 .swal2-confirm {
-    background-color: #f46a05 !important; /* Your brand orange */
+    background-color: #f46a05 !important;
     color: white !important;
     border-radius: 12px !important;
     padding: 12px 30px !important;
     font-weight: 700 !important;
-    box-shadow: 0 4px 12px rgba(244, 106, 5, 0.2) !important; /* Subtle orange glow */
+    box-shadow: 0 4px 12px rgba(244, 106, 5, 0.2) !important;
 }
 
 .swal2-cancel {
-    background-color: #4a2511 !important; /* Your brand brown */
+    background-color: #4a2511 !important;
     color: white !important;
     border-radius: 12px !important;
     padding: 12px 25px !important;
     font-weight: 600 !important;
 }
 
-/* Icon Colors */
 .swal2-icon.swal2-warning,
 .swal2-icon.swal2-question {
     border-color: #f46a05 !important;
@@ -403,4 +399,102 @@ body {
 .swal2-icon.swal2-error {
     border-color: #e02424 !important;
     color: #e02424 !important;
+}
+
+/* --- EXTRACTED MODAL STYLES --- */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.auth-modal {
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    width: 320px;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+    .auth-modal input {
+        width: 100%;
+        padding: 10px;
+        margin: 15px 0;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+    }
+
+.auth-btn {
+    background: #f46a05;
+    color: white;
+    border: none;
+    padding: 10px;
+    width: 100%;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+/* --- ACTION BUTTON STYLES --- */
+.action-btn-group {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.btn-mini {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-confirm-mini {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+    .btn-confirm-mini:hover {
+        background: #065f46;
+        color: white;
+    }
+
+.btn-void-mini {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+    .btn-void-mini:hover {
+        background: #b91c1c;
+        color: white;
+    }
+
+/* --- INTERACTIVE STAT CARDS --- */
+.stat-clickable {
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+    .stat-clickable:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(74, 37, 17, 0.08);
+    }
+
+/* --- UTILITIES --- */
+.hidden-view {
+    display: none !important;
 }
