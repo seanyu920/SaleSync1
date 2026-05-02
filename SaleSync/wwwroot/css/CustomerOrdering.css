@@ -12,17 +12,30 @@ body {
     line-height: 1.6;
 }
 
-/* --- HEADER NAVIGATION --- */
-header {
-    background: white;
-    padding: 20px 5%;
+.dashboard-container {
     display: flex;
+    min-height: 100vh;
+}
+
+/* --- MOCHA SIDEBAR --- */
+.sidebar {
+    width: 260px;
+    background: #4a2511;
+    padding: 30px 20px;
+    display: flex;
+    flex-direction: column;
     justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #eee;
+    color: #ffffff;
     position: sticky;
     top: 0;
-    z-index: 1000;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+.logo-section {
+    margin-bottom: 40px;
+    display: flex;
+    align-items: center;
 }
 
 .brand {
@@ -39,29 +52,108 @@ header {
 .brand-name {
     font-size: 22px;
     font-weight: 800;
-    color: #1a1a1a;
+    color: #ffffff;
 }
 
-/* --- HEADER ACTIONS (Logout + Cart) --- */
+.sidebar-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.menu-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    text-align: left;
+    text-decoration: none;
+    color: #dcbca5;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 14px 20px;
+    border-radius: 10px;
+    background: transparent;
+    border: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+    .menu-btn:hover {
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .menu-btn.active {
+        background: #f46a05;
+        color: #ffffff;
+    }
+
+.logout-section {
+    margin-top: auto;
+}
+
+/* --- MAIN CONTENT & HEADER --- */
+.main-content {
+    flex: 1;
+    padding: 40px 50px;
+    overflow-y: auto;
+}
+
+.pos-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eee;
+}
+
 .header-actions {
     display: flex;
     align-items: center;
-    gap: 25px;
+    gap: 20px;
 }
 
-.logout-btn {
-    text-decoration: none;
-    color: #8D6E63;
-    font-weight: 700;
-    font-size: 15px;
+/* --- SEARCH BAR STYLES --- */
+.search-container {
+    position: relative;
     display: flex;
     align-items: center;
-    gap: 8px;
+    background: #fdfaf6;
+    border: 2px solid #efebe5;
+    border-radius: 12px;
+    padding: 0 15px;
+    width: 300px;
     transition: all 0.3s ease;
 }
 
-    .logout-btn:hover {
-        color: #f46a05;
+    .search-container:focus-within {
+        border-color: #f46a05;
+        background: white;
+        box-shadow: 0 4px 12px rgba(244, 106, 5, 0.08);
+    }
+
+.search-icon {
+    color: #8d6e63;
+    font-size: 16px;
+    margin-right: 10px;
+}
+
+#menuSearch {
+    border: none;
+    background: transparent;
+    padding: 12px 0;
+    width: 100%;
+    outline: none;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    color: #4a2511;
+}
+
+    #menuSearch::placeholder {
+        color: #dcbca5;
+        font-weight: 400;
     }
 
 .cart-icon-btn {
@@ -83,60 +175,12 @@ header {
         transform: scale(1.1);
     }
 
-/* --- HERO & CATEGORY NAVIGATION --- */
-.menu-intro {
-    padding: 30px 5% 10px;
-}
-
-    .menu-intro p {
-        color: #666;
-        font-size: 16px;
-        margin-bottom: 20px;
-    }
-
-.category-nav {
-    display: flex;
-    gap: 12px;
-    overflow-x: auto;
-    padding-bottom: 15px;
-    scrollbar-width: none; /* Firefox */
-}
-
-    .category-nav::-webkit-scrollbar {
-        display: none; /* Chrome/Safari */
-    }
-
-.cat-btn {
-    padding: 10px 22px;
-    border-radius: 25px;
-    border: 1px solid #EFEBE5;
-    background: white;
-    color: #8D6E63;
-    font-weight: 700;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: all 0.3s ease;
-    font-size: 14px;
-}
-
-    .cat-btn:hover {
-        border-color: #f46a05;
-        color: #f46a05;
-    }
-
-    .cat-btn.active {
-        background: #f46a05;
-        border-color: #f46a05;
-        color: white;
-        box-shadow: 0 4px 12px rgba(244, 106, 5, 0.2);
-    }
-
 /* --- PRODUCT GRID --- */
 .product-container {
-    padding: 20px 5% 50px;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 30px;
+    padding-bottom: 50px;
 }
 
 .product-card {
@@ -146,6 +190,8 @@ header {
     box-shadow: 0 2px 15px rgba(0,0,0,0.05);
     transition: transform 0.3s ease, border-color 0.3s ease;
     border: 1px solid transparent;
+    display: flex;
+    flex-direction: column;
 }
 
     .product-card:hover {
@@ -162,6 +208,9 @@ header {
 
 .product-info {
     padding: 20px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
 }
 
 .info-top {
@@ -188,8 +237,7 @@ header {
     font-size: 14px;
     margin-bottom: 20px;
     line-height: 1.5;
-    height: 42px;
-    overflow: hidden;
+    flex-grow: 1;
 }
 
 .btn-add-order {
@@ -207,6 +255,7 @@ header {
     justify-content: center;
     gap: 8px;
     transition: background 0.3s;
+    margin-top: auto;
 }
 
     .btn-add-order:hover {
@@ -221,7 +270,7 @@ header {
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
-    display: none; /* Hidden by default */
+    display: none;
     align-items: center;
     justify-content: center;
     z-index: 2000;
@@ -274,7 +323,7 @@ header {
     letter-spacing: 0.5px;
 }
 
-/* --- SIZE SELECTION TILES --- */
+/* --- SIZE SELECTION --- */
 .size-options {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -365,7 +414,6 @@ header {
     color: #3b2319;
 }
 
-/* --- CONFIRM BUTTON --- */
 .btn-confirm-add {
     width: 100%;
     padding: 16px;
@@ -384,13 +432,15 @@ header {
         background: #d45b04;
     }
 
-/* --- RESPONSIVE ADJUSTMENTS --- */
-@media (max-width: 600px) {
-    .product-container {
-        grid-template-columns: 1fr;
+/* Responsive Wrap */
+@media (max-width: 900px) {
+    .pos-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
     }
 
-    .brand-name {
-        display: none;
+    .search-container {
+        width: 100%;
     }
 }
