@@ -1,4 +1,5 @@
-﻿@{
+﻿@model List<SaleSync.Models.MenuItemModel>
+@{
     Layout = null;
 }
 <!DOCTYPE html>
@@ -9,6 +10,47 @@
     <title>Order Now | Cafero</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="~/css/CustomerOrdering.css" asp-append-version="true" />
+    
+    <!-- ⭐ ADDED: SweetAlert2 for beautiful popups -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        /* ⭐ CART SIDEBAR STYLES ⭐ */
+        .cart-sidebar {
+            position: fixed; top: 0; right: -400px; width: 400px; height: 100vh;
+            background: #fff; box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+            z-index: 2000; transition: right 0.3s ease; display: flex; flex-direction: column;
+        }
+        .cart-sidebar.open { right: 0; }
+        .cart-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.5); z-index: 1999; display: none;
+        }
+        .cart-overlay.open { display: block; }
+        .cart-header {
+            padding: 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;
+        }
+        .cart-header h2 { margin: 0; font-size: 20px; color: #1a1a1a; }
+        .close-cart-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: #666; }
+        .cart-items-container { flex-grow: 1; overflow-y: auto; padding: 20px; }
+        .empty-cart-msg { text-align: center; color: #999; margin-top: 50px; }
+        .cart-item-row { display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; margin-bottom: 15px; border-bottom: 1px solid #f0f0f0; }
+        .cart-item-info h4 { margin: 0 0 5px 0; font-size: 15px; color: #1a1a1a; }
+        .cart-item-info p { margin: 0; font-size: 12px; color: #8c5b3e; }
+        .cart-item-controls { display: flex; align-items: center; gap: 10px; }
+        .cart-qty-btn { background: #fdf0dc; border: none; color: #8c5b3e; width: 25px; height: 25px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+        .cart-footer { padding: 20px; border-top: 1px solid #eee; background: #fafafa; }
+        .cart-total-row { display: flex; justify-content: space-between; font-size: 20px; font-weight: 800; margin-bottom: 15px; color: #1a1a1a; }
+        .btn-checkout { width: 100%; background: #f46a05; color: white; border: none; padding: 15px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .btn-checkout:hover { background: #d95e04; }
+
+        /* The little red badge for the cart icon */
+        .cart-badge {
+            position: absolute; top: -5px; right: -5px; background: red; color: white; 
+            border-radius: 50%; padding: 2px 6px; font-size: 10px; font-weight: bold;
+        }
+        .cart-icon-btn { position: relative; text-decoration: none; font-size: 24px; cursor: pointer; }
+    </style>
 </head>
 <body>
 
@@ -52,321 +94,53 @@
                 </div>
                 
                 <div class="header-actions">
-                    <!-- ⭐ NEW: Search Bar -->
                     <div class="search-container">
                         <span class="search-icon">🔍</span>
                         <input type="text" id="menuSearch" placeholder="Search menu items..." onkeyup="filterMenu()">
                     </div>
                     
-                    <a href="#" class="cart-icon-btn">🛒</a>
+                    <a class="cart-icon-btn" onclick="toggleCart()">🛒</a>
                 </div>
             </header>
 
+            <!-- ⭐ THE CAPSTONE GRADE FIX: DYNAMIC C# PRODUCT GENERATION ⭐ -->
             <div class="product-container" id="menuGrid" data-current-cat="all">
-                <!-- COFFEE -->
-                <div class="product-card" data-category="coffee">
-                    <img src="/images/americano.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Americano</h3><span class="price">₱85</span></div>
-                        <p class="description">Smooth and bold black coffee.</p>
-                        <button class="btn-add-order" onclick="openModal('Americano', 85)">+ Add to Order</button>
-                    </div>
-                </div>
-                <div class="product-card" data-category="coffee">
-                    <img src="/images/cappuccino.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Cappuccino</h3><span class="price">₱110</span></div>
-                        <p class="description">Espresso with velvety milk foam.</p>
-                        <button class="btn-add-order" onclick="openModal('Cappuccino', 110)">+ Add to Order</button>
-                    </div>
-                </div>
-                <div class="product-card" data-category="coffee">
-                    <img src="/images/hot-choco.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Hot Choco</h3><span class="price">₱95</span></div>
-                        <p class="description">Rich, creamy chocolate comfort.</p>
-                        <button class="btn-add-order" onclick="openModal('Hot Choco', 95)">+ Add to Order</button>
-                    </div>
-                </div>
-                <div class="product-card" data-category="coffee">
-                    <img src="/images/latte.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Hot Latte</h3><span class="price">₱115</span></div>
-                        <p class="description">Classic espresso with steamed milk.</p>
-                        <button class="btn-add-order" onclick="openModal('Hot Latte', 115)">+ Add to Order</button>
-                    </div>
-                </div>
-                <div class="product-card" data-category="coffee">
-                    <img src="/images/iced-latte.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Iced Latte</h3><span class="price">₱120</span></div>
-                        <p class="description">Chilled espresso with fresh milk.</p>
-                        <button class="btn-add-order" onclick="openModal('Iced Latte', 120)">+ Add to Order</button>
-                    </div>
-                </div>
-                <div class="product-card" data-category="coffee">
-                    <img src="/images/spanish-latte.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Spanish Latte</h3><span class="price">₱130</span></div>
-                        <p class="description">Sweetened creamy espresso delight.</p>
-                        <button class="btn-add-order" onclick="openModal('Spanish Latte', 130)">+ Add to Order</button>
-                    </div>
-                </div>
-                <div class="product-card" data-category="coffee">
-                    <img src="/images/matcha.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Hot Matcha Latte</h3><span class="price">₱125</span></div>
-                        <p class="description">Pure ceremonial matcha and milk.</p>
-                        <button class="btn-add-order" onclick="openModal('Hot Matcha Latte', 125)">+ Add to Order</button>
-                    </div>
-                </div>
-                <div class="product-card" data-category="coffee">
-                    <img src="/images/matcha.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Iced Matcha Latte</h3><span class="price">₱130</span></div>
-                        <p class="description">Chilled matcha over ice and milk.</p>
-                        <button class="btn-add-order" onclick="openModal('Iced Matcha Latte', 130)">+ Add to Order</button>
-                    </div>
-                </div>
+                @if (Model != null && Model.Count > 0)
+                {
+                    foreach (var item in Model)
+                    {
+                        // Dynamically format the image filename (e.g., "Hot Latte" -> "hot-latte.jpg")
+                        string imageFile = item.ProductName.ToLower().Replace(" ", "-") + ".jpg";
+                        
+                        // Dynamically format the category tag so JavaScript filtering works (e.g., "Fruit Tea" -> "fruittea")
+                        string catFormat = item.CategoryName != null ? item.CategoryName.ToLower().Replace(" ", "") : "uncategorized";
 
-                <!-- MILKTEA -->
-                <div class="product-card" data-category="milktea">
-                    <img src="/images/wintermelon.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Wintermelon</h3><span class="price">₱95</span></div>
-                        <button class="btn-add-order" onclick="openModal('Wintermelon', 95)">+ Add to Order</button>
+                        <div class="product-card" data-category="@catFormat">
+                            <!-- Fallback to a default image if the specific product image doesn't exist yet -->
+                            <img src="/images/@imageFile" class="product-image" onerror="this.src='/images/americano.jpg'" />
+                            <div class="product-info">
+                                <div class="info-top">
+                                    <h3>@item.ProductName</h3>
+                                    <span class="price">₱@item.Price.ToString("0.##")</span>
+                                </div>
+                                <p class="description">Freshly prepared @item.ProductName.</p>
+                                <!-- Notice how we pass the actual item data directly into the Javascript function! -->
+                                <button class="btn-add-order" onclick="openModal('@Html.Raw(item.ProductName.Replace("'", "\\'"))', @item.Price)">+ Add to Order</button>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div style="width: 100%; text-align: center; color: #999; margin-top: 50px;">
+                        <p>No menu items found. Please add products via the Admin Dashboard!</p>
                     </div>
-                </div>
-                <div class="product-card" data-category="milktea">
-                    <img src="/images/okinawa.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Okinawa</h3><span class="price">₱95</span></div>
-                        <button class="btn-add-order" onclick="openModal('Okinawa', 95)">+ Add to Order</button>
-                    </div>
-                </div>
-                <div class="product-card" data-category="milktea">
-                    <img src="/images/cookies-cream.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Cookies and Cream</h3><span class="price">₱105</span></div>
-                        <button class="btn-add-order" onclick="openModal('Cookies and Cream', 105)">+ Add to Order</button>
-                    </div>
-                </div>
-                <div class="product-card" data-category="milktea">
-                    <img src="/images/salted-caramel.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Salted Caramel</h3><span class="price">₱105</span></div>
-                        <button class="btn-add-order" onclick="openModal('Salted Caramel', 105)">+ Add to Order</button>
-                    </div>
-                </div>
-                <div class="product-card" data-category="milktea">
-                    <img src="/images/hokkaido.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Hokkaido</h3><span class="price">₱95</span></div>
-                        <button class="btn-add-order" onclick="openModal('Hokkaido', 95)">+ Add to Order</button>
-                    </div>
-                </div>
-                <div class="product-card" data-category="milktea">
-                    <img src="/images/matcha-milktea.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Matcha Milktea</h3><span class="price">₱105</span></div>
-                        <button class="btn-add-order" onclick="openModal('Matcha Milktea', 105)">+ Add to Order</button>
-                    </div>
-                </div>
-                <div class="product-card" data-category="milktea">
-                    <img src="/images/thai.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Thai Milktea</h3><span class="price">₱95</span></div>
-                        <button class="btn-add-order" onclick="openModal('Thai Milktea', 95)">+ Add to Order</button>
-                    </div>
-                </div>
-
-                <!-- FRUIT TEA -->
-                <div class="product-card" data-category="fruittea">
-                    <img src="/images/green-apple.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Green Apple</h3><span class="price">₱85</span></div>
-                        <button class="btn-add-order" onclick="openModal('Green Apple', 85)">+ Add to Order</button>
-                    </div>
-                </div>
-                <div class="product-card" data-category="fruittea">
-                    <img src="/images/strawberry.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Strawberry</h3><span class="price">₱85</span></div>
-                        <button class="btn-add-order" onclick="openModal('Strawberry', 85)">+ Add to Order</button>
-                    </div>
-                </div>
-                <div class="product-card" data-category="fruittea">
-                    <img src="/images/blueberry.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Blueberry</h3><span class="price">₱85</span></div>
-                        <button class="btn-add-order" onclick="openModal('Blueberry', 85)">+ Add to Order</button>
-                    </div>
-                </div>
-                <div class="product-card" data-category="fruittea">
-                    <img src="/images/mango.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Mango</h3><span class="price">₱85</span></div>
-                        <button class="btn-add-order" onclick="openModal('Mango', 85)">+ Add to Order</button>
-                    </div>
-                </div>
-                <div class="product-card" data-category="fruittea">
-                    <img src="/images/lychee.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Lychee</h3><span class="price">₱85</span></div>
-                        <button class="btn-add-order" onclick="openModal('Lychee', 85)">+ Add to Order</button>
-                    </div>
-                </div>
-                <div class="product-card" data-category="fruittea">
-                    <img src="/images/peach.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Peach</h3><span class="price">₱85</span></div>
-                        <button class="btn-add-order" onclick="openModal('Peach', 85)">+ Add to Order</button>
-                    </div>
-                </div>
-
-                <!-- RICE MEALS -->
-                <div class="product-card" data-category="rice">
-                    <img src="/images/silog.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Silog</h3><span class="price">₱110</span></div>
-                        <button class="btn-add-order" onclick="openModal('Silog', 110)">+ Add to Order</button>
-                    </div>
-                </div>
-                <div class="product-card" data-category="rice">
-                    <img src="/images/tapsilog.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Hot Silog</h3><span class="price">₱125</span></div>
-                        <button class="btn-add-order" onclick="openModal('Hot Silog', 125)">+ Add to Order</button>
-                    </div>
-                </div>
-                <div class="product-card" data-category="rice">
-                    <img src="/images/longsilog.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Long Silog</h3><span class="price">₱115</span></div>
-                        <button class="btn-add-order" onclick="openModal('Long Silog', 115)">+ Add to Order</button>
-                    </div>
-                </div>
-                <div class="product-card" data-category="rice">
-                    <img src="/images/hamsilog.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Ham Silog</h3><span class="price">₱110</span></div>
-                        <button class="btn-add-order" onclick="openModal('Ham Silog', 110)">+ Add to Order</button>
-                    </div>
-                </div>
-                <div class="product-card" data-category="rice">
-                    <img src="/images/shanghai.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Shanghai Silog</h3><span class="price">₱115</span></div>
-                        <button class="btn-add-order" onclick="openModal('Shanghai Silog', 115)">+ Add to Order</button>
-                    </div>
-                </div>
-                <div class="product-card" data-category="rice">
-                    <img src="/images/embotido.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Embotido Silog</h3><span class="price">₱120</span></div>
-                        <button class="btn-add-order" onclick="openModal('Embotido Silog', 120)">+ Add to Order</button>
-                    </div>
-                </div>
-
-                <!-- PASTRY -->
-                <div class="product-card" data-category="pastry">
-                    <img src="/images/cookies.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Chocolate Cookies</h3><span class="price">₱45</span></div>
-                        <button class="btn-add-order" onclick="openModal('Chocolate Cookies', 45)">+ Add to Order</button>
-                    </div>
-                </div>
-                <div class="product-card" data-category="pastry">
-                    <img src="/images/croissant.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Croissant</h3><span class="price">₱75</span></div>
-                        <button class="btn-add-order" onclick="openModal('Croissant', 75)">+ Add to Order</button>
-                    </div>
-                </div>
-                <div class="product-card" data-category="pastry">
-                    <img src="/images/ensaymada.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Cheese Ensaymada</h3><span class="price">₱60</span></div>
-                        <button class="btn-add-order" onclick="openModal('Cheese Ensaymada', 60)">+ Add to Order</button>
-                    </div>
-                </div>
-                <div class="product-card" data-category="pastry">
-                    <img src="/images/ensaymada.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Yema Ensaymada</h3><span class="price">₱65</span></div>
-                        <button class="btn-add-order" onclick="openModal('Yema Ensaymada', 65)">+ Add to Order</button>
-                    </div>
-                </div>
-                <div class="product-card" data-category="pastry">
-                    <img src="/images/ensaymada.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Ube Ensaymada</h3><span class="price">₱65</span></div>
-                        <button class="btn-add-order" onclick="openModal('Ube Ensaymada', 65)">+ Add to Order</button>
-                    </div>
-                </div>
-                <div class="product-card" data-category="pastry">
-                    <img src="/images/donut.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Chocolate Donut</h3><span class="price">₱55</span></div>
-                        <button class="btn-add-order" onclick="openModal('Chocolate Donut', 55)">+ Add to Order</button>
-                    </div>
-                </div>
-                <div class="product-card" data-category="pastry">
-                    <img src="/images/cinnamon.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Cinnamon</h3><span class="price">₱70</span></div>
-                        <button class="btn-add-order" onclick="openModal('Cinnamon', 70)">+ Add to Order</button>
-                    </div>
-                </div>
-
-                <!-- SNACKS -->
-                <div class="product-card" data-category="snacks">
-                    <img src="/images/fries.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Flavored Fries</h3><span class="price">₱85</span></div>
-                        <button class="btn-add-order" onclick="openModal('Flavored Fries', 85)">+ Add to Order</button>
-                    </div>
-                </div>
-                <div class="product-card" data-category="snacks">
-                    <img src="/images/nachos.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Nachos</h3><span class="price">₱120</span></div>
-                        <button class="btn-add-order" onclick="openModal('Nachos', 120)">+ Add to Order</button>
-                    </div>
-                </div>
-                <div class="product-card" data-category="snacks">
-                    <img src="/images/siomai.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Siomai 4pcs</h3><span class="price">₱60</span></div>
-                        <button class="btn-add-order" onclick="openModal('Siomai 4pcs', 60)">+ Add to Order</button>
-                    </div>
-                </div>
-                <div class="product-card" data-category="snacks">
-                    <img src="/images/carbonara.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Carbonara</h3><span class="price">₱165</span></div>
-                        <button class="btn-add-order" onclick="openModal('Carbonara', 165)">+ Add to Order</button>
-                    </div>
-                </div>
-                <div class="product-card" data-category="snacks">
-                    <img src="/images/pesto.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Pesto Pasta</h3><span class="price">₱155</span></div>
-                        <button class="btn-add-order" onclick="openModal('Pesto Pasta', 155)">+ Add to Order</button>
-                    </div>
-                </div>
-                <div class="product-card" data-category="snacks">
-                    <img src="/images/gambas.jpg" class="product-image" />
-                    <div class="product-info">
-                        <div class="info-top"><h3>Gambas Pasta</h3><span class="price">₱175</span></div>
-                        <button class="btn-add-order" onclick="openModal('Gambas Pasta', 175)">+ Add to Order</button>
-                    </div>
-                </div>
+                }
             </div>
         </main>
     </div>
 
-    <!-- ⭐ MODAL -->
+    <!-- ⭐ SIZE & QTY MODAL -->
     <div id="sizeModal" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-header">
@@ -409,74 +183,331 @@
         </div>
     </div>
 
-    <script>
-            function filterMenu(category, btnElement) {
-                const grid = document.getElementById('menuGrid');
+    <!-- ⭐ NEW: THE SLIDE-OUT CART PANEL ⭐ -->
+    <div id="cartSidebar" class="cart-sidebar">
+        <div class="cart-header">
+            <h2>🛒 Your Order</h2>
+            <button class="close-cart-btn" onclick="toggleCart()">✕</button>
+        </div>
+        
+        <div class="cart-items-container" id="customerCartList">
+            <!-- Items injected by JS -->
+            <div class="empty-cart-msg">Your cart is empty.</div>
+        </div>
+
+        <div class="cart-footer">
+            <div class="cart-total-row">
+                <span>Total:</span>
+                <span id="customerCartTotal">₱0.00</span>
+            </div>
             
-                // 1. Update Category if explicitly clicked
-                if (category) {
-                    const btns = document.querySelectorAll('.cat-btn');
-                    btns.forEach(btn => btn.classList.remove('active'));
-                
-                    if(btnElement) {
-                         btnElement.classList.add('active');
-                    }
-                    grid.setAttribute('data-current-cat', category);
+            <!-- ⭐ Order Type Selector (UPDATED) -->
+            <select id="customerOrderType" onchange="toggleAddressField()" style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #ddd; font-family: 'Outfit';">
+                <option value="Pick-up">🏃‍♂️ Pick-up</option>
+                <option value="Dine In">🍽️ Dine In</option>
+                <option value="Delivery">🛵 Delivery</option>
+            </select>
+
+            <!-- ⭐ NEW: Hidden Address Box -->
+            <div id="addressContainer" style="display: none; margin-bottom: 15px;">
+                <textarea id="customerAddress" placeholder="Enter full delivery address..." rows="2" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; font-family: 'Outfit'; resize: none; box-sizing: border-box;"></textarea>
+            </div>
+            
+            <!-- Payment Method Selector -->
+            <select id="customerPaymentMethod" style="width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #ddd; font-family: 'Outfit';">
+                <option value="Cash">💵 Pay at Counter (Cash)</option>
+                <option value="GCash">🔵 GCash</option>
+                <option value="Maya">🟢 Maya</option>
+                <option value="Card">💳 Credit/Debit Card</option>
+            </select>
+            
+            <button class="btn-checkout" onclick="submitOnlineOrder()">Send Order to Kitchen</button>
+        </div>
+    </div>
+    <div id="cartOverlay" class="cart-overlay" onclick="toggleCart()"></div>
+
+    <script>
+        // ⭐ THE MENU LOADER ⭐
+        const menuData = {};
+        
+        @if (Model != null)
+        {
+            foreach (var item in Model)
+            {
+                @:if(!menuData["@Html.Raw((item.CategoryName ?? "Uncategorized").ToUpper())"]) menuData["@Html.Raw((item.CategoryName ?? "Uncategorized").ToUpper())"] = [];
+                @:menuData["@Html.Raw((item.CategoryName ?? "Uncategorized").ToUpper())"].push({ id: @item.ProductId, name: "@Html.Raw(item.ProductName.Replace("\"", "\\\"").Replace("'", "\\'"))", price: @item.Price });
+            }
+        }
+
+        // ⭐ THE CART LOGIC ⭐
+        let customerCart = JSON.parse(localStorage.getItem('caferoCustomerCart')) || [];
+
+        function toggleCart() {
+            document.getElementById('cartSidebar').classList.toggle('open');
+            document.getElementById('cartOverlay').classList.toggle('open');
+            renderCustomerCart();
+        }
+
+        // ⭐ NEW: Toggle address text box
+        function toggleAddressField() {
+            const orderType = document.getElementById('customerOrderType').value;
+            const addressBox = document.getElementById('addressContainer');
+            if (orderType === 'Delivery') {
+                addressBox.style.display = 'block';
+            } else {
+                addressBox.style.display = 'none';
+            }
+        }
+
+        function confirmAddToCart() {
+            const selectedSize = document.querySelector('input[name="itemSize"]:checked').value;
+            const quantity = parseInt(document.getElementById('itemQty').value);
+            const itemName = document.getElementById('modalItemName').innerText;
+            
+            const priceText = document.querySelector('input[name="itemSize"]:checked').nextElementSibling.querySelector('.size-price-mod').innerText;
+            const price = parseFloat(priceText.replace('₱', ''));
+
+            let realDbId = 0;
+            for (let category in menuData) {
+                // ⭐ THE FIX: Added .trim() to prevent minor spacing mismatches
+                let found = menuData[category].find(p => p.name.trim().toLowerCase() === itemName.trim().toLowerCase());
+                if (found) {
+                    realDbId = found.id;
+                    break;
                 }
+            }
 
-                // 2. Get current states
-                const currentCategory = grid.getAttribute('data-current-cat');
-                const searchTerm = document.getElementById('menuSearch').value.toLowerCase();
-                const cards = document.querySelectorAll('.product-card');
+            // ⭐ THE FIX: Safety Net! Stop if the item isn't in the database.
+            if (realDbId === 0) {
+                Swal.fire(
+                    'Item Not Found in DB', 
+                    `The item "${itemName}" doesn't exist in your live database. Please add it via your Admin Dashboard first!`, 
+                    'error'
+                );
+                return; // Stop the cart from adding fake data
+            }
 
-                // 3. Apply combined filter
-                cards.forEach(card => {
-                    const itemCategory = card.getAttribute('data-category');
-                    const itemName = card.querySelector('h3').innerText.toLowerCase();
-                
-                    const matchesCategory = (currentCategory === 'all' || itemCategory === currentCategory);
-                    const matchesSearch = itemName.includes(searchTerm);
-
-                    if (matchesCategory && matchesSearch) {
-                        card.style.display = 'flex';
-                    } else {
-                        card.style.display = 'none';
-                    }
+            const existingItemIndex = customerCart.findIndex(i => i.name === itemName && i.size === selectedSize);
+            
+            if (existingItemIndex > -1) {
+                customerCart[existingItemIndex].qty += quantity;
+            } else {
+                customerCart.push({ 
+                    name: itemName, 
+                    size: selectedSize, 
+                    qty: quantity, 
+                    price: price,
+                    id: realDbId // ⭐ THE FIX: Now we ONLY use the real database ID
                 });
             }
 
-            function openModal(itemName, price) {
-                document.getElementById('modalItemName').innerText = itemName;
-                document.getElementById('smallPrice').innerText = "₱" + price;
-                document.getElementById('largePrice').innerText = "₱" + (price + 20);
-                document.getElementById('itemQty').value = 1;
-                document.getElementById('sizeModal').style.display = 'flex';
+            localStorage.setItem('caferoCustomerCart', JSON.stringify(customerCart));
+            
+            Swal.fire({
+                title: 'Added!',
+                text: `${quantity}x ${itemName} added to your cart.`,
+                icon: 'success',
+                timer: 1500,
+                showConfirmButton: false
+            });
+            
+            closeModal();
+            updateCartBadge();
+        }
+
+        function updateCartBadge() {
+            let totalItems = 0;
+            customerCart.forEach(item => totalItems += item.qty);
+            
+            let icon = document.querySelector('.cart-icon-btn');
+            let badge = icon.querySelector('.cart-badge');
+            
+            if (totalItems > 0) {
+                if (!badge) {
+                    badge = document.createElement('span');
+                    badge.className = 'cart-badge';
+                    icon.appendChild(badge);
+                }
+                badge.innerText = totalItems;
+            } else if (badge) {
+                badge.remove();
+            }
+        }
+
+        function renderCustomerCart() {
+            const container = document.getElementById('customerCartList');
+            const totalDisplay = document.getElementById('customerCartTotal');
+            
+            updateCartBadge();
+
+            if (customerCart.length === 0) {
+                container.innerHTML = '<div class="empty-cart-msg">Your cart is empty.</div>';
+                totalDisplay.innerText = "₱0.00";
+                return;
             }
 
-            function closeModal() {
-                document.getElementById('sizeModal').style.display = 'none';
+            let html = '';
+            let grandTotal = 0;
+
+            customerCart.forEach((item, index) => {
+                let sub = item.qty * item.price;
+                grandTotal += sub;
+
+                html += `
+                <div class="cart-item-row">
+                    <div class="cart-item-info">
+                        <h4>${item.name}</h4>
+                        <p>${item.size} • ₱${item.price.toFixed(2)}/ea</p>
+                    </div>
+                    <div class="cart-item-controls">
+                        <button class="cart-qty-btn" onclick="updateCustomerQty(${index}, -1)">-</button>
+                        <span style="font-weight: bold; width: 20px; text-align: center;">${item.qty}</span>
+                        <button class="cart-qty-btn" onclick="updateCustomerQty(${index}, 1)">+</button>
+                    </div>
+                    <div style="font-weight: 800; color: #f46a05; min-width: 60px; text-align: right;">
+                        ₱${sub.toFixed(2)}
+                    </div>
+                </div>`;
+            });
+
+            container.innerHTML = html;
+            totalDisplay.innerText = "₱" + grandTotal.toFixed(2);
+        }
+
+        function updateCustomerQty(index, change) {
+            customerCart[index].qty += change;
+            if (customerCart[index].qty <= 0) {
+                customerCart.splice(index, 1);
+            }
+            localStorage.setItem('caferoCustomerCart', JSON.stringify(customerCart));
+            renderCustomerCart();
+        }
+
+        // ⭐ SEND DATA TO C# API
+        async function submitOnlineOrder() {
+            if (customerCart.length === 0) {
+                Swal.fire('Empty Cart', 'Please add items to your cart before checking out.', 'warning');
+                return;
             }
 
-            function updateQty(change) {
-                const qtyInput = document.getElementById('itemQty');
-                let currentQty = parseInt(qtyInput.value);
-                currentQty += change;
-                if (currentQty < 1) currentQty = 1;
-                qtyInput.value = currentQty;
+            const orderType = document.getElementById('customerOrderType').value;
+            const paymentMethod = document.getElementById('customerPaymentMethod').value;
+            const address = document.getElementById('customerAddress').value;
+
+            // Validate address if delivery is selected
+            if (orderType === 'Delivery' && address.trim() === '') {
+                Swal.fire('Missing Address', 'Please enter a delivery address.', 'warning');
+                return;
             }
 
-            function confirmAddToCart() {
-                const selectedSize = document.querySelector('input[name="itemSize"]:checked').value;
-                const quantity = document.getElementById('itemQty').value;
-                const item = document.getElementById('modalItemName').innerText;
-                alert(`${quantity}x ${item} (${selectedSize}) added to cart!`);
-                closeModal();
+            const btn = document.querySelector('.btn-checkout');
+            btn.disabled = true;
+            btn.innerText = "Sending to Kitchen...";
+
+            const payload = {
+                OrderType: orderType,
+                PaymentMethod: paymentMethod,
+                DeliveryAddress: orderType === 'Delivery' ? address : null,
+                Items: customerCart.map(item => ({
+                    ProductId: item.id,
+                    Quantity: item.qty,
+                    Price: item.price
+                }))
+            };
+
+            try {
+                const response = await fetch('/Customer/PlaceOnlineOrder', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    
+                    Swal.fire({
+                        title: 'Order Received! 🎉',
+                        text: `Your order #${result.orderId} has been sent to the kitchen.`,
+                        icon: 'success'
+                    }).then(() => {
+                        customerCart = [];
+                        localStorage.removeItem('caferoCustomerCart');
+                        document.getElementById('customerAddress').value = ""; // Clear address
+                        toggleCart();
+                        updateCartBadge();
+                    });
+                } else {
+                    const errorData = await response.json();
+                    Swal.fire('Checkout Failed', errorData.message || 'Database rejected the order.', 'error');
+                }
+            } catch (err) {
+                Swal.fire('Error', 'Network error. Could not connect to the server.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Send Order to Kitchen";
+            }
+        }
+
+        // ⭐ YOUR EXISTING UI LOGIC ⭐
+        function filterMenu(category, btnElement) {
+            const grid = document.getElementById('menuGrid');
+            
+            if (category) {
+                const btns = document.querySelectorAll('.cat-btn');
+                btns.forEach(btn => btn.classList.remove('active'));
+                
+                if(btnElement) {
+                     btnElement.classList.add('active');
+                }
+                grid.setAttribute('data-current-cat', category);
             }
 
-            window.onclick = function(event) {
-                const modal = document.getElementById('sizeModal');
-                if (event.target == modal) closeModal();
-            }
+            const currentCategory = grid.getAttribute('data-current-cat');
+            const searchTerm = document.getElementById('menuSearch').value.toLowerCase();
+            const cards = document.querySelectorAll('.product-card');
+
+            cards.forEach(card => {
+                const itemCategory = card.getAttribute('data-category');
+                const itemName = card.querySelector('h3').innerText.toLowerCase();
+            
+                const matchesCategory = (currentCategory === 'all' || itemCategory === currentCategory);
+                const matchesSearch = itemName.includes(searchTerm);
+
+                if (matchesCategory && matchesSearch) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        function openModal(itemName, price) {
+            document.getElementById('modalItemName').innerText = itemName;
+            document.getElementById('smallPrice').innerText = "₱" + price;
+            document.getElementById('largePrice').innerText = "₱" + (price + 20);
+            document.getElementById('itemQty').value = 1;
+            document.getElementById('sizeModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('sizeModal').style.display = 'none';
+        }
+
+        function updateQty(change) {
+            const qtyInput = document.getElementById('itemQty');
+            let currentQty = parseInt(qtyInput.value);
+            currentQty += change;
+            if (currentQty < 1) currentQty = 1;
+            qtyInput.value = currentQty;
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('sizeModal');
+            if (event.target == modal) closeModal();
+        }
+        
+        // Load badge on startup
+        window.onload = updateCartBadge;
     </script>
 </body>
 </html>
