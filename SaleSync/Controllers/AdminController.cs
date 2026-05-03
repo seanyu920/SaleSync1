@@ -58,12 +58,14 @@ namespace SaleSync.Controllers
                     FROM sales WHERE CAST(sale_date AS DATE) = CAST(GETDATE() AS DATE) 
                     AND status = 'Completed'";
 
+                // ⭐ UPDATE: Grabbing the new columns and changed to LEFT JOIN just in case an online order has no user_id
                 string historySql = @"
                     SELECT TOP 10 s.sale_id, s.sale_date, s.total_amount, s.status, u.username,
+                    s.customer_name, s.order_type, s.payment_method, s.delivery_address,
                     (SELECT STRING_AGG(CAST(si.quantity AS VARCHAR) + 'x ' + p.product_name, ', ') 
                      FROM sale_items si JOIN products p ON si.product_id = p.product_id 
                      WHERE si.sale_id = s.sale_id) as ItemsSummary
-                    FROM sales s JOIN users u ON s.user_id = u.user_id
+                    FROM sales s LEFT JOIN users u ON s.user_id = u.user_id
                     ORDER BY s.sale_date DESC";
 
                 conn.Open();
@@ -87,9 +89,15 @@ namespace SaleSync.Controllers
                             SaleId = Convert.ToInt32(r["sale_id"]),
                             SaleDate = Convert.ToDateTime(r["sale_date"]),
                             TotalAmount = Convert.ToDecimal(r["total_amount"]),
-                            CashierName = r["username"].ToString(),
+                            CashierName = r["username"]?.ToString() ?? "Online",
                             ItemsSummary = r["ItemsSummary"]?.ToString() ?? "No items",
-                            Status = r["status"]?.ToString() ?? "Pending"
+                            Status = r["status"]?.ToString() ?? "Pending",
+
+                            // ⭐ NEW: Mapping the online order data to your model
+                            CustomerName = r["customer_name"]?.ToString(),
+                            OrderType = r["order_type"]?.ToString(),
+                            PaymentMethod = r["payment_method"]?.ToString(),
+                            DeliveryAddress = r["delivery_address"]?.ToString()
                         });
                     }
                 }
@@ -1143,6 +1151,23 @@ namespace SaleSync.Controllers
                 }
             }
         }
+
+        // ⭐ NEW: REAL-TIME NOTIFICATION ENDPOINT ⭐
+        [HttpGet]
+        public IActionResult CheckNewOrders()
+        {
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                string sql = "SELECT COUNT(*) FROM sales WHERE status = 'Pending'";
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                {
+                    conn.Open();
+                    int count = (int)cmd.ExecuteScalar();
+                    return Json(new { pendingCount = count });
+                }
+            }
+        }
+
         public class AdminVoidRequest { public int SaleId { get; set; } public string Pass { get; set; } }
         public class StatusUpdateModel { public int SaleId { get; set; } public string Status { get; set; } }
     }
