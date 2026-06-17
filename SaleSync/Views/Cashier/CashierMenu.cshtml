@@ -39,7 +39,7 @@
         <aside class="sidebar no-print">
             <div>
                 <div class="logo-section">
-                    <div class="logo-title">SyncScale</div>
+                    <div class="logo-title">Cafero</div>
                     <div class="logo-subtitle">Coffee & Pastries</div>
                 </div>
 
@@ -212,8 +212,6 @@
                 <label class="custom-radio-card"><input type="radio" name="paymentOption" value="GCash" /><span class="radio-tile">🔵 GCash</span></label>
                 <label class="custom-radio-card"><input type="radio" name="paymentOption" value="Maya" /><span class="radio-tile">🟢 Maya</span></label>
                 <label class="custom-radio-card"><input type="radio" name="paymentOption" value="Card" /><span class="radio-tile">💳 Card</span></label>
-                <label class="custom-radio-card"><input type="radio" name="paymentOption" value="QR Ph" /><span class="radio-tile">🔳 QR Ph</span></label>
-                <label class="custom-radio-card"><input type="radio" name="paymentOption" value="Google Pay" /><span class="radio-tile">📱 Google Pay</span></label>
             </div>
             
             <button type="button" class="add-btn-large" onclick="confirmPaymentMethod()">Confirm Selection</button>
@@ -323,7 +321,7 @@
         const selectedOption = document.querySelector('input[name="paymentOption"]:checked');
         if (selectedOption) {
         finalPaymentMethod = selectedOption.value;
-        const icons = {"Cash": "💵", "GCash": "🔵", "Maya": "🟢", "Card": "💳", "QR Ph": "🔳", "Google Pay": "📱"};
+        const icons = {"Cash": "💵", "GCash": "🔵", "Maya": "🟢", "Card": "💳"};
         document.getElementById('activePaymentLabel').innerText = `${icons[finalPaymentMethod]} ${finalPaymentMethod}`;
         document.getElementById('cashSection').style.display = (finalPaymentMethod === "Cash") ? 'block' : 'none';
         if(finalPaymentMethod === "Cash") document.getElementById('amountTendered').focus();

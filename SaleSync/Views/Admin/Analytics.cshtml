@@ -20,7 +20,7 @@
         <aside class="sidebar">
             <div>
                 <div class="logo-section">
-                    <div class="logo-title" style="font-size: 24px; font-weight: 800; color: #ffffff;">SyncScale</div>
+                    <div class="logo-title" style="font-size: 24px; font-weight: 800; color: #ffffff;">Cafero</div>
                     <div class="logo-subtitle" style="font-size: 13px; color: #dcbca5;">Coffee & Pastries</div>
                 </div>
 
@@ -35,7 +35,7 @@
                 <nav class="sidebar-menu">
                     <a href="/@homeController/Dashboard" class="menu-btn @(ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")">❖ Dashboard</a>
                     
-                    <a href="/@homeController/PointOfSale" class="menu-btn @(ViewContext.RouteData.Values["action"]?.ToString() == "PointOfSale" ? "active" : "")">🛒 Point of Sale</a>
+                    <a href="/@homeController/PointOfSale" class="menu-btn @(ViewContext.RouteData.Values["action"]?.ToString() == "PointOfSale" ? "active" : "")">🛒 POS</a>
 
                     @if (User.IsInRole("Admin"))
                     {
@@ -95,15 +95,15 @@
                         <h2 class="widget-title" style="font-size: 20px; font-weight: 800; color: #4a2511; margin-bottom: 20px;">Best Sellers</h2>
                         <div class="items-list" style="display: flex; flex-direction: column; gap: 12px;">
                             <div class="item-row" style="display: flex; justify-content: space-between; padding: 10px; background: #fdfaf6; border-radius: 8px;">
-                                <span style="font-weight: 700;">Coca-Cola 1.5L</span>
+                                <span style="font-weight: 700;">Americano</span>
                                 <span style="color: #f46a05; font-weight: bold;">120 sold</span>
                             </div>
                             <div class="item-row" style="display: flex; justify-content: space-between; padding: 10px; background: #fdfaf6; border-radius: 8px;">
-                                <span style="font-weight: 700;">Pancit Canton</span>
+                                <span style="font-weight: 700;">Wintermelon</span>
                                 <span style="color: #f46a05; font-weight: bold;">98 sold</span>
                             </div>
                             <div class="item-row" style="display: flex; justify-content: space-between; padding: 10px; background: #fdfaf6; border-radius: 8px;">
-                                <span style="font-weight: 700;">Bear Brand Milk</span>
+                                <span style="font-weight: 700;">Green Apple</span>
                                 <span style="color: #f46a05; font-weight: bold;">85 sold</span>
                             </div>
                         </div>

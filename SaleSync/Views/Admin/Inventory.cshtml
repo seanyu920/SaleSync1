@@ -32,7 +32,7 @@
         <aside class="sidebar">
             <div>
                 <div class="logo-section">
-                    <div class="logo-title" style="font-size: 24px; font-weight: 800; color: #ffffff;">SyncScale</div>
+                    <div class="logo-title" style="font-size: 24px; font-weight: 800; color: #ffffff;">Cafero</div>
                     <div class="logo-subtitle" style="font-size: 13px; color: #dcbca5;">Coffee & Pastries</div>
                 </div>
 
@@ -47,7 +47,7 @@
                 <nav class="sidebar-menu">
                     <a href="/@homeController/Dashboard" class="menu-btn @(ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")">❖ Dashboard</a>
                     
-                    <a href="/@homeController/PointOfSale" class="menu-btn @(ViewContext.RouteData.Values["action"]?.ToString() == "PointOfSale" ? "active" : "")">🛒 Point of Sale</a>
+                    <a href="/@homeController/PointOfSale" class="menu-btn @(ViewContext.RouteData.Values["action"]?.ToString() == "PointOfSale" ? "active" : "")">🛒 POS</a>
 
                     @if (User.IsInRole("Admin"))
                     {

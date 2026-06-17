@@ -1,4 +1,6 @@
-﻿/* --- GLOBAL --- */
+﻿/* ==========================================================================
+   1. GLOBAL RESETS & BASE STYLES
+   ========================================================================== */
 * {
     margin: 0;
     padding: 0;
@@ -7,213 +9,183 @@
 }
 
 body {
-    background-color: #ffffff;
-    color: #3b2319;
+    background-color: #111613; /* Consistent dark moss base */
+    color: #ffffff;
 }
 
-/* --- SPLIT LAYOUT --- */
+/* ==========================================================================
+   2. FULL-SCREEN BACKGROUND REGISTRATION LAYOUT
+   ========================================================================== */
 .register-split-container {
+    position: relative;
     display: flex;
-    min-height: 100vh;
-}
-
-/* --- LEFT SIDE (Branding) --- */
-.register-left {
-    flex: 1;
-    /* UPDATE THIS IMAGE URL IF NEEDED */
-    background: linear-gradient(rgba(42, 24, 17, 0.85), rgba(42, 24, 17, 0.85)), url('/images/HomePage2.jpg') center/cover no-repeat;
-    display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    min-height: 100vh;
+    width: 100%;
     padding: 40px;
-    color: #FAF7F2;
-    text-align: center;
 }
 
+    /* Base layer: Full window background */
+    .register-split-container::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: url('/images/HomePage2.jpg') center/cover no-repeat;
+        filter: brightness(1.15) contrast(1.1) saturate(1.05);
+        z-index: -2;
+    }
+
+    /* Tint layer: Dark overlay */
+    .register-split-container::after {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle, rgba(17, 22, 19, 0.4) 0%, rgba(11, 17, 14, 0.85) 100%);
+        z-index: -1;
+    }
+
+/* Branding above the card */
 .brand-content {
-    max-width: 400px;
+    text-align: center;
+    margin-bottom: 30px;
+    z-index: 2;
 }
 
 .register-logo {
     font-family: 'Playfair Display', serif;
-    font-size: 64px;
+    font-size: 52px;
     font-weight: 800;
-    margin-bottom: 5px;
-    letter-spacing: -1px;
+    color: #ffffff;
+    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
 }
 
 .software-tag {
-    font-size: 13px;
+    font-size: 12px;
     letter-spacing: 2px;
-    color: #A8968F;
+    color: #dfb756; /* Gold accent */
     text-transform: uppercase;
-    margin-bottom: 30px;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
 }
 
-    .software-tag strong {
-        color: #f46a05;
-    }
-
-.brand-content p {
-    font-size: 16px;
-    line-height: 1.6;
-    color: #e5dcd8;
-}
-
-/* --- RIGHT SIDE (Form) --- */
+/* --- THE FLOATING CARD --- */
 .register-right {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #ffffff;
-    padding: 40px;
+    width: 100%;
+    max-width: 450px;
+    z-index: 2;
 }
 
 .register-card {
     width: 100%;
-    max-width: 400px;
+    background-color: rgba(29, 38, 33, 0.88); /* Frosted glass */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(223, 183, 86, 0.25); /* Subtle gold border */
+    border-radius: 20px;
+    padding: 40px 35px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
 .register-header {
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 25px;
 }
 
-.top-user-icon {
-    font-size: 45px;
-    display: block;
-    margin-bottom: 15px;
-    color: #573e35;
-}
+    .register-header h2 {
+        font-size: 28px;
+        font-weight: 800;
+        color: #dfb756; /* Gold */
+        margin-bottom: 6px;
+    }
 
-.register-header h2 {
-    font-size: 32px;
-    font-weight: 800;
-    color: #3b2319;
-    margin-bottom: 8px;
-}
-
-.register-header p {
-    color: #8D6E63;
-    font-size: 15px;
-}
+    .register-header p {
+        color: #a7b7af; /* Muted */
+        font-size: 14px;
+    }
 
 /* --- FORM INPUTS --- */
 form {
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 15px;
 }
 
 .input-group label {
     display: block;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 800;
-    margin-bottom: 8px;
-    color: #5b4033;
+    color: #dfb756;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    margin-bottom: 6px;
 }
 
 .input-wrapper {
     display: flex;
     align-items: center;
-    background-color: #FFFDFB;
-    border: 1px solid #EFEBE5;
+    background-color: rgba(17, 22, 19, 0.7);
+    border: 1px solid #2b3931;
     border-radius: 12px;
     padding: 0 15px;
-    transition: border-color 0.3s;
+    transition: all 0.3s;
 }
 
     .input-wrapper:focus-within {
-        border-color: #f46a05;
+        border-color: #dfb756;
+        box-shadow: 0 0 12px rgba(223, 183, 86, 0.2);
     }
 
-.input-icon {
-    font-size: 16px;
-    color: #A8968F;
-    margin-right: 12px;
-}
-
-.input-wrapper input {
-    width: 100%;
-    padding: 14px 0;
-    border: none;
-    background: transparent;
-    font-size: 15px;
-    font-family: 'Outfit', sans-serif;
-    outline: none;
-    color: #3b2319;
-}
-
-    .input-wrapper input::placeholder {
-        color: #bfaaa1;
+    .input-wrapper input {
+        width: 100%;
+        padding: 14px 0;
+        border: none;
+        background: transparent;
+        font-size: 15px;
+        color: #ffffff;
+        outline: none;
     }
 
-/* --- ACTIONS --- */
-.form-actions {
-    text-align: center;
-    margin-top: 10px;
-}
-
+/* --- BUTTON & LINK --- */
 .btn-register {
     width: 100%;
-    padding: 16px;
-    background-color: #f46a05;
-    color: white;
+    padding: 15px;
+    background-color: #dfb756;
+    color: #111613;
     border: none;
     border-radius: 12px;
     font-size: 16px;
     font-weight: 800;
     cursor: pointer;
-    box-shadow: 0 4px 15px rgba(244, 106, 5, 0.25);
-    transition: background-color 0.3s;
+    transition: background 0.3s;
+    margin-top: 10px;
 }
 
     .btn-register:hover {
-        background-color: #d45b04;
+        background-color: #eed074;
     }
 
-/* --- LOGIN PROMPT (Bottom) --- */
 .login-prompt {
-    margin-top: 30px;
-    padding-top: 25px;
-    border-top: 1px solid #EFEBE5;
+    margin-top: 25px;
     text-align: center;
+    border-top: 1px solid #2b3931;
+    padding-top: 20px;
 }
-
-    .login-prompt p {
-        color: #8D6E63;
-        font-size: 15px;
-        margin-bottom: 8px;
-    }
 
 .login-link {
-    color: #f46a05;
+    color: #dfb756;
     font-weight: 800;
     text-decoration: none;
-    font-size: 16px;
-    transition: color 0.3s;
 }
 
-    .login-link:hover {
-        color: #d45b04;
-        text-decoration: underline;
-    }
-
 /* --- RESPONSIVE --- */
-@media (max-width: 850px) {
-    .register-split-container {
-        flex-direction: column;
-    }
-
-    .register-left {
-        padding: 50px 20px;
-        flex: none;
-    }
-
-    .register-right {
-        padding: 40px 20px;
+@media (max-width: 480px) {
+    .register-card {
+        padding: 30px 20px;
     }
 }

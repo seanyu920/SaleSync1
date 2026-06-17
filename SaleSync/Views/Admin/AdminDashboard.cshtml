@@ -109,7 +109,7 @@
                 <div class="summary-card stat-clickable" onclick="switchView('lowstock')">
                     <div class="card-icon-box icon-red">⚠️</div>
                     <div class="card-label">Low Stock Alerts</div>
-                    <div class="card-value">7</div>
+                    <div class="card-value">1</div>
                 </div>
             </div>
 
@@ -375,12 +375,12 @@
         const pendingView = document.getElementById('pendingViewContainer');
         const completedView = document.getElementById('completedViewContainer');
         const lowStockView = document.getElementById('lowStockViewContainer');
-                
+                    
         salesView.classList.add('hidden-view');
         pendingView.classList.add('hidden-view');
         completedView.classList.add('hidden-view');
         lowStockView.classList.add('hidden-view');
-                
+                    
         if (viewName === 'sales') salesView.classList.remove('hidden-view');
         else if (viewName === 'pending') pendingView.classList.remove('hidden-view');
         else if (viewName === 'completed') completedView.classList.remove('hidden-view');
@@ -443,46 +443,6 @@
         }
         });
         }
-
-        // ⭐ NOTIFICATION SYSTEM ⭐
-        let currentPendingCount = @(Model.RecentSales?.Count(s => s.Status == "Pending" || string.IsNullOrEmpty(s.Status)) ?? 0);
-
-        // Helper function to play the sound
-        function playDing() {
-        const ding = new Audio('https://actions.google.com/google_actions/notifications/beeps_instrumental_light.mp3');
-        ding.play().catch(e => console.log("Audio play blocked until user interacts with page."));
-        }
-
-        setInterval(async () => {
-        try {
-        const res = await fetch('/Admin/CheckNewOrders');
-        if (res.ok) {
-        const data = await res.json();
-        if (data.pendingCount > currentPendingCount) {
-                        
-        // ⭐ PLAY SOUND
-        playDing();
-
-        Swal.fire({
-        title: '🛎️ New Online Order!',
-        text: 'A customer just placed a new order.',
-        icon: 'info',
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 4000
-        });
-
-        // Update local count so we don't spam the sound
-        currentPendingCount = data.pendingCount;
-
-        setTimeout(() => location.reload(), 3000);
-        } else if (data.pendingCount < currentPendingCount) {
-        location.reload();
-        }
-        }
-        } catch (e) { console.error("Sync error."); }
-        }, 10000);
     </script>
 </body>
 </html>
