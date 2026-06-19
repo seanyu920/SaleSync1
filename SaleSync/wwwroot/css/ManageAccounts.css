@@ -1,4 +1,29 @@
-﻿/* --- RESET & BASE --- */
+﻿/* ==========================================================================
+   CAFÈRO POS — Dark Theme (User Accounts & Employee Management)
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap');
+
+:root {
+    --bg-base: #0D110D;
+    --bg-surface: #141A14;
+    --bg-card: #1C241C;
+    --bg-card-2: #212B21;
+    --gold: #C9A84C;
+    --gold-light: #DDB95E;
+    --gold-glow: rgba(201, 168, 76, 0.15);
+    --cream: #F2EDE4;
+    --muted: rgba(242, 237, 228, 0.5);
+    --muted-2: rgba(242, 237, 228, 0.75);
+    --border: rgba(201, 168, 76, 0.18);
+    --border-sub: rgba(255, 255, 255, 0.06);
+    --success: #3dbf78;
+    --warning: #d69e2e;
+    --info: #3182ce;
+    --danger: #e05555;
+}
+
+/* --- RESET & BASE --- */
 * {
     margin: 0;
     padding: 0;
@@ -6,9 +31,10 @@
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #fcfaf6;
-    color: #4a2511;
+    font-family: 'Outfit', 'Segoe UI', sans-serif;
+    background: var(--bg-base);
+    color: var(--cream);
+    -webkit-font-smoothing: antialiased;
 }
 
 .dashboard-container {
@@ -18,102 +44,126 @@ body {
 
 /* --- MOCHA SIDEBAR --- */
 .sidebar {
-    width: 260px;
-    background: #4a2511;
-    padding: 30px 20px;
+    width: 240px;
+    background: var(--bg-surface);
+    padding: 28px 18px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    color: #ffffff;
+    flex-shrink: 0;
+    border-right: 1px solid var(--border-sub);
     position: sticky;
     top: 0;
     height: 100vh;
     overflow-y: auto;
 }
 
+    .sidebar::-webkit-scrollbar {
+        width: 3px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+        background: var(--border-sub);
+        border-radius: 10px;
+    }
+
 .logo-section {
-    margin-bottom: 30px;
+    margin-bottom: 28px;
 }
 
 .logo-title {
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 800;
-    color: #ffffff;
-    letter-spacing: 0.5px;
+    color: var(--cream);
+    letter-spacing: -0.5px;
 }
 
 .logo-subtitle {
-    font-size: 13px;
-    color: #dcbca5;
-    margin-top: 4px;
+    font-size: 11px;
+    color: var(--gold);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-top: 3px;
 }
 
 .profile-section {
     display: flex;
     align-items: center;
-    gap: 15px;
-    margin-bottom: 40px;
+    gap: 13px;
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border-sub);
 }
 
 .profile-circle {
-    width: 45px;
-    height: 45px;
-    background: #f46a05;
+    width: 42px;
+    height: 42px;
+    background: var(--gold-glow);
+    border: 1.5px solid var(--gold);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
-    color: #fff;
+    font-size: 17px;
+    color: var(--gold);
+    flex-shrink: 0;
 }
 
 .admin-name {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 700;
-    color: #ffffff;
+    color: var(--cream);
+    margin: 0;
 }
 
 .admin-role {
-    font-size: 12px;
-    color: #dcbca5;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 1px;
 }
 
 .sidebar-menu {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 4px;
 }
 
 .menu-btn {
     display: flex;
     align-items: center;
-    gap: 12px;
-    width: 100%;
+    gap: 10px;
     text-align: left;
     text-decoration: none;
-    color: #dcbca5;
-    font-size: 15px;
+    color: var(--muted);
+    font-size: 14px;
     font-weight: 600;
-    padding: 14px 20px;
-    border-radius: 10px;
+    padding: 11px 14px;
     background: transparent;
     border: none;
-    transition: all 0.3s ease;
+    border-radius: 10px;
+    transition: all 0.2s ease;
     cursor: pointer;
+    width: 100%;
+    font-family: 'Outfit', sans-serif;
+    letter-spacing: 0.2px;
 }
 
     .menu-btn:hover {
-        color: #ffffff;
-        background: rgba(255, 255, 255, 0.05);
+        color: var(--cream);
+        background: var(--border-sub);
     }
 
     .menu-btn.active {
-        background: #f46a05;
-        color: #ffffff;
+        background: var(--gold);
+        color: var(--bg-base);
+        font-weight: 800;
     }
 
 .logout-section {
     margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-sub);
 }
 
 .logout-btn {
@@ -122,63 +172,77 @@ body {
     width: 100%;
     text-align: left;
     cursor: pointer;
-    color: #dcbca5;
-    padding: 14px 20px;
-    font-size: 15px;
+    color: var(--muted);
+    padding: 11px 14px;
+    font-size: 14px;
     font-weight: 600;
-    transition: 0.3s;
+    transition: all 0.2s ease;
+    font-family: 'Outfit', sans-serif;
 }
 
     .logout-btn:hover {
-        color: #ffffff;
-        background: rgba(255, 255, 255, 0.05);
+        color: var(--danger);
+        background: rgba(224, 85, 85, 0.07);
         border-radius: 10px;
     }
 
 /* --- MAIN CONTENT & HEADER --- */
 .main-content {
     flex: 1;
-    padding: 40px 50px;
+    padding: 30px 28px;
     overflow-y: auto;
+    background: var(--bg-base);
 }
 
+    .main-content::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .main-content::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 10px;
+    }
+
 .page-header {
-    margin-bottom: 30px;
+    margin-bottom: 28px;
 }
 
 .greeting-title {
-    font-size: 32px;
+    font-size: 22px;
     font-weight: 800;
-    color: #4a2511;
-    margin-bottom: 8px;
+    color: var(--cream);
+    letter-spacing: -0.3px;
+    margin-bottom: 4px;
 }
 
 .greeting-subtitle {
-    font-size: 15px;
-    color: #b58361;
+    color: var(--muted);
+    font-size: 13px;
 }
 
 /* --- CARDS --- */
 .form-card, .table-card {
-    background: #ffffff;
-    border-radius: 16px;
-    padding: 30px;
-    box-shadow: 0 4px 20px rgba(74, 37, 17, 0.04);
-    margin-bottom: 30px;
+    background: var(--bg-card);
+    border-radius: 14px;
+    padding: 26px;
+    border: 1px solid var(--border-sub);
+    box-shadow: 0 10px 32px rgba(0,0,0,0.2);
+    margin-bottom: 24px;
 }
 
 .widget-title {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 800;
-    color: #4a2511;
-    margin-bottom: 25px;
+    color: var(--cream);
+    letter-spacing: -0.3px;
+    margin-bottom: 20px;
 }
 
 /* --- ACCOUNT FORM GRID --- */
 .form-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
+    gap: 16px;
 }
 
 .input-group {
@@ -187,74 +251,85 @@ body {
 }
 
     .input-group label {
-        font-size: 13px;
+        font-size: 11px;
         font-weight: 700;
-        color: #8c5b3e;
-        margin-bottom: 8px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        margin-bottom: 6px;
         display: block;
     }
 
     .input-group input,
     .input-group select {
         width: 100%;
-        padding: 12px 14px;
-        border: 1px solid #f0e6dd;
-        border-radius: 8px;
+        padding: 11px 14px;
+        border-radius: 10px;
+        border: 1px solid var(--border-sub);
+        background: var(--bg-surface);
+        color: var(--cream);
         font-size: 14px;
-        background: #fdfaf6;
-        height: 44px;
-        color: #4a2511;
+        font-weight: 600;
         outline: none;
-        transition: 0.3s;
+        height: 44px;
+        transition: all 0.2s;
+        font-family: 'Outfit', sans-serif;
     }
 
         .input-group input:focus,
         .input-group select:focus {
-            border-color: #f46a05;
-            background: #fff;
+            border-color: var(--gold);
+            background: var(--bg-card-2);
         }
 
 /* --- BUTTONS --- */
 .form-actions-row {
     display: flex;
     gap: 12px;
-    margin-top: 25px;
+    margin-top: 20px;
     justify-content: flex-end;
 }
 
 .btn {
     border: none;
-    color: white;
-    font-size: 14px;
-    padding: 12px 24px;
+    color: var(--bg-base);
+    font-size: 13.5px;
+    padding: 11px 22px;
     border-radius: 8px;
     cursor: pointer;
-    font-weight: 600;
-    transition: 0.3s;
+    font-weight: 800;
+    font-family: 'Outfit', sans-serif;
+    transition: all 0.2s ease;
 }
 
+    .btn:hover {
+        transform: translateY(-1px);
+    }
+
 .save-btn {
-    background: #f46a05;
+    background: var(--gold);
 }
 
     .save-btn:hover {
-        background: #cc5500;
+        background: var(--gold-light);
     }
 
 .update-btn {
-    background: #ab4a03;
+    background: var(--cream);
+    color: var(--bg-base);
 }
 
     .update-btn:hover {
-        background: #8c3b02;
+        background: #ffffff;
     }
 
 .delete-btn {
-    background: #e02424;
+    background: var(--danger);
+    color: #ffffff;
 }
 
     .delete-btn:hover {
-        background: #b81d1d;
+        filter: brightness(1.15);
     }
 
 /* --- ACCOUNTS TABLE --- */
@@ -263,9 +338,20 @@ body {
     max-height: 500px;
     overflow-y: auto;
     overflow-x: auto;
-    border-radius: 8px;
-    border: 1px solid #f0e9e4;
+    border-radius: 12px;
+    border: 1px solid var(--border-sub);
+    background: var(--bg-card);
 }
+
+    .table-wrap::-webkit-scrollbar {
+        width: 4px;
+        height: 4px;
+    }
+
+    .table-wrap::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 10px;
+    }
 
 .accounts-table {
     width: 100%;
@@ -278,144 +364,157 @@ body {
         position: sticky;
         top: 0;
         z-index: 10;
-        background: #ffffff;
-        color: #8c5b3e;
-        font-size: 12px;
+        background: var(--bg-card-2);
+        color: var(--gold);
+        font-size: 11px;
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
-        padding: 16px 12px;
+        letter-spacing: 1.5px;
+        padding: 14px 16px;
         text-align: left;
-        border-bottom: 2px solid #f0e9e4;
+        border-bottom: 1px solid var(--border);
     }
 
     .accounts-table tbody td {
-        padding: 16px 12px;
-        font-size: 14px;
-        color: #4a2511;
-        border-bottom: 1px solid #f0e9e4;
+        padding: 14px 16px;
+        font-size: 13.5px;
+        color: var(--muted-2);
+        border-bottom: 1px solid var(--border-sub);
         vertical-align: middle;
     }
 
 .clickable-row {
     cursor: pointer;
-    transition: 0.2s;
+    transition: all 0.2s ease;
 }
 
     .clickable-row:hover td {
-        background: #fdfaf6 !important;
+        background: rgba(255, 255, 255, 0.02) !important;
     }
 
 .hidden-password {
-    color: #b58361;
+    color: var(--muted);
+    font-family: monospace;
+    letter-spacing: 2px;
 }
 
 .empty-table-msg {
     text-align: center;
     padding: 40px;
-    color: #b58361;
+    color: var(--muted);
     font-style: italic;
+    font-size: 14px;
 }
 
 /* --- ROLE BADGES --- */
 .role-badge {
-    padding: 6px 12px;
+    padding: 5px 12px;
     border-radius: 20px;
-    font-size: 12px;
-    font-weight: 700;
+    font-size: 11px;
+    font-weight: 800;
     display: inline-block;
     text-align: center;
     min-width: 80px;
 }
 
 .role-admin {
-    background: #d1f4e0;
-    color: #0d7a46;
+    background: rgba(61, 191, 120, 0.12);
+    color: var(--success);
+    border: 1px solid rgba(61, 191, 120, 0.2);
 }
 
 .role-manager {
-    background: #fdf0dc;
-    color: #a16c1b;
+    background: rgba(214, 158, 46, 0.12);
+    color: var(--warning);
+    border: 1px solid rgba(214, 158, 46, 0.2);
 }
 
 .role-cashier {
-    background: #e0f2fe;
-    color: #0369a1;
+    background: rgba(49, 130, 206, 0.12);
+    color: var(--info);
+    border: 1px solid rgba(49, 130, 206, 0.2);
 }
 
-/* --- SWEETALERT2 OVERRIDES (CAFERO THEME) --- */
-/* Target the SweetAlert container to match dashboard cards */
+/* ==========================================================================
+   SWEETALERT2 MODAL SYSTEM PREMIUM OVERRIDES
+   ========================================================================== */
 .swal2-popup {
-    border-radius: 20px !important;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
-    padding: 2rem !important; /* Extra padding for breathing room */
-    border: 2px solid #fcfaf6 !important; /* Blends with your background */
-    box-shadow: 0 10px 30px rgba(74, 37, 17, 0.1) !important;
+    background: var(--bg-card) !important;
+    border-radius: 18px !important;
+    font-family: 'Outfit', 'Segoe UI', sans-serif !important;
+    padding: 2.5rem 2rem !important;
+    border: 1px solid var(--border) !important;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.5) !important;
 }
 
-/* Style the main Title */
 .swal2-title {
-    color: #4a2511 !important; /* Your brand dark mocha */
+    color: var(--cream) !important;
     font-weight: 800 !important;
-    font-size: 1.6rem !important;
+    font-size: 1.5rem !important;
+    letter-spacing: -0.3px !important;
 }
 
-/* Style the subtext */
 .swal2-html-container {
-    color: #8c5b3e !important; /* Your brand muted brown */
-    font-size: 15px !important;
-    margin-top: 10px !important;
+    color: var(--muted-2) !important;
+    font-size: 14px !important;
+    margin-top: 12px !important;
+    line-height: 1.5 !important;
 }
 
-/* Add a gap between the action buttons so they aren't touching */
 .swal2-actions {
-    gap: 15px !important;
-    margin-top: 25px !important;
+    gap: 12px !important;
+    margin-top: 24px !important;
 }
 
-/* The Primary Confirm/Yes Button (Orange) */
 .swal2-confirm {
-    background-color: #f46a05 !important; /* Your brand orange */
-    color: white !important;
-    border-radius: 12px !important;
-    padding: 12px 30px !important;
-    font-weight: 700 !important;
-    box-shadow: 0 4px 12px rgba(244, 106, 5, 0.2) !important; /* Subtle orange glow */
+    background-color: var(--gold) !important;
+    color: var(--bg-base) !important;
+    border-radius: 8px !important;
+    padding: 11px 28px !important;
+    font-weight: 800 !important;
+    font-size: 13.5px !important;
+    box-shadow: none !important;
     border: none !important;
+    transition: all 0.2s !important;
 }
 
-/* The Cancel Button (Brown) */
+    .swal2-confirm:hover {
+        background-color: var(--gold-light) !important;
+    }
+
 .swal2-cancel {
-    background-color: #4a2511 !important; /* Your brand dark mocha */
-    color: white !important;
-    border-radius: 12px !important;
-    padding: 12px 25px !important;
-    font-weight: 600 !important;
-    border: none !important;
+    background-color: var(--bg-surface) !important;
+    color: var(--cream) !important;
+    border: 1px solid var(--border-sub) !important;
+    border-radius: 8px !important;
+    padding: 11px 24px !important;
+    font-weight: 700 !important;
+    font-size: 13.5px !important;
+    transition: all 0.2s !important;
 }
 
-/* Fix Hover States */
-.swal2-confirm:hover {
-    background-color: #cc5500 !important;
-}
+    .swal2-cancel:hover {
+        border-color: var(--border) !important;
+        background-color: var(--bg-card-2) !important;
+    }
 
-.swal2-cancel:hover {
-    background-color: #381c0d !important;
-}
-
-/* Colorize the Icons to match your theme */
+/* Icon Colors */
 .swal2-icon.swal2-warning,
 .swal2-icon.swal2-question {
-    border-color: #f46a05 !important;
-    color: #f46a05 !important;
+    border-color: var(--warning) !important;
+    color: var(--warning) !important;
 }
 
 .swal2-icon.swal2-success {
-    border-color: #0b8a53 !important;
-    color: #0b8a53 !important;
+    border-color: var(--success) !important;
+    color: var(--success) !important;
 }
 
 .swal2-icon.swal2-error {
-    border-color: #e02424 !important;
-    color: #e02424 !important;
+    border-color: var(--danger) !important;
+    color: var(--danger) !important;
+}
+
+.swal2-icon {
+    background: transparent !important;
 }
