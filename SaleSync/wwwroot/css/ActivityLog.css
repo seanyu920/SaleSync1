@@ -1,5 +1,5 @@
 ﻿/* ==========================================================================
-   CAFÈRO ACTIVITY LOG — Sidebar copied exactly from POS
+   CAFÈRO ACTIVITY LOG — Dark Theme (Fully Aligned with Dashboard Layout)
    ========================================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap');
@@ -17,6 +17,7 @@
     --muted-2: rgba(242, 237, 228, 0.75);
     --border: rgba(201, 168, 76, 0.18);
     --border-sub: rgba(255, 255, 255, 0.06);
+    --green-hint: rgba(45, 106, 79, 0.25);
     --success: #3dbf78;
     --danger: #e05555;
     --warning: #f59e0b;
@@ -29,7 +30,7 @@
 }
 
 body {
-    font-family: 'Outfit', 'Segoe UI', sans-serif;
+    font-family: 'Outfit', 'Segoe UI', system-ui, sans-serif;
     background: var(--bg-base);
     color: var(--cream);
     -webkit-font-smoothing: antialiased;
@@ -42,37 +43,27 @@ body {
 }
 
 /* ==========================================================================
-   SIDEBAR — pixel-perfect copy of POS sidebar
+   SIDEBAR — Fixed Spacing (Pixel-Perfect Dashboard Clone)
    ========================================================================== */
 .sidebar {
-    width: 240px;
+    width: 255px; /* Restored to perfect 255px dashboard standard */
     background: var(--bg-surface);
-    padding: 30px 20px; /* same as POS */
+    padding: 30px 20px;
     display: flex;
     flex-direction: column;
-    flex-shrink: 0;
-    border-right: 1px solid var(--border-sub);
     position: sticky;
     top: 0;
     height: 100vh;
-    overflow-y: auto;
+    border-right: 1px solid var(--border-sub);
+    flex-shrink: 0;
 }
 
-    .sidebar::-webkit-scrollbar {
-        width: 3px;
-    }
-
-    .sidebar::-webkit-scrollbar-thumb {
-        background: var(--border-sub);
-        border-radius: 10px;
-    }
-
-/* ── Logo block ── */
+/* Logo block */
 .logo-section {
     margin-bottom: 28px;
 }
 
-.logo-title {
+.sidebar .logo-title {
     font-size: 22px;
     font-weight: 800;
     color: var(--cream);
@@ -80,7 +71,7 @@ body {
     line-height: 1.2;
 }
 
-.logo-subtitle {
+.sidebar .logo-subtitle {
     font-size: 11px;
     color: var(--gold);
     font-weight: 700;
@@ -90,21 +81,21 @@ body {
     display: block;
 }
 
-/* ── Profile ── */
+/* Profile — Breathing room matched to Dashboard */
 .profile-section {
     display: flex;
     align-items: center;
     gap: 13px;
-    padding-top: 4px; /* breathing room below subtitle */
-    padding-bottom: 20px;
     margin-bottom: 32px;
+    padding-bottom: 20px;
+    padding-top: 4px;
     border-bottom: 1px solid var(--border-sub);
 }
 
 .profile-circle {
     width: 40px;
     height: 40px;
-    background: var(--gold-glow);
+    background: var(--green-hint); /* Synchronized layout hint value background */
     border: 1.5px solid var(--gold);
     border-radius: 50%;
     display: flex;
@@ -120,7 +111,6 @@ body {
     font-weight: 700;
     color: var(--cream);
     line-height: 1.3;
-    margin: 0;
 }
 
 .admin-role {
@@ -129,7 +119,7 @@ body {
     margin-top: 1px;
 }
 
-/* ── Menu items — exact copy of POS ── */
+/* Menu Navigation Elements */
 .sidebar-menu {
     display: flex;
     flex-direction: column;
@@ -141,18 +131,17 @@ body {
     display: flex;
     align-items: center;
     gap: 11px;
-    text-align: left;
+    width: 100%;
     text-decoration: none;
     color: var(--muted);
     font-size: 14px;
     font-weight: 600;
     padding: 11px 14px;
+    border-radius: 10px;
     background: transparent;
     border: none;
-    border-radius: 10px;
     transition: all 0.2s ease;
     cursor: pointer;
-    width: 100%;
     font-family: 'Outfit', sans-serif;
     letter-spacing: 0.2px;
 }
@@ -168,7 +157,7 @@ body {
         font-weight: 800;
     }
 
-/* Icon — same .menu-icon class as POS & Dashboard */
+/* Menu Icons use unified identification dimensions */
 .menu-icon {
     font-size: 15px;
     width: 18px;
@@ -181,7 +170,7 @@ body {
     opacity: 1;
 }
 
-/* ── Logout ── */
+/* Logout Section */
 .logout-section {
     margin-top: auto;
     padding-top: 16px;
@@ -198,11 +187,11 @@ body {
     }
 
 /* ==========================================================================
-   MAIN CONTENT
+   MAIN CONTENT AREA
    ========================================================================== */
 .main-content {
     flex: 1;
-    padding: 36px 40px;
+    padding: 36px 40px; /* Exact match with main app dashboard panel */
     overflow-y: auto;
     background: var(--bg-base);
 }
@@ -217,7 +206,7 @@ body {
     }
 
 .page-header {
-    margin-bottom: 28px;
+    margin-bottom: 30px; /* Aligned header block bounding heights */
 }
 
 .greeting-title {
@@ -332,7 +321,7 @@ select.filter-input {
     }
 
 /* ==========================================================================
-   ACTIVITY TABLE
+   ACTIVITY DATA TABLE
    ========================================================================== */
 .table-responsive {
     width: 100%;
@@ -345,20 +334,20 @@ select.filter-input {
 }
 
     .activity-table th {
-        background: var(--bg-card-2);
-        color: var(--gold);
+        background: var(--bg-surface); /* Adjusted from card-2 to match dashboard table defaults */
+        color: var(--muted); /* Shifted header items into muted specs for readable focus */
         font-size: 10.5px;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 1.5px;
-        padding: 13px 16px;
+        padding: 12px 16px;
         text-align: left;
         border-bottom: 1px solid var(--border-sub);
     }
 
     .activity-table td {
         padding: 14px 16px;
-        font-size: 13.5px;
+        font-size: 14px; /* Harmonized layout font scaling */
         color: var(--muted-2);
         border-bottom: 1px solid var(--border-sub);
         vertical-align: middle;
@@ -378,7 +367,7 @@ select.filter-input {
 
 .log-timestamp {
     font-weight: 700;
-    color: var(--cream);
+    color: var(--gold); /* Aligned layout visual telemetry flags */
     font-size: 13px;
     white-space: nowrap;
 }
@@ -396,13 +385,13 @@ select.filter-input {
 }
 
 .log-details {
-    color: var(--muted);
-    font-size: 13px;
+    color: var(--muted-2);
+    font-size: 13.5px;
 }
 
 .table-empty-state {
     text-align: center;
-    padding: 48px;
+    padding: 40px;
     color: var(--muted);
     font-size: 14px;
 }
@@ -414,25 +403,26 @@ select.filter-input {
 .badge-void,
 .badge-access,
 .badge-edit {
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 11px;
+    padding: 4px 11px; /* Uniform structural footprint tracking status badges */
+    border-radius: 6px; /* Matched radius curvature config */
+    font-size: 10px;
     font-weight: 700;
     display: inline-block;
     white-space: nowrap;
-    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
 }
 
 .badge-update {
-    background: rgba(61,191,120,0.12);
+    background: rgba(61, 191, 120, 0.12);
     color: var(--success);
-    border: 1px solid rgba(61,191,120,0.2);
+    border: 1px solid rgba(61, 191, 120, 0.25);
 }
 
 .badge-void {
-    background: rgba(224,85,85,0.12);
+    background: rgba(224, 85, 85, 0.12);
     color: var(--danger);
-    border: 1px solid rgba(224,85,85,0.2);
+    border: 1px solid rgba(224, 85, 85, 0.25);
 }
 
 .badge-access {
@@ -442,13 +432,13 @@ select.filter-input {
 }
 
 .badge-edit {
-    background: rgba(245,158,11,0.12);
+    background: rgba(245, 158, 11, 0.12);
     color: var(--warning);
-    border: 1px solid rgba(245,158,11,0.2);
+    border: 1px solid rgba(245, 158, 11, 0.25);
 }
 
 /* ==========================================================================
-   SWEETALERT2
+   SWEETALERT2 — Exactly mirrors the configurations of the Dashboard
    ========================================================================== */
 .swal2-popup {
     border-radius: 16px !important;
@@ -456,19 +446,21 @@ select.filter-input {
     font-family: 'Outfit', sans-serif !important;
     padding: 2.5rem 2rem !important;
     border: 1px solid var(--border) !important;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5) !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5) !important;
 }
 
 .swal2-title {
     color: var(--cream) !important;
     font-weight: 800 !important;
     font-size: 1.4rem !important;
+    letter-spacing: -0.3px !important;
 }
 
 .swal2-html-container {
     color: var(--muted) !important;
     font-size: 14px !important;
     margin-top: 8px !important;
+    line-height: 1.6 !important;
 }
 
 .swal2-actions {

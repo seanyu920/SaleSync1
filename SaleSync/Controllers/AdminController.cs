@@ -1167,6 +1167,14 @@ namespace SaleSync.Controllers
                 }
             }
         }
+        [HttpGet]
+        public IActionResult WebCustomization()
+        {
+            // Initialize a completely new instance directly to prevent database errors for now
+            var settings = new WebCustomization();
+
+            return View(settings);
+        }
 
         public class AdminVoidRequest { public int SaleId { get; set; } public string Pass { get; set; } }
         public class StatusUpdateModel { public int SaleId { get; set; } public string Status { get; set; } }

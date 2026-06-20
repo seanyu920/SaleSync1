@@ -15,7 +15,6 @@
 </head>
 <body>
 
-    <!-- VOID MODAL -->
     <div id="voidModal" class="modal-overlay">
         <div class="auth-modal">
             <h3 class="modal-title">Authorize Void</h3>
@@ -27,7 +26,6 @@
     </div>
 
     <div class="dashboard-container">
-        <!-- SIDEBAR -->
         <aside class="sidebar">
             <div>
                 <div class="logo-section">
@@ -51,18 +49,21 @@
                     {
                         <a href="/Admin/ActivityLog" class="menu-btn"><i class="fas fa-clipboard-list"></i> Activity Log</a>
                     }
-                    
+
                     <a href="/Admin/Analytics" class="menu-btn"><i class="fas fa-chart-pie"></i> Analytics</a>
                     <a href="/Admin/Products" class="menu-btn"><i class="fas fa-tags"></i> Products</a>
                     <a href="/Admin/Inventory" class="menu-btn"><i class="fas fa-box-open"></i> Inventory</a>
+
+                    <a href="/Admin/ArchivedProducts" class="menu-btn"><i class="fas fa-archive"></i> Archived</a>
 
                     @if (User.IsInRole("Admin"))
                     {
                         <a href="/Admin/ManageAccounts" class="menu-btn"><i class="fas fa-credit-card"></i> Accounts</a>
                     }
+                    <a href="/Admin/WebCustomization" class="menu-btn"><i class="fas fa-tags"></i> Customization</a>
                 </nav>
             </div>
-            
+
             <div class="logout-section">
                 <form method="post" action="/Home/Logout">
                     <button type="submit" class="menu-btn logout-btn">
@@ -72,10 +73,8 @@
             </div>
         </aside>
 
-        <!-- MAIN CONTENT -->
         <main class="main-content">
-            
-            <!-- PAGE HEADER -->
+
             <div class="page-header dashboard-header-card">
                 <div>
                     <p class="header-label">Today's Net Sales</p>
@@ -90,26 +89,25 @@
                 </div>
             </div>
 
-            <!-- SUMMARY STATS -->
             <div class="summary-dashboard">
                 <div class="summary-card stat-clickable" onclick="switchView('sales')">
                     <div class="card-icon-box icon-orange"><i class="fas fa-list"></i></div>
                     <div class="card-label">All Transactions</div>
                     <div class="card-value">@(Model.RecentSales?.Count ?? 0)</div>
                 </div>
-                
+
                 <div class="summary-card stat-clickable" onclick="switchView('pending')">
                     <div class="card-icon-box icon-green"><i class="fas fa-hourglass-half"></i></div>
                     <div class="card-label">Pending Orders</div>
                     <div class="card-value">@(Model.RecentSales?.Count(s => s.Status == "Pending" || string.IsNullOrEmpty(s.Status)) ?? 0)</div>
                 </div>
-                
+
                 <div class="summary-card stat-clickable" onclick="switchView('completed')">
                     <div class="card-icon-box icon-light-orange"><i class="fas fa-check-circle"></i></div>
                     <div class="card-label">Completed Sales</div>
                     <div class="card-value">@Model.TodayTransactionCount</div>
                 </div>
-                
+
                 <div class="summary-card stat-clickable" onclick="switchView('lowstock')">
                     <div class="card-icon-box icon-red"><i class="fas fa-exclamation-triangle"></i></div>
                     <div class="card-label">Low Stock Alerts</div>
@@ -117,7 +115,6 @@
                 </div>
             </div>
 
-            <!-- VIEW 1: ALL TRANSACTIONS -->
             <div class="recent-sales-card" id="salesViewContainer">
                 <div class="card-header-flex">
                     <div>
@@ -186,7 +183,6 @@
                 </div>
             </div>
 
-            <!-- VIEW 2: PENDING ORDERS -->
             <div class="recent-sales-card hidden-view" id="pendingViewContainer">
                 <div class="card-header-flex">
                     <div>
@@ -262,7 +258,6 @@
                 </div>
             </div>
 
-            <!-- VIEW 3: COMPLETED TRANSACTIONS -->
             <div class="recent-sales-card hidden-view" id="completedViewContainer">
                 <div class="card-header-flex">
                     <div>
@@ -333,7 +328,6 @@
                 </div>
             </div>
 
-            <!-- VIEW 4: LOW STOCK ALERTS -->
             <div class="recent-sales-card hidden-view" id="lowStockViewContainer">
                 <div class="card-header-flex">
                     <div>
@@ -370,14 +364,13 @@
         </main>
     </div>
 
-    <!-- JAVASCRIPT LOGIC -->
     <script>
         let selectedSaleId = null;
 
         function switchView(viewName) {
         const views = ['salesViewContainer', 'pendingViewContainer', 'completedViewContainer', 'lowStockViewContainer'];
         views.forEach(id => document.getElementById(id).classList.add('hidden-view'));
-            
+
         if (viewName === 'sales') document.getElementById('salesViewContainer').classList.remove('hidden-view');
         else if (viewName === 'pending') document.getElementById('pendingViewContainer').classList.remove('hidden-view');
         else if (viewName === 'completed') document.getElementById('completedViewContainer').classList.remove('hidden-view');

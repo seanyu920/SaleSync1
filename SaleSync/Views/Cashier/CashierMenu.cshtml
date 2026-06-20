@@ -1,8 +1,7 @@
 ﻿@model List<SaleSync.Models.MenuItemModel>
 @{
     Layout = null;
-    
-    // ⭐ SHAPE-SHIFTER LOGIC: Detects who is looking at the POS and adjusts the sidebar
+
     string roleName = "Cashier";
     string homeController = "Cashier";
     string subtitle = "Front Desk Access";
@@ -25,17 +24,17 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Point of Sale - SyncScale</title>
+    <title>Point of Sale - Cafero</title>
     <link rel="stylesheet" href="~/css/CashierMenu.css" asp-append-version="true" />
-    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
     <div class="dashboard-container">
-        
-        <!-- SIDEBAR -->
+
+        <!-- ===================== SIDEBAR (copied from Admin Dashboard) ===================== -->
         <aside class="sidebar no-print">
             <div>
                 <div class="logo-section">
@@ -45,42 +44,58 @@
 
                 <div class="profile-section">
                     <div class="profile-circle">👤</div>
-                    <div class="profile-text">
+                    <div>
                         <h2 class="admin-name">@roleName</h2>
                         <div class="admin-role">@subtitle</div>
                     </div>
                 </div>
 
                 <nav class="sidebar-menu">
-                    <a href="/@homeController/Dashboard" class="menu-btn">❖ Dashboard</a>
-                    <a href="javascript:void(0)" class="menu-btn active">🛒 POS</a>
+                    <a href="/@homeController/Dashboard" class="menu-btn">
+                        <i class="fas fa-chart-line"></i> Dashboard
+                    </a>
+                    <a href="javascript:void(0)" class="menu-btn active">
+                        <i class="fas fa-shopping-cart"></i> POS
+                    </a>
 
                     @if (User.IsInRole("Admin"))
                     {
-                        <a href="/Admin/ActivityLog" class="menu-btn">📋 Activity Log</a>
+                        <a href="/Admin/ActivityLog" class="menu-btn">
+                            <i class="fas fa-clipboard-list"></i> Activity Log
+                        </a>
                     }
-                    
+
                     @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
                     {
-                        <a href="/Admin/Analytics" class="menu-btn">📊 Analytics</a>
-                        <a href="/Admin/Products" class="menu-btn">🏷️ Products</a>
-                        <a href="/Admin/Inventory" class="menu-btn">📦 Inventory</a>
+                        <a href="/Admin/Analytics" class="menu-btn">
+                            <i class="fas fa-chart-pie"></i> Analytics
+                        </a>
+                        <a href="/Admin/Products" class="menu-btn">
+                            <i class="fas fa-tags"></i> Products
+                        </a>
+                        <a href="/Admin/Inventory" class="menu-btn">
+                            <i class="fas fa-box-open"></i> Inventory
+                        </a>
                     }
 
                     @if (User.IsInRole("Admin"))
                     {
-                        <a href="/Admin/ManageAccounts" class="menu-btn">💳 Accounts</a>
+                        <a href="/Admin/ManageAccounts" class="menu-btn">
+                            <i class="fas fa-credit-card"></i> Accounts
+                        </a>
                     }
                 </nav>
             </div>
 
             <div class="logout-section">
                 <form method="post" action="/Home/Logout">
-                    <button type="submit" class="menu-btn logout-btn">⎋ Log Out</button>
+                    <button type="submit" class="menu-btn logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> Log Out
+                    </button>
                 </form>
             </div>
         </aside>
-
+        <!-- ===================== END SIDEBAR ===================== -->
         <!-- MAIN POS AREA -->
         <main class="menu-side no-print">
             <div id="menuSection">
@@ -127,7 +142,7 @@
         <aside class="receipt-side no-print">
             <h2 class="widget-title receipt-title">🛒 Current Order</h2>
             <p class="receipt-subtitle">Tap an item to select for removal</p>
-            
+
             <div class="order-items-list" id="receiptList">
                 <div class="empty-msg">No items in order</div>
             </div>
@@ -138,12 +153,10 @@
                     <span id="total">₱0.00</span>
                 </div>
 
-                <!-- ⭐ CUSTOMER NAME INPUT -->
                 <div style="margin-bottom: 12px;">
                     <input type="text" id="customerName" class="customer-name-input" placeholder="Customer Name (Optional)" autocomplete="off" />
                 </div>
 
-                <!-- ⭐ ORDER TYPE TOGGLE -->
                 <div style="display: flex; gap: 10px; margin-bottom: 12px;">
                     <label class="custom-radio-card" style="flex: 1;">
                         <input type="radio" name="orderType" value="Dine In" checked onchange="updateOrderType()" />
@@ -154,26 +167,25 @@
                         <span class="radio-tile" style="padding: 12px; font-size: 14px;">🛍️ Take Out</span>
                     </label>
                 </div>
-                
+
                 <button type="button" onclick="openPaymentModal()" class="payment-select-btn">
                     <span class="payment-label">Payment Method</span>
                     <span id="activePaymentLabel">💵 Cash</span>
                 </button>
-                
+
                 <div class="receipt-actions">
                     <button type="button" onclick="removeSelectedItem()" class="delete-btn">Remove Item</button>
                 </div>
-                
+
                 <div id="cashSection" class="cash-section">
                     <label class="cash-label">Amount Tendered (₱):</label>
                     <input type="number" id="amountTendered" class="cash-input" onkeyup="calculateChange()" placeholder="0.00" />
-                    
                     <div class="change-row">
                         <span class="change-label">Change Due:</span>
                         <span id="changeDisplay" class="change-amount">₱0.00</span>
                     </div>
                 </div>
-                
+
                 <button type="button" onclick="checkoutOrder()" class="btn-checkout">Complete Checkout</button>
             </div>
         </aside>
@@ -183,19 +195,16 @@
     <div id="selectionModal" class="modal-overlay no-print" style="display:none;">
         <div class="form-card modal-card">
             <button type="button" onclick="closeSelectionModal()" class="modal-close-btn">&times;</button>
-            
             <div class="item-display-flex">
                 <div class="item-image-container" id="detailImageContainer"></div>
                 <div class="item-details-controls">
                     <h2 id="displayName" class="item-name-display">Product Name</h2>
                     <div class="size-selector-grid" id="sizeSelector"></div>
-                    
                     <div class="qty-flex">
                         <button type="button" onclick="decreaseQty()">-</button>
                         <input id="qty" value="1" readonly />
                         <button type="button" onclick="increaseQty()">+</button>
                     </div>
-                    
                     <button type="button" class="add-btn-large" onclick="addToCart()">Add to Receipt</button>
                 </div>
             </div>
@@ -206,19 +215,16 @@
         <div class="form-card modal-card payment-card">
             <button type="button" onclick="closePaymentModal()" class="modal-close-btn">&times;</button>
             <h2 class="widget-title text-center">Select Payment Method</h2>
-            
             <div class="payment-grid">
                 <label class="custom-radio-card"><input type="radio" name="paymentOption" value="Cash" checked /><span class="radio-tile">💵 Cash</span></label>
                 <label class="custom-radio-card"><input type="radio" name="paymentOption" value="GCash" /><span class="radio-tile">🔵 GCash</span></label>
                 <label class="custom-radio-card"><input type="radio" name="paymentOption" value="Maya" /><span class="radio-tile">🟢 Maya</span></label>
                 <label class="custom-radio-card"><input type="radio" name="paymentOption" value="Card" /><span class="radio-tile">💳 Card</span></label>
             </div>
-            
             <button type="button" class="add-btn-large" onclick="confirmPaymentMethod()">Confirm Selection</button>
         </div>
     </div>
 
-    <!-- FINAL RECEIPT PREVIEW MODAL -->
     <div id="receiptModal" class="modal-overlay" style="display:none;">
         <div class="receipt-paper">
             <div class="receipt-header-print">
@@ -226,42 +232,28 @@
                 <p>Coffee & Pastries</p>
                 <p>Taytay, Rizal</p>
             </div>
-            
             <div class="receipt-meta">
                 <p>Date: <span id="receiptDate"></span></p>
                 <p>Receipt #: <span id="receiptNumber"></span></p>
                 <p>Cashier: @roleName</p>
                 <p>Type: <strong id="receiptOrderType"></strong></p>
-                <!-- CUSTOMER NAME ON RECEIPT -->
                 <p id="receiptCustomerRow" style="display: none;">Customer: <strong id="receiptCustomerName"></strong></p>
             </div>
-            
             <div class="receipt-divider"></div>
-            
-            <table class="receipt-table" id="receiptItemsTable">
-                <!-- Items injected by JS -->
-            </table>
-            
+            <table class="receipt-table" id="receiptItemsTable"></table>
             <div class="receipt-divider"></div>
-            
             <div class="receipt-row"><span>Subtotal:</span><span id="receiptSubtotal"></span></div>
             <div class="receipt-row"><span>VAT (12%):</span><span id="receiptVat"></span></div>
             <div class="receipt-row receipt-grand-total"><span>TOTAL:</span><span id="receiptTotal"></span></div>
-            
             <div class="receipt-divider"></div>
-            
             <div class="receipt-row"><span>Method:</span><span id="receiptPayMethod"></span></div>
             <div class="receipt-row"><span>Tendered:</span><span id="receiptTendered"></span></div>
             <div class="receipt-row"><span>Change:</span><span id="receiptChange"></span></div>
-            
             <div class="receipt-divider"></div>
-            
             <div class="receipt-footer-print">
                 <p>Thank you for your purchase!</p>
                 <p>Please come again.</p>
             </div>
-            
-            <!-- ⭐ 3 BUTTON LAYOUT -->
             <div class="receipt-modal-actions no-print" style="display: flex; gap: 10px;">
                 <button onclick="cancelCheckout()" class="btn-cancel" style="flex: 1; padding: 12px; font-size: 14px;">Cancel</button>
                 <button onclick="finalizeOrder(false)" style="flex: 1; padding: 12px; font-size: 14px; font-weight: bold; border-radius: 8px; margin: 0; background: #8c5b3e; color: white; border: none; cursor: pointer;">No Print</button>
@@ -270,7 +262,7 @@
         </div>
     </div>
 
-    <!-- SCRIPTS -->
+    <!-- SCRIPTS (unchanged) -->
     <script>
         const menuData = {};
         const productIdMap = {};
@@ -292,28 +284,17 @@
         }
 
         const sizedCategories = ["COFFEE", "MILKTEA", "FRUIT TEA"];
-        
-        // ⭐ Initialize the cart from memory if it exists
         let cart = JSON.parse(localStorage.getItem('syncScaleCart')) || [];
-        
-        // ⭐ THE ARRAY TRACKER (Multi-Select)
         let selectedReceiptIndices = [], activeItemName = "", currentCategory = "";
-        
         let finalPaymentMethod = "Cash";
         let currentCartTotal = 0;
         let pendingAmountPaid = 0;
-        
         let currentOrderType = "Dine In";
         let currentCustomerName = "";
 
-        document.addEventListener("DOMContentLoaded", () => {
-        renderReceipt();
-        });
+        document.addEventListener("DOMContentLoaded", () => { renderReceipt(); });
 
-        function updateOrderType() {
-        currentOrderType = document.querySelector('input[name="orderType"]:checked').value;
-        }
-
+        function updateOrderType() { currentOrderType = document.querySelector('input[name="orderType"]:checked').value; }
         function openPaymentModal() { document.getElementById('paymentModal').style.display = 'flex'; }
         function closePaymentModal() { document.getElementById('paymentModal').style.display = 'none'; }
 
@@ -324,7 +305,7 @@
         const icons = {"Cash": "💵", "GCash": "🔵", "Maya": "🟢", "Card": "💳"};
         document.getElementById('activePaymentLabel').innerText = `${icons[finalPaymentMethod]} ${finalPaymentMethod}`;
         document.getElementById('cashSection').style.display = (finalPaymentMethod === "Cash") ? 'block' : 'none';
-        if(finalPaymentMethod === "Cash") document.getElementById('amountTendered').focus();
+        if (finalPaymentMethod === "Cash") document.getElementById('amountTendered').focus();
         calculateChange();
         }
         closePaymentModal();
@@ -336,7 +317,7 @@
         if (!document.getElementById('amountTendered').value) { changeDisplay.innerText = '₱0.00'; return; }
         const change = tendered - currentCartTotal;
         changeDisplay.innerText = change < 0 ? 'Insufficient' : '₱' + change.toFixed(2);
-        changeDisplay.style.color = change < 0 ? 'red' : '#2e7d32';
+        changeDisplay.style.color = change < 0 ? 'red' : '#3dbf78';
         }
 
         function openSubMenu(cat) {
@@ -369,7 +350,8 @@
         const sizeSelector = document.getElementById('sizeSelector');
         if (sizedCategories.includes(currentCategory)) {
         sizeSelector.style.display = 'flex';
-        sizeSelector.innerHTML = `<label class="custom-radio-card"><input type="radio" name="size" value="Small" checked /><span class="radio-tile">Small</span></label>
+        sizeSelector.innerHTML = `
+        <label class="custom-radio-card"><input type="radio" name="size" value="Small" checked /><span class="radio-tile">Small</span></label>
         <label class="custom-radio-card"><input type="radio" name="size" value="Large" /><span class="radio-tile">Large</span></label>`;
         } else {
         sizeSelector.style.display = 'none';
@@ -379,7 +361,7 @@
         }
 
         function closeSelectionModal() { document.getElementById('selectionModal').style.display = 'none'; }
-        function getCategoryEmoji(cat) { return {"COFFEE": "☕", "MILKTEA": "🧋", "RICE MEAL": "🍱", "BREAD & PASTRY": "🥐", "FRUIT TEA": "🍹", "SNACKS & PASTA": "🍝"}[cat] || "🍴"; }
+        function getCategoryEmoji(cat) { return {"COFFEE":"☕","MILKTEA":"🧋","RICE MEAL":"🍱","BREAD & PASTRY":"🥐","FRUIT TEA":"🍹","SNACKS & PASTA":"🍝"}[cat] || "🍴"; }
         function increaseQty() { let q = document.getElementById("qty"); q.value = parseInt(q.value) + 1; }
         function decreaseQty() { let q = document.getElementById("qty"); if (parseInt(q.value) > 1) q.value = parseInt(q.value) - 1; }
 
@@ -388,26 +370,19 @@
         let qty = parseInt(document.getElementById("qty").value);
         let dbKey = (sizedCategories.includes(currentCategory) && size !== "Regular") ? `${activeItemName} - ${size}` : activeItemName;
         let price = basePrices[dbKey] || basePrices[activeItemName] || 0;
-                
         cart.push({ name: activeItemName, dbKey: dbKey, size: size, qty: qty, price: price });
-                
         localStorage.setItem('syncScaleCart', JSON.stringify(cart));
-                
-        Toastify({ text: `📦 ${qty}x ${activeItemName} added!`, duration: 1500, style: { background: "#f46a05" } }).showToast();
+        Toastify({ text: `📦 ${qty}x ${activeItemName} added!`, duration: 1500, style: { background: "#C9A84C" } }).showToast();
         renderReceipt();
         closeSelectionModal();
         }
 
-        // ⭐ THE NEW INLINE QTY EDITOR
         function updateCartItemQty(index, change) {
         cart[index].qty += change;
-            
-        // If it drops to 0 or below, remove it entirely
         if (cart[index].qty <= 0) {
         cart.splice(index, 1);
-        selectedReceiptIndices = []; // Reset selection so we don't accidentally delete the wrong item next
+        selectedReceiptIndices = [];
         }
-            
         localStorage.setItem('syncScaleCart', JSON.stringify(cart));
         renderReceipt();
         }
@@ -415,72 +390,50 @@
         function renderReceipt() {
         const receipt = document.getElementById("receiptList");
         const deleteBtn = document.querySelector('.delete-btn');
-        
         if (selectedReceiptIndices.length > 1) {
         deleteBtn.innerText = `Remove Items (${selectedReceiptIndices.length})`;
         } else {
         deleteBtn.innerText = "Remove Item";
         }
-
         if (cart.length === 0) {
         receipt.innerHTML = `<div class="empty-msg">No items in order</div>`;
         document.getElementById("total").textContent = "₱0.00";
         currentCartTotal = 0;
         return;
         }
-        
         let total = 0;
         receipt.innerHTML = cart.map((item, index) => {
         let sub = item.qty * item.price; total += sub;
-            
-        // Highlights the row if its index is in our array
         let isSelected = selectedReceiptIndices.includes(index);
-            
-        // ⭐ UPDATED ROW HTML WITH + AND - BUTTONS
         return `<div class="order-item-row ${isSelected ? 'selected-row' : ''}" onclick="selectReceiptItem(${index})" style="display: flex; align-items: center;">
-                    
         <div style="flex-grow: 1;">
         <div style="font-weight:700;">${item.name}</div>
-        <div style="font-size:11px; color: #555;">${item.size} • ₱${item.price.toFixed(2)}/ea</div>
+        <div style="font-size:11px; color: rgba(242,237,228,0.4);">${item.size} • ₱${item.price.toFixed(2)}/ea</div>
         </div>
-
-        <!-- The New QTY Buttons (event.stopPropagation stops the row from highlighting when clicking buttons) -->
-        <div style="display: flex; align-items: center; border: 1px solid #eaddd3; border-radius: 4px; background: #fff; margin-right: 12px;" onclick="event.stopPropagation()">
-        <button type="button" onclick="updateCartItemQty(${index}, -1)" style="border: none; background: transparent; padding: 4px 10px; cursor: pointer; color: #8c5b3e; font-weight: bold; font-size: 14px;">-</button>
-        <span style="font-size: 13px; font-weight: 700; min-width: 20px; text-align: center;">${item.qty}</span>
-        <button type="button" onclick="updateCartItemQty(${index}, 1)" style="border: none; background: transparent; padding: 4px 10px; cursor: pointer; color: #8c5b3e; font-weight: bold; font-size: 14px;">+</button>
+        <div style="display:flex;align-items:center;border:1px solid rgba(255,255,255,0.08);border-radius:6px;background:rgba(255,255,255,0.04);margin-right:12px;" onclick="event.stopPropagation()">
+        <button type="button" onclick="updateCartItemQty(${index},-1)" style="border:none;background:transparent;padding:4px 10px;cursor:pointer;color:#C9A84C;font-weight:bold;font-size:14px;">-</button>
+        <span style="font-size:13px;font-weight:700;min-width:20px;text-align:center;color:#F2EDE4;">${item.qty}</span>
+        <button type="button" onclick="updateCartItemQty(${index},1)" style="border:none;background:transparent;padding:4px 10px;cursor:pointer;color:#C9A84C;font-weight:bold;font-size:14px;">+</button>
         </div>
-
-        <div style="font-weight:800; color:#f46a05; text-align: right; min-width: 60px;">₱${sub.toFixed(2)}</div>
-                    
+        <div style="font-weight:800;color:#C9A84C;text-align:right;min-width:60px;">₱${sub.toFixed(2)}</div>
         </div>`;
         }).join('');
-        
         document.getElementById("total").textContent = "₱" + total.toFixed(2);
         currentCartTotal = total;
         calculateChange();
         }
 
-        // ⭐ THE TOGGLE LOGIC (Multi-Select)
         function selectReceiptItem(index) {
         const position = selectedReceiptIndices.indexOf(index);
-        if (position > -1) {
-        selectedReceiptIndices.splice(position, 1); // Unselect
-        } else {
-        selectedReceiptIndices.push(index); // Select
-        }
+        if (position > -1) { selectedReceiptIndices.splice(position, 1); }
+        else { selectedReceiptIndices.push(index); }
         renderReceipt();
         }
-        
-        // ⭐ THE BATCH REMOVE LOGIC
+
         function removeSelectedItem() {
         if (selectedReceiptIndices.length === 0) return;
-        
-        // Keep items NOT selected
         cart = cart.filter((item, index) => !selectedReceiptIndices.includes(index));
-        
-        selectedReceiptIndices = []; // Reset selection
-        
+        selectedReceiptIndices = [];
         localStorage.setItem('syncScaleCart', JSON.stringify(cart));
         renderReceipt();
         }
@@ -488,12 +441,10 @@
         function checkoutOrder() {
         if (cart.length === 0) return;
         let amountPaid = (finalPaymentMethod === "Cash") ? parseFloat(document.getElementById('amountTendered').value) || 0 : currentCartTotal;
-                
         if (finalPaymentMethod === "Cash" && amountPaid < currentCartTotal) {
         Swal.fire("Insufficient Cash", "Please enter a valid amount tendered.", "warning");
         return;
         }
-                
         pendingAmountPaid = amountPaid;
         currentCustomerName = document.getElementById("customerName").value.trim();
         generateReceiptUI(amountPaid);
@@ -502,100 +453,63 @@
         function generateReceiptUI(amountPaid) {
         const dateObj = new Date();
         const dateStr = dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString();
-        const receiptNum = "ORD-" + dateObj.getFullYear() + (dateObj.getMonth()+1).toString().padStart(2, '0') + dateObj.getDate().toString().padStart(2, '0') + "-" + Math.floor(1000 + Math.random() * 9000);
-
+        const receiptNum = "ORD-" + dateObj.getFullYear() + (dateObj.getMonth()+1).toString().padStart(2,'0') + dateObj.getDate().toString().padStart(2,'0') + "-" + Math.floor(1000 + Math.random() * 9000);
         document.getElementById("receiptDate").innerText = dateStr;
         document.getElementById("receiptNumber").innerText = receiptNum;
         document.getElementById("receiptOrderType").innerText = currentOrderType;
-
         const custRow = document.getElementById("receiptCustomerRow");
         if (currentCustomerName !== "") {
         document.getElementById("receiptCustomerName").innerText = currentCustomerName;
         custRow.style.display = "block";
-        } else {
-        custRow.style.display = "none";
-        }
-
+        } else { custRow.style.display = "none"; }
         const tbody = document.getElementById("receiptItemsTable");
-        tbody.innerHTML = `<tr><th style="text-align:left; padding-bottom:5px;">Qty</th><th style="text-align:left; padding-bottom:5px;">Item</th><th style="text-align:right; padding-bottom:5px;">Total</th></tr>`;
-                
+        tbody.innerHTML = `<tr><th style="text-align:left;padding-bottom:5px;">Qty</th><th style="text-align:left;padding-bottom:5px;">Item</th><th style="text-align:right;padding-bottom:5px;">Total</th></tr>`;
         cart.forEach(item => {
         let sub = item.qty * item.price;
-        tbody.innerHTML += `<tr><td style="vertical-align:top; width:40px;">${item.qty}x</td><td style="padding-bottom:5px;">${item.name} <br><small style="font-size:10px; color:#555;">${item.size}</small></td><td style="text-align:right; vertical-align:top;">₱${sub.toFixed(2)}</td></tr>`;
+        tbody.innerHTML += `<tr><td style="vertical-align:top;width:40px;">${item.qty}x</td><td style="padding-bottom:5px;">${item.name}<br><small style="font-size:10px;color:#555;">${item.size}</small></td><td style="text-align:right;vertical-align:top;">₱${sub.toFixed(2)}</td></tr>`;
         });
-
         let total = currentCartTotal;
         let vatableSales = total / 1.12;
         let vatAmount = total - vatableSales;
-
         document.getElementById("receiptSubtotal").innerText = "₱" + vatableSales.toFixed(2);
         document.getElementById("receiptVat").innerText = "₱" + vatAmount.toFixed(2);
         document.getElementById("receiptTotal").innerText = "₱" + total.toFixed(2);
         document.getElementById("receiptPayMethod").innerText = finalPaymentMethod;
         document.getElementById("receiptTendered").innerText = "₱" + amountPaid.toFixed(2);
-                
         let change = amountPaid - total;
         document.getElementById("receiptChange").innerText = "₱" + (change > 0 ? change.toFixed(2) : "0.00");
-
         document.getElementById("receiptModal").style.display = "flex";
         }
 
-        function cancelCheckout() {
-        document.getElementById("receiptModal").style.display = "none";
-        }
+        function cancelCheckout() { document.getElementById("receiptModal").style.display = "none"; }
 
         async function finalizeOrder(shouldPrint) {
         const payload = cart.map(item => ({ productId: productIdMap[item.dbKey] || productIdMap[item.name] || 0, quantity: item.qty, price: item.price }));
-                
         const buttons = document.querySelectorAll('.receipt-modal-actions button');
-        buttons.forEach(btn => {
-        btn.disabled = true;
-        btn.style.opacity = '0.5';
-        });
-
+        buttons.forEach(btn => { btn.disabled = true; btn.style.opacity = '0.5'; });
         try {
         const response = await fetch('/Cashier/Checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-        items: payload,
-        paymentMethod: finalPaymentMethod,
-        amountPaid: pendingAmountPaid,
-        orderType: currentOrderType,
-        customerName: currentCustomerName
-        })
+        body: JSON.stringify({ items: payload, paymentMethod: finalPaymentMethod, amountPaid: pendingAmountPaid, orderType: currentOrderType, customerName: currentCustomerName })
         });
-                        
         if (response.ok) {
         if (shouldPrint) { window.print(); }
-                            
         document.getElementById("receiptModal").style.display = "none";
         Swal.fire("Order Completed!", "The system is ready for the next customer.", "success");
-                            
         document.querySelector('input[name="orderType"][value="Dine In"]').checked = true;
         currentOrderType = "Dine In";
-                            
         document.getElementById("customerName").value = "";
         currentCustomerName = "";
-                            
         cart = [];
-        selectedReceiptIndices = []; // ⭐ RESET THE SELECTION TRACKER
+        selectedReceiptIndices = [];
         localStorage.removeItem('syncScaleCart');
-                            
         document.getElementById('amountTendered').value = '';
         renderReceipt();
         backToCategories();
-        } else {
-        Swal.fire("Error", "Failed to save transaction.", "error");
-        }
-        } catch (err) {
-        Swal.fire("Error", "Server error", "error");
-        } finally {
-        buttons.forEach(btn => {
-        btn.disabled = false;
-        btn.style.opacity = '1';
-        });
-        }
+        } else { Swal.fire("Error", "Failed to save transaction.", "error"); }
+        } catch (err) { Swal.fire("Error", "Server error", "error"); }
+        finally { buttons.forEach(btn => { btn.disabled = false; btn.style.opacity = '1'; }); }
         }
     </script>
 </body>
