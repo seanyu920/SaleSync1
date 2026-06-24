@@ -58,12 +58,16 @@
                     <a href="/Admin/Analytics" class="menu-btn @(ViewContext.RouteData.Values["action"]?.ToString() == "Analytics" ? "active" : "")">
                         <i class="fas fa-chart-pie menu-icon"></i> Analytics
                     </a>
+
+                    <a href="/Admin/QueueOrder" class="menu-btn"><i class="fas fa-list-ol"></i> Queue</a>
+
                     <a href="/Admin/Products" class="menu-btn @(ViewContext.RouteData.Values["action"]?.ToString() == "Products" ? "active" : "")">
                         <i class="fas fa-tags menu-icon"></i> Products
                     </a>
                     <a href="/Admin/Inventory" class="menu-btn @(ViewContext.RouteData.Values["action"]?.ToString() == "Inventory" ? "active" : "")">
                         <i class="fas fa-box-open menu-icon"></i> Inventory
                     </a>
+                    <a href="/Admin/ArchivedProducts" class="menu-btn"><i class="fas fa-archive"></i> Archived</a>
 
                     @if (User.IsInRole("Admin"))
                     {
@@ -71,6 +75,8 @@
                             <i class="fas fa-credit-card menu-icon"></i> Accounts
                         </a>
                     }
+                    <a href="/Admin/WebCustomization" class="menu-btn"><i class="fas fa-tags"></i> Customization</a>
+
                 </nav>
             </div>
 

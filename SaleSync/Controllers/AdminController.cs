@@ -1178,5 +1178,13 @@ namespace SaleSync.Controllers
 
         public class AdminVoidRequest { public int SaleId { get; set; } public string Pass { get; set; } }
         public class StatusUpdateModel { public int SaleId { get; set; } public string Status { get; set; } }
+
+        [HttpGet]
+        public IActionResult QueueOrder()
+        {
+            // This tells ASP.NET to look for a view named QueueOrder.cshtml
+            return View();
+        }
+
     }
 }

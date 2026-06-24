@@ -1,7 +1,7 @@
 ﻿@model List<SaleSync.Models.UserAccount>
 @{
     Layout = null;
-    string homeController = User.IsInRole("Manager") ? "Manager" : "Admin";
+    string homeController = "Admin";
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -10,56 +10,55 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Manage Accounts - Cafero</title>
     <link rel="stylesheet" href="~/css/ManageAccounts.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <style>
-        .status-active { background: #d1fae5; color: #065f46; padding: 4px 12px; border-radius: 15px; font-size: 11px; font-weight: 700; display: inline-block; }
-        .status-inactive { background: #fee2e2; color: #b91c1c; padding: 4px 12px; border-radius: 15px; font-size: 11px; font-weight: 700; display: inline-block; }
-        .deactivated-card { margin-top: 25px; border-top: 4px solid #fee2e2; }
-    </style>
 </head>
 <body>
     <div class="dashboard-container">
 
         <aside class="sidebar">
             <div>
-                <div class="logo-section" style="margin-bottom: 30px;">
+                <div class="logo-section">
                     <div class="logo-title">Cafero</div>
                     <div class="logo-subtitle">Coffee & Pastries</div>
                 </div>
 
-                <div class="profile-section" style="display: flex; align-items: center; justify-content: flex-start; gap: 15px; margin-bottom: 40px;">
-                    <div class="profile-circle" style="width: 45px; height: 45px; flex-shrink: 0; background: #f46a05; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #fff;">👤</div>
+                <div class="profile-section">
+                    <div class="profile-circle">👤</div>
                     <div>
-                        <div class="admin-name" style="font-size: 16px; font-weight: 700; color: #fff;">Admin</div>
-                        <div class="admin-role" style="font-size: 12px; color: #dcbca5;">Administrator</div>
+                        <h2 class="admin-name">Admin</h2>
+                        <div class="admin-role">Administrator</div>
                     </div>
                 </div>
 
                 <nav class="sidebar-menu">
-                    <a href="/@homeController/Dashboard" class="menu-btn">❖ Dashboard</a>
-                    
-                    <a href="/@homeController/PointOfSale" class="menu-btn">🛒 POS</a>
+                    <a href="/@homeController/Dashboard" class="menu-btn"><i class="fas fa-chart-line"></i> Dashboard</a>
+                    <a href="/@homeController/PointOfSale" class="menu-btn"><i class="fas fa-shopping-cart"></i> POS</a>
 
                     @if (User.IsInRole("Admin"))
                     {
-                        <a href="/Admin/ActivityLog" class="menu-btn">📋 Activity Log</a>
+                        <a href="/Admin/ActivityLog" class="menu-btn"><i class="fas fa-clipboard-list"></i> Activity Log</a>
                     }
-                    
-                    <a href="/Admin/Analytics" class="menu-btn">📊 Analytics</a>
-                    <a href="/Admin/Products" class="menu-btn">🏷️ Products</a>
-                    <a href="/Admin/Inventory" class="menu-btn">📦 Inventory</a>
+
+                    <a href="/Admin/Analytics" class="menu-btn"><i class="fas fa-chart-pie"></i> Analytics</a>
+                    <a href="/Admin/QueueOrder" class="menu-btn"><i class="fas fa-list-ol"></i> Queue</a>
+                    <a href="/Admin/Products" class="menu-btn"><i class="fas fa-tags"></i> Products</a>
+                    <a href="/Admin/Inventory" class="menu-btn"><i class="fas fa-box-open"></i> Inventory</a>
+
+                    <a href="/Admin/ArchivedProducts" class="menu-btn"><i class="fas fa-archive"></i> Archived</a>
 
                     @if (User.IsInRole("Admin"))
                     {
-                        <a href="/Admin/ManageAccounts" class="menu-btn active">💳 Accounts</a>
+                        <a href="/Admin/ManageAccounts" class="menu-btn active"><i class="fas fa-credit-card"></i> Accounts</a>
                     }
+                    <a href="/Admin/WebCustomization" class="menu-btn"><i class="fas fa-tags"></i> Customization</a>
                 </nav>
             </div>
 
-            <div class="logout-section" style="margin-top: auto;">
+            <div class="logout-section">
                 <form method="post" action="/Home/Logout">
-                    <button type="submit" class="menu-btn logout-btn" style="background: transparent; border: none; width: 100%; text-align: left; cursor: pointer; color: #dcbca5; padding: 14px 20px;">
-                        ⎋ Log Out
+                    <button type="submit" class="menu-btn logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> Log Out
                     </button>
                 </form>
             </div>
@@ -72,7 +71,7 @@
             </div>
 
             <div class="accounts-content">
-                
+
                 <div class="form-card">
                     <h2 class="widget-title">Account Details</h2>
 
@@ -113,7 +112,7 @@
 
                         <div class="form-actions-row">
                             <button type="button" onclick="confirmUpdate()" class="btn update-btn">Update Selected</button>
-                            <button type="button" id="toggleStatusBtn" class="btn delete-btn" style="background:#b91c1c;" onclick="prepareToggleStatus()">Deactivate Selected</button>
+                            <button type="button" id="toggleStatusBtn" class="btn status-toggle-btn deactivate-state" onclick="prepareToggleStatus()">Deactivate Selected</button>
                             <button type="button" onclick="confirmAdd()" class="btn save-btn">+ Add Account</button>
                         </div>
                     </form>
@@ -125,7 +124,7 @@
                         <table class="accounts-table">
                             <thead>
                                 <tr>
-                                    <th style="width: 50px;">Select</th>
+                                    <th class="col-select">Select</th>
                                     <th>Full Name</th>
                                     <th>Username</th>
                                     <th>Email</th>
@@ -140,25 +139,27 @@
                                     {
                                         <tr class="clickable-row"
                                             onclick="selectUser('@user.UserId', '@Html.Raw(user.FullName.Replace("'", "\\'"))', '@Html.Raw(user.Username.Replace("'", "\\'"))', '@Html.Raw(user.Email.Replace("'", "\\'"))', '@Html.Raw(user.Password.Replace("'", "\\'"))', '@user.Role', '@user.IsActive.ToString().ToLower()')">
-                                            
-                                            <td style="text-align: center;">
-                                                <input type="radio" name="selectedAccount" id="radio_@user.UserId" style="cursor:pointer;" />
+
+                                            <td class="cell-center">
+                                                <input type="radio" name="selectedAccount" id="radio_@user.UserId" class="radio-pointer" />
                                             </td>
                                             <td><strong>@user.FullName</strong></td>
                                             <td>@user.Username</td>
                                             <td>@user.Email</td>
                                             <td>
-                                                @{ string badgeClass = user.Role == "Admin" ? "role-admin" : (user.Role == "Manager" ? "role-manager" : "role-cashier"); }
+                                                @{
+                                                    string badgeClass = user.Role == "Admin" ? "role-admin" : (user.Role == "Manager" ? "role-manager" : "role-cashier");
+                                                }
                                                 <span class="role-badge @badgeClass">@user.Role</span>
                                             </td>
-                                            <td><span class="status-active">Active</span></td>
+                                            <td><span class="status-badge badge-high">Active</span></td>
                                         </tr>
                                     }
                                 }
                                 else
                                 {
                                     <tr>
-                                        <td colspan="6" style="text-align: center; padding: 40px; color: #b58361;">No active accounts found.</td>
+                                        <td colspan="6" class="empty-table-cell active-empty">No active accounts found.</td>
                                     </tr>
                                 }
                             </tbody>
@@ -167,12 +168,12 @@
                 </div>
 
                 <div class="table-card deactivated-card">
-                    <h2 class="widget-title" style="color: #b91c1c;">Deactivated Accounts</h2>
+                    <h2 class="widget-title title-danger">Deactivated Accounts</h2>
                     <div class="table-wrap">
                         <table class="accounts-table">
                             <thead>
                                 <tr>
-                                    <th style="width: 50px;">Select</th>
+                                    <th class="col-select">Select</th>
                                     <th>Full Name</th>
                                     <th>Username</th>
                                     <th>Email</th>
@@ -185,27 +186,29 @@
                                 {
                                     foreach (var user in Model.Where(u => !u.IsActive))
                                     {
-                                        <tr class="clickable-row" style="background-color: #fafafa; opacity: 0.8;"
+                                        <tr class="clickable-row row-deactivated"
                                             onclick="selectUser('@user.UserId', '@Html.Raw(user.FullName.Replace("'", "\\'"))', '@Html.Raw(user.Username.Replace("'", "\\'"))', '@Html.Raw(user.Email.Replace("'", "\\'"))', '@Html.Raw(user.Password.Replace("'", "\\'"))', '@user.Role', '@user.IsActive.ToString().ToLower()')">
-                                            
-                                            <td style="text-align: center;">
-                                                <input type="radio" name="selectedAccount" id="radio_@user.UserId" style="cursor:pointer;" />
+
+                                            <td class="cell-center">
+                                                <input type="radio" name="selectedAccount" id="radio_@user.UserId" class="radio-pointer" />
                                             </td>
-                                            <td style="color: #666;"><strong>@user.FullName</strong></td>
-                                            <td style="color: #666;">@user.Username</td>
-                                            <td style="color: #666;">@user.Email</td>
+                                            <td class="cell-deactivated"><strong>@user.FullName</strong></td>
+                                            <td class="cell-deactivated">@user.Username</td>
+                                            <td class="cell-deactivated">@user.Email</td>
                                             <td>
-                                                @{ string badgeClass = user.Role == "Admin" ? "role-admin" : (user.Role == "Manager" ? "role-manager" : "role-cashier"); }
-                                                <span class="role-badge @badgeClass" style="filter: grayscale(100%);">@user.Role</span>
+                                                @{
+                                                    string badgeClass = user.Role == "Admin" ? "role-admin" : (user.Role == "Manager" ? "role-manager" : "role-cashier");
+                                                }
+                                                <span class="role-badge @badgeClass badge-deactivated">@user.Role</span>
                                             </td>
-                                            <td><span class="status-inactive">Inactive</span></td>
+                                            <td><span class="status-badge badge-low">Inactive</span></td>
                                         </tr>
                                     }
                                 }
                                 else
                                 {
                                     <tr>
-                                        <td colspan="6" style="text-align: center; padding: 30px; color: #999;">No deactivated accounts.</td>
+                                        <td colspan="6" class="empty-table-cell inactive-empty">No deactivated accounts.</td>
                                     </tr>
                                 }
                             </tbody>
@@ -221,7 +224,7 @@
     {
         <script>
             document.addEventListener("DOMContentLoaded", function() {
-                Swal.fire('Error', '@TempData["ErrorMessage"]', 'error');
+            Swal.fire('Error', '@TempData["ErrorMessage"]', 'error');
             });
         </script>
     }
@@ -229,7 +232,7 @@
     {
         <script>
             document.addEventListener("DOMContentLoaded", function() {
-                Swal.fire('Success', '@TempData["SuccessMessage"]', 'success');
+            Swal.fire('Success', '@TempData["SuccessMessage"]', 'success');
             });
         </script>
     }
@@ -239,136 +242,137 @@
         let selectedUserIsActive = true;
 
         function selectUser(userId, fullName, username, email, password, role, isActive) {
-            const radioBtn = document.getElementById('radio_' + userId);
-            if (radioBtn) radioBtn.checked = true;
+        const radioBtn = document.getElementById('radio_' + userId);
+        if (radioBtn) radioBtn.checked = true;
 
-            document.getElementById('UserId').value = userId;
-            document.getElementById('FullName').value = fullName;
-            document.getElementById('Username').value = username;
-            document.getElementById('Email').value = email;
-            document.getElementById('Password').value = password;
-            document.getElementById('Role').value = role;
+        document.getElementById('UserId').value = userId;
+        document.getElementById('FullName').value = fullName;
+        document.getElementById('Username').value = username;
+        document.getElementById('Email').value = email;
+        document.getElementById('Password').value = password;
+        document.getElementById('Role').value = role;
 
-            originalData = {
-                fullName: fullName,
-                username: username,
-                email: email,
-                password: password,
-                role: role
-            };
+        originalData = {
+        fullName: fullName,
+        username: username,
+        email: email,
+        password: password,
+        role: role
+        };
 
-            selectedUserIsActive = (isActive === 'true');
-            const btn = document.getElementById('toggleStatusBtn');
-            
-            if(btn) {
-                if(selectedUserIsActive) {
-                    btn.textContent = "Deactivate Selected";
-                    btn.style.background = "#b91c1c"; 
-                } else {
-                    btn.textContent = "Reactivate Selected";
-                    btn.style.background = "#065f46"; 
-                }
-            }
+        selectedUserIsActive = (isActive === 'true');
+        const btn = document.getElementById('toggleStatusBtn');
+
+        if (btn) {
+        if (selectedUserIsActive) {
+        btn.textContent = "Deactivate Selected";
+        btn.classList.remove('reactivate-state');
+        btn.classList.add('deactivate-state');
+        } else {
+        btn.textContent = "Reactivate Selected";
+        btn.classList.remove('deactivate-state');
+        btn.classList.add('reactivate-state');
+        }
+        }
         }
 
         function confirmUpdate() {
-            const userId = document.getElementById('UserId').value;
-            const currentFullName = document.getElementById('FullName').value;
-            const currentUsername = document.getElementById('Username').value;
-            const currentEmail = document.getElementById('Email').value;
-            const currentPassword = document.getElementById('Password').value;
-            const currentRole = document.getElementById('Role').value;
+        const userId = document.getElementById('UserId').value;
+        const currentFullName = document.getElementById('FullName').value;
+        const currentUsername = document.getElementById('Username').value;
+        const currentEmail = document.getElementById('Email').value;
+        const currentPassword = document.getElementById('Password').value;
+        const currentRole = document.getElementById('Role').value;
 
-            if (!userId) {
-                Swal.fire({ title: 'No Selection', text: 'Please select an account from the table to update.', icon: 'warning', confirmButtonColor: '#f46a05' });
-                return;
-            }
+        if (!userId) {
+        Swal.fire({ title: 'No Selection', text: 'Please select an account from the table to update.', icon: 'warning', confirmButtonColor: '#C9A84C' });
+        return;
+        }
 
-            if (currentFullName === originalData.fullName &&
-                currentUsername === originalData.username &&
-                currentEmail === originalData.email &&
-                currentPassword === originalData.password &&
-                currentRole === originalData.role) 
-            {
-                Swal.fire({
-                    title: 'No Changes Detected',
-                    text: 'You have not modified any information for this account.',
-                    icon: 'info',
-                    confirmButtonColor: '#f46a05'
-                });
-                return; 
-            }
+        if (currentFullName === originalData.fullName &&
+        currentUsername === originalData.username &&
+        currentEmail === originalData.email &&
+        currentPassword === originalData.password &&
+        currentRole === originalData.role) {
+        Swal.fire({
+        title: 'No Changes Detected',
+        text: 'You have not modified any information for this account.',
+        icon: 'info',
+        confirmButtonColor: '#C9A84C'
+        });
+        return;
+        }
 
-            Swal.fire({
-                title: 'Update Account?',
-                text: `Save changes for ${currentFullName}?`,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#ab4a03',
-                cancelButtonColor: '#4a2511',
-                confirmButtonText: 'Yes, update it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    const form = document.getElementById('accountForm');
-                    form.action = "/Admin/UpdateAccount";
-                    form.submit();
-                }
-            });
+        Swal.fire({
+        title: 'Update Account?',
+        text: `Save changes for ${currentFullName}?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#C9A84C',
+        cancelButtonColor: '#141A14',
+        confirmButtonText: 'Yes, update it!'
+        }).then((result) => {
+        if (result.isConfirmed) {
+        const form = document.getElementById('accountForm');
+        form.action = "/Admin/UpdateAccount";
+        form.submit();
+        }
+        });
         }
 
         function confirmAdd() {
-            const fullName = document.getElementById('FullName').value;
-            if (!fullName || !document.getElementById('Username').value) {
-                Swal.fire({ title: 'Missing Info', text: 'Please fill in the required fields.', icon: 'warning', confirmButtonColor: '#f46a05' });
-                return;
-            }
+        const fullName = document.getElementById('FullName').value;
+        if (!fullName || !document.getElementById('Username').value) {
+        Swal.fire({ title: 'Missing Info', text: 'Please fill in the required fields.', icon: 'warning', confirmButtonColor: '#C9A84C' });
+        return;
+        }
 
-            Swal.fire({
-                title: 'Add New Account?',
-                text: `Create a system account for ${fullName}?`,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#f46a05',
-                cancelButtonColor: '#4a2511',
-                confirmButtonText: 'Yes, add it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    const form = document.getElementById('accountForm');
-                    form.action = "/Admin/AddAccount";
-                    form.submit();
-                }
-            });
+        Swal.fire({
+        title: 'Add New Account?',
+        text: `Create a system account for ${fullName}?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#C9A84C',
+        cancelButtonColor: '#141A14',
+        confirmButtonText: 'Yes, add it!'
+        }).then((result) => {
+        if (result.isConfirmed) {
+        const form = document.getElementById('accountForm');
+        form.action = "/Admin/AddAccount";
+        form.submit();
+        }
+        });
         }
 
         function prepareToggleStatus() {
-            const userId = document.getElementById('UserId').value;
-            if (!userId) {
-                Swal.fire({ title: 'No Selection', text: 'Please select an account first.', icon: 'warning', confirmButtonColor: '#f46a05' });
-                return;
-            }
+        const userId = document.getElementById('UserId').value;
+        if (!userId) {
+        Swal.fire({ title: 'No Selection', text: 'Please select an account first.', icon: 'warning', confirmButtonColor: '#C9A84C' });
+        return;
+        }
 
-            const actionName = selectedUserIsActive ? "Deactivate" : "Reactivate";
-            const warningText = selectedUserIsActive 
-                ? "This user will no longer be able to log into the system." 
-                : "This user will regain full access to the system.";
-            const targetUrl = selectedUserIsActive ? "/Admin/DeactivateAccount" : "/Admin/ReactivateAccount";
-            const btnColor = selectedUserIsActive ? "#d33" : "#065f46";
+        const actionName = selectedUserIsActive ? "Deactivate" : "Reactivate";
+        const warningText = selectedUserIsActive
+        ? "This user will no longer be able to log into the system."
+        : "This user will regain full access to the system.";
+        const targetUrl = selectedUserIsActive ? "/Admin/DeactivateAccount" : "/Admin/ReactivateAccount";
+        const btnColor = selectedUserIsActive ? "#e05555" : "#3dbf78";
 
-            Swal.fire({
-                title: `${actionName} Account?`,
-                text: warningText,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: btnColor,
-                cancelButtonColor: '#4a2511',
-                confirmButtonText: `Yes, ${actionName.toLowerCase()} them!`
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    const form = document.getElementById('accountForm');
-                    form.action = targetUrl;
-                    form.submit();
-                }
-            });
+        Swal.fire({
+        title: `${actionName} Account?`,
+        text: warningText,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: btnColor,
+        cancelButtonColor: '#141A14',
+        confirmButtonText: `Yes, ${actionName.toLowerCase()} them!`
+        }).then((result) => {
+        if (result.isConfirmed) {
+        const form = document.getElementById('accountForm');
+        form.action = targetUrl;
+        form.submit();
+        }
+        });
         }
     </script>
 </body>

@@ -2,7 +2,7 @@
    CAFÈRO POS — Dark Theme (Product Catalog & Modals)
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght=300;400;600;700;800;900&display=swap');
 
 :root {
     --bg-base: #0D110D;
@@ -17,6 +17,7 @@
     --muted-2: rgba(242, 237, 228, 0.75);
     --border: rgba(201, 168, 76, 0.18);
     --border-sub: rgba(255, 255, 255, 0.06);
+    --green-hint: rgba(45, 106, 79, 0.25);
     --success: #3dbf78;
     --danger: #e05555;
 }
@@ -29,10 +30,11 @@
 }
 
 body {
-    font-family: 'Outfit', 'Segoe UI', sans-serif;
+    font-family: 'Outfit', 'Segoe UI', system-ui, sans-serif;
     background: var(--bg-base);
     color: var(--cream);
     -webkit-font-smoothing: antialiased;
+    line-height: 1.6;
 }
 
 .dashboard-container {
@@ -40,19 +42,20 @@ body {
     min-height: 100vh;
 }
 
-/* --- MOCHA SIDEBAR --- */
+/* ==========================================================================
+   SIDEBAR — Ported from Dashboard Layout
+   ========================================================================== */
 .sidebar {
-    width: 240px;
+    width: 255px;
     background: var(--bg-surface);
-    padding: 28px 18px;
+    padding: 30px 20px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    flex-shrink: 0;
-    border-right: 1px solid var(--border-sub);
     position: sticky;
     top: 0;
     height: 100vh;
+    border-right: 1px solid var(--border-sub);
+    flex-shrink: 0;
     overflow-y: auto;
 }
 
@@ -65,45 +68,50 @@ body {
         border-radius: 10px;
     }
 
+/* Logo block */
 .logo-section {
     margin-bottom: 28px;
 }
 
-.logo-title {
+.sidebar .logo-title {
     font-size: 22px;
     font-weight: 800;
     color: var(--cream);
     letter-spacing: -0.5px;
+    line-height: 1.2;
 }
 
-.logo-subtitle {
+.sidebar .logo-subtitle {
     font-size: 11px;
     color: var(--gold);
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 2px;
-    margin-top: 3px;
+    margin-top: 4px;
+    display: block;
 }
 
+/* Profile — with proper breathing room */
 .profile-section {
     display: flex;
     align-items: center;
     gap: 13px;
     margin-bottom: 32px;
     padding-bottom: 20px;
+    padding-top: 4px;
     border-bottom: 1px solid var(--border-sub);
 }
 
 .profile-circle {
-    width: 42px;
-    height: 42px;
-    background: var(--gold-glow);
+    width: 40px;
+    height: 40px;
+    background: var(--green-hint);
     border: 1.5px solid var(--gold);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 17px;
+    font-size: 15px;
     color: var(--gold);
     flex-shrink: 0;
 }
@@ -112,6 +120,7 @@ body {
     font-size: 14px;
     font-weight: 700;
     color: var(--cream);
+    line-height: 1.3;
     margin: 0;
 }
 
@@ -121,28 +130,29 @@ body {
     margin-top: 1px;
 }
 
+/* Menu */
 .sidebar-menu {
     display: flex;
     flex-direction: column;
     gap: 4px;
+    flex: 1;
 }
 
 .menu-btn {
     display: flex;
     align-items: center;
-    gap: 10px;
-    text-align: left;
+    gap: 11px;
+    width: 100%;
     text-decoration: none;
     color: var(--muted);
     font-size: 14px;
     font-weight: 600;
     padding: 11px 14px;
+    border-radius: 10px;
     background: transparent;
     border: none;
-    border-radius: 10px;
     transition: all 0.2s ease;
     cursor: pointer;
-    width: 100%;
     font-family: 'Outfit', sans-serif;
     letter-spacing: 0.2px;
 }
@@ -158,16 +168,41 @@ body {
         font-weight: 800;
     }
 
+/* Menu icon support */
+.menu-icon {
+    font-size: 15px;
+    width: 18px;
+    text-align: center;
+    flex-shrink: 0;
+    opacity: 0.9;
+}
+
+.menu-btn.active .menu-icon {
+    opacity: 1;
+}
+
+/* Logout */
 .logout-section {
     margin-top: auto;
     padding-top: 16px;
     border-top: 1px solid var(--border-sub);
 }
 
-/* --- MAIN CONTENT --- */
+.logout-btn {
+    color: var(--muted);
+}
+
+    .logout-btn:hover {
+        color: var(--danger);
+        background: rgba(224, 85, 85, 0.07);
+    }
+
+/* ==========================================================================
+   MAIN CONTENT & PRODUCTS SPECIFIC STYLES
+   ========================================================================== */
 .main-content {
     flex: 1;
-    padding: 30px 28px;
+    padding: 36px 40px; /* Aligned with dashboard padding */
     overflow-y: auto;
     background: var(--bg-base);
 }
@@ -182,7 +217,7 @@ body {
     }
 
 .page-header {
-    margin-bottom: 28px;
+    margin-bottom: 30px;
 }
 
 .greeting-title {
@@ -197,10 +232,6 @@ body {
     color: var(--muted);
     font-size: 13px;
 }
-
-/* =========================================
-   PRODUCTS SPECIFIC STYLES
-   ========================================= */
 
 /* --- CATEGORY FILTERS --- */
 .product-filters {

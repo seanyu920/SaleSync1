@@ -70,12 +70,14 @@
                         <a href="/Admin/Analytics" class="menu-btn">
                             <i class="fas fa-chart-pie"></i> Analytics
                         </a>
+                        <a href="/Admin/QueueOrder" class="menu-btn"><i class="fas fa-list-ol"></i> Queue</a>
                         <a href="/Admin/Products" class="menu-btn">
                             <i class="fas fa-tags"></i> Products
                         </a>
                         <a href="/Admin/Inventory" class="menu-btn">
                             <i class="fas fa-box-open"></i> Inventory
                         </a>
+                        <a href="/Admin/ArchivedProducts" class="menu-btn"><i class="fas fa-archive"></i> Archived</a>
                     }
 
                     @if (User.IsInRole("Admin"))
@@ -84,6 +86,8 @@
                             <i class="fas fa-credit-card"></i> Accounts
                         </a>
                     }
+                    <a href="/Admin/WebCustomization" class="menu-btn"><i class="fas fa-tags"></i> Customization</a>
+
                 </nav>
             </div>
 

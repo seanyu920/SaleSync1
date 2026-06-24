@@ -1,5 +1,7 @@
-﻿/* ==========================================================================
-   CAFÈRO POS — Dark Theme (User Accounts & Employee Management)
+﻿
+
+/* ==========================================================================
+   CAFÈRO MANAGE ACCOUNTS — Dark Theme (Aligned with Dashboard)
    ========================================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap');
@@ -17,13 +19,13 @@
     --muted-2: rgba(242, 237, 228, 0.75);
     --border: rgba(201, 168, 76, 0.18);
     --border-sub: rgba(255, 255, 255, 0.06);
+    --green-hint: rgba(45, 106, 79, 0.25);
     --success: #3dbf78;
     --warning: #d69e2e;
     --info: #3182ce;
     --danger: #e05555;
 }
 
-/* --- RESET & BASE --- */
 * {
     margin: 0;
     padding: 0;
@@ -31,10 +33,11 @@
 }
 
 body {
-    font-family: 'Outfit', 'Segoe UI', sans-serif;
+    font-family: 'Outfit', 'Segoe UI', system-ui, sans-serif;
     background: var(--bg-base);
     color: var(--cream);
     -webkit-font-smoothing: antialiased;
+    line-height: 1.6;
 }
 
 .dashboard-container {
@@ -42,49 +45,42 @@ body {
     min-height: 100vh;
 }
 
-/* --- MOCHA SIDEBAR --- */
+/* ==========================================================================
+   SIDEBAR — exact copy from Dashboard
+   ========================================================================== */
 .sidebar {
-    width: 240px;
+    width: 255px;
     background: var(--bg-surface);
-    padding: 28px 18px;
+    padding: 30px 20px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    flex-shrink: 0;
-    border-right: 1px solid var(--border-sub);
     position: sticky;
     top: 0;
     height: 100vh;
-    overflow-y: auto;
+    border-right: 1px solid var(--border-sub);
+    flex-shrink: 0;
 }
-
-    .sidebar::-webkit-scrollbar {
-        width: 3px;
-    }
-
-    .sidebar::-webkit-scrollbar-thumb {
-        background: var(--border-sub);
-        border-radius: 10px;
-    }
 
 .logo-section {
     margin-bottom: 28px;
 }
 
-.logo-title {
+.sidebar .logo-title {
     font-size: 22px;
     font-weight: 800;
     color: var(--cream);
     letter-spacing: -0.5px;
+    line-height: 1.2;
 }
 
-.logo-subtitle {
+.sidebar .logo-subtitle {
     font-size: 11px;
     color: var(--gold);
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 2px;
-    margin-top: 3px;
+    margin-top: 4px;
+    display: block;
 }
 
 .profile-section {
@@ -93,19 +89,20 @@ body {
     gap: 13px;
     margin-bottom: 32px;
     padding-bottom: 20px;
+    padding-top: 4px;
     border-bottom: 1px solid var(--border-sub);
 }
 
 .profile-circle {
-    width: 42px;
-    height: 42px;
-    background: var(--gold-glow);
+    width: 40px;
+    height: 40px;
+    background: var(--green-hint);
     border: 1.5px solid var(--gold);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 17px;
+    font-size: 15px;
     color: var(--gold);
     flex-shrink: 0;
 }
@@ -114,7 +111,7 @@ body {
     font-size: 14px;
     font-weight: 700;
     color: var(--cream);
-    margin: 0;
+    line-height: 1.3;
 }
 
 .admin-role {
@@ -127,26 +124,27 @@ body {
     display: flex;
     flex-direction: column;
     gap: 4px;
+    flex: 1;
 }
 
 .menu-btn {
     display: flex;
     align-items: center;
-    gap: 10px;
-    text-align: left;
+    gap: 11px;
+    width: 100%;
     text-decoration: none;
     color: var(--muted);
     font-size: 14px;
     font-weight: 600;
     padding: 11px 14px;
+    border-radius: 10px;
     background: transparent;
     border: none;
-    border-radius: 10px;
     transition: all 0.2s ease;
     cursor: pointer;
-    width: 100%;
     font-family: 'Outfit', sans-serif;
     letter-spacing: 0.2px;
+    text-align: left;
 }
 
     .menu-btn:hover {
@@ -160,6 +158,18 @@ body {
         font-weight: 800;
     }
 
+    .menu-btn i {
+        font-size: 14px;
+        width: 16px;
+        text-align: center;
+        flex-shrink: 0;
+        opacity: 0.9;
+    }
+
+    .menu-btn.active i {
+        opacity: 1;
+    }
+
 .logout-section {
     margin-top: auto;
     padding-top: 16px;
@@ -167,29 +177,20 @@ body {
 }
 
 .logout-btn {
-    background: transparent;
-    border: none;
-    width: 100%;
-    text-align: left;
-    cursor: pointer;
     color: var(--muted);
-    padding: 11px 14px;
-    font-size: 14px;
-    font-weight: 600;
-    transition: all 0.2s ease;
-    font-family: 'Outfit', sans-serif;
 }
 
     .logout-btn:hover {
         color: var(--danger);
         background: rgba(224, 85, 85, 0.07);
-        border-radius: 10px;
     }
 
-/* --- MAIN CONTENT & HEADER --- */
+/* ==========================================================================
+   MAIN CONTENT
+   ========================================================================== */
 .main-content {
     flex: 1;
-    padding: 30px 28px;
+    padding: 36px 40px;
     overflow-y: auto;
     background: var(--bg-base);
 }
@@ -204,7 +205,7 @@ body {
     }
 
 .page-header {
-    margin-bottom: 28px;
+    margin-bottom: 30px;
 }
 
 .greeting-title {
@@ -220,7 +221,9 @@ body {
     font-size: 13px;
 }
 
-/* --- CARDS --- */
+/* ==========================================================================
+   CARDS
+   ========================================================================== */
 .form-card, .table-card {
     background: var(--bg-card);
     border-radius: 14px;
@@ -238,7 +241,19 @@ body {
     margin-bottom: 20px;
 }
 
-/* --- ACCOUNT FORM GRID --- */
+.title-danger {
+    color: var(--danger);
+}
+
+/* Deactivated card — dark red border instead of light red */
+.deactivated-card {
+    margin-top: 25px;
+    border-top: 3px solid rgba(224, 85, 85, 0.4);
+}
+
+/* ==========================================================================
+   FORM GRID
+   ========================================================================== */
 .form-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -282,7 +297,19 @@ body {
             background: var(--bg-card-2);
         }
 
-/* --- BUTTONS --- */
+        .input-group input::placeholder {
+            color: var(--muted);
+        }
+
+        /* dropdown options */
+        .input-group select option {
+            background: var(--bg-card);
+            color: var(--cream);
+        }
+
+/* ==========================================================================
+   ACTION BUTTONS
+   ========================================================================== */
 .form-actions-row {
     display: flex;
     gap: 12px;
@@ -292,7 +319,6 @@ body {
 
 .btn {
     border: none;
-    color: var(--bg-base);
     font-size: 13.5px;
     padding: 11px 22px;
     border-radius: 8px;
@@ -308,6 +334,7 @@ body {
 
 .save-btn {
     background: var(--gold);
+    color: var(--bg-base);
 }
 
     .save-btn:hover {
@@ -323,16 +350,19 @@ body {
         background: #ffffff;
     }
 
-.delete-btn {
+/* Deactivate button — uses dark theme danger */
+.status-toggle-btn {
     background: var(--danger);
     color: #ffffff;
 }
 
-    .delete-btn:hover {
+    .status-toggle-btn:hover {
         filter: brightness(1.15);
     }
 
-/* --- ACCOUNTS TABLE --- */
+/* ==========================================================================
+   TABLE
+   ========================================================================== */
 .table-wrap {
     width: 100%;
     max-height: 500px;
@@ -383,38 +413,103 @@ body {
         vertical-align: middle;
     }
 
+    .accounts-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+.col-select {
+    width: 50px;
+}
+
+.cell-center {
+    text-align: center;
+}
+
+.radio-pointer {
+    cursor: pointer;
+    accent-color: var(--gold);
+}
+
 .clickable-row {
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
     .clickable-row:hover td {
-        background: rgba(255, 255, 255, 0.02) !important;
+        background: rgba(255,255,255,0.02) !important;
     }
 
-.hidden-password {
-    color: var(--muted);
-    font-family: monospace;
-    letter-spacing: 2px;
+/* Deactivated rows — dark tint instead of light grey */
+.row-deactivated td {
+    opacity: 0.5;
 }
 
-.empty-table-msg {
-    text-align: center;
-    padding: 40px;
+.row-deactivated:hover td {
+    opacity: 0.7 !important;
+}
+
+.cell-deactivated {
     color: var(--muted);
-    font-style: italic;
+}
+
+.empty-table-cell {
+    text-align: center;
     font-size: 14px;
 }
 
-/* --- ROLE BADGES --- */
+.active-empty {
+    padding: 40px;
+    color: var(--muted);
+}
+
+.inactive-empty {
+    padding: 30px;
+    color: var(--muted);
+}
+
+/* ==========================================================================
+   STATUS BADGES — dark theme versions
+   ========================================================================== */
+.status-active {
+    background: rgba(61, 191, 120, 0.12);
+    color: var(--success);
+    border: 1px solid rgba(61, 191, 120, 0.25);
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    display: inline-block;
+}
+
+.status-inactive {
+    background: rgba(224, 85, 85, 0.1);
+    color: var(--danger);
+    border: 1px solid rgba(224, 85, 85, 0.2);
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    display: inline-block;
+}
+
 .role-badge {
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 800;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
     display: inline-block;
     text-align: center;
     min-width: 80px;
+}
+
+.badge-deactivated {
+    opacity: 0.45;
 }
 
 .role-admin {
@@ -424,9 +519,9 @@ body {
 }
 
 .role-manager {
-    background: rgba(214, 158, 46, 0.12);
-    color: var(--warning);
-    border: 1px solid rgba(214, 158, 46, 0.2);
+    background: rgba(201, 168, 76, 0.12);
+    color: var(--gold);
+    border: 1px solid var(--border);
 }
 
 .role-cashier {
@@ -436,33 +531,33 @@ body {
 }
 
 /* ==========================================================================
-   SWEETALERT2 MODAL SYSTEM PREMIUM OVERRIDES
+   SWEETALERT2
    ========================================================================== */
 .swal2-popup {
     background: var(--bg-card) !important;
-    border-radius: 18px !important;
-    font-family: 'Outfit', 'Segoe UI', sans-serif !important;
+    border-radius: 16px !important;
+    font-family: 'Outfit', sans-serif !important;
     padding: 2.5rem 2rem !important;
     border: 1px solid var(--border) !important;
-    box-shadow: 0 24px 60px rgba(0,0,0,0.5) !important;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5) !important;
 }
 
 .swal2-title {
     color: var(--cream) !important;
     font-weight: 800 !important;
-    font-size: 1.5rem !important;
+    font-size: 1.4rem !important;
     letter-spacing: -0.3px !important;
 }
 
 .swal2-html-container {
-    color: var(--muted-2) !important;
+    color: var(--muted) !important;
     font-size: 14px !important;
-    margin-top: 12px !important;
-    line-height: 1.5 !important;
+    margin-top: 8px !important;
+    line-height: 1.6 !important;
 }
 
 .swal2-actions {
-    gap: 12px !important;
+    gap: 10px !important;
     margin-top: 24px !important;
 }
 
@@ -472,10 +567,9 @@ body {
     border-radius: 8px !important;
     padding: 11px 28px !important;
     font-weight: 800 !important;
-    font-size: 13.5px !important;
+    font-family: 'Outfit', sans-serif !important;
     box-shadow: none !important;
     border: none !important;
-    transition: all 0.2s !important;
 }
 
     .swal2-confirm:hover {
@@ -489,8 +583,7 @@ body {
     border-radius: 8px !important;
     padding: 11px 24px !important;
     font-weight: 700 !important;
-    font-size: 13.5px !important;
-    transition: all 0.2s !important;
+    font-family: 'Outfit', sans-serif !important;
 }
 
     .swal2-cancel:hover {
@@ -498,11 +591,10 @@ body {
         background-color: var(--bg-card-2) !important;
     }
 
-/* Icon Colors */
 .swal2-icon.swal2-warning,
 .swal2-icon.swal2-question {
-    border-color: var(--warning) !important;
-    color: var(--warning) !important;
+    border-color: var(--gold) !important;
+    color: var(--gold) !important;
 }
 
 .swal2-icon.swal2-success {
