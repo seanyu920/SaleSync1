@@ -1,0 +1,270 @@
+﻿/* ==========================================================================
+   CAFÈRO WEB CUSTOMIZATION — Theme Settings Layout
+   ========================================================================== */
+
+/* Outer form styling mimicking recent sales structure spacing */
+.settings-form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    margin-top: 10px;
+}
+
+/* Settings Grouping Cards — Matching .recent-sales-card */
+.settings-card {
+    background: var(--bg-card);
+    border-radius: 14px;
+    padding: 26px;
+    border: 1px solid var(--border-sub);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    position: relative;
+    overflow: hidden;
+    animation: slideUp 0.3s ease-out;
+}
+
+    /* Card Decorative Header Indicator Line */
+    .settings-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: var(--gold);
+        border-radius: 4px 0 0 4px;
+    }
+
+    /* Card Header Icon Boxes — Aligned with .card-icon-box.icon-orange */
+    .settings-card .card-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        margin-bottom: 18px;
+        color: var(--gold);
+        background: var(--gold-glow);
+        border: 1px solid var(--border);
+    }
+
+    /* Card Header Typography */
+    .settings-card h3 {
+        font-size: 17px;
+        font-weight: 800;
+        color: var(--cream);
+        letter-spacing: -0.3px;
+        margin-bottom: 4px;
+    }
+
+    .settings-card .card-desc {
+        font-size: 13px;
+        color: var(--muted);
+        margin-bottom: 22px;
+    }
+
+/* Form Matrix Layout Grids */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.form-group-triple {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    width: 100%;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+    .form-group.full-width {
+        grid-column: span 2;
+    }
+
+    /* Inputs, Labels & Native Selection Elements — Aligned with .auth-modal inputs */
+    .form-group label {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--muted-2);
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+    }
+
+    .form-group input[type="text"],
+    .form-group input[type="number"],
+    .form-group select {
+        width: 100%;
+        padding: 12px 14px;
+        background: var(--bg-surface);
+        border: 1px solid var(--border-sub);
+        color: var(--cream);
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: 'Outfit', sans-serif;
+        transition: all 0.2s ease;
+    }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--gold);
+            background: var(--bg-card-2);
+        }
+
+    .form-group input::placeholder {
+        color: var(--muted);
+    }
+
+/* Custom Interactive UI Color Picker Component Layouts */
+.color-picker-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-sub);
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: border-color 0.2s;
+}
+
+    .color-picker-wrapper:focus-within {
+        border-color: var(--gold);
+        background: var(--bg-card-2);
+    }
+
+.color-picker-input {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    width: 44px;
+    height: 34px;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    flex-shrink: 0;
+    padding: 0;
+}
+
+    .color-picker-input::-webkit-color-swatch {
+        border-radius: 4px;
+        border: none;
+    }
+
+    .color-picker-input::-moz-color-swatch {
+        border-radius: 4px;
+        border: none;
+    }
+
+.color-picker-label-text {
+    font-size: 13px;
+    color: var(--muted-2);
+    font-family: monospace;
+    font-weight: 600;
+}
+
+/* Drag-and-Drop / Custom File Upload Field Wrappers */
+.file-upload-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+    .file-upload-wrapper input[type="file"] {
+        position: absolute;
+        left: 0;
+        top: 0;
+        opacity: 0;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+    }
+
+.file-upload-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 16px;
+    background: var(--bg-surface);
+    border: 1.5px dashed var(--border);
+    color: var(--muted-2);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.file-upload-wrapper:hover .file-upload-btn {
+    background: var(--gold-glow);
+    border-color: var(--gold);
+    color: var(--cream);
+}
+
+/* Form Action Buttons Footer Area — Aligned with .swal2-actions */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 10px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-sub);
+}
+
+/* Secondary Button — Aligned with .swal2-cancel */
+.btn-secondary {
+    background-color: var(--bg-surface);
+    color: var(--cream);
+    border-radius: 8px;
+    padding: 11px 24px;
+    font-weight: 700;
+    border: 1px solid var(--border-sub);
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+    .btn-secondary:hover {
+        background-color: var(--bg-card-2);
+        border-color: var(--muted);
+    }
+
+/* Primary Button — Aligned with .swal2-confirm / .auth-btn */
+.btn-primary {
+    background-color: var(--gold);
+    color: var(--bg-base);
+    border: none;
+    padding: 11px 28px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 800;
+    font-size: 14px;
+    font-family: 'Outfit', sans-serif;
+    transition: all 0.2s ease;
+}
+
+    .btn-primary:hover {
+        background-color: var(--gold-light);
+        transform: translateY(-1px);
+    }
+
+/* Custom Component Layout Adjustments For Lower Breakpoints */
+@media (max-width: 1024px) {
+    .form-grid,
+    .form-group-triple {
+        grid-template-columns: 1fr;
+    }
+
+    .form-group.full-width {
+        grid-column: span 1;
+    }
+}

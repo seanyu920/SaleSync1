@@ -1,0 +1,47 @@
+﻿/* ==========================================================================
+   CAFÈRO POS & DASHBOARD — THE VAULT (ARCHIVE MODULE SUB-VIEW RULES)
+   ========================================================================== */
+
+/* Layout Helper Overrides */
+.hidden-view {
+    display: none !important;
+}
+
+/* Base structural additions inside content canvas elements */
+.main-content {
+    animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Table overrides to maximize spacing layout continuity */
+.recent-sales-table tbody tr {
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+    .recent-sales-table tbody tr:hover {
+        background: rgba(201, 168, 76, 0.02) !important; /* Extremely faint gold glow trace line */
+    }
+
+/* Action button groupings sizing match */
+.action-btn-group {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Custom layout adjustments for clean inline spacing cells */
+.recent-sales-table td {
+    border-bottom: 1px solid var(--border-sub);
+}
+
+.recent-sales-table tbody tr:last-child td {
+    border-bottom: 1px solid var(--border-sub); /* Keeps bounds visible on long arrays */
+}
+
+/* Custom text utility indicators */
+.text-danger {
+    color: var(--danger) !important;
+    font-weight: 600;
+    display: inline-block;
+    margin-top: 6px;
+}

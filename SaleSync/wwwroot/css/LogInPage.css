@@ -1,4 +1,26 @@
-﻿/* --- GLOBAL --- */
+﻿/* ==========================================================================
+   1. BRAND DESIGN SYSTEM & TOKENS
+   ========================================================================== */
+:root {
+    /* Lifted up from deep pitch black to a premium, warm dark moss slate */
+    --bg-main: #111613;
+    /* Elevated surface tone so cards and layout containers clearly pop */
+    --bg-card: #1d2621;
+    /* Higher illumination shift on active hover states */
+    --bg-card-hover: #26332c;
+    /* Clean outline boundaries to prevent dark layout sections from bleeding */
+    --border-color: #2b3931;
+    /* Typography Contrasts */
+    --text-pure: #ffffff;
+    --text-muted: #a7b7af; /* Brightened mid-tone gray-sage for premium readability */
+    /* Cafèro Theme Branding Accents */
+    --accent-gold: #dfb756;
+    --accent-gold-hover: #eed074;
+}
+
+/* ==========================================================================
+   2. GLOBAL RESETS & BASE STYLES
+   ========================================================================== */
 * {
     margin: 0;
     padding: 0;
@@ -7,111 +29,250 @@
 }
 
 body {
-    background-color: #ffffff;
-    color: #3b2319;
+    background-color: var(--bg-main);
+    color: var(--text-pure);
+    transition: background-color 0.3s ease;
 }
 
-/* --- SPLIT LAYOUT --- */
-.login-split-container {
-    display: flex;
-    min-height: 100vh;
+/* ==========================================================================
+   3. HOMEPAGE COMPONENTS (Lightened & Enhanced)
+   ========================================================================== */
+
+/* Navbar & Dropdowns */
+.navbar-custom {
+    background-color: rgba(17, 22, 19, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border-color);
 }
 
-/* --- LEFT SIDE (Branding) --- */
-.login-left {
-    flex: 1;
-    /* Swap 'storefront.jpg' with your actual image name if needed */
-    background: linear-gradient(rgba(42, 24, 17, 0.85), rgba(42, 24, 17, 0.85)), url('/images/HomePage2.jpg') center/cover no-repeat;
+.nav-dropdown-menu {
+    background-color: #1a231f;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.nav-dropdown-item:hover {
+    background-color: var(--bg-card-hover);
+    color: var(--accent-gold);
+}
+
+/* Menu Category Selection Grid */
+.category-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 35px 25px;
+    text-align: center;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+    .category-card:hover {
+        background-color: var(--bg-card-hover);
+        border-color: var(--accent-gold);
+        transform: translateY(-4px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    .category-card p {
+        color: var(--text-muted);
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    .category-card .tap-menu-link {
+        color: var(--accent-gold);
+        font-weight: 700;
+        letter-spacing: 1px;
+    }
+
+/* Product Menu Popups / Item Cards */
+.modal-content-wrapper {
+    background-color: #171f1b;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.6);
+}
+
+.menu-item-item-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+}
+
+/* Visit Our Escape / Contact Info Blocks */
+.contact-info-card {
     display: flex;
     align-items: center;
-    justify-content: center;
-    padding: 40px;
-    color: #FAF7F2;
-    text-align: center;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 15px;
+    transition: background-color 0.3s ease;
 }
 
+    .contact-info-card:hover {
+        background-color: var(--bg-card-hover);
+    }
+
+.contact-icon-box {
+    background-color: #27342d;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 12px;
+    margin-right: 20px;
+}
+
+.contact-info-card h4 {
+    color: var(--accent-gold);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+}
+
+.contact-info-card p {
+    color: var(--text-pure);
+    font-size: 15px;
+}
+
+/* ==========================================================================
+   4. FULL-SCREEN BACKGROUND LOGIN LAYOUT (Separated Side-by-Side Spaces)
+   ========================================================================== */
+.login-split-container {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between; /* Pushes brand text and login card apart dynamically */
+    min-height: 100vh;
+    width: 100%;
+    max-width: 1200px; /* Standard container constraint to keep elements unified */
+    margin: 0 auto;
+    padding: 40px;
+    gap: 80px; /* Enforces a deliberate gap between text and form */
+}
+
+    /* Base layer: full window background image */
+    .login-split-container::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: url('/images/HomePage2.jpg') center/cover no-repeat;
+        filter: brightness(1.15) contrast(1.1) saturate(1.05);
+        z-index: -2;
+    }
+
+    /* Tint layer: dark vignetted overlay to maintain text contrast */
+    .login-split-container::after {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle, rgba(17, 22, 19, 0.4) 0%, rgba(11, 17, 14, 0.85) 100%);
+        z-index: -1;
+    }
+
+/* Brand content container pushed comfortably to the left side */
 .brand-content {
-    max-width: 400px;
+    flex: 1;
+    text-align: left; /* Left aligned matches layout side placement */
+    max-width: 460px;
 }
 
 .login-logo {
     font-family: 'Playfair Display', serif;
-    font-size: 64px;
+    font-size: 56px;
     font-weight: 800;
-    margin-bottom: 5px;
+    margin-bottom: 6px;
     letter-spacing: -1px;
+    color: var(--text-pure);
+    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
 }
 
 .software-tag {
-    font-size: 13px;
+    font-size: 12px;
     letter-spacing: 2px;
-    color: #A8968F;
+    color: var(--text-pure);
     text-transform: uppercase;
-    margin-bottom: 30px;
+    margin-bottom: 24px;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
 }
 
     .software-tag strong {
-        color: #f46a05;
+        color: var(--accent-gold);
     }
 
 .brand-content p {
     font-size: 16px;
     line-height: 1.6;
-    color: #e5dcd8;
+    color: #f0f4f2;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
 }
 
-/* --- RIGHT SIDE (Form) --- */
+/* Right side content container wrapper */
 .login-right {
     flex: 1;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #ffffff;
-    padding: 40px;
+    justify-content: flex-end; /* Snaps card closely to the right border boundaries */
+    max-width: 450px;
+    z-index: 2;
 }
 
+/* Entire login card styled with a floating glass theme over your picture */
 .login-card {
     width: 100%;
-    max-width: 400px;
+    background-color: rgba(29, 38, 33, 0.88); /* Semi-transparent frosted glass dark card */
+    backdrop-filter: blur(12px); /* Beautiful blur depth effect over image */
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 40px 35px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
 }
 
 .login-header {
     text-align: center;
-    margin-bottom: 35px;
+    margin-bottom: 30px;
 }
 
 .top-user-icon {
-    font-size: 50px;
+    font-size: 44px;
     display: block;
-    margin-bottom: 15px;
-    color: #573e35;
+    margin-bottom: 12px;
+    color: var(--accent-gold);
 }
 
 .login-header h2 {
-    font-size: 32px;
+    font-size: 28px;
     font-weight: 800;
-    color: #3b2319;
-    margin-bottom: 8px;
+    color: var(--accent-gold);
+    margin-bottom: 6px;
 }
 
 .login-header p {
-    color: #8D6E63;
-    font-size: 15px;
+    color: var(--text-muted);
+    font-size: 14px;
 }
 
-/* --- FORM INPUTS --- */
+/* Form Fields & Enclosures */
 form {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 18px;
 }
 
 .input-group label {
     display: block;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 800;
-    margin-bottom: 8px;
-    color: #5b4033;
+    margin-bottom: 6px;
+    color: var(--accent-gold);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -119,114 +280,136 @@ form {
 .input-wrapper {
     display: flex;
     align-items: center;
-    background-color: #FFFDFB;
-    border: 1px solid #EFEBE5;
+    background-color: rgba(17, 22, 19, 0.7); /* Deep dark background inside fields */
+    border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 0 15px;
-    transition: border-color 0.3s;
+    transition: all 0.3s ease;
 }
 
     .input-wrapper:focus-within {
-        border-color: #f46a05;
+        border-color: var(--accent-gold);
+        box-shadow: 0 0 12px rgba(223, 183, 86, 0.2);
+        background-color: var(--bg-main);
     }
 
 .input-icon {
-    font-size: 16px;
-    color: #A8968F;
+    font-size: 15px;
+    color: var(--accent-gold);
     margin-right: 12px;
 }
 
 .input-wrapper input {
     width: 100%;
-    padding: 16px 0;
+    padding: 14px 0;
     border: none;
     background: transparent;
     font-size: 15px;
-    font-family: 'Outfit', sans-serif;
     outline: none;
-    color: #3b2319;
+    color: var(--text-pure);
 }
 
     .input-wrapper input::placeholder {
-        color: #bfaaa1;
+        color: #5c6f64;
     }
 
-/* --- ACTIONS --- */
+/* Form Submission Actions */
 .form-actions {
     text-align: center;
-    margin-top: 10px;
+    margin-top: 5px;
 }
 
 .btn-login {
     width: 100%;
-    padding: 16px;
-    background-color: #f46a05;
-    color: white;
+    padding: 15px;
+    background-color: var(--accent-gold);
+    color: #111613; /* Deep text inside button for perfect accessibility standards */
     border: none;
     border-radius: 12px;
     font-size: 16px;
     font-weight: 800;
     cursor: pointer;
-    box-shadow: 0 4px 15px rgba(244, 106, 5, 0.25);
-    transition: background-color 0.3s;
-    margin-bottom: 20px;
+    box-shadow: 0 4px 20px rgba(223, 183, 86, 0.25);
+    transition: background-color 0.3s, transform 0.2s;
+    margin-bottom: 18px;
 }
 
     .btn-login:hover {
-        background-color: #d45b04;
+        background-color: var(--accent-gold-hover);
+        transform: translateY(-1px);
+    }
+
+    .btn-login:active {
+        transform: translateY(0);
     }
 
 .forgot-link {
-    color: #8D6E63;
+    color: var(--text-muted);
     text-decoration: none;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
     transition: color 0.3s;
 }
 
     .forgot-link:hover {
-        color: #f46a05;
+        color: var(--accent-gold);
     }
 
-/* --- NEW REGISTRATION PROMPT --- */
+/* Portal Account Routing Anchor */
 .register-prompt {
-    margin-top: 35px;
-    padding-top: 25px;
-    border-top: 1px solid #EFEBE5;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
     text-align: center;
 }
 
     .register-prompt p {
-        color: #8D6E63;
-        font-size: 15px;
-        margin-bottom: 8px;
+        color: var(--text-muted);
+        font-size: 14px;
+        margin-bottom: 6px;
     }
 
 .register-link {
-    color: #f46a05;
+    color: var(--accent-gold);
     font-weight: 800;
     text-decoration: none;
-    font-size: 16px;
+    font-size: 15px;
     transition: color 0.3s;
 }
 
     .register-link:hover {
-        color: #d45b04;
+        color: var(--accent-gold-hover);
         text-decoration: underline;
     }
 
-/* --- RESPONSIVE --- */
-@media (max-width: 850px) {
+/* ==========================================================================
+   5. RESPONSIVE ADAPTABILITY VIEWPORTS
+   ========================================================================== */
+@media (max-width: 900px) {
     .login-split-container {
         flex-direction: column;
+        justify-content: center;
+        gap: 40px;
+        padding: 30px 24px;
     }
 
-    .login-left {
-        padding: 60px 20px;
-        flex: none;
+    .brand-content {
+        text-align: center;
+        max-width: 100%;
     }
 
     .login-right {
-        padding: 40px 20px;
+        justify-content: center;
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .login-card {
+        padding: 30px 20px;
+    }
+
+    .login-logo {
+        font-size: 42px;
     }
 }

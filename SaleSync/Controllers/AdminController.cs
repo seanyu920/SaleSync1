@@ -16,7 +16,7 @@ namespace SaleSync.Controllers
     public class AdminController : Controller
     {
         private readonly IConfiguration _configuration;
-        private readonly string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+        private readonly string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
 
         public AdminController(IConfiguration configuration)
         {
@@ -1167,8 +1167,24 @@ namespace SaleSync.Controllers
                 }
             }
         }
+        [HttpGet]
+        public IActionResult WebCustomization()
+        {
+            // Initialize a completely new instance directly to prevent database errors for now
+            var settings = new WebCustomization();
+
+            return View(settings);
+        }
 
         public class AdminVoidRequest { public int SaleId { get; set; } public string Pass { get; set; } }
         public class StatusUpdateModel { public int SaleId { get; set; } public string Status { get; set; } }
+
+        [HttpGet]
+        public IActionResult QueueOrder()
+        {
+            // This tells ASP.NET to look for a view named QueueOrder.cshtml
+            return View();
+        }
+
     }
 }
