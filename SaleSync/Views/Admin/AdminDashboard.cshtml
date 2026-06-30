@@ -10,110 +10,112 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Admin Dashboard - Cafero</title>
     <link rel="stylesheet" href="~/css/AdminDashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
 
     <div id="voidModal" class="modal-overlay">
         <div class="auth-modal">
-            <h3 style="color: #4a2511;">Authorize Void</h3>
-            <p style="font-size: 12px; color: #8c5b3e; margin-top: 5px;">Enter your Admin password to void <br><strong>Order #ORD-<span id="displayId"></span></strong></p>
+            <h3 class="modal-title">Authorize Void</h3>
+            <p class="modal-desc">Enter your Admin password to void <br><strong>Order #ORD-<span id="displayId"></span></strong></p>
             <input type="password" id="adminPass" placeholder="Admin Password" />
             <button class="auth-btn" onclick="confirmAdminVoid()">Verify & Void</button>
-            <p onclick="closeModal()" style="margin-top:15px; cursor:pointer; font-size:12px; color:#999;">Cancel</p>
+            <p onclick="closeModal()" class="modal-cancel">Cancel</p>
         </div>
     </div>
 
     <div class="dashboard-container">
-        <!-- SIDEBAR -->
         <aside class="sidebar">
             <div>
-                <div class="logo-section" style="margin-bottom: 30px;">
+                <div class="logo-section">
                     <div class="logo-title">Cafero</div>
                     <div class="logo-subtitle">Coffee & Pastries</div>
                 </div>
 
-                <div class="profile-section" style="display: flex; align-items: center; gap: 15px; margin-bottom: 40px; padding: 0 10px;">
-                    <div class="profile-circle" style="width: 45px; height: 45px; flex-shrink: 0; background: #f46a05; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #fff;">👤</div>
+                <div class="profile-section">
+                    <div class="profile-circle">👤</div>
                     <div>
-                        <h2 class="admin-name" style="font-size: 16px; font-weight: 700; color: #ffffff; margin: 0;">Admin</h2>
-                        <div style="font-size: 12px; color: #dcbca5;">Administrator</div>
+                        <h2 class="admin-name">Admin</h2>
+                        <div class="admin-role">Administrator</div>
                     </div>
                 </div>
 
                 <nav class="sidebar-menu">
-                    <a href="/@homeController/Dashboard" class="menu-btn active">❖ Dashboard</a>
-                    <a href="/@homeController/PointOfSale" class="menu-btn">🛒 POS</a>
+                    <a href="/@homeController/Dashboard" class="menu-btn active"><i class="fas fa-chart-line"></i> Dashboard</a>
+                    <a href="/@homeController/PointOfSale" class="menu-btn"><i class="fas fa-shopping-cart"></i> POS</a>
 
                     @if (User.IsInRole("Admin"))
                     {
-                        <a href="/Admin/ActivityLog" class="menu-btn">📋 Activity Log</a>
+                        <a href="/Admin/ActivityLog" class="menu-btn"><i class="fas fa-clipboard-list"></i> Activity Log</a>
                     }
-                    
-                    <a href="/Admin/Analytics" class="menu-btn">📊 Analytics</a>
-                    <a href="/Admin/Products" class="menu-btn">🏷️ Products</a>
-                    <a href="/Admin/Inventory" class="menu-btn">📦 Inventory</a>
+
+                    <a href="/Admin/Analytics" class="menu-btn"><i class="fas fa-chart-pie"></i> Analytics</a>
+                    <a href="/Admin/QueueOrder" class="menu-btn"><i class="fas fa-list-ol"></i> Queue</a>
+                    <a href="/Admin/Products" class="menu-btn"><i class="fas fa-tags"></i> Products</a>
+                    <a href="/Admin/Inventory" class="menu-btn"><i class="fas fa-box-open"></i> Inventory</a>
+
+                    <a href="/Admin/ArchivedProducts" class="menu-btn"><i class="fas fa-archive"></i> Archived</a>
 
                     @if (User.IsInRole("Admin"))
                     {
-                        <a href="/Admin/ManageAccounts" class="menu-btn">💳 Accounts</a>
+                        <a href="/Admin/ManageAccounts" class="menu-btn"><i class="fas fa-credit-card"></i> Accounts</a>
                     }
+                    <a href="/Admin/WebCustomization" class="menu-btn"><i class="fas fa-tags"></i> Customization</a>
                 </nav>
             </div>
-            
-            <div class="logout-section" style="margin-top: auto;">
+
+            <div class="logout-section">
                 <form method="post" action="/Home/Logout">
-                    <button type="submit" class="menu-btn logout-btn" style="background: transparent; border: none; width: 100%; text-align: left; cursor: pointer; color: #dcbca5; padding: 14px 20px;">
-                        ⎋ Log Out
+                    <button type="submit" class="menu-btn logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> Log Out
                     </button>
                 </form>
             </div>
         </aside>
 
-        <!-- MAIN CONTENT -->
         <main class="main-content">
-            
-            <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 25px 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); margin-bottom: 25px; border: 1px solid #eaddd3;">
+
+            <div class="page-header dashboard-header-card">
                 <div>
-                    <p style="margin: 0; font-size: 13px; color: #8c5b3e; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">Today's Net Sales</p>
-                    <h1 style="margin: 5px 0 0 0; font-size: 42px; color: #4a2511; font-weight: 800;">₱@Model.TodayTotalSales.ToString("N2")</h1>
+                    <p class="header-label">Today's Net Sales</p>
+                    <h1 class="header-sales-value">₱@Model.TodayTotalSales.ToString("N2")</h1>
                 </div>
-                <div style="text-align: right;">
-                    <p style="margin: 0; font-size: 13px; color: #8c5b3e; font-weight: 600;">System Status</p>
-                    <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 8px;">
-                        <span style="display: inline-block; width: 10px; height: 10px; background: #0b8a53; border-radius: 50%; box-shadow: 0 0 8px rgba(11, 138, 83, 0.6);"></span>
-                        <span style="font-size: 14px; font-weight: 700; color: #0b8a53;">Online & Syncing</span>
+                <div class="system-status-container">
+                    <p class="status-label">System Status</p>
+                    <div class="status-indicator-flex">
+                        <span class="status-dot animate-pulse"></span>
+                        <span class="status-text">Online & Syncing</span>
                     </div>
                 </div>
             </div>
 
             <div class="summary-dashboard">
                 <div class="summary-card stat-clickable" onclick="switchView('sales')">
-                    <div class="card-icon-box icon-orange" style="background: #8c5b3e;">📋</div>
+                    <div class="card-icon-box icon-orange"><i class="fas fa-list"></i></div>
                     <div class="card-label">All Transactions</div>
                     <div class="card-value">@(Model.RecentSales?.Count ?? 0)</div>
                 </div>
-                
+
                 <div class="summary-card stat-clickable" onclick="switchView('pending')">
-                    <div class="card-icon-box icon-green">⏳</div>
+                    <div class="card-icon-box icon-green"><i class="fas fa-hourglass-half"></i></div>
                     <div class="card-label">Pending Orders</div>
                     <div class="card-value">@(Model.RecentSales?.Count(s => s.Status == "Pending" || string.IsNullOrEmpty(s.Status)) ?? 0)</div>
                 </div>
-                
+
                 <div class="summary-card stat-clickable" onclick="switchView('completed')">
-                    <div class="card-icon-box icon-light-orange">📁</div>
+                    <div class="card-icon-box icon-light-orange"><i class="fas fa-check-circle"></i></div>
                     <div class="card-label">Completed Sales</div>
                     <div class="card-value">@Model.TodayTransactionCount</div>
                 </div>
-                
+
                 <div class="summary-card stat-clickable" onclick="switchView('lowstock')">
-                    <div class="card-icon-box icon-red">⚠️</div>
+                    <div class="card-icon-box icon-red"><i class="fas fa-exclamation-triangle"></i></div>
                     <div class="card-label">Low Stock Alerts</div>
-                    <div class="card-value">7</div>
+                    <div class="card-value">1</div>
                 </div>
             </div>
 
-            <!-- VIEW 1: ALL TRANSACTIONS -->
             <div class="recent-sales-card" id="salesViewContainer">
                 <div class="card-header-flex">
                     <div>
@@ -141,37 +143,37 @@
                                 @foreach (var sale in Model.RecentSales)
                                 {
                                     <tr>
-                                        <td class="td-bold">#ORD-@sale.SaleId</td>
+                                        <td class="order-id">#ORD-@sale.SaleId</td>
                                         <td>@sale.SaleDate.ToString("hh:mm tt")</td>
                                         <td>
-                                            <div style="font-weight: 700; color: #4a2511;">@(sale.CustomerName ?? "Walk-in")</div>
-                                            <div style="margin-top: 4px;">
-                                                <span style="background: #fdf0dc; color: #a16c1b; padding: 3px 8px; border-radius: 12px; font-size: 10px; font-weight: bold;">
+                                            <div class="customer-name">@(sale.CustomerName ?? "Walk-in")</div>
+                                            <div class="badge-wrapper">
+                                                <span class="order-type-badge">
                                                     @(sale.OrderType ?? "Dine In")
                                                 </span>
                                             </div>
                                             @if (!string.IsNullOrEmpty(sale.DeliveryAddress))
                                             {
-                                                <div style="margin-top: 4px; font-size: 11px; color: #e02424; font-weight: 600;">
+                                                <div class="delivery-address">
                                                     📍 @sale.DeliveryAddress
                                                 </div>
                                             }
                                         </td>
                                         <td>@sale.ItemsSummary</td>
-                                        <td><span style="font-weight: 600; color: #8c5b3e;">@(sale.PaymentMethod ?? "Cash")</span></td>
+                                        <td><span class="payment-method-text">@(sale.PaymentMethod ?? "Cash")</span></td>
                                         <td class="td-price">₱@sale.TotalAmount.ToString("N2")</td>
                                         <td>
                                             @if (sale.Status == "Completed")
                                             {
-                                                <span class="badge-completed" style="background: #d1fae5; color: #065f46; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;">Completed</span>
+                                                <span class="status-badge status-completed">Completed</span>
                                             }
                                             else if (sale.Status == "Voided")
                                             {
-                                                <span class="status-voided" style="background: #fee2e2; color: #b91c1c; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;">Voided</span>
+                                                <span class="status-badge status-voided">Voided</span>
                                             }
                                             else
                                             {
-                                                <span class="badge-pending" style="background: #fef3c7; color: #92400e; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;">Pending</span>
+                                                <span class="status-badge status-pending">Pending</span>
                                             }
                                         </td>
                                     </tr>
@@ -182,7 +184,6 @@
                 </div>
             </div>
 
-            <!-- VIEW 2: PENDING ORDERS -->
             <div class="recent-sales-card hidden-view" id="pendingViewContainer">
                 <div class="card-header-flex">
                     <div>
@@ -202,7 +203,7 @@
                                 <th>Payment</th>
                                 <th>Total Amount</th>
                                 <th>Status</th>
-                                <th style="text-align: center;">Actions</th>
+                                <th class="text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -217,27 +218,27 @@
                                     {
                                         hasPending = true;
                                         <tr>
-                                            <td class="td-bold">#ORD-@sale.SaleId</td>
+                                            <td class="order-id">#ORD-@sale.SaleId</td>
                                             <td>@sale.SaleDate.ToString("hh:mm tt")</td>
                                             <td>
-                                                <div style="font-weight: 700; color: #4a2511;">@(sale.CustomerName ?? "Walk-in")</div>
-                                                <div style="margin-top: 4px;">
-                                                    <span style="background: #fdf0dc; color: #a16c1b; padding: 3px 8px; border-radius: 12px; font-size: 10px; font-weight: bold;">
+                                                <div class="customer-name">@(sale.CustomerName ?? "Walk-in")</div>
+                                                <div class="badge-wrapper">
+                                                    <span class="order-type-badge">
                                                         @(sale.OrderType ?? "Dine In")
                                                     </span>
                                                 </div>
                                                 @if (!string.IsNullOrEmpty(sale.DeliveryAddress))
                                                 {
-                                                    <div style="margin-top: 4px; font-size: 11px; color: #e02424; font-weight: 600;">
+                                                    <div class="delivery-address">
                                                         📍 @sale.DeliveryAddress
                                                     </div>
                                                 }
                                             </td>
                                             <td>@sale.ItemsSummary</td>
-                                            <td><span style="font-weight: 600; color: #8c5b3e;">@(sale.PaymentMethod ?? "Cash")</span></td>
+                                            <td><span class="payment-method-text">@(sale.PaymentMethod ?? "Cash")</span></td>
                                             <td class="td-price">₱@sale.TotalAmount.ToString("N2")</td>
-                                            <td><span class="badge-pending" style="background: #fef3c7; color: #92400e; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;">Pending</span></td>
-                                            <td style="text-align: center;">
+                                            <td><span class="status-badge status-pending">Pending</span></td>
+                                            <td class="text-center">
                                                 <div class="action-btn-group">
                                                     <button class="btn-mini btn-confirm-mini" onclick="updateStatus(@sale.SaleId, 'Completed')">✓</button>
                                                     <button class="btn-mini btn-void-mini" onclick="openVoidModal(@sale.SaleId)">✕</button>
@@ -250,7 +251,7 @@
                             @if (!hasPending)
                             {
                                 <tr>
-                                    <td colspan="8" style="text-align: center; padding: 25px; color: #8c5b3e;">No pending orders. You're all caught up!</td>
+                                    <td colspan="8" class="table-empty-state">No pending orders. You're all caught up!</td>
                                 </tr>
                             }
                         </tbody>
@@ -258,12 +259,11 @@
                 </div>
             </div>
 
-            <!-- VIEW 3: COMPLETED TRANSACTIONS -->
             <div class="recent-sales-card hidden-view" id="completedViewContainer">
                 <div class="card-header-flex">
                     <div>
                         <h2 class="widget-title">Completed Transactions</h2>
-                        <p class="widget-subtitle" style="color: #0b8a53; font-weight: 700; font-size: 15px; margin-top: 5px;">
+                        <p class="widget-subtitle subtitle-highlight">
                             Total Sales: ₱@Model.TodayTotalSales.ToString("N2")
                         </p>
                     </div>
@@ -294,26 +294,26 @@
                                     {
                                         hasCompleted = true;
                                         <tr>
-                                            <td class="td-bold">#ORD-@sale.SaleId</td>
+                                            <td class="order-id">#ORD-@sale.SaleId</td>
                                             <td>@sale.SaleDate.ToString("hh:mm tt")</td>
                                             <td>
-                                                <div style="font-weight: 700; color: #4a2511;">@(sale.CustomerName ?? "Walk-in")</div>
-                                                <div style="margin-top: 4px;">
-                                                    <span style="background: #fdf0dc; color: #a16c1b; padding: 3px 8px; border-radius: 12px; font-size: 10px; font-weight: bold;">
+                                                <div class="customer-name">@(sale.CustomerName ?? "Walk-in")</div>
+                                                <div class="badge-wrapper">
+                                                    <span class="order-type-badge">
                                                         @(sale.OrderType ?? "Dine In")
                                                     </span>
                                                 </div>
                                                 @if (!string.IsNullOrEmpty(sale.DeliveryAddress))
                                                 {
-                                                    <div style="margin-top: 4px; font-size: 11px; color: #e02424; font-weight: 600;">
+                                                    <div class="delivery-address">
                                                         📍 @sale.DeliveryAddress
                                                     </div>
                                                 }
                                             </td>
                                             <td>@sale.ItemsSummary</td>
-                                            <td><span style="font-weight: 600; color: #8c5b3e;">@(sale.PaymentMethod ?? "Cash")</span></td>
+                                            <td><span class="payment-method-text">@(sale.PaymentMethod ?? "Cash")</span></td>
                                             <td class="td-price">₱@sale.TotalAmount.ToString("N2")</td>
-                                            <td><span class="badge-completed" style="background: #d1fae5; color: #065f46; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;">Completed</span></td>
+                                            <td><span class="status-badge status-completed">Completed</span></td>
                                         </tr>
                                     }
                                 }
@@ -321,7 +321,7 @@
                             @if (!hasCompleted)
                             {
                                 <tr>
-                                    <td colspan="7" style="text-align: center; padding: 25px; color: #8c5b3e;">No completed transactions yet today.</td>
+                                    <td colspan="7" class="table-empty-state">No completed transactions yet today.</td>
                                 </tr>
                             }
                         </tbody>
@@ -329,11 +329,10 @@
                 </div>
             </div>
 
-            <!-- VIEW 4: LOW STOCK ALERTS -->
             <div class="recent-sales-card hidden-view" id="lowStockViewContainer">
                 <div class="card-header-flex">
                     <div>
-                        <h2 class="widget-title" style="color: #e02424;">⚠️ Low Stock Items</h2>
+                        <h2 class="widget-title title-danger">⚠️ Low Stock Items</h2>
                         <p class="widget-subtitle">Items needing immediate restock</p>
                     </div>
                     <a href="/Admin/Inventory" class="view-all-link">Manage Inventory &rarr;</a>
@@ -352,12 +351,12 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td class="td-bold">ITM-001</td>
+                                <td class="order-id">ITM-001</td>
                                 <td>COFFEE</td>
                                 <td>Espresso Beans</td>
-                                <td><strong style="color: #e02424;">2.5 kg</strong></td>
+                                <td><strong class="text-danger">2.5 kg</strong></td>
                                 <td>Local Roasters Inc.</td>
-                                <td><span class="status-voided" style="background: #fee2e2; color: #b91c1c; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;">Low Stock</span></td>
+                                <td><span class="status-badge status-voided">Low Stock</span></td>
                             </tr>
                         </tbody>
                     </table>
@@ -366,25 +365,17 @@
         </main>
     </div>
 
-    <!-- JAVASCRIPT LOGIC -->
     <script>
         let selectedSaleId = null;
 
         function switchView(viewName) {
-        const salesView = document.getElementById('salesViewContainer');
-        const pendingView = document.getElementById('pendingViewContainer');
-        const completedView = document.getElementById('completedViewContainer');
-        const lowStockView = document.getElementById('lowStockViewContainer');
-                
-        salesView.classList.add('hidden-view');
-        pendingView.classList.add('hidden-view');
-        completedView.classList.add('hidden-view');
-        lowStockView.classList.add('hidden-view');
-                
-        if (viewName === 'sales') salesView.classList.remove('hidden-view');
-        else if (viewName === 'pending') pendingView.classList.remove('hidden-view');
-        else if (viewName === 'completed') completedView.classList.remove('hidden-view');
-        else if (viewName === 'lowstock') lowStockView.classList.remove('hidden-view');
+        const views = ['salesViewContainer', 'pendingViewContainer', 'completedViewContainer', 'lowStockViewContainer'];
+        views.forEach(id => document.getElementById(id).classList.add('hidden-view'));
+
+        if (viewName === 'sales') document.getElementById('salesViewContainer').classList.remove('hidden-view');
+        else if (viewName === 'pending') document.getElementById('pendingViewContainer').classList.remove('hidden-view');
+        else if (viewName === 'completed') document.getElementById('completedViewContainer').classList.remove('hidden-view');
+        else if (viewName === 'lowstock') document.getElementById('lowStockViewContainer').classList.remove('hidden-view');
         }
 
         function updateStatus(saleId, status) {
@@ -416,7 +407,9 @@
         document.getElementById('voidModal').style.display = 'flex';
         }
 
-        function closeModal() { document.getElementById('voidModal').style.display = 'none'; }
+        function closeModal() {
+        document.getElementById('voidModal').style.display = 'none';
+        }
 
         function confirmAdminVoid() {
         const passValue = document.getElementById('adminPass').value;
@@ -443,46 +436,6 @@
         }
         });
         }
-
-        // ⭐ NOTIFICATION SYSTEM ⭐
-        let currentPendingCount = @(Model.RecentSales?.Count(s => s.Status == "Pending" || string.IsNullOrEmpty(s.Status)) ?? 0);
-
-        // Helper function to play the sound
-        function playDing() {
-        const ding = new Audio('https://actions.google.com/google_actions/notifications/beeps_instrumental_light.mp3');
-        ding.play().catch(e => console.log("Audio play blocked until user interacts with page."));
-        }
-
-        setInterval(async () => {
-        try {
-        const res = await fetch('/Admin/CheckNewOrders');
-        if (res.ok) {
-        const data = await res.json();
-        if (data.pendingCount > currentPendingCount) {
-                        
-        // ⭐ PLAY SOUND
-        playDing();
-
-        Swal.fire({
-        title: '🛎️ New Online Order!',
-        text: 'A customer just placed a new order.',
-        icon: 'info',
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 4000
-        });
-
-        // Update local count so we don't spam the sound
-        currentPendingCount = data.pendingCount;
-
-        setTimeout(() => location.reload(), 3000);
-        } else if (data.pendingCount < currentPendingCount) {
-        location.reload();
-        }
-        }
-        } catch (e) { console.error("Sync error."); }
-        }, 10000);
     </script>
 </body>
 </html>

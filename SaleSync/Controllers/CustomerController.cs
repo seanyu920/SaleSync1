@@ -11,7 +11,7 @@ namespace SaleSync.Controllers
     [Authorize(Roles = "Customer")]
     public class CustomerController : Controller
     {
-        private readonly string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+        private readonly string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
 
         [HttpGet]
         public IActionResult CustomerOrdering()

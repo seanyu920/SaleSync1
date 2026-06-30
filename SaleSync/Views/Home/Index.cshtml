@@ -7,18 +7,19 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Cafero | Coffee & Connection</title>
-    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
-    
     <link rel="stylesheet" href="~/css/HomePage.css" asp-append-version="true" />
     <script src="https://www.tuqlas.com/chatbot.js"
             data-key="tq_live_9547c2eeec76bb4a64f8c3005fa50150596e2b7c"
             data-api="https://www.tuqlas.com"
             defer></script>
+
+   
 </head>
 <body>
+
     <header class="top-bar">
         <div class="logo">
             <img src="/images/Untitled design.png" alt="Cafero Logo" class="logo-icon" />
@@ -34,24 +35,10 @@
         <div class="nav-container" id="navContainer">
             <nav class="nav-menu">
                 <a href="#home" onclick="closeNav()">Home</a>
-                
-                <!-- Mega Dropdown Menu -->
-                <div class="nav-dropdown" onclick="toggleDropdown(event)">
-                    <button class="dropbtn">Menu ▾</button>
-                    <div class="dropdown-menu" id="menuDropdown">
-                        <a href="javascript:void(0)" onclick="openCategoryModal('coffee', 'Coffee')">☕ Coffee</a>
-                        <a href="javascript:void(0)" onclick="openCategoryModal('milktea', 'Milktea')">🧋 Milktea</a>
-                        <a href="javascript:void(0)" onclick="openCategoryModal('fruittea', 'Fruit Tea')">🍹 Fruit Tea</a>
-                        <a href="javascript:void(0)" onclick="openCategoryModal('rice', 'Rice Meals')">🍛 Rice Meals</a>
-                        <a href="javascript:void(0)" onclick="openCategoryModal('pastry', 'Bread & Pastry')">🥐 Bread & Pastry</a>
-                        <a href="javascript:void(0)" onclick="openCategoryModal('snacks', 'Snacks & Pasta')">🍝 Snacks & Pasta</a>
-                    </div>
-                </div>
-
                 <a href="#about" onclick="closeNav()">About</a>
+                <a href="#menu" onclick="closeNav()">Menu</a>
                 <a href="#contact" onclick="closeNav()">Contact</a>
             </nav>
-
             <div class="nav-login">
                 <a asp-controller="Home" asp-action="Login" class="login-btn">Log In</a>
             </div>
@@ -61,181 +48,121 @@
     <main class="hero-section" id="home">
         <div class="hero-content">
             <span class="hero-badge">Est. 2026</span>
-            <h1>Welcome to Cafero</h1>
-            <p>
-                From cozy vibes to carefully brewed cups.
-                Experience a retreat where every sip feels like home.
-            </p>
+            <h1>Where Every<br>Sip Feels Like <em>Home</em></h1>
+            <p>Craft coffee, warm spaces, and a menu made for lingering. Cafero is your corner escape in Taytay.</p>
             <div class="hero-actions">
-                <!-- Direct link to login -->
                 <a href="/Home/Login" class="hero-btn">Order Now</a>
                 <a href="javascript:void(0)" onclick="openCategoryModal('coffee', 'Coffee')" class="hero-btn btn-outline">Explore Menu</a>
             </div>
         </div>
+        <div class="hero-image-col">
+            <img src="/images/HomePage2.jpg" alt="Cafero interior" />
+        </div>
     </main>
 
-    <!-- ABOUT SECTION -->
-    <section class="about-section" id="about">
-        <div class="section-container">
-            <div class="section-header">
-                <h2>Our Specialties</h2>
-                <div class="section-divider"></div>
-                <p>
-                    Cafero specializes in the art of craft coffee, offering a space purposefully designed for connection.
-                </p>
+   <section class="about-story-section" id="about">
+    <div class="story-container">
+        <span class="section-eyebrow">Our Story</span>
+        <h2>Welcome to<br><span>Cafèro</span></h2>
+        <p class="about-story-text">
+            Established in December 2025, <strong>Cafèro</strong> is Taytay, Rizal’s newest coffee sanctuary. 
+            We believe that exceptional, passion-crafted coffee shouldn't come with a premium price tag. 
+            That’s why we’re dedicated to bringing you rich flavors, cozy vibes, and daily brews that are beautifully budget-friendly.
+        </p>
+    </div>
+</section>
+
+    <section class="about-section" id="menu">
+        <div class="section-header">
+            <div class="section-header-left">
+                <span class="section-eyebrow">Our Menu</span>
+                <h2>Crafted with<br><span>Passion</span></h2>
+            </div>
+        </div>
+
+        <div class="feature-grid">
+
+            <div class="feature-card" onclick="openCategoryModal('coffee', 'Coffee')">
+                <div class="card-inner">
+                    <div class="card-front">
+                        <div class="card-icon"><img src="/images/Coffee.png" alt="Coffee" /></div>
+                        <h3>Coffee</h3>
+                        <p>Artisan blends brewed to perfection by our expert baristas.</p>
+                        <span class="card-tap-hint">Tap to see menu</span>
+                    </div>
+                </div>
             </div>
 
-            <div class="feature-grid">
-                
-                <div class="feature-card" onclick="this.classList.toggle('is-flipped')">
-                    <div class="card-inner">
-                        <div class="card-front">
-                            <div class="card-icon"><img src="/images/Coffee.png" alt="Coffee" /></div>
-                            <h3>Coffee</h3>
-                            <p>Artisan blends brewed to perfection by our expert baristas.</p>
-                        </div>
-                        <div class="card-back">
-                            <h3 class="back-title">Coffee Menu</h3>
-                            <div class="menu-size-header"><span>Item</span><span>S | L</span></div>
-                            <ul class="flip-menu-list">
-                                <li><span>Americano</span> <span>₱79 | ₱89</span></li>
-                                <li><span>Cappuccino</span> <span>₱79 | ₱89</span></li>
-                                <li><span>Hot Choco</span> <span>₱79 | ₱89</span></li>
-                                <li><span>Hot Latte</span> <span>₱79 | ₱89</span></li>
-                                <li><span>Iced Latte</span> <span>₱89 | ₱99</span></li>
-                                <li><span>Spanish Latte</span> <span>₱89 | ₱99</span></li>
-                                <li><span>Hot Matcha Latte</span> <span>₱89 | ₱99</span></li>
-                                <li><span>Iced Matcha Latte</span> <span>₱89 | ₱99</span></li>
-                            </ul>
-                        </div>
+            <div class="feature-card" onclick="openCategoryModal('milktea', 'Milktea')">
+                <div class="card-inner">
+                    <div class="card-front">
+                        <div class="card-icon"><img src="/images/MilkTea.png" alt="Milk Tea" /></div>
+                        <h3>Milk Tea</h3>
+                        <p>Perfectly balanced sweetness with premium tea leaves.</p>
+                        <span class="card-tap-hint">Tap to see menu</span>
                     </div>
                 </div>
-                
-                <div class="feature-card" onclick="this.classList.toggle('is-flipped')">
-                    <div class="card-inner">
-                        <div class="card-front">
-                            <div class="card-icon"><img src="/images/MilkTea.png" alt="Milk Tea" /></div>
-                            <h3>Milk Tea</h3>
-                            <p>Perfectly balanced sweetness with premium tea leaves.</p>
-                        </div>
-                        <div class="card-back">
-                            <h3 class="back-title">Milk Tea Menu</h3>
-                            <div class="menu-size-header"><span>Item</span><span>S | L</span></div>
-                            <ul class="flip-menu-list">
-                                <li><span>Wintermelon</span> <span>₱49 | ₱59</span></li>
-                                <li><span>Okinawa</span> <span>₱49 | ₱59</span></li>
-                                <li><span>Cookies and Cream</span> <span>₱49 | ₱59</span></li>
-                                <li><span>Salted Caramel</span> <span>₱49 | ₱59</span></li>
-                                <li><span>Hokkaido</span> <span>₱49 | ₱59</span></li>
-                                <li><span>Matcha</span> <span>₱49 | ₱59</span></li>
-                                <li><span>Thai</span> <span>₱49 | ₱59</span></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="feature-card" onclick="this.classList.toggle('is-flipped')">
-                    <div class="card-inner">
-                        <div class="card-front">
-                            <div class="card-icon"><img src="/images/FruitTea.png" alt="Fruit Tea" /></div>
-                            <h3>Fruit Tea</h3>
-                            <p>Refreshing infusions of real fruit and natural botanicals.</p>
-                        </div>
-                        <div class="card-back">
-                            <h3 class="back-title">Fruit Tea Menu</h3>
-                            <div class="menu-size-header"><span>Item</span><span>S | L</span></div>
-                            <ul class="flip-menu-list">
-                                <li><span>Green Apple</span> <span>₱49 | ₱59</span></li>
-                                <li><span>Strawberry</span> <span>₱49 | ₱59</span></li>
-                                <li><span>Blueberry</span> <span>₱49 | ₱59</span></li>
-                                <li><span>Mango</span> <span>₱49 | ₱59</span></li>
-                                <li><span>Lychee</span> <span>₱49 | ₱59</span></li>
-                                <li><span>Peach</span> <span>₱49 | ₱59</span></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="feature-card" onclick="this.classList.toggle('is-flipped')">
-                    <div class="card-inner">
-                        <div class="card-front">
-                            <div class="card-icon"><img src="/images/Silog.png" alt="Rice Meals" /></div>
-                            <h3>Rice Meals</h3>
-                            <p>Hearty, savory meals that provide comfort in every bite.</p>
-                        </div>
-                        <div class="card-back">
-                            <h3 class="back-title">Rice Meals</h3>
-                            <ul class="flip-menu-list">
-                                <li><span>Silog</span> <span>₱49</span></li>
-                                <li><span>Hot Silog</span> <span>₱79</span></li>
-                                <li><span>Long Silog</span> <span>₱79</span></li>
-                                <li><span>Ham Silog</span> <span>₱79</span></li>
-                                <li><span>Shanghai Silog</span> <span>₱89</span></li>
-                                <li><span>Embotido Silog</span> <span>₱99</span></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="feature-card" onclick="this.classList.toggle('is-flipped')">
-                    <div class="card-inner">
-                        <div class="card-front">
-                            <div class="card-icon"><img src="/images/Pasta.jpg" alt="Pasta & Snacks" /></div>
-                            <h3>Pasta & Snacks</h3>
-                            <p>Classic favorites reimagined for your mid-day escape.</p>
-                        </div>
-                        <div class="card-back">
-                            <h3 class="back-title">Pasta & Snacks</h3>
-                            <ul class="flip-menu-list">
-                                <li><span>Flavored Fries</span> <span>₱59</span></li>
-                                <li><span>Nachos</span> <span>₱59</span></li>
-                                <li><span>Siomai 4pcs</span> <span>₱39</span></li>
-                                <li><span>Carbonara</span> <span>₱109</span></li>
-                                <li><span>Pesto Pasta</span> <span>₱119</span></li>
-                                <li><span>Gambas Pasta</span> <span>₱129</span></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="feature-card" onclick="this.classList.toggle('is-flipped')">
-                    <div class="card-inner">
-                        <div class="card-front">
-                            <div class="card-icon"><img src="/images/Pastry.jpg" alt="Bread & Pastries" /></div>
-                            <h3>Bread & Pastries</h3>
-                            <p>Baked fresh daily with high-quality, local ingredients.</p>
-                        </div>
-                        <div class="card-back">
-                            <h3 class="back-title">Bread & Pastries</h3>
-                            <ul class="flip-menu-list">
-                                <li><span>Chocolate Cookies</span> <span>₱49</span></li>
-                                <li><span>Croissant</span> <span>₱59</span></li>
-                                <li><span>Cheese Ensaymada</span> <span>₱39</span></li>
-                                <li><span>Yema Ensaymada</span> <span>₱39</span></li>
-                                <li><span>Ube Ensaymada</span> <span>₱39</span></li>
-                                <li><span>Chocolate Donut</span> <span>₱29</span></li>
-                                <li><span>Cinnamon</span> <span>₱39</span></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
             </div>
+
+            <div class="feature-card" onclick="openCategoryModal('fruittea', 'Fruit Tea')">
+                <div class="card-inner">
+                    <div class="card-front">
+                        <div class="card-icon"><img src="/images/FruitTea.png" alt="Fruit Tea" /></div>
+                        <h3>Fruit Tea</h3>
+                        <p>Refreshing infusions of real fruit and natural botanicals.</p>
+                        <span class="card-tap-hint">Tap to see menu</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="feature-card" onclick="openCategoryModal('rice', 'Rice Meals')">
+                <div class="card-inner">
+                    <div class="card-front">
+                        <div class="card-icon"><img src="/images/Silog.png" alt="Rice Meals" /></div>
+                        <h3>Rice Meals</h3>
+                        <p>Hearty, savory meals that provide comfort in every bite.</p>
+                        <span class="card-tap-hint">Tap to see menu</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="feature-card" onclick="openCategoryModal('snacks', 'Snacks & Pasta')">
+                <div class="card-inner">
+                    <div class="card-front">
+                        <div class="card-icon"><img src="/images/Pasta.jpg" alt="Pasta & Snacks" /></div>
+                        <h3>Pasta & Snacks</h3>
+                        <p>Classic favorites reimagined for your mid-day escape.</p>
+                        <span class="card-tap-hint">Tap to see menu</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="feature-card" onclick="openCategoryModal('pastry', 'Bread & Pastry')">
+                <div class="card-inner">
+                    <div class="card-front">
+                        <div class="card-icon"><img src="/images/Pastry.jpg" alt="Bread & Pastries" /></div>
+                        <h3>Bread & Pastries</h3>
+                        <p>Baked fresh daily with high-quality, local ingredients.</p>
+                        <span class="card-tap-hint">Tap to see menu</span>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </section>
 
-    <!-- CONTACT SECTION -->
     <section class="contact-section" id="contact">
         <div class="contact-container">
             <div class="contact-info">
-                <h2>Visit Our Escape</h2>
+                <span class="section-eyebrow">Find Us</span>
+                <h2>Visit Our<br><span>Escape</span></h2>
                 <p class="contact-sub">Drop by for a cup, stay for the connection.</p>
                 <div class="contact-card-list">
                     <div class="contact-item">
                         <div class="contact-icon">📍</div>
                         <div class="contact-details">
                             <strong>Location</strong>
-                            <p>B.A Cruz Street near Brgy Hall, Sta.Ana, Taytay, 1920</p>
+                            <p>B.A Cruz Street near Brgy Hall,<br>Sta.Ana, Taytay, 1920</p>
                         </div>
                     </div>
                     <div class="contact-item">
@@ -254,44 +181,48 @@
                     </div>
                 </div>
             </div>
-            <div class="contact-image-wrapper">
-                <img src="/images/payment.jpg" alt="Accepted Payments" class="payment-photo" />
+
+            <div class="contact-map-side">
+                <iframe
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3861.0!2d121.132!3d14.555!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zQi5BIENydXogU3QsIFRheXRheQ!5e0!3m2!1sen!2sph!4v1"
+                    allowfullscreen="" loading="lazy">
+                 Clyde</iframe>
+                <div class="map-overlay-badge">
+                    <span>Our Location</span>
+                    Taytay, Rizal
+                </div>
             </div>
         </div>
     </section>
 
     <footer class="footer">
         <div class="footer-content">
-            <p>&copy; 2026 Cafero. Crafted for connection.</p>
+            <p>© 2026 Cafero. Crafted for connection.</p>
             <p class="salesync-badge">Powered by <strong>SaleSync</strong></p>
         </div>
     </footer>
 
-    <!-- ⭐ THE POPUP MENU CARD ⭐ -->
     <div id="categoryModal" class="modal-overlay">
         <div class="modal-card category-modal-card">
             <div class="modal-header">
                 <h2 id="categoryModalTitle">Menu Category</h2>
                 <button class="close-modal" onclick="closeCategoryModal()">✕</button>
             </div>
-            
             <div class="modal-body category-modal-body">
                 <div class="product-container" id="categoryModalGrid">
-                    
-                    <!-- COFFEE -->
+
                     <div class="product-card" data-category="coffee">
                         <img src="/images/americano.jpg" class="product-image" />
                         <div class="product-info">
                             <div class="info-top"><h3>Americano</h3><span class="price">₱85</span></div>
                             <p class="description">Smooth and bold black coffee.</p>
-                            <!-- ⭐ DIRECT LINK TO LOGIN ⭐ -->
                             <a href="/Home/Login" class="btn-add-order">Order Now</a>
                         </div>
                     </div>
                     <div class="product-card" data-category="coffee">
                         <img src="/images/cappuccino.jpg" class="product-image" />
                         <div class="product-info">
-                            <div class="info-top"><h3>Cappuccino</h3><span class="price">₱110</span></div>
+                            <div class="info-top"><h3>Campuccino</h3><span class="price">₱110</span></div>
                             <p class="description">Espresso with velvety milk foam.</p>
                             <a href="/Home/Login" class="btn-add-order">Order Now</a>
                         </div>
@@ -345,239 +276,42 @@
                         </div>
                     </div>
 
-                    <!-- MILKTEA -->
-                    <div class="product-card" data-category="milktea">
-                        <img src="/images/wintermelon.jpg" class="product-image" />
-                        <div class="product-info">
-                            <div class="info-top"><h3>Wintermelon</h3><span class="price">₱95</span></div>
-                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
-                        </div>
-                    </div>
-                    <div class="product-card" data-category="milktea">
-                        <img src="/images/okinawa.jpg" class="product-image" />
-                        <div class="product-info">
-                            <div class="info-top"><h3>Okinawa</h3><span class="price">₱95</span></div>
-                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
-                        </div>
-                    </div>
-                    <div class="product-card" data-category="milktea">
-                        <img src="/images/cookies-cream.jpg" class="product-image" />
-                        <div class="product-info">
-                            <div class="info-top"><h3>Cookies & Cream</h3><span class="price">₱105</span></div>
-                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
-                        </div>
-                    </div>
-                    <div class="product-card" data-category="milktea">
-                        <img src="/images/salted-caramel.jpg" class="product-image" />
-                        <div class="product-info">
-                            <div class="info-top"><h3>Salted Caramel</h3><span class="price">₱105</span></div>
-                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
-                        </div>
-                    </div>
-                    <div class="product-card" data-category="milktea">
-                        <img src="/images/hokkaido.jpg" class="product-image" />
-                        <div class="product-info">
-                            <div class="info-top"><h3>Hokkaido</h3><span class="price">₱95</span></div>
-                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
-                        </div>
-                    </div>
-                    <div class="product-card" data-category="milktea">
-                        <img src="/images/matcha-milktea.jpg" class="product-image" />
-                        <div class="product-info">
-                            <div class="info-top"><h3>Matcha Milktea</h3><span class="price">₱105</span></div>
-                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
-                        </div>
-                    </div>
-                    <div class="product-card" data-category="milktea">
-                        <img src="/images/thai.jpg" class="product-image" />
-                        <div class="product-info">
-                            <div class="info-top"><h3>Thai Milktea</h3><span class="price">₱95</span></div>
-                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
-                        </div>
-                    </div>
+                    <div class="product-card" data-category="milktea"><img src="/images/wintermelon.jpg" class="product-image" /><div class="product-info"><div class="info-top"><h3>Wintermelon</h3><span class="price">₱95</span></div><a href="/Home/Login" class="btn-add-order">Order Now</a></div></div>
+                    <div class="product-card" data-category="milktea"><img src="/images/okinawa.jpg" class="product-image" /><div class="product-info"><div class="info-top"><h3>Okinawa</h3><span class="price">₱95</span></div><a href="/Home/Login" class="btn-add-order">Order Now</a></div></div>
+                    <div class="product-card" data-category="milktea"><img src="/images/cookies-cream.jpg" class="product-image" /><div class="product-info"><div class="info-top"><h3>Cookies & Cream</h3><span class="price">₱105</span></div><a href="/Home/Login" class="btn-add-order">Order Now</a></div></div>
+                    <div class="product-card" data-category="milktea"><img src="/images/salted-caramel.jpg" class="product-image" /><div class="product-info"><div class="info-top"><h3>Salted Caramel</h3><span class="price">₱105</span></div><a href="/Home/Login" class="btn-add-order">Order Now</a></div></div>
+                    <div class="product-card" data-category="milktea"><img src="/images/hokkaido.jpg" class="product-image" /><div class="product-info"><div class="info-top"><h3>Hokkaido</h3><span class="price">₱95</span></div><a href="/Home/Login" class="btn-add-order">Order Now</a></div></div>
+                    <div class="product-card" data-category="milktea"><img src="/images/matcha-milktea.jpg" class="product-image" /><div class="product-info"><div class="info-top"><h3>Matcha Milktea</h3><span class="price">₱105</span></div><a href="/Home/Login" class="btn-add-order">Order Now</a></div></div>
+                    <div class="product-card" data-category="milktea"><img src="/images/thai.jpg" class="product-image" /><div class="product-info"><div class="info-top"><h3>Thai Milktea</h3><span class="price">₱95</span></div><a href="/Home/Login" class="btn-add-order">Order Now</a></div></div>
 
-                    <!-- FRUIT TEA -->
-                    <div class="product-card" data-category="fruittea">
-                        <img src="/images/green-apple.jpg" class="product-image" />
-                        <div class="product-info">
-                            <div class="info-top"><h3>Green Apple</h3><span class="price">₱85</span></div>
-                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
-                        </div>
-                    </div>
-                    <div class="product-card" data-category="fruittea">
-                        <img src="/images/strawberry.jpg" class="product-image" />
-                        <div class="product-info">
-                            <div class="info-top"><h3>Strawberry</h3><span class="price">₱85</span></div>
-                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
-                        </div>
-                    </div>
-                    <div class="product-card" data-category="fruittea">
-                        <img src="/images/blueberry.jpg" class="product-image" />
-                        <div class="product-info">
-                            <div class="info-top"><h3>Blueberry</h3><span class="price">₱85</span></div>
-                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
-                        </div>
-                    </div>
-                    <div class="product-card" data-category="fruittea">
-                        <img src="/images/mango.jpg" class="product-image" />
-                        <div class="product-info">
-                            <div class="info-top"><h3>Mango</h3><span class="price">₱85</span></div>
-                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
-                        </div>
-                    </div>
-                    <div class="product-card" data-category="fruittea">
-                        <img src="/images/lychee.jpg" class="product-image" />
-                        <div class="product-info">
-                            <div class="info-top"><h3>Lychee</h3><span class="price">₱85</span></div>
-                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
-                        </div>
-                    </div>
-                    <div class="product-card" data-category="fruittea">
-                        <img src="/images/peach.jpg" class="product-image" />
-                        <div class="product-info">
-                            <div class="info-top"><h3>Peach</h3><span class="price">₱85</span></div>
-                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
-                        </div>
-                    </div>
+                    <div class="product-card" data-category="fruittea"><img src="/images/green-apple.jpg" class="product-image" /><div class="product-info"><div class="info-top"><h3>Green Apple</h3><span class="price">₱85</span></div><a href="/Home/Login" class="btn-add-order">Order Now</a></div></div>
+                    <div class="product-card" data-category="fruittea"><img src="/images/strawberry.jpg" class="product-image" /><div class="product-info"><div class="info-top"><h3>Strawberry</h3><span class="price">₱85</span></div><a href="/Home/Login" class="btn-add-order">Order Now</a></div></div>
+                    <div class="product-card" data-category="fruittea"><img src="/images/blueberry.jpg" class="product-image" /><div class="product-info"><div class="info-top"><h3>Blueberry</h3><span class="price">₱85</span></div><a href="/Home/Login" class="btn-add-order">Order Now</a></div></div>
+                    <div class="product-card" data-category="mango"><img src="/images/mango.jpg" class="product-image" /><div class="product-info"><div class="info-top"><h3>Mango</h3><span class="price">₱85</span></div><a href="/Home/Login" class="btn-add-order">Order Now</a></div></div>
+                    <div class="product-card" data-category="fruittea"><img src="/images/lychee.jpg" class="product-image" /><div class="product-info"><div class="info-top"><h3>Lychee</h3><span class="price">₱85</span></div><a href="/Home/Login" class="btn-add-order">Order Now</a></div></div>
+                    <div class="product-card" data-category="fruittea"><img src="/images/peach.jpg" class="product-image" /><div class="product-info"><div class="info-top"><h3>Peach</h3><span class="price">₱85</span></div><a href="/Home/Login" class="btn-add-order">Order Now</a></div></div>
 
-                    <!-- RICE MEALS -->
-                    <div class="product-card" data-category="rice">
-                        <img src="/images/silog.jpg" class="product-image" />
-                        <div class="product-info">
-                            <div class="info-top"><h3>Silog</h3><span class="price">₱110</span></div>
-                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
-                        </div>
-                    </div>
-                    <div class="product-card" data-category="rice">
-                        <img src="/images/tapsilog.jpg" class="product-image" />
-                        <div class="product-info">
-                            <div class="info-top"><h3>Hot Silog</h3><span class="price">₱125</span></div>
-                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
-                        </div>
-                    </div>
-                    <div class="product-card" data-category="rice">
-                        <img src="/images/longsilog.jpg" class="product-image" />
-                        <div class="product-info">
-                            <div class="info-top"><h3>Long Silog</h3><span class="price">₱115</span></div>
-                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
-                        </div>
-                    </div>
-                    <div class="product-card" data-category="rice">
-                        <img src="/images/hamsilog.jpg" class="product-image" />
-                        <div class="product-info">
-                            <div class="info-top"><h3>Ham Silog</h3><span class="price">₱110</span></div>
-                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
-                        </div>
-                    </div>
-                    <div class="product-card" data-category="rice">
-                        <img src="/images/shanghai.jpg" class="product-image" />
-                        <div class="product-info">
-                            <div class="info-top"><h3>Shanghai Silog</h3><span class="price">₱115</span></div>
-                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
-                        </div>
-                    </div>
-                    <div class="product-card" data-category="rice">
-                        <img src="/images/embotido.jpg" class="product-image" />
-                        <div class="product-info">
-                            <div class="info-top"><h3>Embotido Silog</h3><span class="price">₱120</span></div>
-                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
-                        </div>
-                    </div>
+                    <div class="product-card" data-category="rice"><img src="/images/silog.jpg" class="product-image" /><div class="product-info"><div class="info-top"><h3>Silog</h3><span class="price">₱110</span></div><a href="/Home/Login" class="btn-add-order">Order Now</a></div></div>
+                    <div class="product-card" data-category="rice"><img src="/images/tapsilog.jpg" class="product-image" /><div class="product-info"><div class="info-top"><h3>Hot Silog</h3><span class="price">₱125</span></div><a href="/Home/Login" class="btn-add-order">Order Now</a></div></div>
+                    <div class="product-card" data-category="rice"><img src="/images/longsilog.jpg" class="product-image" /><div class="product-info"><div class="info-top"><h3>Long Silog</h3><span class="price">₱115</span></div><a href="/Home/Login" class="btn-add-order">Order Now</a></div></div>
+                    <div class="product-card" data-category="rice"><img src="/images/hamsilog.jpg" class="product-image" /><div class="product-info"><div class="info-top"><h3>Ham Silog</h3><span class="price">₱110</span></div><a href="/Home/Login" class="btn-add-order">Order Now</a></div></div>
+                    <div class="product-card" data-category="rice"><img src="/images/shanghai.jpg" class="product-image" /><div class="product-info"><div class="info-top"><h3>Shanghai Silog</h3><span class="price">₱115</span></div><a href="/Home/Login" class="btn-add-order">Order Now</a></div></div>
+                    <div class="product-card" data-category="rice"><img src="/images/embotido.jpg" class="product-image" /><div class="product-info"><div class="info-top"><h3>Embotido Silog</h3><span class="price">₱120</span></div><a href="/Home/Login" class="btn-add-order">Order Now</a></div></div>
 
-                    <!-- PASTRY -->
-                    <div class="product-card" data-category="pastry">
-                        <img src="/images/cookies.jpg" class="product-image" />
-                        <div class="product-info">
-                            <div class="info-top"><h3>Chocolate Cookies</h3><span class="price">₱45</span></div>
-                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
-                        </div>
-                    </div>
-                    <div class="product-card" data-category="pastry">
-                        <img src="/images/croissant.jpg" class="product-image" />
-                        <div class="product-info">
-                            <div class="info-top"><h3>Croissant</h3><span class="price">₱75</span></div>
-                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
-                        </div>
-                    </div>
-                    <div class="product-card" data-category="pastry">
-                        <img src="/images/ensaymada.jpg" class="product-image" />
-                        <div class="product-info">
-                            <div class="info-top"><h3>Cheese Ensaymada</h3><span class="price">₱60</span></div>
-                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
-                        </div>
-                    </div>
-                    <div class="product-card" data-category="pastry">
-                        <img src="/images/ensaymada.jpg" class="product-image" />
-                        <div class="product-info">
-                            <div class="info-top"><h3>Yema Ensaymada</h3><span class="price">₱65</span></div>
-                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
-                        </div>
-                    </div>
-                    <div class="product-card" data-category="pastry">
-                        <img src="/images/ensaymada.jpg" class="product-image" />
-                        <div class="product-info">
-                            <div class="info-top"><h3>Ube Ensaymada</h3><span class="price">₱65</span></div>
-                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
-                        </div>
-                    </div>
-                    <div class="product-card" data-category="pastry">
-                        <img src="/images/donut.jpg" class="product-image" />
-                        <div class="product-info">
-                            <div class="info-top"><h3>Chocolate Donut</h3><span class="price">₱55</span></div>
-                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
-                        </div>
-                    </div>
-                    <div class="product-card" data-category="pastry">
-                        <img src="/images/cinnamon.jpg" class="product-image" />
-                        <div class="product-info">
-                            <div class="info-top"><h3>Cinnamon</h3><span class="price">₱70</span></div>
-                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
-                        </div>
-                    </div>
+                    <div class="product-card" data-category="pastry"><img src="/images/cookies.jpg" class="product-image" /><div class="product-info"><div class="info-top"><h3>Chocolate Cookies</h3><span class="price">₱45</span></div><a href="/Home/Login" class="btn-add-order">Order Now</a></div></div>
+                    <div class="product-card" data-category="pastry"><img src="/images/croissant.jpg" class="product-image" /><div class="product-info"><div class="info-top"><h3>Croissant</h3><span class="price">₱75</span></div><a href="/Home/Login" class="btn-add-order">Order Now</a></div></div>
+                    <div class="product-card" data-category="pastry"><img src="/images/ensaymada.jpg" class="product-image" /><div class="product-info"><div class="info-top"><h3>Cheese Ensaymada</h3><span class="price">₱60</span></div><a href="/Home/Login" class="btn-add-order">Order Now</a></div></div>
+                    <div class="product-card" data-category="pastry"><img src="/images/ensaymada.jpg" class="product-image" /><div class="product-info"><div class="info-top"><h3>Yema Ensaymada</h3><span class="price">₱65</span></div><a href="/Home/Login" class="btn-add-order">Order Now</a></div></div>
+                    <div class="product-card" data-category="pastry"><img src="/images/ensaymada.jpg" class="product-image" /><div class="product-info"><div class="info-top"><h3>Ube Ensaymada</h3><span class="price">₱65</span></div><a href="/Home/Login" class="btn-add-order">Order Now</a></div></div>
+                    <div class="product-card" data-category="pastry"><img src="/images/donut.jpg" class="product-image" /><div class="product-info"><div class="info-top"><h3>Chocolate Donut</h3><span class="price">₱55</span></div><a href="/Home/Login" class="btn-add-order">Order Now</a></div></div>
+                    <div class="product-card" data-category="pastry"><img src="/images/cinnamon.jpg" class="product-image" /><div class="product-info"><div class="info-top"><h3>Cinnamon</h3><span class="price">₱70</span></div><a href="/Home/Login" class="btn-add-order">Order Now</a></div></div>
 
-                    <!-- SNACKS -->
-                    <div class="product-card" data-category="snacks">
-                        <img src="/images/fries.jpg" class="product-image" />
-                        <div class="product-info">
-                            <div class="info-top"><h3>Flavored Fries</h3><span class="price">₱85</span></div>
-                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
-                        </div>
-                    </div>
-                    <div class="product-card" data-category="snacks">
-                        <img src="/images/nachos.jpg" class="product-image" />
-                        <div class="product-info">
-                            <div class="info-top"><h3>Nachos</h3><span class="price">₱120</span></div>
-                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
-                        </div>
-                    </div>
-                    <div class="product-card" data-category="snacks">
-                        <img src="/images/siomai.jpg" class="product-image" />
-                        <div class="product-info">
-                            <div class="info-top"><h3>Siomai 4pcs</h3><span class="price">₱60</span></div>
-                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
-                        </div>
-                    </div>
-                    <div class="product-card" data-category="snacks">
-                        <img src="/images/carbonara.jpg" class="product-image" />
-                        <div class="product-info">
-                            <div class="info-top"><h3>Carbonara</h3><span class="price">₱165</span></div>
-                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
-                        </div>
-                    </div>
-                    <div class="product-card" data-category="snacks">
-                        <img src="/images/pesto.jpg" class="product-image" />
-                        <div class="product-info">
-                            <div class="info-top"><h3>Pesto Pasta</h3><span class="price">₱155</span></div>
-                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
-                        </div>
-                    </div>
-                    <div class="product-card" data-category="snacks">
-                        <img src="/images/gambas.jpg" class="product-image" />
-                        <div class="product-info">
-                            <div class="info-top"><h3>Gambas Pasta</h3><span class="price">₱175</span></div>
-                            <a href="/Home/Login" class="btn-add-order">Order Now</a>
-                        </div>
-                    </div>
+                    <div class="product-card" data-category="snacks"><img src="/images/fries.jpg" class="product-image" /><div class="product-info"><div class="info-top"><h3>Flavored Fries</h3><span class="price">₱85</span></div><a href="/Home/Login" class="btn-add-order">Order Now</a></div></div>
+                    <div class="product-card" data-category="snacks"><img src="/images/nachos.jpg" class="product-image" /><div class="product-info"><div class="info-top"><h3>Nachos</h3><span class="price">₱120</span></div><a href="/Home/Login" class="btn-add-order">Order Now</a></div></div>
+                    <div class="product-card" data-category="snacks"><img src="/images/siomai.jpg" class="product-image" /><div class="product-info"><div class="info-top"><h3>Siomai 4pcs</h3><span class="price">₱60</span></div><a href="/Home/Login" class="btn-add-order">Order Now</a></div></div>
+                    <div class="product-card" data-category="snacks"><img src="/images/carbonara.jpg" class="product-image" /><div class="product-info"><div class="info-top"><h3>Carbonara</h3><span class="price">₱165</span></div><a href="/Home/Login" class="btn-add-order">Order Now</a></div></div>
+                    <div class="product-card" data-category="snacks"><img src="/images/pesto.jpg" class="product-image" /><div class="product-info"><div class="info-top"><h3>Pesto Pasta</h3><span class="price">₱155</span></div><a href="/Home/Login" class="btn-add-order">Order Now</a></div></div>
+                    <div class="product-card" data-category="snacks"><img src="/images/gambas.jpg" class="product-image" /><div class="product-info"><div class="info-top"><h3>Gambas Pasta</h3><span class="price">₱175</span></div><a href="/Home/Login" class="btn-add-order">Order Now</a></div></div>
 
                 </div>
             </div>
@@ -585,61 +319,36 @@
     </div>
 
     <script>
-            function toggleNav() {
-                const nav = document.getElementById('navContainer');
-                const hamburger = document.getElementById('hamburger');
-                nav.classList.toggle('active');
-                hamburger.classList.toggle('active');
-            }
-        
-            function closeNav() {
-                if (window.innerWidth <= 768) {
-                    document.getElementById('navContainer').classList.remove('active');
-                    document.getElementById('hamburger').classList.remove('active');
-                }
-            }
+        function toggleNav() {
+            const nav = document.getElementById('navContainer');
+            const hamburger = document.getElementById('hamburger');
+            nav.classList.toggle('active');
+            hamburger.classList.toggle('active');
+        }
 
-            function toggleDropdown(event) {
-                event.stopPropagation();
-                const dropdown = document.querySelector('.nav-dropdown');
-                dropdown.classList.toggle('active');
+        function closeNav() {
+            if (window.innerWidth <= 768) {
+                document.getElementById('navContainer').classList.remove('active');
+                document.getElementById('hamburger').classList.remove('active');
             }
+        }
 
-            window.onclick = function(event) {
-                if (!event.target.matches('.dropbtn')) {
-                    const dropdowns = document.getElementsByClassName("nav-dropdown");
-                    for (let i = 0; i < dropdowns.length; i++) {
-                        if (dropdowns[i].classList.contains('active')) {
-                            dropdowns[i].classList.remove('active');
-                        }
-                    }
-                }
-            
-                const modal = document.getElementById('categoryModal');
-                if (event.target == modal) closeCategoryModal();
-            }
+        window.onclick = function(event) {
+            const modal = document.getElementById('categoryModal');
+            if (event.target == modal) closeCategoryModal();
+        }
 
-            function openCategoryModal(category, title) {
-                document.getElementById('categoryModalTitle').innerText = title;
-            
-                const cards = document.querySelectorAll('#categoryModalGrid .product-card');
-                cards.forEach(card => {
-                    if (card.getAttribute('data-category') === category) {
-                        card.style.display = 'flex';
-                    } else {
-                        card.style.display = 'none';
-                    }
-                });
+        function openCategoryModal(category, title) {
+            document.getElementById('categoryModalTitle').innerText = title;
+            document.querySelectorAll('#categoryModalGrid .product-card').forEach(card => {
+                card.style.display = card.getAttribute('data-category') === category ? 'flex' : 'none';
+            });
+            document.getElementById('categoryModal').style.display = 'flex';
+        }
 
-                document.getElementById('categoryModal').style.display = 'flex';
-            
-                const dropdown = document.querySelector('.nav-dropdown');
-                dropdown.classList.remove('active');
-            }
-
-            function closeCategoryModal() {
-                document.getElementById('categoryModal').style.display = 'none';
-            }
+        function closeCategoryModal() {
+            document.getElementById('categoryModal').style.display = 'none';
+        }
     </script>
 </body>
 </html>

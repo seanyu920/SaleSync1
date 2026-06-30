@@ -1,0 +1,124 @@
+﻿@{
+    ViewData["Title"] = "Queue Orders";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Cafero</title>
+
+    <!-- Framework Requirements matching your setup -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/QueueOrder.css" asp-append-version="true" />
+</head>
+<body>
+
+    <div class="dashboard-container">
+
+        <!-- Sidebar Navigation Left Panel -->
+        <aside class="sidebar">
+            <!-- Brand Block -->
+            <div class="logo-section">
+                <div class="logo-title">Cafero</div>
+                <div class="logo-subtitle">Coffee & Pastries</div>
+            </div>
+
+            <!-- User Profile Block -->
+            <div class="profile-section">
+                <div class="profile-circle">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+                <div>
+                    <div class="admin-name">Admin</div>
+                    <div class="admin-role">Administrator</div>
+                </div>
+            </div>
+
+            <!-- Items Links Menu -->
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="@Url.Action("Dashboard", "Admin")" class="menu-btn">
+                        <i class="fa-solid fa-chart-simple menu-icon"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="menu-btn">
+                        <i class="fa-solid fa-cart-shopping menu-icon"></i>
+                        <span>POS</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="@Url.Action("ActivityLog", "Admin")" class="menu-btn">
+                        <i class="fa-solid fa-clock-rotate-left menu-icon"></i>
+                        <span>Activity Log</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="menu-btn">
+                        <i class="fa-solid fa-chart-pie menu-icon"></i>
+                        <span>Analytics</span>
+                    </a>
+                </li>
+
+                <!-- Highlighted View Focus state for Queue Order -->
+                <li>
+                    <a href="#" class="menu-btn active">
+                        <i class="fa-solid fa-list-ul menu-icon"></i>
+                        <span>Queue</span>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="@Url.Action("Products", "Admin")" class="menu-btn">
+                        <i class="fa-solid fa-tag menu-icon"></i>
+                        <span>Products</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="@Url.Action("Inventory", "Admin")" class="menu-btn">
+                        <i class="fa-solid fa-warehouse menu-icon"></i>
+                        <span>Inventory</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="menu-btn">
+                        <i class="fa-solid fa-box-archive menu-icon"></i>
+                        <span>Archived</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="@Url.Action("ManageAccounts", "Admin")" class="menu-btn">
+                        <i class="fa-solid fa-users menu-icon"></i>
+                        <span>Accounts</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="menu-btn">
+                        <i class="fa-solid fa-sliders menu-icon"></i>
+                        <span>Customization</span>
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Bottom Placement Logout Navigation action -->
+            <div class="logout-section">
+                <a href="#" class="menu-btn logout-btn">
+                    <i class="fa-solid fa-right-from-bracket menu-icon"></i>
+                    <span>Log Out</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Workspace Window (Completely Blank) -->
+        <main class="main-content">
+            <!-- Ready for your implementation details -->
+        </main>
+
+    </div>
+
+</body>
+</html>

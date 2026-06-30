@@ -1,0 +1,194 @@
+﻿/* ==========================================================================
+   CAFÈRO DASHBOARD — Dark Theme (Queue Order Sidebar)
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght=300;400;600;700;800;900&display=swap');
+
+:root {
+    --bg-base: #0D110D;
+    --bg-surface: #141A14;
+    --bg-card: #1C241C;
+    --bg-card-2: #212B21;
+    --gold: #C9A84C;
+    --gold-light: #DDB95E;
+    --gold-glow: rgba(201, 168, 76, 0.15);
+    --cream: #F2EDE4;
+    --muted: rgba(242, 237, 228, 0.5);
+    --muted-2: rgba(242, 237, 228, 0.75);
+    --border: rgba(201, 168, 76, 0.18);
+    --border-sub: rgba(255, 255, 255, 0.06);
+    --green-hint: rgba(45, 106, 79, 0.25);
+    --danger: #e05555;
+    --success: #3dbf78;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Outfit', 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg-base);
+    color: var(--cream);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.6;
+}
+
+.dashboard-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* ==========================================================================
+   SIDEBAR — Replicated directly from image_7dfe99.png
+   ========================================================================== */
+.sidebar {
+    width: 255px;
+    background: var(--bg-surface);
+    padding: 30px 20px;
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    border-right: 1px solid var(--border-sub);
+    flex-shrink: 0;
+}
+
+/* Logo block */
+.logo-section {
+    margin-bottom: 28px;
+}
+
+.sidebar .logo-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--cream);
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+}
+
+.sidebar .logo-subtitle {
+    font-size: 11px;
+    color: var(--gold);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-top: 4px;
+    display: block;
+}
+
+/* Profile Section */
+.profile-section {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    padding-top: 4px;
+    border-bottom: 1px solid var(--border-sub);
+}
+
+.profile-circle {
+    width: 40px;
+    height: 40px;
+    background: var(--green-hint);
+    border: 1.5px solid var(--gold);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    color: var(--gold);
+    flex-shrink: 0;
+}
+
+.admin-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--cream);
+    line-height: 1.3;
+}
+
+.admin-role {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 1px;
+}
+
+/* Menu Customization */
+.sidebar-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+
+.menu-btn {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    width: 100%;
+    text-decoration: none;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 600;
+    padding: 11px 14px;
+    border-radius: 10px;
+    background: transparent;
+    border: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    font-family: 'Outfit', sans-serif;
+    letter-spacing: 0.2px;
+}
+
+    .menu-btn:hover {
+        color: var(--cream);
+        background: var(--border-sub);
+    }
+
+    .menu-btn.active {
+        background: var(--gold);
+        color: var(--bg-base);
+        font-weight: 800;
+    }
+
+/* Menu icon styling */
+.menu-icon {
+    font-size: 15px;
+    width: 18px;
+    text-align: center;
+    flex-shrink: 0;
+    opacity: 0.9;
+}
+
+.menu-btn.active .menu-icon {
+    opacity: 1;
+}
+
+/* Logout Window Alignment */
+.logout-section {
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-sub);
+}
+
+.logout-btn {
+    color: var(--muted);
+}
+
+    .logout-btn:hover {
+        color: var(--danger);
+        background: rgba(224, 85, 85, 0.07);
+    }
+
+/* Empty Main Content Window Workspace */
+.main-content {
+    flex: 1;
+    padding: 36px 40px;
+    overflow-y: auto;
+    background: var(--bg-base);
+}
