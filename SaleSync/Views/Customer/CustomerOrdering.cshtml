@@ -12,48 +12,10 @@
     <link rel="stylesheet" href="~/css/CustomerOrdering.css" asp-append-version="true" />
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-    <style>
-        .cart-sidebar {
-            position: fixed; top: 0; right: -400px; width: 400px; height: 100vh;
-            background: #fff; box-shadow: -5px 0 15px rgba(0,0,0,0.1);
-            z-index: 2000; transition: right 0.3s ease; display: flex; flex-direction: column;
-        }
-        .cart-sidebar.open { right: 0; }
-        .cart-overlay {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0,0,0,0.5); z-index: 1999; display: none;
-        }
-        .cart-overlay.open { display: block; }
-        .cart-header {
-            padding: 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;
-        }
-        .cart-header h2 { margin: 0; font-size: 20px; color: #1a1a1a; }
-        .close-cart-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: #666; }
-        .cart-items-container { flex-grow: 1; overflow-y: auto; padding: 20px; }
-        .empty-cart-msg { text-align: center; color: #999; margin-top: 50px; }
-        .cart-item-row { display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; margin-bottom: 15px; border-bottom: 1px solid #f0f0f0; }
-        .cart-item-info h4 { margin: 0 0 5px 0; font-size: 15px; color: #1a1a1a; }
-        .cart-item-info p { margin: 0; font-size: 12px; color: #8c5b3e; }
-        .cart-item-controls { display: flex; align-items: center; gap: 10px; }
-        .cart-qty-btn { background: #fdf0dc; border: none; color: #8c5b3e; width: 25px; height: 25px; border-radius: 5px; font-weight: bold; cursor: pointer; }
-        .cart-footer { padding: 20px; border-top: 1px solid #eee; background: #fafafa; }
-        .cart-total-row { display: flex; justify-content: space-between; font-size: 20px; font-weight: 800; margin-bottom: 15px; color: #1a1a1a; }
-        .btn-checkout { width: 100%; background: #f46a05; color: white; border: none; padding: 15px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
-        .btn-checkout:hover { background: #d95e04; }
-
-        /* The little red badge for the cart icon */
-        .cart-badge {
-            position: absolute; top: -5px; right: -5px; background: red; color: white; 
-            border-radius: 50%; padding: 2px 6px; font-size: 10px; font-weight: bold;
-        }
-        .cart-icon-btn { position: relative; text-decoration: none; font-size: 24px; cursor: pointer; }
-    </style>
 </head>
 <body>
 
     <div class="dashboard-container">
-        <!-- ⭐ LEFT SIDEBAR (Menu Categories) -->
         <aside class="sidebar">
             <div>
                 <div class="logo-section">
@@ -63,8 +25,8 @@
                     </div>
                 </div>
 
-                <h3 style="color: #b58361; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; padding-left: 10px;">Menu Categories</h3>
-                
+                <h3 class="modal-label">Menu Categories</h3>
+
                 <nav class="sidebar-menu">
                     <button class="menu-btn cat-btn active" onclick="filterMenu('all', this)">🍽️ All Items</button>
                     <button class="menu-btn cat-btn" onclick="filterMenu('coffee', this)">☕ Coffee</button>
@@ -75,62 +37,56 @@
                     <button class="menu-btn cat-btn" onclick="filterMenu('snacks', this)">🍝 Snacks & Pasta</button>
                 </nav>
             </div>
-            
-            <div class="logout-section" style="margin-top: auto;">
+
+            <div class="logout-section">
                 <a href="/Home/Logout" class="menu-btn logout-btn">
                     <span>🚪</span> Log Out
                 </a>
             </div>
         </aside>
 
-        <!-- ⭐ MAIN CONTENT (Product Grid) -->
         <main class="main-content">
             <header class="pos-header">
                 <div>
-                    <h1 style="font-size: 28px; font-weight: 800; color: #1a1a1a; margin-bottom: 5px;">Place an Order</h1>
-                    <p style="color: #666; font-size: 15px;">Handcrafted beverages and meals made with love</p>
+                    <h1>Place an Order</h1>
+                    <p>Handcrafted beverages and meals made with love</p>
                 </div>
-                
+
                 <div class="header-actions">
                     <div class="search-container">
                         <span class="search-icon">🔍</span>
                         <input type="text" id="menuSearch" placeholder="Search menu items..." onkeyup="filterMenu()">
                     </div>
-                    
+
                     <a class="cart-icon-btn" onclick="toggleCart()">🛒</a>
                 </div>
             </header>
 
-            <!-- ⭐ THE CAPSTONE GRADE FIX: DYNAMIC C# PRODUCT GENERATION ⭐ -->
             <div class="product-container" id="menuGrid" data-current-cat="all">
                 @if (Model != null && Model.Count > 0)
                 {
                     foreach (var item in Model)
                     {
-                        // Dynamically format the image filename (e.g., "Hot Latte" -> "hot-latte.jpg")
                         string imageFile = item.ProductName.ToLower().Replace(" ", "-") + ".jpg";
-                        
-                        // Dynamically format the category tag so JavaScript filtering works (e.g., "Fruit Tea" -> "fruittea")
                         string catFormat = item.CategoryName != null ? item.CategoryName.ToLower().Replace(" ", "") : "uncategorized";
+                        var safeItemName = Html.Raw(item.ProductName.Replace("'", "\\'"));
 
-                        <div class="product-card" data-category="@catFormat">
-                            <!-- Fallback to a default image if the specific product image doesn't exist yet -->
-                            <img src="/images/@imageFile" class="product-image" onerror="this.src='/images/americano.jpg'" />
+                        <div class="product-card" data-category="@catFormat" onclick="openModal('@safeItemName', @item.Price, '/images/@imageFile')">
+                            <img src="/images/@imageFile" class="product-image" onerror="this.onerror=null; this.src='/images/americano.jpg';" />
                             <div class="product-info">
                                 <div class="info-top">
                                     <h3>@item.ProductName</h3>
                                     <span class="price">₱@item.Price.ToString("0.##")</span>
                                 </div>
                                 <p class="description">Freshly prepared @item.ProductName.</p>
-                                <!-- Notice how we pass the actual item data directly into the Javascript function! -->
-                                <button class="btn-add-order" onclick="openModal('@Html.Raw(item.ProductName.Replace("'", "\\'"))', @item.Price)">+ Add to Order</button>
+                                <button class="btn-add-order">+ Add to Order</button>
                             </div>
                         </div>
                     }
                 }
                 else
                 {
-                    <div style="width: 100%; text-align: center; color: #999; margin-top: 50px;">
+                    <div class="no-items-fallback">
                         <p>No menu items found. Please add products via the Admin Dashboard!</p>
                     </div>
                 }
@@ -138,21 +94,21 @@
         </main>
     </div>
 
-    <!-- ⭐ SIZE & QTY MODAL -->
     <div id="sizeModal" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-header">
                 <h2 id="modalItemName">Item Name</h2>
                 <button class="close-modal" onclick="closeModal()">✕</button>
             </div>
-            
+
             <div class="modal-body">
+                <img id="modalItemImage" src="/images/americano.jpg" class="modal-product-img" onerror="this.onerror=null; this.src='/images/americano.jpg';" alt="Product image" />
+
                 <p class="modal-label">Select Size:</p>
                 <div class="size-options">
                     <label class="size-box">
                         <input type="radio" name="itemSize" value="Small" checked>
                         <div class="size-content">
-                            <span class="size-icon">☕</span>
                             <span class="size-label">Small</span>
                             <span class="size-price-mod" id="smallPrice">₱0</span>
                         </div>
@@ -160,7 +116,6 @@
                     <label class="size-box">
                         <input type="radio" name="itemSize" value="Large">
                         <div class="size-content">
-                            <span class="size-icon">🥤</span>
                             <span class="size-label">Large</span>
                             <span class="size-price-mod" id="largePrice">₱0</span>
                         </div>
@@ -181,15 +136,13 @@
         </div>
     </div>
 
-    <!-- ⭐ NEW: THE SLIDE-OUT CART PANEL ⭐ -->
     <div id="cartSidebar" class="cart-sidebar">
         <div class="cart-header">
             <h2>🛒 Your Order</h2>
             <button class="close-cart-btn" onclick="toggleCart()">✕</button>
         </div>
-        
+
         <div class="cart-items-container" id="customerCartList">
-            <!-- Items injected by JS -->
             <div class="empty-cart-msg">Your cart is empty.</div>
         </div>
 
@@ -198,36 +151,32 @@
                 <span>Total:</span>
                 <span id="customerCartTotal">₱0.00</span>
             </div>
-            
-            <!-- ⭐ Order Type Selector (UPDATED) -->
-            <select id="customerOrderType" onchange="toggleAddressField()" style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #ddd; font-family: 'Outfit';">
+
+            <select id="customerOrderType" class="cart-select" onchange="toggleAddressField()">
                 <option value="Pick-up">🏃‍♂️ Pick-up</option>
                 <option value="Dine In">🍽️ Dine In</option>
                 <option value="Delivery">🛵 Delivery</option>
             </select>
 
-            <!-- ⭐ NEW: Hidden Address Box -->
-            <div id="addressContainer" style="display: none; margin-bottom: 15px;">
-                <textarea id="customerAddress" placeholder="Enter full delivery address..." rows="2" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; font-family: 'Outfit'; resize: none; box-sizing: border-box;"></textarea>
+            <div id="addressContainer">
+                <textarea id="customerAddress" class="cart-textarea" placeholder="Enter full delivery address..." rows="2"></textarea>
             </div>
-            
-            <!-- Payment Method Selector -->
-            <select id="customerPaymentMethod" style="width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #ddd; font-family: 'Outfit';">
+
+            <select id="customerPaymentMethod" class="cart-select">
                 <option value="Cash">💵 Pay at Counter (Cash)</option>
                 <option value="GCash">🔵 GCash</option>
                 <option value="Maya">🟢 Maya</option>
                 <option value="Card">💳 Credit/Debit Card</option>
             </select>
-            
+
             <button class="btn-checkout" onclick="submitOnlineOrder()">Send Order to Kitchen</button>
         </div>
     </div>
     <div id="cartOverlay" class="cart-overlay" onclick="toggleCart()"></div>
 
     <script>
-        // ⭐ THE MENU LOADER ⭐
         const menuData = {};
-        
+
         @if (Model != null)
         {
             foreach (var item in Model)
@@ -237,274 +186,263 @@
             }
         }
 
-        // ⭐ THE CART LOGIC ⭐
         let customerCart = JSON.parse(localStorage.getItem('caferoCustomerCart')) || [];
 
         function toggleCart() {
-            document.getElementById('cartSidebar').classList.toggle('open');
-            document.getElementById('cartOverlay').classList.toggle('open');
-            renderCustomerCart();
+        document.getElementById('cartSidebar').classList.toggle('open');
+        document.getElementById('cartOverlay').classList.toggle('open');
+        renderCustomerCart();
         }
 
-        // ⭐ NEW: Toggle address text box
         function toggleAddressField() {
-            const orderType = document.getElementById('customerOrderType').value;
-            const addressBox = document.getElementById('addressContainer');
-            if (orderType === 'Delivery') {
-                addressBox.style.display = 'block';
-            } else {
-                addressBox.style.display = 'none';
-            }
+        const orderType = document.getElementById('customerOrderType').value;
+        const addressBox = document.getElementById('addressContainer');
+        addressBox.style.display = (orderType === 'Delivery') ? 'block' : 'none';
         }
 
         function confirmAddToCart() {
-            const selectedSize = document.querySelector('input[name="itemSize"]:checked').value;
-            const quantity = parseInt(document.getElementById('itemQty').value);
-            const itemName = document.getElementById('modalItemName').innerText;
-            
-            const priceText = document.querySelector('input[name="itemSize"]:checked').nextElementSibling.querySelector('.size-price-mod').innerText;
-            const price = parseFloat(priceText.replace('₱', ''));
+        const selectedSize = document.querySelector('input[name="itemSize"]:checked').value;
+        const quantity = parseInt(document.getElementById('itemQty').value);
+        const itemName = document.getElementById('modalItemName').innerText;
 
-            let realDbId = 0;
-            for (let category in menuData) {
-                // ⭐ THE FIX: Added .trim() to prevent minor spacing mismatches
-                let found = menuData[category].find(p => p.name.trim().toLowerCase() === itemName.trim().toLowerCase());
-                if (found) {
-                    realDbId = found.id;
-                    break;
-                }
-            }
+        const priceText = document.querySelector('input[name="itemSize"]:checked').nextElementSibling.querySelector('.size-price-mod').innerText;
+        const price = parseFloat(priceText.replace('₱', ''));
 
-            // ⭐ THE FIX: Safety Net! Stop if the item isn't in the database.
-            if (realDbId === 0) {
-                Swal.fire(
-                    'Item Not Found in DB', 
-                    `The item "${itemName}" doesn't exist in your live database. Please add it via your Admin Dashboard first!`, 
-                    'error'
-                );
-                return; // Stop the cart from adding fake data
-            }
+        let realDbId = 0;
+        for (let category in menuData) {
+        let found = menuData[category].find(p => p.name.trim().toLowerCase() === itemName.trim().toLowerCase());
+        if (found) {
+        realDbId = found.id;
+        break;
+        }
+        }
 
-            const existingItemIndex = customerCart.findIndex(i => i.name === itemName && i.size === selectedSize);
-            
-            if (existingItemIndex > -1) {
-                customerCart[existingItemIndex].qty += quantity;
-            } else {
-                customerCart.push({ 
-                    name: itemName, 
-                    size: selectedSize, 
-                    qty: quantity, 
-                    price: price,
-                    id: realDbId // ⭐ THE FIX: Now we ONLY use the real database ID
-                });
-            }
+        if (realDbId === 0) {
+        Swal.fire(
+        'Item Not Found in DB',
+        `The item "${itemName}" doesn't exist in your live database. Please add it via your Admin Dashboard first!`,
+        'error'
+        );
+        return;
+        }
 
-            localStorage.setItem('caferoCustomerCart', JSON.stringify(customerCart));
-            
-            Swal.fire({
-                title: 'Added!',
-                text: `${quantity}x ${itemName} added to your cart.`,
-                icon: 'success',
-                timer: 1500,
-                showConfirmButton: false
-            });
-            
-            closeModal();
-            updateCartBadge();
+        const existingItemIndex = customerCart.findIndex(i => i.name === itemName && i.size === selectedSize);
+
+        if (existingItemIndex > -1) {
+        customerCart[existingItemIndex].qty += quantity;
+        } else {
+        customerCart.push({
+        name: itemName,
+        size: selectedSize,
+        qty: quantity,
+        price: price,
+        id: realDbId
+        });
+        }
+
+        localStorage.setItem('caferoCustomerCart', JSON.stringify(customerCart));
+
+        Swal.fire({
+        title: 'Added!',
+        text: `${quantity}x ${itemName} added to your cart.`,
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false
+        });
+
+        closeModal();
+        updateCartBadge();
         }
 
         function updateCartBadge() {
-            let totalItems = 0;
-            customerCart.forEach(item => totalItems += item.qty);
-            
-            let icon = document.querySelector('.cart-icon-btn');
-            let badge = icon.querySelector('.cart-badge');
-            
-            if (totalItems > 0) {
-                if (!badge) {
-                    badge = document.createElement('span');
-                    badge.className = 'cart-badge';
-                    icon.appendChild(badge);
-                }
-                badge.innerText = totalItems;
-            } else if (badge) {
-                badge.remove();
-            }
+        let totalItems = 0;
+        customerCart.forEach(item => totalItems += item.qty);
+
+        let icon = document.querySelector('.cart-icon-btn');
+        let badge = icon.querySelector('.cart-badge');
+
+        if (totalItems > 0) {
+        if (!badge) {
+        badge = document.createElement('span');
+        badge.className = 'cart-badge';
+        icon.appendChild(badge);
+        }
+        badge.innerText = totalItems;
+        } else if (badge) {
+        badge.remove();
+        }
         }
 
         function renderCustomerCart() {
-            const container = document.getElementById('customerCartList');
-            const totalDisplay = document.getElementById('customerCartTotal');
-            
-            updateCartBadge();
+        const container = document.getElementById('customerCartList');
+        const totalDisplay = document.getElementById('customerCartTotal');
 
-            if (customerCart.length === 0) {
-                container.innerHTML = '<div class="empty-cart-msg">Your cart is empty.</div>';
-                totalDisplay.innerText = "₱0.00";
-                return;
-            }
+        updateCartBadge();
 
-            let html = '';
-            let grandTotal = 0;
+        if (customerCart.length === 0) {
+        container.innerHTML = '<div class="empty-cart-msg">Your cart is empty.</div>';
+        totalDisplay.innerText = "₱0.00";
+        return;
+        }
 
-            customerCart.forEach((item, index) => {
-                let sub = item.qty * item.price;
-                grandTotal += sub;
+        let html = '';
+        let grandTotal = 0;
 
-                html += `
-                <div class="cart-item-row">
-                    <div class="cart-item-info">
-                        <h4>${item.name}</h4>
-                        <p>${item.size} • ₱${item.price.toFixed(2)}/ea</p>
-                    </div>
-                    <div class="cart-item-controls">
-                        <button class="cart-qty-btn" onclick="updateCustomerQty(${index}, -1)">-</button>
-                        <span style="font-weight: bold; width: 20px; text-align: center;">${item.qty}</span>
-                        <button class="cart-qty-btn" onclick="updateCustomerQty(${index}, 1)">+</button>
-                    </div>
-                    <div style="font-weight: 800; color: #f46a05; min-width: 60px; text-align: right;">
-                        ₱${sub.toFixed(2)}
-                    </div>
-                </div>`;
-            });
+        customerCart.forEach((item, index) => {
+        let sub = item.qty * item.price;
+        grandTotal += sub;
 
-            container.innerHTML = html;
-            totalDisplay.innerText = "₱" + grandTotal.toFixed(2);
+        html += `
+        <div class="cart-item-row">
+        <div class="cart-item-info">
+        <h4>${item.name}</h4>
+        <p>${item.size} • ₱${item.price.toFixed(2)}/ea</p>
+        </div>
+        <div class="cart-item-controls">
+        <button class="cart-qty-btn" onclick="updateCustomerQty(${index}, -1)">-</button>
+        <span class="cart-qty-val">${item.qty}</span>
+        <button class="cart-qty-btn" onclick="updateCustomerQty(${index}, 1)">+</button>
+        </div>
+        <div class="cart-subtotal-val">
+        ₱${sub.toFixed(2)}
+        </div>
+        </div>`;
+        });
+
+        container.innerHTML = html;
+        totalDisplay.innerText = "₱" + grandTotal.toFixed(2);
         }
 
         function updateCustomerQty(index, change) {
-            customerCart[index].qty += change;
-            if (customerCart[index].qty <= 0) {
-                customerCart.splice(index, 1);
-            }
-            localStorage.setItem('caferoCustomerCart', JSON.stringify(customerCart));
-            renderCustomerCart();
+        customerCart[index].qty += change;
+        if (customerCart[index].qty <= 0) {
+        customerCart.splice(index, 1);
+        }
+        localStorage.setItem('caferoCustomerCart', JSON.stringify(customerCart));
+        renderCustomerCart();
         }
 
-        // ⭐ SEND DATA TO C# API
         async function submitOnlineOrder() {
-            if (customerCart.length === 0) {
-                Swal.fire('Empty Cart', 'Please add items to your cart before checking out.', 'warning');
-                return;
-            }
-
-            const orderType = document.getElementById('customerOrderType').value;
-            const paymentMethod = document.getElementById('customerPaymentMethod').value;
-            const address = document.getElementById('customerAddress').value;
-
-            // Validate address if delivery is selected
-            if (orderType === 'Delivery' && address.trim() === '') {
-                Swal.fire('Missing Address', 'Please enter a delivery address.', 'warning');
-                return;
-            }
-
-            const btn = document.querySelector('.btn-checkout');
-            btn.disabled = true;
-            btn.innerText = "Sending to Kitchen...";
-
-            const payload = {
-                OrderType: orderType,
-                PaymentMethod: paymentMethod,
-                DeliveryAddress: orderType === 'Delivery' ? address : null,
-                Items: customerCart.map(item => ({
-                    ProductId: item.id,
-                    Quantity: item.qty,
-                    Price: item.price
-                }))
-            };
-
-            try {
-                const response = await fetch('/Customer/PlaceOnlineOrder', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (response.ok) {
-                    const result = await response.json();
-                    
-                    Swal.fire({
-                        title: 'Order Received! 🎉',
-                        text: `Your order #${result.orderId} has been sent to the kitchen.`,
-                        icon: 'success'
-                    }).then(() => {
-                        customerCart = [];
-                        localStorage.removeItem('caferoCustomerCart');
-                        document.getElementById('customerAddress').value = ""; // Clear address
-                        toggleCart();
-                        updateCartBadge();
-                    });
-                } else {
-                    const errorData = await response.json();
-                    Swal.fire('Checkout Failed', errorData.message || 'Database rejected the order.', 'error');
-                }
-            } catch (err) {
-                Swal.fire('Error', 'Network error. Could not connect to the server.', 'error');
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "Send Order to Kitchen";
-            }
+        if (customerCart.length === 0) {
+        Swal.fire('Empty Cart', 'Please add items to your cart before checking out.', 'warning');
+        return;
         }
 
-        // ⭐ YOUR EXISTING UI LOGIC ⭐
+        const orderType = document.getElementById('customerOrderType').value;
+        const paymentMethod = document.getElementById('customerPaymentMethod').value;
+        const address = document.getElementById('customerAddress').value;
+
+        if (orderType === 'Delivery' && address.trim() === '') {
+        Swal.fire('Missing Address', 'Please enter a delivery address.', 'warning');
+        return;
+        }
+
+        const btn = document.querySelector('.btn-checkout');
+        btn.disabled = true;
+        btn.innerText = "Sending to Kitchen...";
+
+        const payload = {
+        OrderType: orderType,
+        PaymentMethod: paymentMethod,
+        DeliveryAddress: orderType === 'Delivery' ? address : null,
+        Items: customerCart.map(item => ({
+        ProductId: item.id,
+        Quantity: item.qty,
+        Price: item.price
+        }))
+        };
+
+        try {
+        const response = await fetch('/Customer/PlaceOnlineOrder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+        const result = await response.json();
+
+        Swal.fire({
+        title: 'Order Received! 🎉',
+        text: `Your order #${result.orderId} has been sent to the kitchen.`,
+        icon: 'success'
+        }).then(() => {
+        customerCart = [];
+        localStorage.removeItem('caferoCustomerCart');
+        document.getElementById('customerAddress').value = "";
+        toggleCart();
+        updateCartBadge();
+        });
+        } else {
+        const errorData = await response.json();
+        Swal.fire('Checkout Failed', errorData.message || 'Database rejected the order.', 'error');
+        }
+        } catch (err) {
+        Swal.fire('Error', 'Network error. Could not connect to the server.', 'error');
+        } finally {
+        btn.disabled = false;
+        btn.innerText = "Send Order to Kitchen";
+        }
+        }
+
         function filterMenu(category, btnElement) {
-            const grid = document.getElementById('menuGrid');
-            
-            if (category) {
-                const btns = document.querySelectorAll('.cat-btn');
-                btns.forEach(btn => btn.classList.remove('active'));
-                
-                if(btnElement) {
-                     btnElement.classList.add('active');
-                }
-                grid.setAttribute('data-current-cat', category);
-            }
+        const grid = document.getElementById('menuGrid');
 
-            const currentCategory = grid.getAttribute('data-current-cat');
-            const searchTerm = document.getElementById('menuSearch').value.toLowerCase();
-            const cards = document.querySelectorAll('.product-card');
+        if (category) {
+        const btns = document.querySelectorAll('.cat-btn');
+        btns.forEach(btn => btn.classList.remove('active'));
 
-            cards.forEach(card => {
-                const itemCategory = card.getAttribute('data-category');
-                const itemName = card.querySelector('h3').innerText.toLowerCase();
-            
-                const matchesCategory = (currentCategory === 'all' || itemCategory === currentCategory);
-                const matchesSearch = itemName.includes(searchTerm);
-
-                if (matchesCategory && matchesSearch) {
-                    card.style.display = 'flex';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
+        if(btnElement) {
+        btnElement.classList.add('active');
+        }
+        grid.setAttribute('data-current-cat', category);
         }
 
-        function openModal(itemName, price) {
-            document.getElementById('modalItemName').innerText = itemName;
-            document.getElementById('smallPrice').innerText = "₱" + price;
-            document.getElementById('largePrice').innerText = "₱" + (price + 20);
-            document.getElementById('itemQty').value = 1;
-            document.getElementById('sizeModal').style.display = 'flex';
+        const currentCategory = grid.getAttribute('data-current-cat');
+        const searchTerm = document.getElementById('menuSearch').value.toLowerCase();
+        const cards = document.querySelectorAll('.product-card');
+
+        cards.forEach(card => {
+        const itemCategory = card.getAttribute('data-category');
+        const itemName = card.querySelector('h3').innerText.toLowerCase();
+
+        const matchesCategory = (currentCategory === 'all' || itemCategory === currentCategory);
+        const matchesSearch = itemName.includes(searchTerm);
+
+        if (matchesCategory && matchesSearch) {
+        card.classList.remove('is-hidden');
+        } else {
+        card.classList.add('is-hidden');
+        }
+        });
+        }
+
+        function openModal(itemName, price, imgSrc) {
+        document.getElementById('modalItemName').innerText = itemName;
+        document.getElementById('modalItemImage').src = imgSrc;
+        document.getElementById('smallPrice').innerText = "₱" + price;
+        document.getElementById('largePrice').innerText = "₱" + (price + 20);
+        document.getElementById('itemQty').value = 1;
+        document.getElementById('sizeModal').style.display = 'flex';
         }
 
         function closeModal() {
-            document.getElementById('sizeModal').style.display = 'none';
+        document.getElementById('sizeModal').style.display = 'none';
         }
 
         function updateQty(change) {
-            const qtyInput = document.getElementById('itemQty');
-            let currentQty = parseInt(qtyInput.value);
-            currentQty += change;
-            if (currentQty < 1) currentQty = 1;
-            qtyInput.value = currentQty;
+        const qtyInput = document.getElementById('itemQty');
+        let currentQty = parseInt(qtyInput.value);
+        currentQty += change;
+        if (currentQty < 1) currentQty = 1;
+        qtyInput.value = currentQty;
         }
 
         window.onclick = function(event) {
-            const modal = document.getElementById('sizeModal');
-            if (event.target == modal) closeModal();
+        const modal = document.getElementById('sizeModal');
+        if (event.target == modal) closeModal();
         }
-        
-        // Load badge on startup
+
         window.onload = updateCartBadge;
     </script>
 </body>

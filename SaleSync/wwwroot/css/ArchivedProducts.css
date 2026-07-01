@@ -45,3 +45,91 @@
     display: inline-block;
     margin-top: 6px;
 }
+
+/* --- Added Archive Component Specific Rules --- */
+
+/* Archive Layout Header Adjustments */
+.page-header {
+    margin-bottom: 20px;
+}
+
+.greeting-subtitle {
+    color: #b58361;
+    margin-top: 5px;
+}
+
+/* Dedicated Action Row to isolate alignment boundaries */
+.archive-actions-row {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 25px;
+}
+
+/* Premium Back to Active Products Action Button Link */
+.action-link-btn {
+    background: #fdfaf7;
+    color: #4a2511;
+    border: 1.5px solid #4a2511;
+    padding: 8px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.3px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 4px rgba(74, 37, 17, 0.04);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+    .action-link-btn i {
+        font-size: 12px;
+        transition: transform 0.2s ease;
+    }
+
+    .action-link-btn:hover {
+        background: #4a2511;
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(74, 37, 17, 0.15);
+    }
+
+        .action-link-btn:hover i {
+            transform: translateX(-3px);
+        }
+
+    .action-link-btn:active {
+        transform: scale(0.97);
+    }
+
+/* Product list text adjustments */
+.product-muted-text {
+    color: #666;
+}
+
+/* Archived Badges styling indicators */
+.status-badge-archived {
+    background: #fee2e2;
+    color: #b91c1c;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    display: inline-block;
+}
+
+/* Custom Interactive Restore Controls */
+.restore-btn {
+    background: #d1fae5;
+    color: #065f46;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+    .restore-btn:hover {
+        background: #a7f3d0;
+    }
