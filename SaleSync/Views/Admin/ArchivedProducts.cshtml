@@ -10,33 +10,91 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Archived Products - SyncScale</title>
+    <link rel="stylesheet" href="~/css/AdminDashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/Inventory.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        .restore-btn {
-            background: #d1fae5; color: #065f46; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer;
+        /* Small style block helper strictly for the interactive hover effects */
+        .premium-restore-btn:hover {
+        background-color: #0b8a53 !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 10px rgba(11, 138, 83, 0.25) !important;
+        transform: translateY(-1px);
         }
-        .restore-btn:hover { background: #a7f3d0; }
+
+        .premium-restore-btn:active {
+        transform: translateY(0);
+        }
     </style>
 </head>
 <body>
     <div class="dashboard-container">
-        <!-- Add your standard Sidebar here (Copy it from your Products.cshtml file) -->
+
+        <aside class="sidebar">
+            <div>
+                <div class="logo-section">
+                    <div class="logo-title">Cafero</div>
+                    <div class="logo-subtitle">Coffee & Pastries</div>
+                </div>
+
+                <div class="profile-section">
+                    <div class="profile-circle">👤</div>
+                    <div>
+                        <h2 class="admin-name">@displayRole</h2>
+                        <div class="admin-role">@(displayRole)istrator</div>
+                    </div>
+                </div>
+
+                <nav class="sidebar-menu">
+                    <a href="/@homeController/Dashboard" class="menu-btn"><i class="fas fa-chart-line"></i> Dashboard</a>
+                    <a href="/@homeController/PointOfSale" class="menu-btn"><i class="fas fa-shopping-cart"></i> POS</a>
+
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a href="/Admin/ActivityLog" class="menu-btn"><i class="fas fa-clipboard-list"></i> Activity Log</a>
+                    }
+
+                    <a href="/Admin/Analytics" class="menu-btn"><i class="fas fa-chart-pie"></i> Analytics</a>
+                    <a href="/Admin/QueueOrder" class="menu-btn"><i class="fas fa-list-ol"></i> Queue</a>
+                    <a href="/Admin/Products" class="menu-btn"><i class="fas fa-tags"></i> Products</a>
+                    <a href="/Admin/Inventory" class="menu-btn"><i class="fas fa-box-open"></i> Inventory</a>
+
+                    <a href="/Admin/ArchivedProducts" class="menu-btn active"><i class="fas fa-archive"></i> Archived</a>
+
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a href="/Admin/ManageAccounts" class="menu-btn"><i class="fas fa-credit-card"></i> Accounts</a>
+                    }
+                    <a href="/Admin/WebCustomization" class="menu-btn"><i class="fas fa-tags"></i> Customization</a>
+                </nav>
+            </div>
+
+            <div class="logout-section">
+                <form method="post" action="/Home/Logout">
+                    <button type="submit" class="menu-btn logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> Log Out
+                    </button>
+                </form>
+            </div>
+        </aside>
 
         <main class="main-content">
-            <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-                <div>
-                    <h1 class="greeting-title" style="font-size: 32px; font-weight: 800; color: #4a2511;">Product Archive 🗄️</h1>
-                    <p style="color: #b58361;">Items hidden from the POS. Restore them to make them active again.</p>
-                </div>
-                <a href="/Admin/Products" style="background: #4a2511; color: #fff; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 700;">
-                    ← Back to Active Products
+
+            <div class="page-header" style="display: block !important; margin-bottom: 15px !important;">
+                <h1 class="greeting-title">Product Archive 🗄️</h1>
+                <p class="greeting-subtitle">Items hidden from the POS. Restore them to make them active again.</p>
+            </div>
+
+            <div class="archive-actions-row" style="display: flex !important; justify-content: flex-start !important; margin-bottom: 25px !important; clear: both !important; width: 100% !important;">
+                <a href="/Admin/Products" class="action-link-btn" style="background: #fdfaf7 !important; color: #4a2511 !important; border: 1.5px solid #4a2511 !important; padding: 8px 16px !important; border-radius: 8px !important; text-decoration: none !important; font-weight: 700 !important; font-size: 13px !important; letter-spacing: 0.3px !important; display: inline-flex !important; align-items: center !important; gap: 8px !important; box-shadow: 0 2px 4px rgba(74, 37, 17, 0.04) !important;">
+                    <i class="fas fa-arrow-left" style="font-size: 12px !important;"></i> Back to Active Products
                 </a>
             </div>
 
             <div class="table-card">
                 <div class="table-wrap">
-                    <table class="inventory-table">
+                    <table class="inventory-table recent-sales-table">
                         <thead>
                             <tr>
                                 <th>ID</th>
@@ -44,7 +102,7 @@
                                 <th>Product Name</th>
                                 <th>Historical Price</th>
                                 <th>Status</th>
-                                <th style="text-align: center;">Action</th>
+                                <th class="text-center">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -55,14 +113,14 @@
                                     <tr class="inventory-row">
                                         <td><strong>@item.ProductId</strong></td>
                                         <td>@item.CategoryName</td>
-                                        <td style="color: #666;">@item.ProductName</td>
+                                        <td class="product-muted-text">@item.ProductName</td>
                                         <td>₱@item.Price.ToString("0.00")</td>
                                         <td>
-                                            <span style="background: #fee2e2; color: #b91c1c; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;">Archived</span>
+                                            <span class="status-badge-archived">Archived</span>
                                         </td>
-                                        <td style="text-align: center;">
-                                            <button class="restore-btn" onclick="restoreItem(@item.ProductId, '@item.ProductName')">
-                                                ↩️ Restore
+                                        <td class="text-center">
+                                            <button class="premium-restore-btn" onclick="restoreItem(@item.ProductId, '@item.ProductName')" style="background: #e6f7ed !important; color: #0b8a53 !important; border: 1px solid #a3e635 !important; border-color: #0b8a53 !important; padding: 6px 14px !important; border-radius: 6px !important; font-weight: 700 !important; font-size: 12px !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; gap: 6px !important; transition: all 0.2s ease !important;">
+                                                <i class="fas fa-undo-alt"></i> Restore
                                             </button>
                                         </td>
                                     </tr>
@@ -71,7 +129,7 @@
                             else
                             {
                                 <tr>
-                                    <td colspan="6" style="text-align:center; padding: 30px; color: #8c5b3e;">No items in the archive.</td>
+                                    <td colspan="6" class="table-empty-state">No items in the archive.</td>
                                 </tr>
                             }
                         </tbody>
@@ -83,30 +141,30 @@
 
     <script>
         function restoreItem(id, name) {
-            Swal.fire({
-                title: 'Restore Product?',
-                text: `This will put "${name}" back on the POS menu.`,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#0b8a53',
-                cancelButtonColor: '#4a2511',
-                confirmButtonText: 'Yes, restore it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    fetch('/Admin/RestoreMenuItem', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(id)
-                    }).then(res => {
-                        if(res.ok) {
-                            Swal.fire('Restored!', `${name} is now active again.`, 'success')
-                                .then(() => location.reload());
-                        } else {
-                            Swal.fire('Error', 'Could not restore item.', 'error');
-                        }
-                    });
-                }
-            });
+        Swal.fire({
+        title: 'Restore Product?',
+        text: `This will put "${name}" back on the POS menu.`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#0b8a53',
+        cancelButtonColor: '#4a2511',
+        confirmButtonText: 'Yes, restore it!'
+        }).then((result) => {
+        if (result.isConfirmed) {
+        fetch('/Admin/RestoreMenuItem', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(id)
+        }).then(res => {
+        if(res.ok) {
+        Swal.fire('Restored!', `${name} is now active again.`, 'success')
+        .then(() => location.reload());
+        } else {
+        Swal.fire('Error', 'Could not restore item.', 'error');
+        }
+        });
+        }
+        });
         }
     </script>
 </body>
