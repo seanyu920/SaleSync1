@@ -1,112 +1,269 @@
-﻿@model List<SaleSync.Models.MenuItemModel>
+﻿@model SaleSync.Models.ArchiveViewModel
 @{
     Layout = null;
-    string displayRole = User.IsInRole("Manager") ? "Manager" : "Admin";
-    string homeController = User.IsInRole("Manager") ? "Manager" : "Admin";
+    bool isManager = User.IsInRole("Manager");
+    string homeController = isManager ? "Manager" : "Admin";
+    string displayRole = isManager ? "Manager" : "Admin";
 }
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Archived Products - SyncScale</title>
-    <link rel="stylesheet" href="~/css/Inventory.css" asp-append-version="true" />
+    <title>System Archive - SyncScale</title>
+
+    <link rel="stylesheet" href="~/css/AdminDashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/Products.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        .restore-btn {
-            background: #d1fae5; color: #065f46; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer;
+        /* Custom Table Styling overrides to align nicely with the unified CSS structure */
+        .archive-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+        background: var(--bg-surface);
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 10px;
         }
-        .restore-btn:hover { background: #a7f3d0; }
+
+        .archive-table th {
+        background: #4a2511;
+        color: #fff;
+        padding: 14px 18px;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        }
+
+        .archive-table td {
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--border-sub);
+        color: var(--cream);
+        font-size: 14px;
+        }
+
+        .restore-btn {
+        background: #d1fae5;
+        color: #065f46;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-family: 'Outfit', sans-serif;
+        }
+
+        .restore-btn:hover {
+        background: #a7f3d0;
+        transform: translateY(-1px);
+        }
+
+        .table-card-wrapper {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-sub);
+        border-radius: 14px;
+        padding: 8px;
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 40px;
+        }
+
+        .section-divider-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--gold);
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        }
     </style>
 </head>
 <body>
     <div class="dashboard-container">
-        <!-- Add your standard Sidebar here (Copy it from your Products.cshtml file) -->
 
-        <main class="main-content">
-            <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <main class="main-content slide-up">
+            <!-- PAGE HEADER -->
+            <div class="card-header-flex" style="align-items: flex-end; margin-bottom: 30px;">
                 <div>
-                    <h1 class="greeting-title" style="font-size: 32px; font-weight: 800; color: #4a2511;">Product Archive 🗄️</h1>
-                    <p style="color: #b58361;">Items hidden from the POS. Restore them to make them active again.</p>
+                    <h1 class="greeting-title" style="font-size: 22px; font-weight: 800; letter-spacing: -0.5px;">System Archives 🗄️</h1>
+                    <p class="widget-subtitle">Completely isolated data states. Restore layers to bring them back to live POS tracking or stock calculations.</p>
                 </div>
-                <a href="/Admin/Products" style="background: #4a2511; color: #fff; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 700;">
-                    ← Back to Active Products
-                </a>
+                <div style="display: flex; gap: 15px;">
+                    <a href="/Admin/Products" class="view-all-link" style="text-decoration: none; font-weight: 600;">← Products Catalog</a>
+                    <a href="/@homeController/Inventory" class="view-all-link" style="text-decoration: none; font-weight: 600;">← Inventory Sheet</a>
+                </div>
             </div>
 
-            <div class="table-card">
-                <div class="table-wrap">
-                    <table class="inventory-table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Category</th>
-                                <th>Product Name</th>
-                                <th>Historical Price</th>
-                                <th>Status</th>
-                                <th style="text-align: center;">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @if (Model != null && Model.Any())
+            <!-- ================= TABLE 1: MENU PRODUCTS ARCHIVE ================= -->
+            <h2 class="section-divider-title">🍔 Archived Menu Items</h2>
+            <div class="table-card-wrapper">
+                <table class="archive-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px;">ID</th>
+                            <th>Category</th>
+                            <th>Product Name</th>
+                            <th>Historical Price</th>
+                            <th>System State</th>
+                            <th style="text-align: center; width: 140px;">Action Lifecycle</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.ArchivedProducts != null && Model.ArchivedProducts.Any())
+                        {
+                            foreach (var item in Model.ArchivedProducts)
                             {
-                                @foreach (var item in Model)
-                                {
-                                    <tr class="inventory-row">
-                                        <td><strong>@item.ProductId</strong></td>
-                                        <td>@item.CategoryName</td>
-                                        <td style="color: #666;">@item.ProductName</td>
-                                        <td>₱@item.Price.ToString("0.00")</td>
-                                        <td>
-                                            <span style="background: #fee2e2; color: #b91c1c; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;">Archived</span>
-                                        </td>
-                                        <td style="text-align: center;">
-                                            <button class="restore-btn" onclick="restoreItem(@item.ProductId, '@item.ProductName')">
-                                                ↩️ Restore
-                                            </button>
-                                        </td>
-                                    </tr>
-                                }
-                            }
-                            else
-                            {
-                                <tr>
-                                    <td colspan="6" style="text-align:center; padding: 30px; color: #8c5b3e;">No items in the archive.</td>
+                                var safeName = System.Web.HttpUtility.JavaScriptStringEncode(item.ProductName);
+
+                                <tr class="inventory-row">
+                                    <td><strong style="color: var(--gold); font-family: 'Outfit';">#@item.ProductId</strong></td>
+                                    <td><span style="font-size: 11px; text-transform: uppercase; background: var(--border-sub); padding: 4px 8px; border-radius: 4px; font-weight: 600;">@item.CategoryName</span></td>
+                                    <td style="color: var(--cream); font-weight: 500;">@item.ProductName</td>
+                                    <td style="font-weight: 600; color: var(--gold-light);">₱@item.Price.ToString("0.00")</td>
+                                    <td>
+                                        <span style="background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; border: 1px solid rgba(239, 68, 68, 0.25);">Archived</span>
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <button type="button" class="restore-btn" onclick="restoreProduct(@item.ProductId, '@safeName')">
+                                            <i class="fas fa-trash-restore-alt"></i> Restore
+                                        </button>
+                                    </td>
                                 </tr>
                             }
-                        </tbody>
-                    </table>
-                </div>
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="6" style="text-align:center; padding: 48px; color: var(--muted); font-size: 14px;">
+                                    <div style="font-size: 28px; margin-bottom: 8px;">🏝️</div>
+                                    No isolated product lines currently matching archive parameters.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- ================= TABLE 2: INVENTORY INGREDIENTS ARCHIVE ================= -->
+            <h2 class="section-divider-title">📦 Archived Inventory Ingredients</h2>
+            <div class="table-card-wrapper">
+                <table class="archive-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px;">ID</th>
+                            <th>Class</th>
+                            <th>Ingredient Name</th>
+                            <th>Last Unit Cost</th>
+                            <th>Remaining Volume</th>
+                            <th style="text-align: center; width: 140px;">Action Lifecycle</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.ArchivedIngredients != null && Model.ArchivedIngredients.Any())
+                        {
+                            foreach (var item in Model.ArchivedIngredients)
+                            {
+                                var safeName = System.Web.HttpUtility.JavaScriptStringEncode(item.ItemName);
+
+                                <tr class="inventory-row">
+                                    <td><strong style="color: var(--gold); font-family: 'Outfit';">#@item.ProductId</strong></td>
+                                    <td><span style="font-size: 11px; text-transform: uppercase; background: var(--border-sub); padding: 4px 8px; border-radius: 4px; font-weight: 600; color: #b45309;">@item.ItemCategory</span></td>
+                                    <td style="color: var(--cream); font-weight: 500;">@item.ItemName</td>
+                                    <td style="font-weight: 600; color: var(--gold-light);">₱@item.PurchasePrice.ToString("0.00")</td>
+                                    <td style="font-weight: 700;">@item.Quantity.ToString("0.##") @item.Unit</td>
+                                    <td style="text-align: center;">
+                                        <button type="button" class="restore-btn" onclick="restoreIngredient(@item.ProductId, '@safeName')">
+                                            <i class="fas fa-trash-restore-alt"></i> Restore
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="6" style="text-align:center; padding: 48px; color: var(--muted); font-size: 14px;">
+                                    <div style="font-size: 28px; margin-bottom: 8px;">🍂</div>
+                                    No ingredient profiles or recipes locked in the historical archive.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
             </div>
         </main>
     </div>
 
+    <!-- SCRIPTS FOR RESTORATION LIFECYCLES -->
     <script>
-        function restoreItem(id, name) {
-            Swal.fire({
-                title: 'Restore Product?',
-                text: `This will put "${name}" back on the POS menu.`,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#0b8a53',
-                cancelButtonColor: '#4a2511',
-                confirmButtonText: 'Yes, restore it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    fetch('/Admin/RestoreMenuItem', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(id)
-                    }).then(res => {
-                        if(res.ok) {
-                            Swal.fire('Restored!', `${name} is now active again.`, 'success')
-                                .then(() => location.reload());
-                        } else {
-                            Swal.fire('Error', 'Could not restore item.', 'error');
-                        }
-                    });
-                }
-            });
+        // 🛍️ Restore Finished Menu Product
+        function restoreProduct(id, name) {
+        Swal.fire({
+        title: 'Restore Product Layer?',
+        text: `Commiting sequence will push "${name}" back into active POS listings context.`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#0b8a53',
+        cancelButtonColor: '#4a2511',
+        confirmButtonText: 'Yes, restore active tracking'
+        }).then((result) => {
+        if (result.isConfirmed) {
+        fetch('/Admin/RestoreMenuItem', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(id)
+        }).then(res => {
+        if(res.ok) {
+        Swal.fire({
+        title: 'Database Restored',
+        text: `${name} state updated back to active array tracking loop.`,
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false
+        }).then(() => location.reload());
+        } else {
+        Swal.fire('Database Drop Error', 'The remote instance dropped the operation update payload.', 'error');
+        }
+        });
+        }
+        });
+        }
+
+        // 📦 Restore Raw Ingredient/Stock Item
+        function restoreIngredient(id, name) {
+        Swal.fire({
+        title: 'Restore Inventory Stock Profile?',
+        text: `Returning "${name}" will map its calculations back into active stock levels and recipe deductions.`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#0b8a53',
+        cancelButtonColor: '#4a2511',
+        confirmButtonText: 'Yes, restore stock line'
+        }).then((result) => {
+        if (result.isConfirmed) {
+        fetch('/Admin/RestoreInventoryItem', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(id)
+        }).then(res => {
+        if(res.ok) {
+        Swal.fire({
+        title: 'Stock Line Restored',
+        text: `${name} is back in operational matrices.`,
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false
+        }).then(() => location.reload());
+        } else {
+        Swal.fire('Database Update Error', 'Failed to update ingredient status tracking states.', 'error');
+        }
+        });
+        }
+        });
         }
     </script>
 </body>

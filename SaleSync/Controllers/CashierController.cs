@@ -11,7 +11,7 @@ namespace SaleSync.Controllers
     [Authorize(Roles = "Cashier,Admin,Manager")]
     public class CashierController : Controller
     {
-        private readonly string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
+        private readonly string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
 
         // --- DASHBOARD ---
         public IActionResult Dashboard()

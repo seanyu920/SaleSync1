@@ -16,7 +16,7 @@ namespace SaleSync.Controllers
     public class AdminController : Controller
     {
         private readonly IConfiguration _configuration;
-        private readonly string connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=SaleSync;Trusted_Connection=True;TrustServerCertificate=True;";
+        private readonly string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
 
         public AdminController(IConfiguration configuration)
         {
@@ -244,6 +244,161 @@ namespace SaleSync.Controllers
         }
 
         public IActionResult Analytics() => View();
+        [HttpGet]
+        public IActionResult Analytics(string timeframe = "week")
+        {
+            var model = new AnalyticsViewModel { SelectedTimeframe = timeframe.ToLower() };
+            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+
+            // Define T-SQL filtering criteria based on your exact column parameters
+            string dateCondition = "CAST(s.sale_date AS DATE) = CAST(GETDATE() AS DATE)";
+            string salesGroupQuery = "";
+
+            switch (model.SelectedTimeframe)
+            {
+                case "today":
+                    dateCondition = "CAST(s.sale_date AS DATE) = CAST(GETDATE() AS DATE)";
+                    salesGroupQuery = $@"
+                SELECT FORMAT(sale_date, 'hh:mm tt') AS Label, SUM(final_amount) AS Total 
+                FROM dbo.sales s 
+                WHERE {dateCondition} 
+                GROUP BY FORMAT(sale_date, 'hh:mm tt'), DATEPART(hour, sale_date), DATEPART(minute, sale_date)
+                ORDER BY DATEPART(hour, sale_date), DATEPART(minute, sale_date) ASC;";
+                    break;
+
+                case "month":
+                    dateCondition = "s.sale_date >= DATEADD(month, -1, GETDATE())";
+                    salesGroupQuery = $@"
+                SELECT FORMAT(sale_date, 'MMM dd') AS Label, SUM(final_amount) AS Total 
+                FROM dbo.sales s 
+                WHERE {dateCondition} 
+                GROUP BY FORMAT(sale_date, 'MMM dd'), CAST(sale_date AS DATE)
+                ORDER BY CAST(sale_date AS DATE) ASC;";
+                    break;
+
+                case "year":
+                    dateCondition = "s.sale_date >= DATEADD(year, -1, GETDATE())";
+                    salesGroupQuery = $@"
+                SELECT FORMAT(sale_date, 'MMM') AS Label, SUM(final_amount) AS Total 
+                FROM dbo.sales s 
+                WHERE {dateCondition} 
+                GROUP BY FORMAT(sale_date, 'MMM'), MONTH(sale_date)
+                ORDER BY MONTH(sale_date) ASC;";
+                    break;
+
+                case "week":
+                default:
+                    model.SelectedTimeframe = "week";
+                    dateCondition = "s.sale_date >= DATEADD(day, -7, GETDATE())";
+                    salesGroupQuery = $@"
+                SELECT DATENAME(weekday, sale_date) AS Label, SUM(final_amount) AS Total 
+                FROM dbo.sales s 
+                WHERE {dateCondition} 
+                GROUP BY DATENAME(weekday, sale_date), DATEPART(weekday, sale_date)
+                ORDER BY DATEPART(weekday, sale_date) ASC;";
+                    break;
+            }
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+
+                // 💳 1. Top-Level KPI Summary Card Metrics
+                string summarySql = $@"
+            SELECT 
+                ISNULL(SUM(final_amount), 0) AS TotalRev, 
+                COUNT(*) AS TotalTrans,
+                CASE WHEN COUNT(*) = 0 THEN 0 ELSE ISNULL(SUM(final_amount), 0) / COUNT(*) END AS AOV
+            FROM dbo.sales s
+            WHERE {dateCondition};";
+
+                using (SqlCommand cmd = new SqlCommand(summarySql, conn))
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        model.TotalRevenue = Convert.ToDecimal(reader["TotalRev"]);
+                        model.TotalTransactions = Convert.ToInt32(reader["TotalTrans"]);
+                        model.AverageOrderValue = Convert.ToDecimal(reader["AOV"]);
+                    }
+                }
+
+                // 📊 2. Gross Revenue Trend Line/Bar Data
+                using (SqlCommand cmd = new SqlCommand(salesGroupQuery, conn))
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        model.SalesLabels.Add(reader["Label"].ToString());
+                        model.SalesValues.Add(Convert.ToDecimal(reader["Total"]));
+                    }
+                }
+
+                // ⏰ 3. Peak Business Hours Traffic Trend
+                string peakHoursSql = $@"
+            SELECT 
+                DATEPART(HOUR, s.sale_date) AS RawHour,
+                FORMAT(s.sale_date, 'hh tt') AS HourLabel, 
+                COUNT(*) AS TotalOrders
+            FROM dbo.sales s
+            WHERE {dateCondition}
+            GROUP BY DATEPART(HOUR, s.sale_date), FORMAT(s.sale_date, 'hh tt')
+            ORDER BY RawHour ASC;";
+
+                using (SqlCommand cmd = new SqlCommand(peakHoursSql, conn))
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        model.PeakHourLabels.Add(reader["HourLabel"].ToString());
+                        model.PeakHourOrderCounts.Add(Convert.ToInt32(reader["TotalOrders"]));
+                    }
+                }
+
+                // ☕ 4. Best Sellers List (Linked via sale_items cross-reference)
+                string bestSellersSql = $@"
+            SELECT TOP 5 p.product_name, SUM(si.quantity) AS TotalQty 
+            FROM dbo.sale_items si
+            JOIN dbo.products p ON si.product_id = p.product_id
+            JOIN dbo.sales s ON si.sale_id = s.sale_id
+            WHERE {dateCondition}
+            GROUP BY p.product_name
+            ORDER BY TotalQty DESC;";
+
+                using (SqlCommand cmd = new SqlCommand(bestSellersSql, conn))
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        model.BestSellers.Add(new BestSellerItem
+                        {
+                            ProductName = reader["product_name"].ToString(),
+                            TotalSold = Convert.ToInt32(reader["TotalQty"])
+                        });
+                    }
+                }
+
+                // 💳 5. Payment Option Distribution Check
+                string paymentSql = $@"
+            SELECT s.payment_method, COUNT(*) AS DistributionCount 
+            FROM dbo.sales s 
+            WHERE {dateCondition}
+            GROUP BY s.payment_method;";
+
+                using (SqlCommand cmd = new SqlCommand(paymentSql, conn))
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        string method = reader["payment_method"]?.ToString();
+                        model.PaymentLabels.Add(string.IsNullOrEmpty(method) ? "Unspecified" : method);
+                        model.PaymentValues.Add(Convert.ToInt32(reader["DistributionCount"]));
+                    }
+                }
+            }
+
+            return View(model);
+        }
 
         [HttpGet]
         public IActionResult ActivityLog()
@@ -504,10 +659,8 @@ namespace SaleSync.Controllers
             TempData["SuccessMessage"] = $"{model.ItemName} added successfully!";
             return RedirectToAction("Inventory");
         }
-
-        // ⭐ UPDATE: Changed from Hard Delete to Soft Delete (Archive)
         [HttpPost]
-        public IActionResult DeleteMenuItem([FromBody] int productId)
+        public IActionResult ArchiveInventory([FromForm] int productId)
         {
             int currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
 
@@ -516,7 +669,144 @@ namespace SaleSync.Controllers
                 conn.Open();
                 try
                 {
-                    // Instead of deleting, we flip the archive switch
+                    string itemName = "Unknown Ingredient";
+
+                    // 1. Fetch the ingredient details first for your activity log snapshot
+                    string getOldSql = @"
+                SELECT product_name 
+                FROM products 
+                WHERE product_id = @id AND is_ingredient = 1";
+
+                    using (SqlCommand checkCmd = new SqlCommand(getOldSql, conn))
+                    {
+                        checkCmd.Parameters.AddWithValue("@id", productId);
+                        using (SqlDataReader r = checkCmd.ExecuteReader())
+                        {
+                            if (r.Read())
+                            {
+                                itemName = r["product_name"].ToString();
+                            }
+                        }
+                    }
+
+                    // 2. Soft-delete the ingredient by flipping the archive switch
+                    string archiveSql = "UPDATE products SET is_archived = 1 WHERE product_id = @id AND is_ingredient = 1";
+                    using (SqlCommand cmd = new SqlCommand(archiveSql, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@id", productId);
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    // 3. Log the activity specifically as an inventory action
+                    LogActivity(
+                        userId: currentUserId,
+                        action: "Inventory Archived",
+                        details: $"Archived Ingredient: {itemName} (ID: {productId})",
+                        newData: null
+                    );
+
+                    // 4. Pass the success message to trigger your view's SweetAlert
+                    TempData["SuccessMessage"] = $"'{itemName}' has been archived successfully!";
+
+                    return RedirectToAction("Inventory");
+                }
+                catch (Exception ex)
+                {
+                    TempData["ErrorMessage"] = $"Failed to archive ingredient: {ex.Message}";
+                    return RedirectToAction("Inventory");
+                }
+            }
+        }
+        [HttpPost]
+        public IActionResult RestoreInventoryItem([FromBody] int productId)
+        {
+            int currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+                try
+                {
+                    string itemName = "Unknown Ingredient";
+
+                    // 1. Fetch the ingredient details first for your activity tracking data trail
+                    string getNameSql = "SELECT product_name FROM products WHERE product_id = @id AND is_ingredient = 1";
+                    using (SqlCommand checkCmd = new SqlCommand(getNameSql, conn))
+                    {
+                        checkCmd.Parameters.AddWithValue("@id", productId);
+                        using (SqlDataReader r = checkCmd.ExecuteReader())
+                        {
+                            if (r.Read())
+                            {
+                                itemName = r["product_name"].ToString();
+                            }
+                        }
+                    }
+
+                    // 2. Bring the row layer back by flipping the archive flag off (0)
+                    string restoreSql = "UPDATE products SET is_archived = 0 WHERE product_id = @id AND is_ingredient = 1";
+                    using (SqlCommand cmd = new SqlCommand(restoreSql, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@id", productId);
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    // 3. Log the action into your system activity tracking table
+                    LogActivity(
+                        userId: currentUserId,
+                        action: "Inventory Restored",
+                        details: $"Restored Ingredient: {itemName} (ID: {productId})",
+                        newData: null
+                    );
+
+                    // 4. Return standard HTTP 200 to let SweetAlert reload the view context
+                    return Ok();
+                }
+                catch (Exception ex)
+                {
+                    // If the query crashes, pass an explicit JSON message back to the client console
+                    return BadRequest(new { message = $"Failed to restore ingredient: {ex.Message}" });
+                }
+            }
+        }
+
+        // ⭐ UPDATE: Soft Delete (Archive) with Enterprise Logging Support
+        [HttpPost]
+        public IActionResult ArchiveProduct([FromBody] int productId) // 👈 Renamed from DeleteMenuItem
+        {
+            int currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+                try
+                {
+                    string productName = "Unknown Product";
+                    MenuItemModel oldProductData = null;
+
+                    // 1. Fetch the product details first for the activity log
+                    string getOldSql = @"                 SELECT p.product_name, c.category_name, p.selling_price                  FROM products p                 LEFT JOIN categories c ON p.category_id = c.category_id                 WHERE p.product_id = @id";
+
+                    using (SqlCommand checkCmd = new SqlCommand(getOldSql, conn))
+                    {
+                        checkCmd.Parameters.AddWithValue("@id", productId);
+                        using (SqlDataReader r = checkCmd.ExecuteReader())
+                        {
+                            if (r.Read())
+                            {
+                                productName = r["product_name"].ToString();
+                                oldProductData = new MenuItemModel
+                                {
+                                    ProductId = productId,
+                                    ProductName = productName,
+                                    CategoryName = r["category_name"]?.ToString() ?? "Uncategorized",
+                                    Price = r["selling_price"] != DBNull.Value ? Convert.ToDecimal(r["selling_price"]) : 0
+                                };
+                            }
+                        }
+                    }
+
+                    // 2. Flip the archive switch
                     string archiveSql = "UPDATE products SET is_archived = 1 WHERE product_id = @id";
                     using (SqlCommand cmd = new SqlCommand(archiveSql, conn))
                     {
@@ -524,7 +814,14 @@ namespace SaleSync.Controllers
                         cmd.ExecuteNonQuery();
                     }
 
-                    LogActivity(currentUserId, "Product Archived", $"Archived Product ID: {productId}");
+                    // 3. Log the activity with the complete historical snapshot
+                    LogActivity(
+                        userId: currentUserId,
+                        action: "Product Archived",
+                        details: $"Archived Product: {productName} (ID: {productId})",
+                        oldData: oldProductData
+                    );
+
                     return Ok();
                 }
                 catch (Exception ex)
@@ -1091,37 +1388,61 @@ namespace SaleSync.Controllers
         [HttpGet]
         public IActionResult ArchivedProducts()
         {
-            var menuList = new List<MenuItemModel>();
+            var viewModel = new ArchiveViewModel();
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                // Fetch ONLY items where is_archived = 1
-                string sql = @"
-                    SELECT p.product_id, p.product_name, c.category_name, p.selling_price
-                    FROM products p
-                    LEFT JOIN categories c ON p.category_id = c.category_id
-                    WHERE (p.is_ingredient = 0 OR p.is_ingredient IS NULL)
-                    AND p.is_archived = 1";
+                conn.Open();
 
-                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                // 🛍️ Query 1: Fetch Archived Finished Products (Menu Items)
+                string productSql = @"
+            SELECT p.product_id, p.product_name, c.category_name, p.selling_price 
+            FROM products p
+            LEFT JOIN categories c ON p.category_id = c.category_id
+            WHERE p.is_archived = 1 AND p.is_ingredient = 0";
+
+                using (SqlCommand cmd = new SqlCommand(productSql, conn))
+                using (SqlDataReader r = cmd.ExecuteReader())
                 {
-                    conn.Open();
-                    using (SqlDataReader r = cmd.ExecuteReader())
+                    while (r.Read())
                     {
-                        while (r.Read())
+                        viewModel.ArchivedProducts.Add(new MenuItemModel
                         {
-                            menuList.Add(new MenuItemModel
-                            {
-                                ProductId = Convert.ToInt32(r["product_id"]),
-                                ProductName = r["product_name"].ToString(),
-                                CategoryName = r["category_name"]?.ToString() ?? "Uncategorized",
-                                Price = r["selling_price"] != DBNull.Value ? Convert.ToDecimal(r["selling_price"]) : 0
-                            });
-                        }
+                            ProductId = Convert.ToInt32(r["product_id"]),
+                            ProductName = r["product_name"].ToString(),
+                            CategoryName = r["category_name"]?.ToString() ?? "Uncategorized",
+                            Price = r["selling_price"] != DBNull.Value ? Convert.ToDecimal(r["selling_price"]) : 0
+                        });
+                    }
+                }
+
+                // 📦 Query 2: Fetch Archived Raw Ingredients (Inventory)
+                string ingredientSql = @"
+            SELECT product_id, product_name, stock_quantity, cost_price, unit, recipe_unit, conversion_factor 
+            FROM products 
+            WHERE is_archived = 1 AND is_ingredient = 1";
+
+                using (SqlCommand cmd = new SqlCommand(ingredientSql, conn))
+                using (SqlDataReader r = cmd.ExecuteReader())
+                {
+                    while (r.Read())
+                    {
+                        viewModel.ArchivedIngredients.Add(new InventoryItems
+                        {
+                            ProductId = Convert.ToInt32(r["product_id"]),
+                            ItemName = r["product_name"].ToString(),
+                            ItemCategory = "Ingredients", // Hardcoded display category since category_id = 99
+                            Quantity = r["stock_quantity"] != DBNull.Value ? Convert.ToDouble(r["stock_quantity"]) : 0,
+                            PurchasePrice = r["cost_price"] != DBNull.Value ? Convert.ToDecimal(r["cost_price"]) : 0,
+                            Unit = r["unit"]?.ToString() ?? "pcs",
+                            RecipeUnit = r["recipe_unit"]?.ToString(),
+                            ConversionFactor = r["conversion_factor"] != DBNull.Value ? Convert.ToDouble(r["conversion_factor"]) : 1
+                        });
                     }
                 }
             }
-            return View(menuList);
+
+            return View(viewModel);
         }
 
         [HttpPost]

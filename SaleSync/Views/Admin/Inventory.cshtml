@@ -29,7 +29,6 @@
 <body>
     <div class="dashboard-container">
 
-        <!-- ===== SIDEBAR — exact copy from Admin Dashboard ===== -->
         <aside class="sidebar">
             <div>
                 <div class="logo-section">
@@ -77,8 +76,6 @@
                 </form>
             </div>
         </aside>
-        <!-- ===== END SIDEBAR ===== -->
-        <!-- MAIN CONTENT PANEL -->
         <main class="main-content">
 
             <div class="page-header" style="margin-bottom: 30px;">
@@ -166,7 +163,7 @@
                         <div class="action-buttons">
                             <button type="button" onclick="confirmAdd()" class="action-btn add-btn">Add Item</button>
                             <button type="button" onclick="confirmUpdate()" class="action-btn update-btn">Update Item</button>
-                            <button type="button" onclick="deleteItem()" class="action-btn delete-btn">Delete Item</button>
+                            <button type="button" onclick="archiveItem()" class="action-btn delete-btn">Archive</button>
                         </div>
                     </form>
                 </div>
@@ -277,8 +274,8 @@
         </main>
     </div>
 
-    <form id="deleteForm" method="post" action="/Admin/DeleteInventory">
-        <input type="hidden" name="ProductId" id="deleteId" />
+    <form id="archiveForm" method="post" action="/Admin/ArchiveInventory">
+        <input type="hidden" name="ProductId" id="archiveId" />
     </form>
 
     <script>
@@ -388,21 +385,24 @@
         return selected.value;
         }
 
-        function deleteItem() {
+        // 🗄️ Soft Delete / Archive function matching system state behaviors
+        function archiveItem() {
         if (isSubmitting) return;
         const id = getSelectedId();
         if (!id) return;
+
         Swal.fire({
-        title: 'Are you sure?',
-        text: "Permanently delete this inventory item?",
+        title: 'Archive Inventory Item?',
+        text: "This item will be hidden from current stock tables and moved to the system archive repository.",
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: 'Yes, delete it!'
+        confirmButtonColor: '#4a2511',
+        confirmButtonText: 'Yes, archive item'
         }).then((result) => {
         if (result.isConfirmed) {
         isSubmitting = true;
-        document.getElementById("deleteId").value = id;
-        document.getElementById("deleteForm").submit();
+        document.getElementById("archiveId").value = id;
+        document.getElementById("archiveForm").submit();
         }
         });
         }
