@@ -21,9 +21,6 @@
 <body>
     <div class="dashboard-container">
 
-        <!-- ==========================================================================
-           SIDEBAR (Aligned precisely to 255px master dashboard grid layout)
-           ========================================================================== -->
         <aside class="sidebar">
             <div>
                 <div class="logo-section">
@@ -67,7 +64,6 @@
                     <a href="/Admin/Inventory" class="menu-btn @(ViewContext.RouteData.Values["action"]?.ToString() == "Inventory" ? "active" : "")">
                         <i class="fas fa-box-open menu-icon"></i> Inventory
                     </a>
-                    <a href="/Admin/ArchivedProducts" class="menu-btn"><i class="fas fa-archive"></i> Archived</a>
 
                     @if (User.IsInRole("Admin"))
                     {
@@ -89,12 +85,8 @@
             </div>
         </aside>
 
-        <!-- ==========================================================================
-           MAIN CONTENT (Aligned precisely to padding: 36px 40px workspace box rules)
-           ========================================================================== -->
         <main class="main-content slide-up">
 
-            <!-- Structural Workspace Flex Header Wrapper -->
             <div class="card-header-flex" style="align-items: flex-end; margin-bottom: 30px;">
                 <div>
                     <h1 class="greeting-title" id="pageTitle" style="font-size: 22px; font-weight: 800; letter-spacing: -0.5px;">Menu Categories 🏷️</h1>
@@ -103,15 +95,10 @@
                 <div style="display: flex; gap: 12px; align-items: center;">
                     <button id="backBtn" class="view-all-link" style="display: none;" onclick="showCategories()">← Back to Categories</button>
 
-                    <a href="/Admin/ArchivedProducts" class="view-all-link" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
-                        <span style="color: var(--gold);">🗄️ View Archive</span>
-                    </a>
-
                     <button id="mainAddBtn" class="btn-primary" style="padding: 9px 20px;">+ Add Category</button>
                 </div>
             </div>
 
-            <!-- Categories Grid Content Layout -->
             <div id="categoryContainer" class="product-catalog-grid">
 
                 <div class="menu-item-card" onclick="openSubMenu('COFFEE')">
@@ -181,14 +168,10 @@
                 </div>
             </div>
 
-            <!-- Standalone Submenu Display Layout Content Area -->
             <div id="subItemsContainer" class="product-catalog-grid" style="display: none;"></div>
         </main>
     </div>
 
-    <!-- ==========================================================================
-       RECIPE EDIT MODAL WINDOW OVERLAY (Integrated with unified auth-modal tokens)
-       ========================================================================== -->
     <div id="recipeModal" class="modal-overlay">
         <div class="auth-modal" style="width: 480px; max-width: 90%; text-align: left; padding: 28px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -217,18 +200,19 @@
         </div>
     </div>
 
-    <!-- ==========================================================================
-       JAVASCRIPT DYNAMIC ROUTING & EVENTS LOGIC
-       ========================================================================== -->
     <script>
         const menuData = {};
 
+        // 🟢 SECURE INITIALIZATION: Safely escapes special characters and quotes for your thesis defense
         @if (Model != null)
         {
             foreach (var item in Model)
             {
-                @:if(!menuData["@Html.Raw(item.CategoryName.ToUpper())"]) menuData["@Html.Raw(item.CategoryName.ToUpper())"] = [];
-                @:menuData["@Html.Raw(item.CategoryName.ToUpper())"].push({ id: @item.ProductId, name: "@Html.Raw(item.ProductName)", price: @item.Price });
+                var safeName = System.Web.HttpUtility.JavaScriptStringEncode(item.ProductName);
+                var safeCategory = System.Web.HttpUtility.JavaScriptStringEncode(item.CategoryName.ToUpper());
+
+                @:if(!menuData["@safeCategory"]) menuData["@safeCategory"] = [];
+                @:menuData["@safeCategory"].push({ id: @item.ProductId, name: "@safeName", price: @item.Price });
             }
         }
 
@@ -267,11 +251,11 @@
         </div>
 
         <div style="display: flex; gap: 8px; margin-top: 4px;">
-        <button type="button" class="btn-secondary" style="flex: 1; padding: 8px; font-size: 12px; border-radius: 6px; text-align: center; justify-content: center;" onclick="event.stopPropagation(); openRecipe(${item.id}, '${item.name.replace(/'/g, "\\'")}')">
+        <button type="button" class="btn-secondary" style="flex: 1; padding: 8px; font-size: 12px; border-radius: 6px; text-align: center; justify-content: center;" onclick="event.stopPropagation(); openRecipe(${item.id}, '${item.name.replace(/'/g, "\\'")}');">
         Edit Recipe
         </button>
-        <button type="button" onclick="event.stopPropagation(); deleteItem(${item.id})" class="btn-void-mini" style="width: 32px; height: 32px; border-radius: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-        <i class="fas fa-trash-alt"></i>
+        <button type="button" style="flex: 1; padding: 8px; font-size: 12px; border-radius: 6px; text-align: center; justify-content: center; background: rgba(220, 53, 69, 0.15); color: #ff6b6b; border: 1px solid rgba(220, 53, 69, 0.3); cursor: pointer; font-family: 'Outfit', sans-serif;" onclick="event.stopPropagation(); archiveProduct(${item.id}, '${item.name.replace(/'/g, "\\'")}');">
+        <i class="fas fa-box-archive" style="margin-right: 4px;"></i> Archive
         </button>
         </div>
         </div>
@@ -354,15 +338,14 @@
         return;
         }
 
-        let ingOptions = '<option value="">Select Ingredient...</option>';
-        allIngredients.forEach(i => ingOptions += `<option value="${i.id}">${i.name}</option>`);
+        // 🟢 CLEANUP: Removed the unused ingOptions loop that was cluttering this event handler
 
         const { value: formValues } = await Swal.fire({
         title: `Append Menu Item`,
         width: '540px',
         html: `
         <div style="display: flex; flex-direction: column; gap: 12px; text-align: left; margin-top: 10px;">
-        <input id="swal-name" class="swal2-input" placeholder="Product Name Name" style="width:100%; margin:0; background: var(--bg-surface); color: var(--cream); border: 1px solid var(--border-sub); border-radius: 8px;">
+        <input id="swal-name" class="swal2-input" placeholder="Product Name" style="width:100%; margin:0; background: var(--bg-surface); color: var(--cream); border: 1px solid var(--border-sub); border-radius: 8px;">
         <div style="display: flex; gap: 10px;">
         <select id="swal-size" class="swal2-input" style="flex: 1; margin:0; font-size: 14px; background: var(--bg-surface); color: var(--cream); border: 1px solid var(--border-sub); border-radius: 8px;">
         <option value="">No Structural Size Variant</option>
@@ -408,30 +391,6 @@
         });
         }
         });
-
-        function deleteItem(id) {
-        Swal.fire({
-        title: 'Archive Menu Listing?',
-        text: "Removes from target POS views while protecting legacy transaction lines.",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#e05555',
-        confirmButtonText: 'Confirm Archive Flag'
-        }).then((result) => {
-        if (result.isConfirmed) {
-        fetch('/Admin/DeleteMenuItem', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(id)
-        }).then(res => {
-        if(res.ok) {
-        Swal.fire({ title: 'Archived', text: 'State modified cleanly.', icon: 'success', timer: 1200, showConfirmButton: false })
-        .then(() => location.reload());
-        }
-        });
-        }
-        });
-        }
 
         let currentRecipeProductId = 0;
         let currentRecipeItems = [];
@@ -525,6 +484,43 @@
         closeRecipe();
         }
         });
+        }
+
+        async function archiveProduct(id, name) {
+        const result = await Swal.fire({
+        title: 'Archive Menu Item?',
+        html: `Are you sure you want to remove <strong>${name}</strong> from the active POS menu mapping?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#bd2130',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Confirm Archive'
+        });
+
+        if (result.isConfirmed) {
+        fetch('/Admin/ArchiveProduct', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(id)
+        })
+        .then(res => {
+        if (res.ok) {
+        Swal.fire({
+        title: 'Archived!',
+        text: 'Product allocation flags updated successfully.',
+        icon: 'success',
+        timer: 1200,
+        showConfirmButton: false
+        })
+        .then(() => location.reload());
+        } else {
+        Swal.fire('Error Intercept', 'SQL status flip operation dropped.', 'error');
+        }
+        })
+        .catch(err => {
+        Swal.fire('Network Fault', 'Unable to reach system server architecture.', 'error');
+        });
+        }
         }
     </script>
 </body>
