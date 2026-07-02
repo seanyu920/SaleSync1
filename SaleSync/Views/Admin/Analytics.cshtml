@@ -107,10 +107,8 @@
                     <a href="/@homeController/Dashboard" class="menu-btn @(ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")">
                         <i class="fas fa-chart-line"></i> Dashboard
                     </a>
+                    <a href="/Admin/QueueOrder" class="menu-btn"><i class="fas fa-list-ol"></i> Queue</a>
 
-                    <a href="/@homeController/PointOfSale" class="menu-btn @(ViewContext.RouteData.Values["action"]?.ToString() == "PointOfSale" ? "active" : "")">
-                        <i class="fas fa-shopping-cart"></i> POS
-                    </a>
 
                     @if (User.IsInRole("Admin"))
                     {
@@ -122,7 +120,7 @@
                     <a href="/Admin/Analytics" class="menu-btn @(ViewContext.RouteData.Values["action"]?.ToString() == "Analytics" ? "active" : "")">
                         <i class="fas fa-chart-pie"></i> Analytics
                     </a>
-                    <a href="/Admin/QueueOrder" class="menu-btn"><i class="fas fa-list-ol"></i> Queue</a>
+                    
 
                     <a href="/Admin/Products" class="menu-btn @(ViewContext.RouteData.Values["action"]?.ToString() == "Products" ? "active" : "")">
                         <i class="fas fa-tags"></i> Products
