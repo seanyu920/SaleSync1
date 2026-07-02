@@ -40,10 +40,7 @@
                     <a href="/@homeController/Dashboard" class="menu-btn @(ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")">
                         <i class="fas fa-chart-line menu-icon"></i> Dashboard
                     </a>
-
-                    <a href="/@homeController/PointOfSale" class="menu-btn @(ViewContext.RouteData.Values["action"]?.ToString() == "PointOfSale" ? "active" : "")">
-                        <i class="fas fa-shopping-cart menu-icon"></i> POS
-                    </a>
+                    <a href="/Admin/QueueOrder" class="menu-btn"><i class="fas fa-list-ol"></i> Queue</a>
 
                     @if (User.IsInRole("Admin"))
                     {
@@ -56,14 +53,13 @@
                         <i class="fas fa-chart-pie menu-icon"></i> Analytics
                     </a>
 
-                    <a href="/Admin/QueueOrder" class="menu-btn"><i class="fas fa-list-ol"></i> Queue</a>
-
                     <a href="/Admin/Products" class="menu-btn @(ViewContext.RouteData.Values["action"]?.ToString() == "Products" ? "active" : "")">
                         <i class="fas fa-tags menu-icon"></i> Products
                     </a>
                     <a href="/Admin/Inventory" class="menu-btn @(ViewContext.RouteData.Values["action"]?.ToString() == "Inventory" ? "active" : "")">
                         <i class="fas fa-box-open menu-icon"></i> Inventory
                     </a>
+                    <a href="/Admin/ArchivedProducts" class="menu-btn"><i class="fas fa-archive"></i> Archived</a>
 
                     @if (User.IsInRole("Admin"))
                     {
