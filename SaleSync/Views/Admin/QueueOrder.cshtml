@@ -1,9 +1,12 @@
-﻿@{
+﻿@model List<SaleHistoryItem>
+@{
     ViewData["Title"] = "Queue Orders";
     Layout = null;
-}
-
-<!DOCTYPE html>
+    bool isManager = User.IsInRole("Manager");
+    string homeController = isManager ? "Manager" : "Admin";
+    string displayRole = isManager ? "Manager" : "Admin";
+    string currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "QueueOrder";
+}<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -11,114 +14,752 @@
     <title>@ViewData["Title"] - Cafero</title>
 
     <!-- Framework Requirements matching your setup -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/AdminDashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/QueueOrder.css" asp-append-version="true" />
+    
+    <!-- SweetAlert2 Library for Elegant Dark-Themed Popups -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        /* Modern CSS resets to strictly match styling context */
+        body {
+            background-color: #141615 !important;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+            background-color: #141615;
+        }
+
+        .main-content {
+            background-color: #141615;
+            padding: 30px 40px;
+            flex: 1; 
+        }
+
+        /* Top Header Styling */
+        .queue-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #2a2d2b;
+        }
+
+        .queue-header h1 {
+            color: #ffffff;
+            font-size: 32px;
+            font-weight: 700;
+            margin: 0 0 8px 0;
+            letter-spacing: -0.5px;
+        }
+
+        .queue-header p {
+            color: #a0a5a1;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .queue-stats {
+            display: flex;
+            gap: 12px;
+        }
+
+        .stat-badge {
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 13px;
+            letter-spacing: 0.3px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .badge-pending { background-color: #fdf0cd; color: #332300; }
+        .badge-preparing { background-color: #cfe2ff; color: #002451; }
+
+        /* Multi-Column Production Grid */
+        .queue-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        @@media (max-width: 1500px) { .queue-grid { grid-template-columns: repeat(3, 1fr); } }
+        @@media (max-width: 1100px) { .queue-grid { grid-template-columns: repeat(2, 1fr); } }
+        @@media (max-width: 750px) { .queue-grid { grid-template-columns: 1fr; } }
+
+        /* Dark Mode Order Cards */
+        .queue-card {
+            background: #1e201f;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            border-left: 6px solid #ffc107; 
+            min-height: 230px;
+        }
+
+        .queue-card.status-Pending { border-left-color: #ffc107; }
+        .queue-card.status-Preparing, .queue-card.status-Processing, .queue-card.status-Completed { border-left-color: #007bff; }
+
+        .card-header-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .order-id {
+            font-weight: 800;
+            color: #ffffff;
+            font-size: 16px;
+        }
+
+        .order-time {
+            color: #a0a5a1;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .customer-name {
+            font-weight: 700;
+            color: #ffffff;
+            font-size: 16px;
+            margin: 0 0 12px 0;
+        }
+
+        /* Metadata Badge Rows */
+        .order-meta {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+
+        .meta-tag {
+            background: #2a2d2b;
+            color: #c9ccc9;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Dark Items Box Layout */
+        .items-box {
+            background: #252726;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #e2e5e3;
+            margin-bottom: 18px;
+            border: 1px solid #2e312f;
+            min-height: 55px;
+        }
+
+        .items-box-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: #888e8a;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        /* Action Buttons Footers */
+        .card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: auto;
+        }
+
+        .btn-action {
+            padding: 10px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-view {
+            background: #2a2d2b;
+            color: #ffffff;
+            flex: 1.1;
+            border: 1px solid #3a3e3b;
+        }
+        .btn-view:hover { background: #3a3e3b; }
+
+        .btn-start {
+            background: #007bff;
+            color: #ffffff;
+            flex: 1.4;
+        }
+        .btn-start:hover { background: #0069d9; }
+
+        .btn-complete {
+            background: #28a745;
+            color: #ffffff;
+            flex: 1.4;
+        }
+        .btn-complete:hover { background: #218838; }
+
+        .btn-void {
+            background: #dc3545;
+            color: #ffffff;
+            width: 38px;
+            flex: none;
+        }
+        .btn-void:hover { background: #c82333; }
+
+        /* Modular Popup Overlays - Dark Mode Edition */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        .modal-content {
+            background: #1e201f;
+            padding: 30px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            color: #e2e5e3;
+            border: 1px solid #2e312f;
+        }
+        .modal-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 20px; 
+        }
+        .modal-close { 
+            cursor: pointer; 
+            font-size: 24px; 
+            background: none; 
+            border: none; 
+            color: #888e8a; 
+        }
+        .modal-close:hover { color: #ffffff; }
+        .list-group { margin: 12px 0; padding-left: 20px; }
+        .list-group li { margin-bottom: 6px; font-weight: 500; color: #e2e5e3; }
+        
+        .form-control { 
+            width: 100%; 
+            padding: 10px; 
+            margin: 12px 0; 
+            border: 1px solid #2e312f; 
+            border-radius: 6px; 
+            font-size: 14px; 
+            background: #252726; 
+            color: #ffffff; 
+        }
+        .form-control::placeholder { color: #616662; }
+
+        /* High-Density Queue Status Badges */
+        .badge-q {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.7px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s ease-in-out;
+        }
+
+        /* 1. Pending Status - Warn Alert Amber */
+        .badge-q-pending {
+            background: rgba(243, 156, 18, 0.15);
+            color: #F39C12;
+            border: 1px solid rgba(243, 156, 18, 0.4);
+        }
+
+        /* 2. Preparing Status - Active Signature Gold with Smooth Pulse Effect */
+        .badge-q-preparing {
+            background: rgba(212, 175, 55, 0.18);
+            color: #D4AF37;
+            border: 1px solid rgba(212, 175, 55, 0.5);
+            animation: status-glow-pulse 2s infinite alternate;
+        }
+
+        /* 3. Out for Delivery Status - Electric Delivery Rider Cyan */
+        .badge-q-delivery {
+            background: rgba(52, 152, 219, 0.15);
+            color: #3498DB;
+            border: 1px solid rgba(52, 152, 219, 0.4);
+        }
+
+        /* 4. Done Status - Vibrant Emerald Clean Signoff */
+        .badge-q-done {
+            background: rgba(46, 204, 113, 0.2);
+            color: #2ECC71;
+            border: 1px solid rgba(46, 204, 113, 0.5);
+        }
+
+        /* Fallback Gray Tag */
+        .badge-q-default {
+            background: rgba(255, 255, 255, 0.08);
+            color: #8E9891;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        /* Active Work Glow Keyframes */
+        @@keyframes status-glow-pulse {
+            0% {
+                box-shadow: 0 2px 6px rgba(212, 175, 55, 0.15);
+                border-color: rgba(212, 175, 55, 0.3);
+            }
+            100% {
+                box-shadow: 0 4px 14px rgba(212, 175, 55, 0.35);
+                border-color: rgba(212, 175, 55, 0.7);
+            }
+        }
+
+        /* Icon rotation helper for pending state */
+        .animate-pulse {
+            animation: pulse 1.5s infinite;
+        }
+
+        @@keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.85; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
 </head>
 <body>
 
     <div class="dashboard-container">
 
-        <!-- Sidebar Navigation Left Panel -->
+        <!-- Sidebar Panel Component -->
         <aside class="sidebar">
-            <!-- Brand Block -->
-            <div class="logo-section">
-                <div class="logo-title">Cafero</div>
-                <div class="logo-subtitle">Coffee & Pastries</div>
+            <div>
+                <div class="logo-section">
+                    <div class="logo-title">Cafero</div>
+                    <div class="logo-subtitle">Coffee & Pastries</div>
+                </div>
+
+                <div class="profile-section">
+                    <div class="profile-circle">👤</div>
+                    <div>
+                        <h2 class="admin-name">@displayRole</h2>
+                        <div class="admin-role">System Access</div>
+                    </div>
+                </div>
+
+                <nav class="sidebar-menu">
+                    <a href="/@homeController/Dashboard" class="menu-btn @(currentAction == "Dashboard" ? "active" : "")">
+                        <i class="fas fa-chart-line"></i> Dashboard
+                    </a>
+
+                    <a href="/@homeController/QueueOrder" class="menu-btn @(currentAction == "QueueOrder" || currentAction == "QueueOrders" ? "active" : "")">
+                        <i class="fas fa-list-ol"></i> Queue
+                    </a>
+
+                    @if (!User.IsInRole("Admin"))
+                    {
+                        <a href="/@homeController/PointOfSale" class="menu-btn @(currentAction == "PointOfSale" ? "active" : "")">
+                            <i class="fas fa-shopping-cart"></i> POS
+                        </a>
+                    }
+
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a href="/Admin/ActivityLog" class="menu-btn @(currentAction == "ActivityLog" ? "active" : "")">
+                            <i class="fas fa-clipboard-list"></i> Activity Log
+                        </a>
+                    }
+
+                    <a href="/Admin/Analytics" class="menu-btn @(currentAction == "Analytics" ? "active" : "")">
+                        <i class="fas fa-chart-pie"></i> Analytics
+                    </a>
+
+                    <a href="/Admin/Products" class="menu-btn @(currentAction == "Products" ? "active" : "")">
+                        <i class="fas fa-tags"></i> Products
+                    </a>
+
+                    <a href="/Admin/Inventory" class="menu-btn @(currentAction == "Inventory" ? "active" : "")">
+                        <i class="fas fa-box-open"></i> Inventory
+                    </a>
+
+                    <a href="/Admin/ArchivedProducts" class="menu-btn @(currentAction == "ArchivedProducts" || currentAction == "Archive" ? "active" : "")">
+                        <i class="fas fa-archive"></i> Archived
+                    </a>
+
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a href="/Admin/ManageAccounts" class="menu-btn @(currentAction == "ManageAccounts" ? "active" : "")">
+                            <i class="fas fa-credit-card"></i> Accounts
+                        </a>
+                    }
+                    <a href="/Admin/WebCustomization" class="menu-btn @(currentAction == "WebCustomization" ? "active" : "")">
+                        <i class="fas fa-sliders-h"></i> Customization
+                    </a>
+                </nav>
             </div>
 
-            <!-- User Profile Block -->
-            <div class="profile-section">
-                <div class="profile-circle">
-                    <i class="fa-solid fa-user"></i>
-                </div>
-                <div>
-                    <div class="admin-name">Admin</div>
-                    <div class="admin-role">Administrator</div>
-                </div>
-            </div>
-
-            <!-- Items Links Menu -->
-            <ul class="sidebar-menu">
-                <li>
-                    <a href="@Url.Action("Dashboard", "Admin")" class="menu-btn">
-                        <i class="fa-solid fa-chart-simple menu-icon"></i>
-                        <span>Dashboard</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#" class="menu-btn">
-                        <i class="fa-solid fa-cart-shopping menu-icon"></i>
-                        <span>POS</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="@Url.Action("ActivityLog", "Admin")" class="menu-btn">
-                        <i class="fa-solid fa-clock-rotate-left menu-icon"></i>
-                        <span>Activity Log</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#" class="menu-btn">
-                        <i class="fa-solid fa-chart-pie menu-icon"></i>
-                        <span>Analytics</span>
-                    </a>
-                </li>
-
-                <!-- Highlighted View Focus state for Queue Order -->
-                <li>
-                    <a href="#" class="menu-btn active">
-                        <i class="fa-solid fa-list-ul menu-icon"></i>
-                        <span>Queue</span>
-                    </a>
-                </li>
-
-                <li>
-                    <a href="@Url.Action("Products", "Admin")" class="menu-btn">
-                        <i class="fa-solid fa-tag menu-icon"></i>
-                        <span>Products</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="@Url.Action("Inventory", "Admin")" class="menu-btn">
-                        <i class="fa-solid fa-warehouse menu-icon"></i>
-                        <span>Inventory</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#" class="menu-btn">
-                        <i class="fa-solid fa-box-archive menu-icon"></i>
-                        <span>Archived</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="@Url.Action("ManageAccounts", "Admin")" class="menu-btn">
-                        <i class="fa-solid fa-users menu-icon"></i>
-                        <span>Accounts</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#" class="menu-btn">
-                        <i class="fa-solid fa-sliders menu-icon"></i>
-                        <span>Customization</span>
-                    </a>
-                </li>
-            </ul>
-
-            <!-- Bottom Placement Logout Navigation action -->
             <div class="logout-section">
-                <a href="#" class="menu-btn logout-btn">
-                    <i class="fa-solid fa-right-from-bracket menu-icon"></i>
-                    <span>Log Out</span>
-                </a>
+                <form method="post" action="/Home/Logout">
+                    <button type="submit" class="menu-btn logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> Log Out
+                    </button>
+                </form>
             </div>
         </aside>
 
-        <!-- Main Workspace Window (Completely Blank) -->
+        <!-- Main Workspace Grid -->
         <main class="main-content">
-            <!-- Ready for your implementation details -->
-        </main>
+            <div class="queue-header">
+                <div>
+                    <h1>Live Production Queue</h1>
+                    <p>Orders sorted oldest to newest. Complete orders to trigger automated ingredient level deductions.</p>
+                </div>
+                <div class="queue-stats">
+                    <span class="stat-badge badge-pending">Pending: @Model.Count(o => o.Status == "Pending")</span>
+                    <span class="stat-badge badge-preparing">Preparing: @Model.Count(o => o.Status == "Preparing" || o.Status == "Processing")</span>
+                </div>
+            </div>
 
+            @if (Model == null || !Model.Any())
+            {
+                <div class="alert alert-info text-center" style="padding: 60px; background: #1a1d1b; border: 1px dashed #3a3d3b; border-radius: 12px; margin-top: 30px;">
+                    <i class="fas fa-check-circle text-success" style="font-size: 54px; margin-bottom: 15px;"></i>
+                    <h3 style="color: #fff; margin-bottom: 5px;">All caught up!</h3>
+                    <p style="color: #a0a5a1; margin: 0;">There are no active orders inside the production pipeline right now.</p>
+                </div>
+            }
+            else
+            {
+                <div class="queue-grid">
+                    @foreach (var order in Model)
+                    {
+                        <div class="queue-card status-@order.Status">
+                            <div>
+                                <div class="card-header-info">
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <span class="order-id">#ORD-@order.SaleId</span>
+                                        
+                                        @{
+                                            string badgeClass = "badge-q-default";
+                                            string iconClass = "fas fa-clock";
+                                            string currentStatus = order.Status ?? "Pending";
+
+                                            switch (currentStatus)
+                                            {
+                                                case "Pending":
+                                                    badgeClass = "badge-q-pending";
+                                                    iconClass = "fas fa-hourglass-half animate-pulse";
+                                                    break;
+                                                case "Preparing":
+                                                case "Processing":
+                                                    badgeClass = "badge-q-preparing";
+                                                    iconClass = "fas fa-mug-hot";
+                                                    break;
+                                                case "Delivery":
+                                                case "Out for Delivery":
+                                                    badgeClass = "badge-q-delivery";
+                                                    iconClass = "fas fa-shipping-fast";
+                                                    break;
+                                                case "Completed":
+                                                case "Done":
+                                                    badgeClass = "badge-q-done";
+                                                    iconClass = "fas fa-check-double";
+                                                    break;
+                                            }
+                                        }
+                                        <span class="badge-q @badgeClass">
+                                            <i class="@iconClass"></i> @currentStatus
+                                        </span>
+                                    </div>
+                                    <span class="order-time"><i class="far fa-clock"></i> @order.SaleDate.ToString("hh:mm tt")</span>
+                                </div>
+
+                                <h3 class="customer-name">
+                                    @(string.IsNullOrEmpty(order.CustomerName) ? "Walk-In Customer" : order.CustomerName)
+                                </h3>
+
+                                <div class="order-meta">
+                                    <span class="meta-tag"><i class="fas fa-utensils"></i> @(order.OrderType ?? "Dine-In")</span>
+                                    <span class="meta-tag"><i class="fas fa-wallet"></i> @(order.PaymentMethod ?? "Cash")</span>
+                                </div>
+
+                                <div class="items-box">
+                                    <span class="items-box-label">Items Summary:</span>
+                                    @order.ItemsSummary
+                                </div>
+                            </div>
+
+                            <div class="card-actions">
+                                <button class="btn-action btn-view" onclick="openDetailsModal(@order.SaleId)">
+                                    <i class="fas fa-eye"></i> Details
+                                </button>
+
+                                @if (order.Status == "Pending")
+                                {
+                                    <button class="btn-action btn-start" onclick="updateStatus(@order.SaleId, 'Preparing')">
+                                        <i class="fas fa-coffee"></i> Prepare
+                                    </button>
+                                }
+                                else if (order.Status == "Preparing" || order.Status == "Processing")
+                                {
+                                    <button class="btn-action btn-complete" onclick="updateStatus(@order.SaleId, 'Completed')">
+                                        <i class="fas fa-check"></i> Complete
+                                    </button>
+                                }
+
+                                <button class="btn-action btn-void" onclick="openVoidModal(@order.SaleId)">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </main>
     </div>
 
+    <!-- Order Details Modal -->
+    <div id="detailsModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalOrderTitle" style="margin:0; font-weight:700;">Order Breakdown</h3>
+                <button class="modal-close" onclick="closeModal('detailsModal')">&times;</button>
+            </div>
+            <div>
+                <h4 style="margin: 0 0 10px 0; color: #ffffff;">Menu Items Ordered</h4>
+                <ul id="modalItemsList" class="list-group"></ul>
+                
+                <h4 style="margin: 20px 0 10px 0; color: #ffffff;">Deductible Ingredients Profile</h4>
+                <ul id="modalIngredientsList" class="list-group" style="color: #a0a5a1;"></ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Secure Void Override Prompt Modal -->
+    <div id="voidModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 style="margin:0; font-weight:700;">Authorize Order Void</h3>
+                <button class="modal-close" onclick="closeModal('voidModal')">&times;</button>
+            </div>
+            <div>
+                <p style="margin:0 0 12px 0; color:#a0a5a1; font-size:14px; line-height:1.5;">Please input your manager account credentials to authorize voiding ticket <strong id="voidTargetLabel" style="color:#ffc107;"></strong>.</p>
+                <input type="hidden" id="voidSaleId" />
+                <input type="password" id="managerPassword" class="form-control" placeholder="Enter administrative password" />
+                <div style="display:flex; gap:10px; margin-top:20px;">
+                    <button class="btn-action btn-view" onclick="closeModal('voidModal')" style="flex:1;">Cancel</button>
+                    <button class="btn-action btn-void" onclick="submitVoid()" style="flex:1; width:auto; font-weight:700;">Confirm Override</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Controllers using SweetAlert2 -->
+    <script>
+        // 1. Handle Order Status Progression (Prepare / Complete)
+        async function updateStatus(saleId, targetStatus) {
+            try {
+                const res = await fetch('/@homeController/UpdateSaleStatus', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ saleId: saleId, status: targetStatus })
+                });
+
+                if (res.ok) {
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Pipeline Updated',
+                        text: `Order #ORD-${saleId} moved to ${targetStatus}.`,
+                        background: '#1e201f',
+                        color: '#ffffff',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    location.reload();
+                } else {
+                    let serverErrorMessage = 'Could not modify status pipelines successfully.';
+                    try {
+                        const errorData = await res.json();
+                        if (errorData && errorData.message) {
+                            serverErrorMessage = errorData.message;
+                        }
+                    } catch (jsonErr) {}
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Pipeline Error',
+                        text: serverErrorMessage,
+                        background: '#1e201f',
+                        color: '#ffffff',
+                        confirmButtonColor: '#dc3545'
+                    });
+                }
+            } catch (err) {
+                console.error('Status Error:', err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Network Error',
+                    text: 'Failed to communicate with the server infrastructure.',
+                    background: '#1e201f',
+                    color: '#ffffff',
+                    confirmButtonColor: '#dc3545'
+                });
+            }
+        }
+
+        // 2. Fetch and View Production Recipe Details
+        async function openDetailsModal(saleId) {
+            try {
+                document.getElementById('modalOrderTitle').innerText = `Order Details: #ORD-${saleId}`;
+                const itemsList = document.getElementById('modalItemsList');
+                const ingList = document.getElementById('modalIngredientsList');
+
+                itemsList.innerHTML = '<li>Loading production lists...</li>';
+                ingList.innerHTML = '<li>Calculating inventory weights...</li>';
+                document.getElementById('detailsModal').style.display = 'flex';
+
+                const res = await fetch(`/@homeController/GetOrderDetails?saleId=${saleId}`);
+                if (!res.ok) throw new Error('Server returned error status');
+                
+                const data = await res.json();
+                itemsList.innerHTML = '';
+                ingList.innerHTML = '';
+
+                if (data.items && data.items.length > 0) {
+                    data.items.forEach(i => itemsList.innerHTML += `<li><i class="fas fa-shopping-basket" style="color:#888e8a; margin-right:8px;"></i> ${i}</li>`);
+                } else {
+                    itemsList.innerHTML = '<li>No menu items found for this record.</li>';
+                }
+
+                if (data.ingredients && data.ingredients.length > 0) {
+                    data.ingredients.forEach(i => ingList.innerHTML += `<li><i class="fas fa-leaf text-success" style="margin-right:8px;"></i> ${i}</li>`);
+                } else {
+                    ingList.innerHTML = '<li>No recipe tracking parameters needed for this order configuration.</li>';
+                }
+            } catch (err) {
+                console.error('Data Pull Error:', err);
+                closeModal('detailsModal');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Fetch Failed',
+                    text: 'Unable to query recipe item information parameters.',
+                    background: '#1e201f',
+                    color: '#ffffff',
+                    confirmButtonColor: '#dc3545'
+                });
+            }
+        }
+
+        // 3. Admin Authorization Controls for Voiding
+        function openVoidModal(saleId) {
+            document.getElementById('voidSaleId').value = saleId;
+            document.getElementById('voidTargetLabel').innerText = `#ORD-${saleId}`;
+            document.getElementById('managerPassword').value = '';
+            document.getElementById('voidModal').style.display = 'flex';
+        }
+
+        async function submitVoid() {
+            const saleId = parseInt(document.getElementById('voidSaleId').value);
+            const pass = document.getElementById('managerPassword').value;
+
+            if (!pass) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Access Denied',
+                    text: 'Management clearance passphrase required.',
+                    background: '#1e201f',
+                    color: '#ffffff',
+                    confirmButtonColor: '#ffc107'
+                });
+                return;
+            }
+
+            try {
+                const res = await fetch('/@homeController/VerifyAndVoid', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ saleId: saleId, pass: pass })
+                });
+
+                if (res.ok) {
+                    closeModal('voidModal');
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Ticket Voided',
+                        text: `Order #ORD-${saleId} has been successfully canceled.`,
+                        background: '#1e201f',
+                        color: '#ffffff',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    location.reload();
+                } else {
+                    let errorMessage = 'An unexpected system error occurred.';
+                    if (res.status === 401) {
+                        errorMessage = 'Invalid management credentials. Override denied.';
+                    } else {
+                        try {
+                            const errorData = await res.json();
+                            if (errorData && errorData.message) errorMessage = errorData.message;
+                        } catch (e) {}
+                    }
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: res.status === 401 ? 'Unauthorized' : 'System Error',
+                        text: errorMessage,
+                        background: '#1e201f',
+                        color: '#ffffff',
+                        confirmButtonColor: '#dc3545'
+                    });
+                }
+            } catch (err) {
+                console.error('Void Error Tracker:', err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Network Error',
+                    text: 'Failed to securely connect to authorization terminal.',
+                    background: '#1e201f',
+                    color: '#ffffff',
+                    confirmButtonColor: '#dc3545'
+                });
+            }
+        }
+
+        // 4. Modal Window Interface Handlers
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal-overlay')) {
+                event.target.style.display = 'none';
+            }
+        }
+    </script>
 </body>
 </html>

@@ -4,6 +4,7 @@
     bool isManager = User.IsInRole("Manager");
     string homeController = isManager ? "Manager" : "Admin";
     string displayRole = isManager ? "Manager" : "Admin";
+    string currentAction = ViewContext.RouteData.Values["action"]?.ToString();
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -85,21 +86,92 @@
 <body>
     <div class="dashboard-container">
 
+        <!-- ==========================================================================
+           SIDEBAR PANEL INTEGRATION
+           ========================================================================== -->
+        <aside class="sidebar">
+            <div>
+                <div class="logo-section">
+                    <div class="logo-title">Cafero</div>
+                    <div class="logo-subtitle">Coffee & Pastries</div>
+                </div>
+
+                <div class="profile-section">
+                    <div class="profile-circle">👤</div>
+                    <div>
+                        <h2 class="admin-name">@displayRole</h2>
+                        <div class="admin-role">System Access</div>
+                    </div>
+                </div>
+
+                <nav class="sidebar-menu">
+                    <a href="/@homeController/Dashboard" class="menu-btn @(currentAction == "Dashboard" ? "active" : "")">
+                        <i class="fas fa-chart-line"></i> Dashboard
+                    </a>
+                    <a href="/Admin/QueueOrder" class="menu-btn @(currentAction == "QueueOrder" ? "active" : "")"><i class="fas fa-list-ol"></i> Queue</a>
+
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a href="/Admin/ActivityLog" class="menu-btn @(currentAction == "ActivityLog" ? "active" : "")">
+                            <i class="fas fa-clipboard-list"></i> Activity Log
+                        </a>
+                    }
+
+                    <a href="/Admin/Analytics" class="menu-btn @(currentAction == "Analytics" ? "active" : "")">
+                        <i class="fas fa-chart-pie"></i> Analytics
+                    </a>
+
+
+                    <a href="/Admin/Products" class="menu-btn @(currentAction == "Products" ? "active" : "")">
+                        <i class="fas fa-tags"></i> Products
+                    </a>
+
+                    <a href="/Admin/Inventory" class="menu-btn @(currentAction == "Inventory" ? "active" : "")">
+                        <i class="fas fa-box-open"></i> Inventory
+                    </a>
+
+                    <a href="/Admin/ArchivedProducts" class="menu-btn @(currentAction == "ArchivedProducts" || currentAction == "Archive" ? "active" : "")">
+                        <i class="fas fa-archive"></i> Archived
+                    </a>
+
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a href="/Admin/ManageAccounts" class="menu-btn @(currentAction == "ManageAccounts" ? "active" : "")">
+                            <i class="fas fa-credit-card"></i> Accounts
+                        </a>
+                    }
+                    <a href="/Admin/WebCustomization" class="menu-btn @(currentAction == "WebCustomization" ? "active" : "")"><i class="fas fa-sliders-h"></i> Customization</a>
+                </nav>
+            </div>
+
+            <div class="logout-section">
+                <form method="post" action="/Home/Logout">
+                    <button type="submit" class="menu-btn logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> Log Out
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <!-- ==========================================================================
+           MAIN CONTENT AREA
+           ========================================================================== -->
         <main class="main-content slide-up">
             <!-- PAGE HEADER -->
             <div class="card-header-flex" style="align-items: flex-end; margin-bottom: 30px;">
                 <div>
-                    <h1 class="greeting-title" style="font-size: 22px; font-weight: 800; letter-spacing: -0.5px;">System Archives 🗄️</h1>
+                    <h1 class="greeting-title" style="font-size: 22px; font-weight: 800; letter-spacing: -0.5px;">
+                        <i class="fas fa-history" style="font-size: 20px; color: var(--gold); margin-right: 6px;"></i> System Archives
+                    </h1>
                     <p class="widget-subtitle">Completely isolated data states. Restore layers to bring them back to live POS tracking or stock calculations.</p>
                 </div>
                 <div style="display: flex; gap: 15px;">
-                    <a href="/Admin/Products" class="view-all-link" style="text-decoration: none; font-weight: 600;">← Products Catalog</a>
-                    <a href="/@homeController/Inventory" class="view-all-link" style="text-decoration: none; font-weight: 600;">← Inventory Sheet</a>
+
                 </div>
             </div>
 
             <!-- ================= TABLE 1: MENU PRODUCTS ARCHIVE ================= -->
-            <h2 class="section-divider-title">🍔 Archived Menu Items</h2>
+            <h2 class="section-divider-title"><i class="fas fa-utensils" style="font-size: 16px; margin-right: 4px;"></i> Archived Menu Items</h2>
             <div class="table-card-wrapper">
                 <table class="archive-table">
                     <thead>
@@ -139,7 +211,7 @@
                         {
                             <tr>
                                 <td colspan="6" style="text-align:center; padding: 48px; color: var(--muted); font-size: 14px;">
-                                    <div style="font-size: 28px; margin-bottom: 8px;">🏝️</div>
+                                    <div style="font-size: 24px; margin-bottom: 12px; color: var(--muted); opacity: 0.4;"><i class="fas fa-folder-open"></i></div>
                                     No isolated product lines currently matching archive parameters.
                                 </td>
                             </tr>
@@ -149,7 +221,7 @@
             </div>
 
             <!-- ================= TABLE 2: INVENTORY INGREDIENTS ARCHIVE ================= -->
-            <h2 class="section-divider-title">📦 Archived Inventory Ingredients</h2>
+            <h2 class="section-divider-title"><i class="fas fa-box" style="font-size: 16px; margin-right: 4px;"></i> Archived Inventory Ingredients</h2>
             <div class="table-card-wrapper">
                 <table class="archive-table">
                     <thead>
@@ -187,7 +259,7 @@
                         {
                             <tr>
                                 <td colspan="6" style="text-align:center; padding: 48px; color: var(--muted); font-size: 14px;">
-                                    <div style="font-size: 28px; margin-bottom: 8px;">🍂</div>
+                                    <div style="font-size: 24px; margin-bottom: 12px; color: var(--muted); opacity: 0.4;"><i class="fas fa-boxes"></i></div>
                                     No ingredient profiles or recipes locked in the historical archive.
                                 </td>
                             </tr>

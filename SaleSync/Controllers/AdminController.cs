@@ -54,19 +54,10 @@ namespace SaleSync.Controllers
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                string totalSql = @"SELECT ISNULL(SUM(total_amount), 0) as Total, COUNT(sale_id) as Count 
-                    FROM sales WHERE CAST(sale_date AS DATE) = CAST(GETDATE() AS DATE) 
-                    AND status = 'Completed'";
+                string totalSql = @"SELECT ISNULL(SUM(total_amount), 0) as Total, COUNT(sale_id) as Count              FROM sales WHERE CAST(sale_date AS DATE) = CAST(GETDATE() AS DATE)              AND status = 'Completed'";
 
                 // ⭐ UPDATE: Grabbing the new columns and changed to LEFT JOIN just in case an online order has no user_id
-                string historySql = @"
-                    SELECT TOP 10 s.sale_id, s.sale_date, s.total_amount, s.status, u.username,
-                    s.customer_name, s.order_type, s.payment_method, s.delivery_address,
-                    (SELECT STRING_AGG(CAST(si.quantity AS VARCHAR) + 'x ' + p.product_name, ', ') 
-                     FROM sale_items si JOIN products p ON si.product_id = p.product_id 
-                     WHERE si.sale_id = s.sale_id) as ItemsSummary
-                    FROM sales s LEFT JOIN users u ON s.user_id = u.user_id
-                    ORDER BY s.sale_date DESC";
+                string historySql = @"             SELECT TOP 10 s.sale_id, s.sale_date, s.total_amount, s.status, u.username,             s.customer_name, s.order_type, s.payment_method, s.delivery_address,             (SELECT STRING_AGG(CAST(si.quantity AS VARCHAR) + 'x ' + p.product_name, ', ')               FROM sale_items si JOIN products p ON si.product_id = p.product_id               WHERE si.sale_id = s.sale_id) as ItemsSummary             FROM sales s LEFT JOIN users u ON s.user_id = u.user_id             ORDER BY s.sale_date DESC";
 
                 conn.Open();
                 using (SqlCommand cmd = new SqlCommand(totalSql, conn))
@@ -103,6 +94,56 @@ namespace SaleSync.Controllers
                 }
             }
             return View("AdminDashboard", model);
+        }
+
+        // ==========================================
+        // ☕ Dedicated Workstation Live Queue System
+        // ==========================================
+        [HttpGet]
+        public IActionResult QueueOrder()
+        {
+            var queueItems = new List<SaleHistoryItem>();
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                // Pulls active orders. Sorted ASC so oldest orders sit at the front of the line.
+                string queueSql = @"
+             SELECT s.sale_id, s.sale_date, s.total_amount, s.status, u.username,
+                    s.customer_name, s.order_type, s.payment_method, s.delivery_address,
+                    (SELECT STRING_AGG(CAST(si.quantity AS VARCHAR) + 'x ' + p.product_name, ', ') 
+                     FROM sale_items si JOIN products p ON si.product_id = p.product_id 
+                     WHERE si.sale_id = s.sale_id) as ItemsSummary
+             FROM sales s 
+             LEFT JOIN users u ON s.user_id = u.user_id
+             WHERE s.status IN ('Pending', 'Preparing', 'Processing')
+             ORDER BY s.sale_date ASC";
+
+                using (SqlCommand cmd = new SqlCommand(queueSql, conn))
+                {
+                    conn.Open();
+                    using (SqlDataReader r = cmd.ExecuteReader())
+                    {
+                        while (r.Read())
+                        {
+                            queueItems.Add(new SaleHistoryItem
+                            {
+                                SaleId = Convert.ToInt32(r["sale_id"]),
+                                SaleDate = Convert.ToDateTime(r["sale_date"]),
+                                TotalAmount = Convert.ToDecimal(r["total_amount"]),
+                                CashierName = r["username"]?.ToString() ?? "Online",
+                                ItemsSummary = r["ItemsSummary"]?.ToString() ?? "No items",
+                                Status = r["status"]?.ToString() ?? "Pending",
+                                CustomerName = r["customer_name"]?.ToString(),
+                                OrderType = r["order_type"]?.ToString(),
+                                PaymentMethod = r["payment_method"]?.ToString(),
+                                DeliveryAddress = r["delivery_address"]?.ToString()
+                            });
+                        }
+                    }
+                }
+            }
+
+            return View(queueItems);
         }
 
         [HttpPost]
@@ -173,11 +214,7 @@ namespace SaleSync.Controllers
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
-                string itemSql = @"
-                    SELECT si.quantity, p.product_name 
-                    FROM sale_items si 
-                    JOIN products p ON si.product_id = p.product_id 
-                    WHERE si.sale_id = @id";
+                string itemSql = @"             SELECT si.quantity, p.product_name              FROM sale_items si              JOIN products p ON si.product_id = p.product_id              WHERE si.sale_id = @id";
 
                 using (SqlCommand cmd = new SqlCommand(itemSql, conn))
                 {
@@ -188,12 +225,7 @@ namespace SaleSync.Controllers
                     }
                 }
 
-                string ingSql = @"
-                    SELECT (pi.quantity_required * si.quantity) as total_req, p.product_name, ISNULL(p.recipe_unit, p.unit) as unit
-                    FROM sale_items si
-                    JOIN product_ingredients pi ON si.product_id = pi.product_id
-                    JOIN products p ON pi.ingredient_id = p.product_id
-                    WHERE si.sale_id = @id";
+                string ingSql = @"             SELECT (pi.quantity_required * si.quantity) as total_req, p.product_name, ISNULL(p.recipe_unit, p.unit) as unit             FROM sale_items si             JOIN product_ingredients pi ON si.product_id = pi.product_id             JOIN products p ON pi.ingredient_id = p.product_id             WHERE si.sale_id = @id";
 
                 using (SqlCommand cmd = new SqlCommand(ingSql, conn))
                 {
@@ -215,12 +247,7 @@ namespace SaleSync.Controllers
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
-                string checkAuth = @"
-            SELECT COUNT(*) 
-            FROM users u 
-            JOIN roles r ON u.role_id = r.role_id 
-            WHERE u.password_hash = @pass 
-            AND (r.role_name = 'Admin' OR r.role_name = 'Manager')";
+                string checkAuth = @"     SELECT COUNT(*)      FROM users u      JOIN roles r ON u.role_id = r.role_id      WHERE u.password_hash = @pass      AND (r.role_name = 'Admin' OR r.role_name = 'Manager')";
 
                 using (SqlCommand cmd = new SqlCommand(checkAuth, conn))
                 {
@@ -873,56 +900,52 @@ namespace SaleSync.Controllers
 
         [Authorize(Roles = "Admin")]
         [HttpPost]
-        public IActionResult UpdateAccount(UserAccount model)
+        public IActionResult UpdateAccount(int UserId, string Username, int RoleId, string Email)
         {
-            int currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+            string currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            int currentUserId = string.IsNullOrEmpty(currentUserIdStr) ? 0 : int.Parse(currentUserIdStr);
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
 
-                UserAccount oldAccountData = null;
-                string getOldSql = "SELECT full_name, username, email, role_id FROM users WHERE user_id = @id";
-                using (SqlCommand cmd = new SqlCommand(getOldSql, conn))
+                // 1. Peer-Admin Protection Check (Skip if the Admin is updating their own profile details)
+                if (currentUserId != UserId)
                 {
-                    cmd.Parameters.AddWithValue("@id", model.UserId);
-                    using (SqlDataReader r = cmd.ExecuteReader())
+                    string checkTargetAdminSql = @"
+                SELECT COUNT(*) 
+                FROM users u
+                INNER JOIN roles r ON u.role_id = r.role_id
+                WHERE u.user_id = @id AND r.role_name = 'Admin'";
+
+                    using (SqlCommand adminCheckCmd = new SqlCommand(checkTargetAdminSql, conn))
                     {
-                        if (r.Read())
+                        adminCheckCmd.Parameters.AddWithValue("@id", UserId);
+                        int isTargetAdmin = (int)adminCheckCmd.ExecuteScalar();
+
+                        if (isTargetAdmin > 0)
                         {
-                            oldAccountData = new UserAccount
-                            {
-                                FullName = r["full_name"].ToString(),
-                                Username = r["username"].ToString(),
-                                Email = r["email"].ToString(),
-                                Role = r["role_id"].ToString()
-                            };
+                            TempData["ErrorMessage"] = "Security Violation: You are not authorized to modify another Administrator account.";
+                            return RedirectToAction("ManageAccounts");
                         }
                     }
                 }
 
-                string sql = @"
-                    UPDATE users 
-                    SET full_name = @fullName, 
-                        username = @username, 
-                        email = @email, 
-                        password_hash = @password,
-                        role_id = ISNULL((SELECT TOP 1 role_id FROM roles WHERE role_name = @role), role_id)
-                    WHERE user_id = @id";
-
+                // 2. Perform Account Changes Modification
+                string sql = "UPDATE users SET username = @username, role_id = @roleId, email = @email WHERE user_id = @id";
                 using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
-                    cmd.Parameters.AddWithValue("@fullName", model.FullName ?? "");
-                    cmd.Parameters.AddWithValue("@username", model.Username ?? "");
-                    cmd.Parameters.AddWithValue("@email", model.Email ?? "");
-                    cmd.Parameters.AddWithValue("@password", model.Password ?? "");
-                    cmd.Parameters.AddWithValue("@role", model.Role ?? "");
-                    cmd.Parameters.AddWithValue("@id", model.UserId);
+                    cmd.Parameters.AddWithValue("@username", Username);
+                    cmd.Parameters.AddWithValue("@roleId", RoleId);
+                    cmd.Parameters.AddWithValue("@email", Email);
+                    cmd.Parameters.AddWithValue("@id", UserId);
                     cmd.ExecuteNonQuery();
                 }
 
-                LogActivity(currentUserId, "Account Edited", $"Updated profile for {model.Username}", oldData: oldAccountData, newData: model);
+                LogActivity(currentUserId, "Account Updated", $"Modified User ID: {UserId}");
             }
+
+            TempData["SuccessMessage"] = "Account configuration updated successfully.";
             return RedirectToAction("ManageAccounts");
         }
 
@@ -977,6 +1000,7 @@ namespace SaleSync.Controllers
             string currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             int currentUserId = string.IsNullOrEmpty(currentUserIdStr) ? 0 : int.Parse(currentUserIdStr);
 
+            // 1. Prevent self-deactivation
             if (currentUserId == UserId)
             {
                 TempData["ErrorMessage"] = "Self-deactivation is not allowed for security reasons.";
@@ -986,10 +1010,34 @@ namespace SaleSync.Controllers
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
-                string checkLastRoleSql = @"
+
+                // 2. Peer-Admin Protection Check
+                // NOTE: This assumes you have a 'roles' table joined by 'role_id'. 
+                // If your database uses a hardcoded integer for Admin (e.g., 1), change this to:
+                // "SELECT COUNT(*) FROM users WHERE user_id = @id AND role_id = 1"
+                string checkTargetAdminSql = @"
             SELECT COUNT(*) 
-            FROM users 
-            WHERE role_id = (SELECT role_id FROM users WHERE user_id = @id) 
+            FROM users u
+            INNER JOIN roles r ON u.role_id = r.role_id
+            WHERE u.user_id = @id AND r.role_name = 'Admin'";
+
+                using (SqlCommand adminCheckCmd = new SqlCommand(checkTargetAdminSql, conn))
+                {
+                    adminCheckCmd.Parameters.AddWithValue("@id", UserId);
+                    int isTargetAdmin = (int)adminCheckCmd.ExecuteScalar();
+
+                    if (isTargetAdmin > 0)
+                    {
+                        TempData["ErrorMessage"] = "Security Violation: You are not authorized to alter or deactivate another Administrator account.";
+                        return RedirectToAction("ManageAccounts");
+                    }
+                }
+
+                // 3. Prevent deactivating the last active member of a role
+                string checkLastRoleSql = @"
+            SELECT COUNT(*)      
+            FROM users      
+            WHERE role_id = (SELECT role_id FROM users WHERE user_id = @id)      
             AND is_active = 1";
 
                 using (SqlCommand checkCmd = new SqlCommand(checkLastRoleSql, conn))
@@ -1004,6 +1052,7 @@ namespace SaleSync.Controllers
                     }
                 }
 
+                // 4. Perform Deactivation
                 string sql = "UPDATE users SET is_active = 0 WHERE user_id = @id";
                 using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
@@ -1013,6 +1062,8 @@ namespace SaleSync.Controllers
 
                 LogActivity(currentUserId, "Account Deactivated", $"Deactivated User ID: {UserId}");
             }
+
+            TempData["SuccessMessage"] = "Account successfully deactivated.";
             return RedirectToAction("ManageAccounts");
         }
 
@@ -1222,15 +1273,16 @@ namespace SaleSync.Controllers
         private void DeductIngredients(SqlConnection conn, SqlTransaction transaction, int productId, int qty)
         {
             string recipeQuery = @"
-                SELECT pi.ingredient_id, pi.quantity_required, ISNULL(p.conversion_factor, 1) as conversion_factor
-                FROM product_ingredients pi
-                JOIN products p ON pi.ingredient_id = p.product_id
-                WHERE pi.product_id = @product_id";
+        SELECT pi.ingredient_id, pi.quantity_required, ISNULL(p.conversion_factor, 1) as conversion_factor         
+        FROM product_ingredients pi         
+        JOIN products p ON pi.ingredient_id = p.product_id         
+        WHERE pi.product_id = @product_id";
 
             using SqlCommand cmd = new SqlCommand(recipeQuery, conn, transaction);
             cmd.Parameters.AddWithValue("@product_id", productId);
 
-            var ingredients = new List<(int id, double qtyReq, double conv)>();
+            // Changed to decimal to prevent floating-point precision mismatches with database columns
+            var ingredients = new List<(int id, decimal qtyReq, decimal conv)>();
 
             using (SqlDataReader reader = cmd.ExecuteReader())
             {
@@ -1238,20 +1290,21 @@ namespace SaleSync.Controllers
                 {
                     ingredients.Add((
                         Convert.ToInt32(reader["ingredient_id"]),
-                        Convert.ToDouble(reader["quantity_required"]),
-                        Convert.ToDouble(reader["conversion_factor"])
+                        Convert.ToDecimal(reader["quantity_required"]),
+                        Convert.ToDecimal(reader["conversion_factor"])
                     ));
                 }
             }
 
             foreach (var ing in ingredients)
             {
-                double totalDeduct = (ing.qtyReq * qty) / ing.conv;
+                // Safe fixed-point decimal mathematics
+                decimal totalDeduct = (ing.qtyReq * qty) / ing.conv;
 
                 string updateQuery = @"
-            UPDATE products
-            SET    stock_quantity = stock_quantity - @deduct
-            WHERE  product_id     = @ingredient_id
+            UPDATE products     
+            SET    stock_quantity = stock_quantity - @deduct     
+            WHERE  product_id     = @ingredient_id       
               AND  stock_quantity >= @deduct";
 
                 using SqlCommand updateCmd = new SqlCommand(updateQuery, conn, transaction);
@@ -1261,7 +1314,8 @@ namespace SaleSync.Controllers
                 int rows = updateCmd.ExecuteNonQuery();
                 if (rows == 0)
                 {
-                    throw new Exception($"Stock for ingredient ID {ing.id} became insufficient.");
+                    // Provides an explicit error details string that your new SweetAlert can catch and display
+                    throw new Exception($"Stock Shortage: Ingredient ID {ing.id} has insufficient stock to fulfill this order (Required deduction: {totalDeduct}).");
                 }
             }
         }
@@ -1500,11 +1554,10 @@ namespace SaleSync.Controllers
         public class AdminVoidRequest { public int SaleId { get; set; } public string Pass { get; set; } }
         public class StatusUpdateModel { public int SaleId { get; set; } public string Status { get; set; } }
 
-        [HttpGet]
-        public IActionResult QueueOrder()
+        public class UpdateStatusDto
         {
-            // This tells ASP.NET to look for a view named QueueOrder.cshtml
-            return View();
+            public int SaleId { get; set; }
+            public string Status { get; set; }
         }
 
     }
