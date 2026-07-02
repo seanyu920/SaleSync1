@@ -20,77 +20,100 @@
             <div>
                 <div class="logo-section">
                     <div class="brand">
-                        <span class="brand-icon">☕</span>
                         <span class="brand-name">Cafero</span>
                     </div>
                 </div>
 
-                <h3 class="modal-label">Menu Categories</h3>
+                <div id="sidebarMenuCategories">
+                    <h3 class="modal-label">Menu Categories</h3>
+                    <nav class="sidebar-menu">
+                        <button class="menu-btn cat-btn active" onclick="filterMenu('all', this)">All Items</button>
+                        <button class="menu-btn cat-btn" onclick="filterMenu('coffee', this)">Coffee</button>
+                        <button class="menu-btn cat-btn" onclick="filterMenu('milktea', this)">Milktea</button>
+                        <button class="menu-btn cat-btn" onclick="filterMenu('fruittea', this)">Fruit Tea</button>
+                        <button class="menu-btn cat-btn" onclick="filterMenu('rice', this)">Rice Meals</button>
+                        <button class="menu-btn cat-btn" onclick="filterMenu('pastry', this)">Bread & Pastry</button>
+                        <button class="menu-btn cat-btn" onclick="filterMenu('snacks', this)">Snacks & Pasta</button>
+                    </nav>
+                </div>
 
-                <nav class="sidebar-menu">
-                    <button class="menu-btn cat-btn active" onclick="filterMenu('all', this)">🍽️ All Items</button>
-                    <button class="menu-btn cat-btn" onclick="filterMenu('coffee', this)">☕ Coffee</button>
-                    <button class="menu-btn cat-btn" onclick="filterMenu('milktea', this)">🧋 Milktea</button>
-                    <button class="menu-btn cat-btn" onclick="filterMenu('fruittea', this)">🍹 Fruit Tea</button>
-                    <button class="menu-btn cat-btn" onclick="filterMenu('rice', this)">🍛 Rice Meals</button>
-                    <button class="menu-btn cat-btn" onclick="filterMenu('pastry', this)">🥐 Bread & Pastry</button>
-                    <button class="menu-btn cat-btn" onclick="filterMenu('snacks', this)">🍝 Snacks & Pasta</button>
-                </nav>
+                <div class="tracking-section" style="padding: 0 10px; margin-top: 15px;">
+                    <button id="btnNavOrders" class="menu-btn" style="width: 100%; text-align: left;" onclick="switchTab('orders')">
+                        📦 My Orders & Activity
+                    </button>
+                </div>
             </div>
 
             <div class="logout-section">
                 <a href="/Home/Logout" class="menu-btn logout-btn">
-                    <span>🚪</span> Log Out
+                    Log Out
                 </a>
             </div>
         </aside>
 
         <main class="main-content">
-            <header class="pos-header">
-                <div>
-                    <h1>Place an Order</h1>
-                    <p>Handcrafted beverages and meals made with love</p>
-                </div>
 
-                <div class="header-actions">
-                    <div class="search-container">
-                        <span class="search-icon">🔍</span>
-                        <input type="text" id="menuSearch" placeholder="Search menu items..." onkeyup="filterMenu()">
+            <div id="viewMenuContainer" class="tab-content active-tab">
+                <header class="pos-header">
+                    <div>
+                        <h1>Place an Order</h1>
+                        <p>Handcrafted beverages and meals made with love</p>
                     </div>
 
-                    <a class="cart-icon-btn" onclick="toggleCart()">🛒</a>
-                </div>
-            </header>
+                    <div class="header-actions">
+                        <div class="search-container">
+                            <input type="text" id="menuSearch" placeholder="Search menu items..." onkeyup="filterMenu()">
+                        </div>
 
-            <div class="product-container" id="menuGrid" data-current-cat="all">
-                @if (Model != null && Model.Count > 0)
-                {
-                    foreach (var item in Model)
+                        <a class="cart-icon-btn" onclick="toggleCart()">🛒</a>
+                    </div>
+                </header>
+
+                <div class="product-container" id="menuGrid" data-current-cat="all">
+                    @if (Model != null && Model.Count > 0)
                     {
-                        string imageFile = item.ProductName.ToLower().Replace(" ", "-") + ".jpg";
-                        string catFormat = item.CategoryName != null ? item.CategoryName.ToLower().Replace(" ", "") : "uncategorized";
-                        var safeItemName = Html.Raw(item.ProductName.Replace("'", "\\'"));
+                        foreach (var item in Model)
+                        {
+                            string imageFile = item.ProductName.ToLower().Replace(" ", "-") + ".jpg";
+                            string catFormat = item.CategoryName != null ? item.CategoryName.ToLower().Replace(" ", "") : "uncategorized";
+                            var safeItemName = Html.Raw(item.ProductName.Replace("'", "\\'"));
 
-                        <div class="product-card" data-category="@catFormat" onclick="openModal('@safeItemName', @item.Price, '/images/@imageFile')">
-                            <img src="/images/@imageFile" class="product-image" onerror="this.onerror=null; this.src='/images/americano.jpg';" />
-                            <div class="product-info">
-                                <div class="info-top">
-                                    <h3>@item.ProductName</h3>
-                                    <span class="price">₱@item.Price.ToString("0.##")</span>
+                            <div class="product-card" data-category="@catFormat" onclick="openModal('@safeItemName', @item.Price, '/images/@imageFile')">
+                                <img src="/images/@imageFile" class="product-image" onerror="this.onerror=null; this.src='/images/americano.jpg';" />
+                                <div class="product-info">
+                                    <div class="info-top">
+                                        <h3>@item.ProductName</h3>
+                                        <span class="price">₱@item.Price.ToString("0.##")</span>
+                                    </div>
+                                    <p class="description">Freshly prepared @item.ProductName.</p>
+                                    <button class="btn-add-order">+ Add to Order</button>
                                 </div>
-                                <p class="description">Freshly prepared @item.ProductName.</p>
-                                <button class="btn-add-order">+ Add to Order</button>
                             </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="no-items-fallback">
+                            <p>No menu items found. Please add products via the Admin Dashboard!</p>
                         </div>
                     }
-                }
-                else
-                {
-                    <div class="no-items-fallback">
-                        <p>No menu items found. Please add products via the Admin Dashboard!</p>
-                    </div>
-                }
+                </div>
             </div>
+
+            <div id="viewOrdersContainer" class="tab-content" style="display: none;">
+                <header class="pos-header">
+                    <div>
+                        <h1>My Orders & Track Activity</h1>
+                        <p>Real-time live updates on your kitchen orders</p>
+                    </div>
+                </header>
+
+                <div class="orders-dashboard">
+                    <div id="activeOrdersContainer" class="orders-grid">
+                    </div>
+                </div>
+            </div>
+
         </main>
     </div>
 
@@ -153,9 +176,9 @@
             </div>
 
             <select id="customerOrderType" class="cart-select" onchange="toggleAddressField()">
-                <option value="Pick-up">🏃‍♂️ Pick-up</option>
-                <option value="Dine In">🍽️ Dine In</option>
-                <option value="Delivery">🛵 Delivery</option>
+                <option value="Pick-up">Pick-up</option>
+                <option value="Dine In">Dine In</option>
+                <option value="Delivery">Delivery</option>
             </select>
 
             <div id="addressContainer">
@@ -163,10 +186,10 @@
             </div>
 
             <select id="customerPaymentMethod" class="cart-select">
-                <option value="Cash">💵 Pay at Counter (Cash)</option>
-                <option value="GCash">🔵 GCash</option>
-                <option value="Maya">🟢 Maya</option>
-                <option value="Card">💳 Credit/Debit Card</option>
+                <option value="Cash">Pay at Counter (Cash)</option>
+                <option value="GCash">GCash</option>
+                <option value="Maya">Maya</option>
+                <option value="Card">Credit/Debit Card</option>
             </select>
 
             <button class="btn-checkout" onclick="submitOnlineOrder()">Send Order to Kitchen</button>
@@ -187,6 +210,41 @@
         }
 
         let customerCart = JSON.parse(localStorage.getItem('caferoCustomerCart')) || [];
+
+        /* Tracker State Engine Data */
+        let mockOrders = [
+        { orderId: 1024, status: 'Preparing', totalAmount: 320.00 },
+        { orderId: 1023, status: 'Out for Delivery', totalAmount: 185.50 }
+        ];
+
+        // Dynamic SPA Page View Switcher
+        function switchTab(viewName) {
+        const menuContainer = document.getElementById('viewMenuContainer');
+        const ordersContainer = document.getElementById('viewOrdersContainer');
+        const catContainer = document.getElementById('sidebarMenuCategories');
+        const ordersBtn = document.getElementById('btnNavOrders');
+
+        catContainer.style.display = 'block';
+
+        if (viewName === 'menu') {
+        menuContainer.style.display = 'block';
+        ordersContainer.style.display = 'none';
+
+        if(ordersBtn) ordersBtn.style.background = 'transparent';
+
+        // Clear active states on categories if manually triggering full menu reset
+        const btns = document.querySelectorAll('.cat-btn');
+        btns.forEach(btn => btn.classList.remove('active'));
+        const allBtn = Array.from(btns).find(b => b.textContent.includes('All Items'));
+        if(allBtn) allBtn.classList.add('active');
+        } else {
+        ordersContainer.style.display = 'block';
+        menuContainer.style.display = 'none';
+
+        if(ordersBtn) ordersBtn.style.background = 'rgba(255,255,255,0.1)';
+        renderTrackerUI();
+        }
+        }
 
         function toggleCart() {
         document.getElementById('cartSidebar').classList.toggle('open');
@@ -219,7 +277,7 @@
 
         if (realDbId === 0) {
         Swal.fire(
-        'Item Not Found in DB',
+        'Item Not Found',
         `The item "${itemName}" doesn't exist in your live database. Please add it via your Admin Dashboard first!`,
         'error'
         );
@@ -363,15 +421,22 @@
         const result = await response.json();
 
         Swal.fire({
-        title: 'Order Received! 🎉',
+        title: 'Order Received!',
         text: `Your order #${result.orderId} has been sent to the kitchen.`,
         icon: 'success'
         }).then(() => {
+        mockOrders.unshift({
+        orderId: result.orderId || Math.floor(1000 + Math.random() * 9000),
+        status: 'Pending',
+        totalAmount: parseFloat(document.getElementById('customerCartTotal').innerText.replace('₱', ''))
+        });
+
         customerCart = [];
         localStorage.removeItem('caferoCustomerCart');
         document.getElementById('customerAddress').value = "";
         toggleCart();
         updateCartBadge();
+        renderTrackerUI();
         });
         } else {
         const errorData = await response.json();
@@ -386,6 +451,11 @@
         }
 
         function filterMenu(category, btnElement) {
+        const menuContainer = document.getElementById('viewMenuContainer');
+        if (menuContainer && menuContainer.style.display === 'none') {
+        switchTab('menu');
+        }
+
         const grid = document.getElementById('menuGrid');
 
         if (category) {
@@ -438,12 +508,61 @@
         qtyInput.value = currentQty;
         }
 
+        /* Front-End Drawing Tracking Pipeline */
+        function renderTrackerUI() {
+        const container = document.getElementById('activeOrdersContainer');
+        if (!mockOrders || mockOrders.length === 0) {
+        container.innerHTML = '<div class="empty-tracking-msg">No active orders found.</div>';
+        return;
+        }
+
+        let html = '';
+        mockOrders.forEach(order => {
+        let progressWidth = '15%';
+        let statusClass = 'status-pending';
+        let displayStatus = order.status || 'Pending';
+        const rawStatus = displayStatus.toLowerCase();
+
+        if (rawStatus === 'preparing') {
+        progressWidth = '45%';
+        statusClass = 'status-preparing';
+        } else if (rawStatus === 'out for delivery' || rawStatus === 'on the way') {
+        progressWidth = '75%';
+        statusClass = 'status-ontheway';
+        displayStatus = 'On The Way';
+        } else if (rawStatus === 'delivered' || rawStatus === 'completed') {
+        progressWidth = '100%';
+        statusClass = 'status-delivered';
+        displayStatus = 'Delivered';
+        }
+
+        html += `
+        <div class="track-card">
+        <div class="track-header">
+        <span class="track-id">Order #${order.orderId}</span>
+        <span class="track-status ${statusClass}">${displayStatus}</span>
+        </div>
+        <div class="track-meta">
+        <span class="track-price">₱${parseFloat(order.totalAmount).toFixed(2)}</span>
+        </div>
+        <div class="track-progress-bar">
+        <div class="track-progress-fill" style="width: ${progressWidth}"></div>
+        </div>
+        </div>
+        `;
+        });
+
+        container.innerHTML = html;
+        }
+
         window.onclick = function(event) {
         const modal = document.getElementById('sizeModal');
         if (event.target == modal) closeModal();
         }
 
-        window.onload = updateCartBadge;
+        window.onload = function() {
+        updateCartBadge();
+        };
     </script>
 </body>
 </html>
