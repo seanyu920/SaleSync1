@@ -16,7 +16,7 @@ namespace SaleSync.Controllers
     public class AdminController : Controller
     {
         private readonly IConfiguration _configuration;
-        private readonly string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+        private readonly string connectionString = "Server=(localdb)\\MSSQLLocalDB; Database=SaleSync; Trusted_Connection=True; TrustServerCertificate=True;";
 
         public AdminController(IConfiguration configuration)
         {
@@ -248,7 +248,7 @@ namespace SaleSync.Controllers
         public IActionResult Analytics(string timeframe = "week")
         {
             var model = new AnalyticsViewModel { SelectedTimeframe = timeframe.ToLower() };
-            string connectionString = "Server=IANPC;Database=SaleSync;Trusted_Connection=True;Encrypt=False;";
+            string connectionString = "Server=(localdb)\\MSSQLLocalDB; Database=SaleSync; Trusted_Connection=True; TrustServerCertificate=True;";
 
             // Define T-SQL filtering criteria based on your exact column parameters
             string dateCondition = "CAST(s.sale_date AS DATE) = CAST(GETDATE() AS DATE)";
