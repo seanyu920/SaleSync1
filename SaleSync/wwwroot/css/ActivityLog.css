@@ -1,5 +1,5 @@
 ﻿/* ==========================================================================
-   CAFÈRO ACTIVITY LOG — Dark Theme (Fully Aligned with Dashboard Layout)
+   CAFÈRO ACTIVITY LOG — Dark Theme (Fully Aligned)
    ========================================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap');
@@ -37,16 +37,19 @@ body {
     line-height: 1.6;
 }
 
+/* ==========================================================================
+   SIDEBAR & LAYOUT CONTAINER
+   ========================================================================== */
 .dashboard-container {
     display: flex;
     min-height: 100vh;
 }
 
 /* ==========================================================================
-   SIDEBAR — Fixed Spacing (Pixel-Perfect Dashboard Clone)
+   SYNC-SALE SIDEBAR COMPONENT
    ========================================================================== */
 .sidebar {
-    width: 255px; /* Restored to perfect 255px dashboard standard */
+    width: 255px;
     background: var(--bg-surface);
     padding: 30px 20px;
     display: flex;
@@ -60,7 +63,9 @@ body {
 
 /* Logo block */
 .logo-section {
-    margin-bottom: 28px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px dashed var(--border); /* Beautiful decorative accent split under main branding */
 }
 
 .sidebar .logo-title {
@@ -81,7 +86,7 @@ body {
     display: block;
 }
 
-/* Profile — Breathing room matched to Dashboard */
+/* Profile */
 .profile-section {
     display: flex;
     align-items: center;
@@ -95,7 +100,7 @@ body {
 .profile-circle {
     width: 40px;
     height: 40px;
-    background: var(--green-hint); /* Synchronized layout hint value background */
+    background: var(--green-hint);
     border: 1.5px solid var(--gold);
     border-radius: 50%;
     display: flex;
@@ -119,79 +124,88 @@ body {
     margin-top: 1px;
 }
 
-/* Menu Navigation Elements */
+/* Menu Layout */
 .sidebar-menu {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
     flex: 1;
 }
 
 .menu-btn {
     display: flex;
     align-items: center;
-    gap: 11px;
     width: 100%;
     text-decoration: none;
     color: var(--muted);
-    font-size: 14px;
-    font-weight: 600;
-    padding: 11px 14px;
-    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 500;
+    padding: 12px 16px;
+    border-radius: 12px;
     background: transparent;
-    border: none;
-    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    border-left: 3px solid transparent; /* Hidden left text anchor border built-in */
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     font-family: 'Outfit', sans-serif;
-    letter-spacing: 0.2px;
+    letter-spacing: 0.4px;
 }
 
     .menu-btn:hover {
         color: var(--cream);
-        background: var(--border-sub);
+        background: rgba(255, 255, 255, 0.03);
+        border-color: var(--border-sub);
+        border-left-color: rgba(201, 168, 76, 0.5); /* Elegant gold glowing side indicator on hover */
+        transform: translateX(4px);
     }
 
     .menu-btn.active {
-        background: var(--gold);
+        background: linear-gradient(135deg, var(--gold), var(--gold-light));
         color: var(--bg-base);
-        font-weight: 800;
+        font-weight: 700;
+        border-color: transparent;
+        border-left-color: var(--cream); /* Striking contrast cream anchor line embedded in text block */
+        box-shadow: 0 4px 16px rgba(201, 168, 76, 0.25);
     }
 
-/* Menu Icons use unified identification dimensions */
-.menu-icon {
-    font-size: 15px;
-    width: 18px;
-    text-align: center;
-    flex-shrink: 0;
-    opacity: 0.9;
-}
+    .menu-btn i {
+        font-size: 15px;
+        width: 18px;
+        text-align: center;
+        flex-shrink: 0;
+        opacity: 0.9;
+    }
 
-.menu-btn.active .menu-icon {
-    opacity: 1;
-}
+    .menu-btn.active i {
+        opacity: 1;
+    }
 
-/* Logout Section */
+/* Logout Option */
 .logout-section {
     margin-top: auto;
-    padding-top: 16px;
+    padding-top: 20px;
     border-top: 1px solid var(--border-sub);
 }
 
 .logout-btn {
     color: var(--muted);
+    font-weight: 600;
+    border-left: 3px solid transparent;
 }
 
     .logout-btn:hover {
         color: var(--danger);
-        background: rgba(224, 85, 85, 0.07);
+        background: rgba(224, 85, 85, 0.08);
+        border-color: rgba(224, 85, 85, 0.15);
+        border-left-color: var(--danger); /* Threat indicator color bar directly on text element */
+        transform: translateX(4px);
     }
-
 /* ==========================================================================
-   MAIN CONTENT AREA
+   MAIN CONTENT AREA (Original CSS Below)
    ========================================================================== */
 .main-content {
     flex: 1;
-    padding: 36px 40px; /* Exact match with main app dashboard panel */
+    padding: 36px 40px;
     overflow-y: auto;
     background: var(--bg-base);
 }
@@ -204,6 +218,8 @@ body {
         background: var(--border);
         border-radius: 10px;
     }
+
+/* ... [Include all your original .page-header, .log-container, table, badge, and swal2 styles here] ... */
 
 .page-header {
     margin-bottom: 30px; /* Aligned header block bounding heights */
@@ -334,8 +350,8 @@ select.filter-input {
 }
 
     .activity-table th {
-        background: var(--bg-surface); /* Adjusted from card-2 to match dashboard table defaults */
-        color: var(--muted); /* Shifted header items into muted specs for readable focus */
+        background: var(--bg-surface);
+        color: var(--muted);
         font-size: 10.5px;
         font-weight: 700;
         text-transform: uppercase;
@@ -347,7 +363,7 @@ select.filter-input {
 
     .activity-table td {
         padding: 14px 16px;
-        font-size: 14px; /* Harmonized layout font scaling */
+        font-size: 14px;
         color: var(--muted-2);
         border-bottom: 1px solid var(--border-sub);
         vertical-align: middle;
@@ -367,7 +383,7 @@ select.filter-input {
 
 .log-timestamp {
     font-weight: 700;
-    color: var(--gold); /* Aligned layout visual telemetry flags */
+    color: var(--gold);
     font-size: 13px;
     white-space: nowrap;
 }
@@ -403,8 +419,8 @@ select.filter-input {
 .badge-void,
 .badge-access,
 .badge-edit {
-    padding: 4px 11px; /* Uniform structural footprint tracking status badges */
-    border-radius: 6px; /* Matched radius curvature config */
+    padding: 4px 11px;
+    border-radius: 6px;
     font-size: 10px;
     font-weight: 700;
     display: inline-block;

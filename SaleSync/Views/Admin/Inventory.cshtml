@@ -45,32 +45,32 @@
                 </div>
 
                 <nav class="sidebar-menu">
-                    <a href="/@homeController/Dashboard" class="menu-btn"><i class="fas fa-chart-line"></i> Dashboard</a>
-                    <a href="/Admin/QueueOrder" class="menu-btn"><i class="fas fa-list-ol"></i> Queue</a>
+                    <a href="/@homeController/Dashboard" class="menu-btn">Dashboard</a>
+                    <a href="/Admin/QueueOrder" class="menu-btn">Queue</a>
 
                     @if (User.IsInRole("Admin"))
                     {
-                        <a href="/Admin/ActivityLog" class="menu-btn"><i class="fas fa-clipboard-list"></i> Activity Log</a>
+                        <a href="/Admin/ActivityLog" class="menu-btn">Activity Log</a>
                     }
 
-                    <a href="/Admin/Analytics" class="menu-btn"><i class="fas fa-chart-pie"></i> Analytics</a> 
-                    <a href="/Admin/Products" class="menu-btn"><i class="fas fa-tags"></i> Products</a>
-                    <a href="/@homeController/Inventory" class="menu-btn active"><i class="fas fa-box-open"></i> Inventory</a>
-                    <a href="/Admin/ArchivedProducts" class="menu-btn"><i class="fas fa-archive"></i> Archived</a>
+                    <a href="/Admin/Analytics" class="menu-btn">Analytics</a>
+                    <a href="/Admin/Products" class="menu-btn">Products</a>
+                    <a href="/@homeController/Inventory" class="menu-btn active">Inventory</a>
+                    <a href="/Admin/ArchivedProducts" class="menu-btn">Archived</a>
 
                     @if (User.IsInRole("Admin"))
                     {
-                        <a href="/Admin/ManageAccounts" class="menu-btn"><i class="fas fa-credit-card"></i> Accounts</a>
+                        <a href="/Admin/ManageAccounts" class="menu-btn">Accounts</a>
                     }
 
-                    <a href="/Admin/WebCustomization" class="menu-btn"><i class="fas fa-tags"></i> Customization</a>
+                    <a href="/Admin/WebCustomization" class="menu-btn">Customization</a>
                 </nav>
             </div>
 
             <div class="logout-section">
                 <form method="post" action="/Home/Logout">
                     <button type="submit" class="menu-btn logout-btn">
-                        <i class="fas fa-sign-out-alt"></i> Log Out
+                        Log Out
                     </button>
                 </form>
             </div>

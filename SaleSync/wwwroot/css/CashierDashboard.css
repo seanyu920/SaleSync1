@@ -1,4 +1,26 @@
-﻿/* --- GLOBAL STYLES --- */
+﻿/* ==========================================================================
+   CAFÈRO DASHBOARD - REFACTORED FOR DARK THEME
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+
+:root {
+    --bg-base: #0D110D;
+    --bg-surface: #141A14;
+    --bg-card: #1C241C;
+    --bg-card-2: #212B21;
+    --gold: #C9A84C;
+    --gold-light: #DDB95E;
+    --gold-glow: rgba(201, 168, 76, 0.15);
+    --cream: #F2EDE4;
+    --muted: rgba(242, 237, 228, 0.5);
+    --muted-2: rgba(242, 237, 228, 0.75);
+    --border: rgba(201, 168, 76, 0.18);
+    --border-sub: rgba(255, 255, 255, 0.06);
+    --danger: #e05555;
+    --success: #3dbf78;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -6,9 +28,10 @@
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #fdfaf6;
-    color: #4a2511;
+    font-family: 'Outfit', sans-serif;
+    background: var(--bg-base);
+    color: var(--cream);
+    -webkit-font-smoothing: antialiased;
 }
 
 .dashboard-container {
@@ -18,83 +41,73 @@ body {
 
 /* --- SIDEBAR --- */
 .sidebar {
-    width: 260px;
-    background: #4a2511;
+    width: 255px;
+    background: var(--bg-surface);
     padding: 30px 20px;
     display: flex;
     flex-direction: column;
     position: sticky;
     top: 0;
     height: 100vh;
+    border-right: 1px solid var(--border-sub);
+    flex-shrink: 0;
 }
 
 .logo-section {
-    margin-bottom: 40px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px dashed var(--border);
 }
 
-.logo-title {
-    font-size: 24px;
+.sidebar .logo-title {
+    font-size: 22px;
     font-weight: 800;
-    color: #ffffff;
+    color: var(--cream);
+    letter-spacing: -0.5px;
 }
 
-.logo-subtitle {
-    font-size: 13px;
-    color: #dcbca5;
+.sidebar .logo-subtitle {
+    font-size: 11px;
+    color: var(--gold);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-top: 4px;
+    display: block;
 }
 
-.profile-section {
-    text-align: center;
-    margin-bottom: 40px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid rgba(220, 188, 165, 0.1);
-}
-
-.profile-circle {
-    width: 80px;
-    height: 80px;
-    margin: 0 auto 15px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 40px;
-    background: #f46a05;
-    color: white;
-}
-
+/* Sidebar Menu */
 .sidebar-menu {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 6px;
+    flex: 1;
 }
 
 .menu-btn {
-    display: block;
-    text-align: left;
+    display: flex;
+    align-items: center;
     text-decoration: none;
-    color: #dcbca5;
-    font-size: 16px;
-    padding: 14px 20px;
-    background: transparent;
-    border: 1px solid rgba(220, 188, 165, 0.1);
+    color: var(--muted);
+    font-size: 15px;
+    font-weight: 500;
+    padding: 12px 16px;
     border-radius: 12px;
-    transition: 0.3s;
-    cursor: pointer;
-    width: 100%;
+    border-left: 3px solid transparent;
+    transition: all 0.25s ease;
 }
 
     .menu-btn:hover {
-        border-color: #f46a05;
-        color: white;
+        color: var(--cream);
+        background: rgba(255, 255, 255, 0.03);
+        border-left-color: rgba(201, 168, 76, 0.5);
     }
 
     .menu-btn.active {
-        background: #f46a05;
-        color: #ffffff;
-        border-color: #f46a05;
+        background: linear-gradient(135deg, var(--gold), var(--gold-light));
+        color: var(--bg-base);
         font-weight: 700;
-        box-shadow: 0 4px 15px rgba(244, 106, 5, 0.2);
+        border-left-color: var(--cream);
     }
 
 /* --- MAIN CONTENT --- */
@@ -104,19 +117,15 @@ body {
     overflow-y: auto;
 }
 
-.page-header {
-    margin-bottom: 30px;
-}
-
 .greeting-title {
     font-size: 32px;
     font-weight: 800;
-    color: #4a2511;
+    color: var(--cream);
     margin-bottom: 5px;
 }
 
 .greeting-subtitle {
-    color: #8c5b3e;
+    color: var(--muted);
     font-size: 15px;
 }
 
@@ -129,10 +138,10 @@ body {
 }
 
 .summary-card {
-    background: #ffffff;
+    background: var(--bg-card);
     border-radius: 20px;
     padding: 25px;
-    box-shadow: 0 4px 20px rgba(74, 37, 17, 0.04);
+    border: 1px solid var(--border-sub);
     display: flex;
     align-items: center;
     gap: 20px;
@@ -141,40 +150,44 @@ body {
 .card-icon-box {
     width: 60px;
     height: 60px;
-    color: white;
     border-radius: 15px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 28px;
+    border: 1px solid var(--border);
 }
 
 .icon-sales {
-    background: #0b8a53;
+    background: var(--gold-glow);
+    color: var(--gold);
 }
 
 .icon-trans {
-    background: #f46a05;
+    background: rgba(244, 106, 5, 0.1);
+    color: #f46a05;
 }
 
 .card-label {
     font-size: 14px;
     font-weight: 600;
-    color: #8c5b3e;
+    color: var(--muted);
     margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .card-value {
     font-size: 28px;
     font-weight: 800;
-    color: #4a2511;
+    color: var(--cream);
 }
 
 /* --- RECENT SALES TABLE --- */
 .table-card {
-    background: #ffffff;
+    background: var(--bg-card);
     border-radius: 20px;
-    box-shadow: 0 4px 20px rgba(74, 37, 17, 0.04);
+    border: 1px solid var(--border-sub);
     overflow: hidden;
 }
 
@@ -188,139 +201,90 @@ body {
 .table-title {
     font-size: 20px;
     font-weight: 800;
-    color: #4a2511;
-    margin: 0;
-}
-
-.table-subtitle {
-    color: #8c5b3e;
-    font-size: 13px;
-    margin-top: 5px;
+    color: var(--cream);
 }
 
 .btn-full-report {
-    background: #fdf0e6;
-    color: #f46a05;
-    border: none;
+    background: transparent;
+    color: var(--gold);
+    border: 1px solid var(--border);
     padding: 10px 20px;
     border-radius: 20px;
     font-weight: 700;
-    font-size: 13px;
     cursor: pointer;
     transition: 0.3s;
 }
 
     .btn-full-report:hover {
-        background: #f46a05;
-        color: white;
+        background: var(--gold);
+        color: var(--bg-base);
     }
 
 .recent-sales-table {
     width: 100%;
     border-collapse: collapse;
-    text-align: left;
 }
 
     .recent-sales-table thead {
-        background: #fdfaf6;
-        border-top: 1px solid #f0e6dd;
-        border-bottom: 1px solid #f0e6dd;
+        background: var(--bg-surface);
     }
 
     .recent-sales-table th {
         padding: 15px 30px;
-        color: #8c5b3e;
+        color: var(--muted);
         font-size: 12px;
         font-weight: 800;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
     }
 
     .recent-sales-table td {
         padding: 18px 30px;
-        border-bottom: 1px solid #fdfaf6;
-        color: #4a2511;
-        font-size: 14px;
+        border-bottom: 1px solid var(--border-sub);
+        color: var(--cream);
     }
 
-.td-bold {
-    font-weight: bold;
-    color: #4a2511;
-}
-
-.td-price {
-    font-weight: bold;
-}
-
-/* --- ACTION BUTTONS --- */
-.action-btn-group {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-    align-items: center;
-}
-
+/* --- ACTION BUTTONS & BADGES --- */
 .btn-action {
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    font-weight: bold;
+    border: 1px solid var(--border-sub);
+    background: var(--bg-surface);
+    color: var(--cream);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.2s;
 }
 
-.btn-confirm {
-    background-color: #d1fae5;
-    color: #065f46;
+.btn-confirm:hover {
+    background: var(--success);
+    color: var(--bg-base);
 }
 
-    .btn-confirm:hover {
-        background-color: #0b8a53;
-        color: white;
-    }
-
-.btn-void {
-    background-color: #fee2e2;
-    color: #b91c1c;
+.btn-void:hover {
+    background: var(--danger);
+    color: white;
 }
 
-    .btn-void:hover {
-        background-color: #e11d48;
-        color: white;
-    }
-
-/* Pill Badges */
 .badge-cashier {
-    background: #fdf0e6;
+    background: rgba(217, 119, 6, 0.1);
     color: #d97706;
-    padding: 6px 14px;
+    padding: 4px 12px;
     border-radius: 20px;
-    font-size: 12px;
-    font-weight: 700;
-    display: inline-block;
+    font-size: 11px;
 }
 
 .badge-completed {
-    background: #d1fae5;
-    color: #065f46;
-    padding: 6px 14px;
+    background: rgba(61, 191, 120, 0.1);
+    color: var(--success);
+    padding: 4px 12px;
     border-radius: 20px;
-    font-size: 12px;
-    font-weight: 700;
-    display: inline-block;
+    font-size: 11px;
 }
 
 .badge-pending {
-    background: #ffedd5;
-    color: #c2410c;
-    padding: 6px 14px;
+    background: rgba(201, 168, 76, 0.1);
+    color: var(--gold);
+    padding: 4px 12px;
     border-radius: 20px;
-    font-size: 12px;
-    font-weight: 700;
-    display: inline-block;
+    font-size: 11px;
 }

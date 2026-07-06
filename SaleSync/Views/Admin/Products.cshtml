@@ -38,36 +38,36 @@
 
                 <nav class="sidebar-menu">
                     <a href="/@homeController/Dashboard" class="menu-btn @(ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")">
-                        <i class="fas fa-chart-line menu-icon"></i> Dashboard
+                        Dashboard
                     </a>
-                    <a href="/Admin/QueueOrder" class="menu-btn"><i class="fas fa-list-ol"></i> Queue</a>
+                    <a href="/Admin/QueueOrder" class="menu-btn">Queue</a>
 
                     @if (User.IsInRole("Admin"))
                     {
                         <a href="/Admin/ActivityLog" class="menu-btn @(ViewContext.RouteData.Values["action"]?.ToString() == "ActivityLog" ? "active" : "")">
-                            <i class="fas fa-clipboard-list menu-icon"></i> Activity Log
+                            Activity Log
                         </a>
                     }
 
                     <a href="/Admin/Analytics" class="menu-btn @(ViewContext.RouteData.Values["action"]?.ToString() == "Analytics" ? "active" : "")">
-                        <i class="fas fa-chart-pie menu-icon"></i> Analytics
+                        Analytics
                     </a>
 
                     <a href="/Admin/Products" class="menu-btn @(ViewContext.RouteData.Values["action"]?.ToString() == "Products" ? "active" : "")">
-                        <i class="fas fa-tags menu-icon"></i> Products
+                        Products
                     </a>
                     <a href="/Admin/Inventory" class="menu-btn @(ViewContext.RouteData.Values["action"]?.ToString() == "Inventory" ? "active" : "")">
-                        <i class="fas fa-box-open menu-icon"></i> Inventory
+                        Inventory
                     </a>
-                    <a href="/Admin/ArchivedProducts" class="menu-btn"><i class="fas fa-archive"></i> Archived</a>
+                    <a href="/Admin/ArchivedProducts" class="menu-btn">Archived</a>
 
                     @if (User.IsInRole("Admin"))
                     {
                         <a href="/Admin/ManageAccounts" class="menu-btn @(ViewContext.RouteData.Values["action"]?.ToString() == "ManageAccounts" ? "active" : "")">
-                            <i class="fas fa-credit-card menu-icon"></i> Accounts
+                            Accounts
                         </a>
                     }
-                    <a href="/Admin/WebCustomization" class="menu-btn"><i class="fas fa-tags"></i> Customization</a>
+                    <a href="/Admin/WebCustomization" class="menu-btn">Customization</a>
 
                 </nav>
             </div>
@@ -75,7 +75,7 @@
             <div class="logout-section">
                 <form method="post" action="/Home/Logout">
                     <button type="submit" class="menu-btn logout-btn">
-                        <i class="fas fa-sign-out-alt menu-icon"></i> Log Out
+                        Log Out
                     </button>
                 </form>
             </div>
@@ -199,7 +199,6 @@
     <script>
         const menuData = {};
 
-        // 🟢 SECURE INITIALIZATION: Safely escapes special characters and quotes for your thesis defense
         @if (Model != null)
         {
             foreach (var item in Model)
@@ -251,7 +250,7 @@
         Edit Recipe
         </button>
         <button type="button" style="flex: 1; padding: 8px; font-size: 12px; border-radius: 6px; text-align: center; justify-content: center; background: rgba(220, 53, 69, 0.15); color: #ff6b6b; border: 1px solid rgba(220, 53, 69, 0.3); cursor: pointer; font-family: 'Outfit', sans-serif;" onclick="event.stopPropagation(); archiveProduct(${item.id}, '${item.name.replace(/'/g, "\\'")}');">
-        <i class="fas fa-box-archive" style="margin-right: 4px;"></i> Archive
+        Archive
         </button>
         </div>
         </div>
@@ -333,8 +332,6 @@
         });
         return;
         }
-
-        // 🟢 CLEANUP: Removed the unused ingOptions loop that was cluttering this event handler
 
         const { value: formValues } = await Swal.fire({
         title: `Append Menu Item`,
@@ -459,7 +456,7 @@
         list.innerHTML += `
         <li style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border-sub); align-items: center;">
         <span style="color: var(--cream); font-size: 13.5px;"><strong style="color: var(--gold);">${item.qty} ${item.unit}</strong> × ${item.name}</span>
-        <button onclick="removeIngredientFromUI(${item.id})" style="color: var(--danger); border: none; background: none; cursor: pointer; font-size: 14px;"><i class="fas fa-times"></i></button>
+        <button onclick="removeIngredientFromUI(${item.id})" style="color: var(--danger); border: none; background: none; cursor: pointer; font-size: 14px;">&times;</button>
         </li>`;
         });
         }

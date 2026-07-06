@@ -61,8 +61,11 @@ body {
     flex-shrink: 0;
 }
 
+/* Logo block */
 .logo-section {
-    margin-bottom: 28px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px dashed var(--border); /* Beautiful decorative accent split under main branding */
 }
 
 .sidebar .logo-title {
@@ -83,6 +86,7 @@ body {
     display: block;
 }
 
+/* Profile */
 .profile-section {
     display: flex;
     align-items: center;
@@ -120,47 +124,53 @@ body {
     margin-top: 1px;
 }
 
+/* Menu Layout */
 .sidebar-menu {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
     flex: 1;
 }
 
 .menu-btn {
     display: flex;
     align-items: center;
-    gap: 11px;
     width: 100%;
     text-decoration: none;
     color: var(--muted);
-    font-size: 14px;
-    font-weight: 600;
-    padding: 11px 14px;
-    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 500;
+    padding: 12px 16px;
+    border-radius: 12px;
     background: transparent;
-    border: none;
-    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    border-left: 3px solid transparent; /* Hidden left text anchor border built-in */
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     font-family: 'Outfit', sans-serif;
-    letter-spacing: 0.2px;
-    text-align: left;
+    letter-spacing: 0.4px;
 }
 
     .menu-btn:hover {
         color: var(--cream);
-        background: var(--border-sub);
+        background: rgba(255, 255, 255, 0.03);
+        border-color: var(--border-sub);
+        border-left-color: rgba(201, 168, 76, 0.5); /* Elegant gold glowing side indicator on hover */
+        transform: translateX(4px);
     }
 
     .menu-btn.active {
-        background: var(--gold);
+        background: linear-gradient(135deg, var(--gold), var(--gold-light));
         color: var(--bg-base);
-        font-weight: 800;
+        font-weight: 700;
+        border-color: transparent;
+        border-left-color: var(--cream); /* Striking contrast cream anchor line embedded in text block */
+        box-shadow: 0 4px 16px rgba(201, 168, 76, 0.25);
     }
 
     .menu-btn i {
-        font-size: 14px;
-        width: 16px;
+        font-size: 15px;
+        width: 18px;
         text-align: center;
         flex-shrink: 0;
         opacity: 0.9;
@@ -170,19 +180,25 @@ body {
         opacity: 1;
     }
 
+/* Logout Option */
 .logout-section {
     margin-top: auto;
-    padding-top: 16px;
+    padding-top: 20px;
     border-top: 1px solid var(--border-sub);
 }
 
 .logout-btn {
     color: var(--muted);
+    font-weight: 600;
+    border-left: 3px solid transparent;
 }
 
     .logout-btn:hover {
         color: var(--danger);
-        background: rgba(224, 85, 85, 0.07);
+        background: rgba(224, 85, 85, 0.08);
+        border-color: rgba(224, 85, 85, 0.15);
+        border-left-color: var(--danger); /* Threat indicator color bar directly on text element */
+        transform: translateX(4px);
     }
 
 /* ==========================================================================

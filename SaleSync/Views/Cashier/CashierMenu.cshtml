@@ -34,7 +34,7 @@
 <body>
     <div class="dashboard-container">
 
-        <!-- ===================== SIDEBAR (copied from Admin Dashboard) ===================== -->
+        <!-- ===================== SIDEBAR ===================== -->
         <aside class="sidebar no-print">
             <div>
                 <div class="logo-section">
@@ -52,41 +52,41 @@
 
                 <nav class="sidebar-menu">
                     <a href="/@homeController/Dashboard" class="menu-btn">
-                        <i class="fas fa-chart-line"></i> Dashboard
+                        Dashboard
                     </a>
                     <a href="javascript:void(0)" class="menu-btn active">
-                        <i class="fas fa-shopping-cart"></i> POS
+                        POS
                     </a>
 
                     @if (User.IsInRole("Admin"))
                     {
                         <a href="/Admin/ActivityLog" class="menu-btn">
-                            <i class="fas fa-clipboard-list"></i> Activity Log
+                            Activity Log
                         </a>
                     }
 
                     @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
                     {
                         <a href="/Admin/Analytics" class="menu-btn">
-                            <i class="fas fa-chart-pie"></i> Analytics
+                            Analytics
                         </a>
-                        <a href="/Admin/QueueOrder" class="menu-btn"><i class="fas fa-list-ol"></i> Queue</a>
+                        <a href="/Admin/QueueOrder" class="menu-btn">Queue</a>
                         <a href="/Admin/Products" class="menu-btn">
-                            <i class="fas fa-tags"></i> Products
+                            Products
                         </a>
                         <a href="/Admin/Inventory" class="menu-btn">
-                            <i class="fas fa-box-open"></i> Inventory
+                            Inventory
                         </a>
-                        <a href="/Admin/ArchivedProducts" class="menu-btn"><i class="fas fa-archive"></i> Archived</a>
+                        <a href="/Admin/ArchivedProducts" class="menu-btn">Archived</a>
                     }
 
                     @if (User.IsInRole("Admin"))
                     {
                         <a href="/Admin/ManageAccounts" class="menu-btn">
-                            <i class="fas fa-credit-card"></i> Accounts
+                            Accounts
                         </a>
                     }
-                    <a href="/Admin/WebCustomization" class="menu-btn"><i class="fas fa-tags"></i> Customization</a>
+                    <a href="/Admin/WebCustomization" class="menu-btn">Customization</a>
 
                 </nav>
             </div>
@@ -94,7 +94,7 @@
             <div class="logout-section">
                 <form method="post" action="/Home/Logout">
                     <button type="submit" class="menu-btn logout-btn">
-                        <i class="fas fa-sign-out-alt"></i> Log Out
+                        Log Out
                     </button>
                 </form>
             </div>
