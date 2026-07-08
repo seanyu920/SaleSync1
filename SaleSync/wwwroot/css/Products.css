@@ -612,3 +612,6 @@ body {
     border: 1px solid rgba(61, 191, 120, 0.2);
     display: inline-block;
 }
+.slide-up {
+    animation: slideUp 0.3s ease-out;
+}

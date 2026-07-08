@@ -388,3 +388,6 @@
 .animate-pulse {
     animation: pulse 1.8s infinite ease-in-out;
 }
+.slide-up {
+    animation: slideUp 0.3s ease-out;
+}
