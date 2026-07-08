@@ -10,7 +10,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Manage Accounts - Cafero</title>
     <link rel="stylesheet" href="~/css/ManageAccounts.css" asp-append-version="true" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
@@ -32,37 +31,37 @@
                 </div>
 
                 <nav class="sidebar-menu">
-                    <a href="/@homeController/Dashboard" class="menu-btn"><i class="fas fa-chart-line"></i> Dashboard</a>
-                    <a href="/Admin/QueueOrder" class="menu-btn"><i class="fas fa-list-ol"></i> Queue</a>
+                    <a href="/@homeController/Dashboard" class="menu-btn">Dashboard</a>
+                    <a href="/Admin/QueueOrder" class="menu-btn">Queue</a>
 
                     @if (User.IsInRole("Admin"))
                     {
-                        <a href="/Admin/ActivityLog" class="menu-btn"><i class="fas fa-clipboard-list"></i> Activity Log</a>
+                        <a href="/Admin/ActivityLog" class="menu-btn">Activity Log</a>
                     }
 
-                    <a href="/Admin/Analytics" class="menu-btn"><i class="fas fa-chart-pie"></i> Analytics</a>
-                    <a href="/Admin/Products" class="menu-btn"><i class="fas fa-tags"></i> Products</a>
-                    <a href="/Admin/Inventory" class="menu-btn"><i class="fas fa-box-open"></i> Inventory</a>
-                    <a href="/Admin/ArchivedProducts" class="menu-btn"><i class="fas fa-archive"></i> Archived</a>
+                    <a href="/Admin/Analytics" class="menu-btn">Analytics</a>
+                    <a href="/Admin/Products" class="menu-btn">Products</a>
+                    <a href="/Admin/Inventory" class="menu-btn">Inventory</a>
+                    <a href="/Admin/ArchivedProducts" class="menu-btn">Archived</a>
 
                     @if (User.IsInRole("Admin"))
                     {
-                        <a href="/Admin/ManageAccounts" class="menu-btn active"><i class="fas fa-credit-card"></i> Accounts</a>
+                        <a href="/Admin/ManageAccounts" class="menu-btn active">Accounts</a>
                     }
-                    <a href="/Admin/WebCustomization" class="menu-btn"><i class="fas fa-tags"></i> Customization</a>
+                    <a href="/Admin/WebCustomization" class="menu-btn">Customization</a>
                 </nav>
             </div>
 
             <div class="logout-section">
                 <form method="post" action="/Home/Logout">
                     <button type="submit" class="menu-btn logout-btn">
-                        <i class="fas fa-sign-out-alt"></i> Log Out
+                        Log Out
                     </button>
                 </form>
             </div>
         </aside>
 
-        <main class="main-content">
+        <main class="main-content slide-up">
             <div class="page-header">
                 <h1 class="greeting-title">User Accounts 💳</h1>
                 <p class="greeting-subtitle">Add, update, or deactivate system access.</p>
@@ -222,7 +221,7 @@
     {
         <script>
             document.addEventListener("DOMContentLoaded", function() {
-                Swal.fire('Error', '@TempData["ErrorMessage"]', 'error');
+            Swal.fire('Error', '@TempData["ErrorMessage"]', 'error');
             });
         </script>
     }
@@ -230,7 +229,7 @@
     {
         <script>
             document.addEventListener("DOMContentLoaded", function() {
-                Swal.fire('Success', '@TempData["SuccessMessage"]', 'success');
+            Swal.fire('Success', '@TempData["SuccessMessage"]', 'success');
             });
         </script>
     }
@@ -239,141 +238,137 @@
         let originalData = {};
         let selectedUserIsActive = true;
 
-        // Security Fix: Removed password parameter entirely from data mapping injection
         function selectUser(userId, fullName, username, email, role, isActive) {
-            const radioBtn = document.getElementById('radio_' + userId);
-            if (radioBtn) radioBtn.checked = true;
+        const radioBtn = document.getElementById('radio_' + userId);
+        if (radioBtn) radioBtn.checked = true;
 
-            document.getElementById('UserId').value = userId;
-            document.getElementById('FullName').value = fullName;
-            document.getElementById('Username').value = username;
-            document.getElementById('Email').value = email;
-            document.getElementById('Role').value = role;
-            
-            // Security Fix: Always blank out the visual password field on data row select
-            document.getElementById('Password').value = ''; 
-            document.getElementById('Password').removeAttribute('required'); 
+        document.getElementById('UserId').value = userId;
+        document.getElementById('FullName').value = fullName;
+        document.getElementById('Username').value = username;
+        document.getElementById('Email').value = email;
+        document.getElementById('Role').value = role;
 
-            originalData = {
-                fullName: fullName,
-                username: username,
-                email: email,
-                role: role
-            };
+        document.getElementById('Password').value = '';
+        document.getElementById('Password').removeAttribute('required');
 
-            selectedUserIsActive = (isActive === 'true');
-            const btn = document.getElementById('toggleStatusBtn');
+        originalData = {
+        fullName: fullName,
+        username: username,
+        email: email,
+        role: role
+        };
 
-            if (btn) {
-                if (selectedUserIsActive) {
-                    btn.textContent = "Deactivate Selected";
-                    btn.classList.remove('reactivate-state');
-                    btn.classList.add('deactivate-state');
-                } else {
-                    btn.textContent = "Reactivate Selected";
-                    btn.classList.remove('deactivate-state');
-                    btn.classList.add('reactivate-state');
-                }
-            }
+        selectedUserIsActive = (isActive === 'true');
+        const btn = document.getElementById('toggleStatusBtn');
+
+        if (btn) {
+        if (selectedUserIsActive) {
+        btn.textContent = "Deactivate Selected";
+        btn.classList.remove('reactivate-state');
+        btn.classList.add('deactivate-state');
+        } else {
+        btn.textContent = "Reactivate Selected";
+        btn.classList.remove('deactivate-state');
+        btn.classList.add('reactivate-state');
+        }
+        }
         }
 
         function confirmUpdate() {
-            const form = document.getElementById('accountForm');
-            const userId = document.getElementById('UserId').value;
+        const form = document.getElementById('accountForm');
+        const userId = document.getElementById('UserId').value;
 
-            if (!userId) {
-                Swal.fire({ title: 'No Selection', text: 'Please select an account from the table to update.', icon: 'warning', confirmButtonColor: '#C9A84C' });
-                return;
-            }
+        if (!userId) {
+        Swal.fire({ title: 'No Selection', text: 'Please select an account from the table to update.', icon: 'warning', confirmButtonColor: '#C9A84C' });
+        return;
+        }
 
-            // Validation Fix: Forces the browser to process empty fields or bad email formatting constraints
-            if (!form.reportValidity()) return;
+        if (!form.reportValidity()) return;
 
-            const currentFullName = document.getElementById('FullName').value;
-            const currentUsername = document.getElementById('Username').value;
-            const currentEmail = document.getElementById('Email').value;
-            const currentPassword = document.getElementById('Password').value;
-            const currentRole = document.getElementById('Role').value;
+        const currentFullName = document.getElementById('FullName').value;
+        const currentUsername = document.getElementById('Username').value;
+        const currentEmail = document.getElementById('Email').value;
+        const currentPassword = document.getElementById('Password').value;
+        const currentRole = document.getElementById('Role').value;
 
-            if (currentFullName === originalData.fullName &&
-                currentUsername === originalData.username &&
-                currentEmail === originalData.email &&
-                currentPassword === '' && 
-                currentRole === originalData.role) {
-                
-                Swal.fire({ title: 'No Changes Detected', text: 'You have not modified any information for this account.', icon: 'info', confirmButtonColor: '#C9A84C' });
-                return;
-            }
+        if (currentFullName === originalData.fullName &&
+        currentUsername === originalData.username &&
+        currentEmail === originalData.email &&
+        currentPassword === '' &&
+        currentRole === originalData.role) {
 
-            Swal.fire({
-                title: 'Update Account?',
-                text: `Save changes for ${currentFullName}?`,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#C9A84C',
-                cancelButtonColor: '#141A14',
-                confirmButtonText: 'Yes, update it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    form.action = "/Admin/UpdateAccount";
-                    form.submit();
-                }
-            });
+        Swal.fire({ title: 'No Changes Detected', text: 'You have not modified any information for this account.', icon: 'info', confirmButtonColor: '#C9A84C' });
+        return;
+        }
+
+        Swal.fire({
+        title: 'Update Account?',
+        text: `Save changes for ${currentFullName}?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#C9A84C',
+        cancelButtonColor: '#141A14',
+        confirmButtonText: 'Yes, update it!'
+        }).then((result) => {
+        if (result.isConfirmed) {
+        form.action = "/Admin/UpdateAccount";
+        form.submit();
+        }
+        });
         }
 
         function confirmAdd() {
-            const form = document.getElementById('accountForm');
-            const fullName = document.getElementById('FullName').value;
-            
-            // Validation Fix: Ensure passwords are explicitly required when writing a brand new account
-            document.getElementById('Password').setAttribute('required', 'required');
-            if (!form.reportValidity()) return;
+        const form = document.getElementById('accountForm');
+        const fullName = document.getElementById('FullName').value;
 
-            Swal.fire({
-                title: 'Add New Account?',
-                text: `Create a system account for ${fullName}?`,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#C9A84C',
-                cancelButtonColor: '#141A14',
-                confirmButtonText: 'Yes, add it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    form.action = "/Admin/AddAccount";
-                    form.submit();
-                }
-            });
+        document.getElementById('Password').setAttribute('required', 'required');
+        if (!form.reportValidity()) return;
+
+        Swal.fire({
+        title: 'Add New Account?',
+        text: `Create a system account for ${fullName}?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#C9A84C',
+        cancelButtonColor: '#141A14',
+        confirmButtonText: 'Yes, add it!'
+        }).then((result) => {
+        if (result.isConfirmed) {
+        form.action = "/Admin/AddAccount";
+        form.submit();
+        }
+        });
         }
 
         function prepareToggleStatus() {
-            const userId = document.getElementById('UserId').value;
-            if (!userId) {
-                Swal.fire({ title: 'No Selection', text: 'Please select an account first.', icon: 'warning', confirmButtonColor: '#C9A84C' });
-                return;
-            }
+        const userId = document.getElementById('UserId').value;
+        if (!userId) {
+        Swal.fire({ title: 'No Selection', text: 'Please select an account first.', icon: 'warning', confirmButtonColor: '#C9A84C' });
+        return;
+        }
 
-            const actionName = selectedUserIsActive ? "Deactivate" : "Reactivate";
-            const warningText = selectedUserIsActive
-                ? "This user will no longer be able to log into the system."
-                : "This user will regain full access to the system.";
-            const targetUrl = selectedUserIsActive ? "/Admin/DeactivateAccount" : "/Admin/ReactivateAccount";
-            const btnColor = selectedUserIsActive ? "#e05555" : "#3dbf78";
+        const actionName = selectedUserIsActive ? "Deactivate" : "Reactivate";
+        const warningText = selectedUserIsActive
+        ? "This user will no longer be able to log into the system."
+        : "This user will regain full access to the system.";
+        const targetUrl = selectedUserIsActive ? "/Admin/DeactivateAccount" : "/Admin/ReactivateAccount";
+        const btnColor = selectedUserIsActive ? "#e05555" : "#3dbf78";
 
-            Swal.fire({
-                title: `${actionName} Account?`,
-                text: warningText,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: btnColor,
-                cancelButtonColor: '#141A14',
-                confirmButtonText: `Yes, ${actionName.toLowerCase()} them!`
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    const form = document.getElementById('accountForm');
-                    form.action = targetUrl;
-                    form.submit();
-                }
-            });
+        Swal.fire({
+        title: `${actionName} Account?`,
+        text: warningText,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: btnColor,
+        cancelButtonColor: '#141A14',
+        confirmButtonText: `Yes, ${actionName.toLowerCase()} them!`
+        }).then((result) => {
+        if (result.isConfirmed) {
+        const form = document.getElementById('accountForm');
+        form.action = targetUrl;
+        form.submit();
+        }
+        });
         }
     </script>
 </body>

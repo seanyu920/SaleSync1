@@ -189,3 +189,6 @@ form {
         padding: 30px 20px;
     }
 }
+.slide-up {
+    animation: slideUp 0.3s ease-out;
+}

@@ -12,354 +12,11 @@
     <link rel="stylesheet" href="~/css/AdminDashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- Chart.js for high-performance visual reporting -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <style>
-        /* Modernized Theme Variables matching your Premium Palette */
-        :root {
-            --bg-main: #0D120F;
-            --bg-card: #1A211A;
-            --accent-gold: #D4AF37;
-            --accent-gold-hover: #F3E5AB;
-            --text-light: #F5F5F5;
-            --text-muted: #8E9891;
-            --success: #2ECC71;
-            --warning: #F39C12;
-            --danger: #E74C3C;
-            --border-color: rgba(212, 175, 55, 0.15);
-            --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.3);
-            --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
-            --radius: 12px;
-            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        body {
-            background-color: var(--bg-main) !important;
-            color: var(--text-light) !important;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        }
-
-        /* Top Utility Navbar Layout */
-        .top-navbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 30px;
-            background: var(--bg-card);
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 20px;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow-sm);
-        }
-
-        .search-wrapper {
-            position: relative;
-            width: 320px;
-        }
-
-        .search-wrapper i {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-muted);
-        }
-
-        .search-input {
-            width: 100%;
-            background: var(--bg-main);
-            border: 1px solid var(--border-color);
-            padding: 10px 12px 10px 40px;
-            border-radius: 8px;
-            color: var(--text-light);
-            font-size: 0.9rem;
-            transition: var(--transition);
-        }
-
-        .search-input:focus {
-            outline: none;
-            border-color: var(--accent-gold);
-            box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.1);
-        }
-
-        .top-nav-controls {
-            display: flex;
-            align-items: center;
-            gap: 24px;
-        }
-
-        .datetime-display {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            text-align: right;
-            line-height: 1.4;
-        }
-
-        .notification-bell {
-            position: relative;
-            cursor: pointer;
-            font-size: 1.2rem;
-            color: var(--text-light);
-            transition: var(--transition);
-        }
-
-        .notification-bell:hover {
-            color: var(--accent-gold);
-        }
-
-        .bell-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: var(--danger);
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-        }
-
-        .user-dropdown {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            padding: 6px 12px;
-            border-radius: 8px;
-            transition: var(--transition);
-        }
-
-        .user-dropdown:hover {
-            background: rgba(212, 175, 55, 0.08);
-        }
-
-        /* Improved Metric Summary Hierarchy */
-        .summary-dashboard {
-            grid-gap: 20px !important;
-            margin-bottom: 25px !important;
-        }
-
-        .summary-card {
-            background: var(--bg-card) !important;
-            border: 1px solid var(--border-color) !important;
-            border-radius: var(--radius) !important;
-            padding: 20px !important;
-            box-shadow: var(--shadow-sm) !important;
-            transition: var(--transition) !important;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .summary-card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-md);
-            border-color: rgba(212, 175, 55, 0.3) !important;
-        }
-
-        .card-value {
-            font-size: 2rem !important;
-            font-weight: 700 !important;
-            color: var(--text-light) !important;
-            line-height: 1.2;
-            margin-top: 4px;
-        }
-
-        .card-label {
-            font-size: 0.78rem !important;
-            text-transform: uppercase !important;
-            letter-spacing: 0.5px;
-            color: var(--text-muted) !important;
-            font-weight: 600 !important;
-        }
-
-        /* Dashboard Analytical Grids Layout */
-        .pos-grid-container {
-            display: grid;
-            grid-template-columns: 1.4fr 1fr;
-            gap: 25px;
-            margin-bottom: 25px;
-        }
-
-        .pos-card-wrapper {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius);
-            padding: 24px;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .pos-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .pos-card-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--text-light);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .pos-card-title i {
-            color: var(--accent-gold);
-        }
-
-        /* Table Redesigns */
-        .pos-table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-            font-size: 0.88rem;
-        }
-
-        .pos-table th {
-            color: var(--text-muted);
-            font-weight: 500;
-            padding: 12px 10px;
-            border-bottom: 1px solid rgba(212, 175, 55, 0.1);
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            letter-spacing: 0.5px;
-        }
-
-        .pos-table td {
-            padding: 14px 10px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-            vertical-align: middle;
-        }
-
-        /* System Contextual Badges */
-        .badge {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .badge-success { background: rgba(46, 204, 113, 0.15); color: var(--success); }
-        .badge-warning { background: rgba(243, 156, 18, 0.15); color: var(--warning); }
-        .badge-danger { background: rgba(231, 76, 60, 0.15); color: var(--danger); }
-
-        /* Dynamic Progress Bar Formatting */
-        .progress-container {
-            width: 100%;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 4px;
-            overflow: hidden;
-            height: 6px;
-            margin-top: 4px;
-        }
-
-        .progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, var(--accent-gold), #F3E5AB);
-            border-radius: 4px;
-        }
-
-        /* Action Controls Layout */
-        .action-button-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            height: calc(100% - 40px);
-        }
-
-        .action-btn {
-            background: rgba(212, 175, 55, 0.05);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            color: var(--text-light);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            cursor: pointer;
-            font-weight: 500;
-            font-size: 0.9rem;
-            transition: var(--transition);
-        }
-
-        .action-btn i {
-            font-size: 1.4rem;
-            color: var(--accent-gold);
-            transition: var(--transition);
-        }
-
-        .action-btn:hover {
-            background: var(--accent-gold);
-            color: var(--bg-main);
-            border-color: var(--accent-gold);
-            transform: translateY(-2px);
-        }
-
-        .action-btn:hover i {
-            color: var(--bg-main);
-        }
-
-        /* Mini Action Buttons */
-        .btn-restock {
-            background: transparent;
-            border: 1px solid var(--accent-gold);
-            color: var(--accent-gold);
-            padding: 4px 12px;
-            border-radius: 6px;
-            font-size: 0.78rem;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .btn-restock:hover {
-            background: var(--accent-gold);
-            color: var(--bg-main);
-        }
-
-        /* Notification Panel Lists */
-        .notification-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .notification-item {
-            display: flex;
-            gap: 12px;
-            padding: 12px;
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 8px;
-            border-left: 3px solid var(--accent-gold);
-            font-size: 0.85rem;
-        }
-
-        .notification-item.alert-node { border-left-color: var(--danger); }
-        .notification-item.success-node { border-left-color: var(--success); }
-
-        .notification-info p { margin: 0; font-weight: 500; }
-        .notification-time { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
-
-        .bottom-three-column-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 25px;
-        }
-
-        @@media (max-width: 1200px) {
-            .pos-grid-container, .bottom-three-column-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
 </head>
 <body>
 
     <div class="dashboard-container">
-        <!-- Sidebar: Kept exactly as requested -->
         <aside class="sidebar">
             <div>
                 <div class="logo-section">
@@ -376,41 +33,39 @@
                 </div>
 
                 <nav class="sidebar-menu">
-                    <a href="/@homeController/Dashboard" class="menu-btn active"><i class="fas fa-chart-line"></i> Dashboard</a>
-                    <a href="/Admin/QueueOrder" class="menu-btn"><i class="fas fa-list-ol"></i> Queue</a>
+                    <a href="/@homeController/Dashboard" class="menu-btn active">Dashboard</a>
+                    <a href="/Admin/QueueOrder" class="menu-btn">Queue</a>
 
                     @if (User.IsInRole("Admin"))
                     {
-                        <a href="/Admin/ActivityLog" class="menu-btn"><i class="fas fa-clipboard-list"></i> Activity Log</a>
+                        <a href="/Admin/ActivityLog" class="menu-btn">Activity Log</a>
                     }
 
-                    <a href="/Admin/Analytics" class="menu-btn"><i class="fas fa-chart-pie"></i> Analytics</a>
-                    <a href="/Admin/Products" class="menu-btn"><i class="fas fa-tags"></i> Products</a>
-                    <a href="/Admin/Inventory" class="menu-btn"><i class="fas fa-box-open"></i> Inventory</a>
+                    <a href="/Admin/Analytics" class="menu-btn">Analytics</a>
+                    <a href="/Admin/Products" class="menu-btn">Products</a>
+                    <a href="/Admin/Inventory" class="menu-btn">Inventory</a>
 
-                    <a href="/Admin/ArchivedProducts" class="menu-btn"><i class="fas fa-archive"></i> Archived</a>
+                    <a href="/Admin/ArchivedProducts" class="menu-btn">Archived</a>
 
                     @if (User.IsInRole("Admin"))
                     {
-                        <a href="/Admin/ManageAccounts" class="menu-btn"><i class="fas fa-credit-card"></i> Accounts</a>
+                        <a href="/Admin/ManageAccounts" class="menu-btn">Accounts</a>
                     }
-                    <a href="/Admin/WebCustomization" class="menu-btn"><i class="fas fa-tags"></i> Customization</a>
+                    <a href="/Admin/WebCustomization" class="menu-btn">Customization</a>
                 </nav>
             </div>
 
             <div class="logout-section">
                 <form method="post" action="/Home/Logout">
                     <button type="submit" class="menu-btn logout-btn">
-                        <i class="fas fa-sign-out-alt"></i> Log Out
+                        Log Out
                     </button>
                 </form>
             </div>
         </aside>
 
-        <!-- Main Workspace Window -->
-        <main class="main-content">
+        <main class="main-content slide-up">
 
-            <!-- New Operational Top Bar Controls Header -->
             <div class="top-navbar">
                 <div class="search-wrapper">
                     <i class="fas fa-search"></i>
@@ -418,8 +73,8 @@
                 </div>
                 <div class="top-nav-controls">
                     <div class="datetime-display">
-                        <div id="currentDate">Thursday, July 2, 2026</div>
-                        <div id="currentTime" style="font-weight: 600; color: var(--text-light);">07:47 PM</div>
+                        <div id="currentDate"></div>
+                        <div id="currentTime"></div>
                     </div>
                     <div class="notification-bell">
                         <i class="fas fa-bell"></i>
@@ -427,12 +82,11 @@
                     </div>
                     <div class="user-dropdown">
                         <span>Active Terminal: <strong>Station 1</strong></span>
-                        <i class="fas fa-angle-down" style="font-size: 0.8rem; color: var(--accent-gold);"></i>
+                        <i class="fas fa-angle-down"></i>
                     </div>
                 </div>
             </div>
 
-            <!-- Page Header Net Sales Card Area -->
             <div class="page-header dashboard-header-card">
                 <div>
                     <p class="header-label">Today's Net Sales</p>
@@ -447,7 +101,6 @@
                 </div>
             </div>
 
-            <!-- Enhanced Metric Summary Workspace Panel -->
             <div class="summary-dashboard">
                 <div class="summary-card">
                     <div class="card-icon-box icon-orange"><i class="fas fa-list"></i></div>
@@ -482,31 +135,28 @@
                 </div>
             </div>
 
-            <!-- Middle Analytical Layout Split Grid: Sales Chart vs Recent Transactions -->
             <div class="pos-grid-container">
-                <!-- Sales Overview Weekly Reporting Chart Container -->
                 <div class="pos-card-wrapper">
                     <div class="pos-card-header">
                         <div>
                             <div class="pos-card-title"><i class="fas fa-chart-line"></i> Sales This Week</div>
-                            <div style="font-size: 1.6rem; font-weight: 700; margin-top: 5px; color: var(--accent-gold);">
-                                   ₱@((Model.TodayTotalSales * 5.8m).ToString("N2"))
+                            <div class="weekly-sales-value">
+                                ₱@((Model.TodayTotalSales * 5.8m).ToString("N2"))
                             </div>
                         </div>
-                        <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: 500;">Past 7 Days Rolling</span>
+                        <span class="rolling-label">Past 7 Days Rolling</span>
                     </div>
-                    <div style="height: 220px; position: relative;">
+                    <div class="chart-container">
                         <canvas id="weeklySalesChart"></canvas>
                     </div>
                 </div>
 
-                <!-- Production Level Data Presentation: Recent Transactions -->
                 <div class="pos-card-wrapper">
                     <div class="pos-card-header">
                         <div class="pos-card-title"><i class="fas fa-history"></i> Recent Transactions</div>
-                        <a href="/Admin/DailyReport" style="color: var(--accent-gold); font-size: 0.8rem; text-decoration: none; font-weight: 500;">View All &rarr;</a>
+                        <a href="/Admin/DailyReport" class="view-all-link">View All &rarr;</a>
                     </div>
-                    <div style="overflow-x: auto;">
+                    <div class="table-responsive">
                         <table class="pos-table">
                             <thead>
                                 <tr>
@@ -524,7 +174,7 @@
                                     @foreach (var sale in Model.RecentSales.Take(5))
                                     {
                                         <tr>
-                                            <td style="font-weight: 600; color: var(--accent-gold);">#@sale.SaleId</td>
+                                            <td class="sale-id">#@sale.SaleId</td>
                                             <td>@(sale.CustomerName ?? "Walk-in")</td>
                                             <td>₱@sale.TotalAmount.ToString("N2")</td>
                                             <td>@(sale.PaymentMethod ?? "Cash")</td>
@@ -542,36 +192,35 @@
                                                     <span class="badge badge-warning">Pending</span>
                                                 }
                                             </td>
-                                            <td style="color: var(--text-muted);">@sale.SaleDate.ToString("hh:mm tt")</td>
+                                            <td class="text-muted">@sale.SaleDate.ToString("hh:mm tt")</td>
                                         </tr>
                                     }
                                 }
                                 else
                                 {
-                                    <!-- Fallback Sample Presentation Framework Data matching standard POS styles -->
                                     <tr>
-                                        <td style="font-weight: 600; color: var(--accent-gold);">#8036</td>
+                                        <td class="sale-id">#8036</td>
                                         <td>Walk-in</td>
                                         <td>₱79.00</td>
                                         <td>Cash</td>
                                         <td><span class="badge badge-warning">Pending</span></td>
-                                        <td style="color: var(--text-muted);">07:34 PM</td>
+                                        <td class="text-muted">07:34 PM</td>
                                     </tr>
                                     <tr>
-                                        <td style="font-weight: 600; color: var(--accent-gold);">#8035</td>
+                                        <td class="sale-id">#8035</td>
                                         <td>Walk-in</td>
                                         <td>₱158.00</td>
                                         <td>GCash</td>
                                         <td><span class="badge badge-success">Completed</span></td>
-                                        <td style="color: var(--text-muted);">07:12 PM</td>
+                                        <td class="text-muted">07:12 PM</td>
                                     </tr>
                                     <tr>
-                                        <td style="font-weight: 600; color: var(--accent-gold);">#7036</td>
+                                        <td class="sale-id">#7036</td>
                                         <td>Juan Dela Cruz</td>
                                         <td>₱89.00</td>
                                         <td>Card</td>
                                         <td><span class="badge badge-success">Completed</span></td>
-                                        <td style="color: var(--text-muted);">03:46 PM</td>
+                                        <td class="text-muted">03:46 PM</td>
                                     </tr>
                                 }
                             </tbody>
@@ -580,72 +229,69 @@
                 </div>
             </div>
 
-            <!-- Lower Layout Management Grid Layer -->
             <div class="pos-grid-container">
-                <!-- Left: Best Selling Products Analytics Inventory List -->
                 <div class="pos-card-wrapper">
                     <div class="pos-card-header">
                         <div class="pos-card-title"><i class="fas fa-crown"></i> Best Selling Products</div>
-                        <span style="font-size: 0.78rem; color: var(--text-muted);">By Volume</span>
+                        <span class="volume-label">By Volume</span>
                     </div>
                     <table class="pos-table">
                         <thead>
                             <tr>
                                 <th>Product Name</th>
-                                <th style="width: 40%;">Units Sold</th>
-                                <th style="text-align: right;">Revenue Generated</th>
+                                <th>Units Sold</th>
+                                <th class="text-right">Revenue Generated</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td style="font-weight: 500;">Spanish Latte (Iced)</td>
+                                <td>Spanish Latte (Iced)</td>
                                 <td>
-                                    <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; margin-bottom: 2px;">
+                                    <div class="progress-info">
                                         <span>142 units</span>
                                     </div>
                                     <div class="progress-container"><div class="progress-bar" style="width: 92%;"></div></div>
                                 </td>
-                                <td style="text-align: right; font-weight: 600; color: var(--accent-gold);">₱22,720.00</td>
+                                <td class="text-right revenue-val">₱22,720.00</td>
                             </tr>
                             <tr>
-                                <td style="font-weight: 500;">Café Americana (Hot)</td>
+                                <td>Café Americana (Hot)</td>
                                 <td>
-                                    <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; margin-bottom: 2px;">
+                                    <div class="progress-info">
                                         <span>98 units</span>
                                     </div>
                                     <div class="progress-container"><div class="progress-bar" style="width: 68%;"></div></div>
                                 </td>
-                                <td style="text-align: right; font-weight: 600; color: var(--accent-gold);">₱10,780.00</td>
+                                <td class="text-right revenue-val">₱10,780.00</td>
                             </tr>
                             <tr>
-                                <td style="font-weight: 500;">Cream Cheese Ensaymada</td>
+                                <td>Cream Cheese Ensaymada</td>
                                 <td>
-                                    <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; margin-bottom: 2px;">
+                                    <div class="progress-info">
                                         <span>75 units</span>
                                     </div>
                                     <div class="progress-container"><div class="progress-bar" style="width: 51%;"></div></div>
                                 </td>
-                                <td style="text-align: right; font-weight: 600; color: var(--accent-gold);">₱6,375.00</td>
+                                <td class="text-right revenue-val">₱6,375.00</td>
                             </tr>
                             <tr>
-                                <td style="font-weight: 500;">Caramel Macchiato</td>
+                                <td>Caramel Macchiato</td>
                                 <td>
-                                    <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; margin-bottom: 2px;">
+                                    <div class="progress-info">
                                         <span>64 units</span>
                                     </div>
                                     <div class="progress-container"><div class="progress-bar" style="width: 43%;"></div></div>
                                 </td>
-                                <td style="text-align: right; font-weight: 600; color: var(--accent-gold);">₱10,880.00</td>
+                                <td class="text-right revenue-val">₱10,880.00</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
 
-                <!-- Right: Low Stock Operational Critical Details Panel -->
                 <div class="pos-card-wrapper">
                     <div class="pos-card-header">
                         <div class="pos-card-title"><i class="fas fa-boxes"></i> Low Stock Details</div>
-                        <a href="/Admin/Inventory" style="color: var(--accent-gold); font-size: 0.8rem; text-decoration: none; font-weight: 500;">Manage</a>
+                        <a href="/Admin/Inventory" class="manage-link">Manage</a>
                     </div>
                     <table class="pos-table">
                         <thead>
@@ -653,36 +299,34 @@
                                 <th>Item Stock</th>
                                 <th>Current Qty</th>
                                 <th>Status</th>
-                                <th style="text-align: right;">Action</th>
+                                <th class="text-right">Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td style="font-weight: 500;">Espresso Coffee Beans</td>
+                                <td>Espresso Coffee Beans</td>
                                 <td>2.5 kg</td>
                                 <td><span class="badge badge-danger">Critical</span></td>
-                                <td style="text-align: right;"><button class="btn-restock" onclick="location.href='/Admin/Inventory'">Restock</button></td>
+                                <td class="text-right"><button class="btn-restock" onclick="location.href='/Admin/Inventory'">Restock</button></td>
                             </tr>
                             <tr>
-                                <td style="font-weight: 500;">Whole Milk (1L Cartons)</td>
+                                <td>Whole Milk (1L Cartons)</td>
                                 <td>12 units</td>
                                 <td><span class="badge badge-warning">Low</span></td>
-                                <td style="text-align: right;"><button class="btn-restock" onclick="location.href='/Admin/Inventory'">Restock</button></td>
+                                <td class="text-right"><button class="btn-restock" onclick="location.href='/Admin/Inventory'">Restock</button></td>
                             </tr>
                             <tr>
-                                <td style="font-weight: 500;">Caramel Syrup Base</td>
+                                <td>Caramel Syrup Base</td>
                                 <td>1.2 L</td>
                                 <td><span class="badge badge-warning">Low</span></td>
-                                <td style="text-align: right;"><button class="btn-restock" onclick="location.href='/Admin/Inventory'">Restock</button></td>
+                                <td class="text-right"><button class="btn-restock" onclick="location.href='/Admin/Inventory'">Restock</button></td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- Base Row Layout Element: System Actions, Tender Metrics, Notifications Framework -->
             <div class="bottom-three-column-grid">
-                <!-- Action Commands Router Card -->
                 <div class="pos-card-wrapper">
                     <div class="pos-card-header">
                         <div class="pos-card-title"><i class="fas fa-bolt"></i> Quick Manager Actions</div>
@@ -695,17 +339,15 @@
                     </div>
                 </div>
 
-                <!-- Tender Breakdown Metric Engine Structure -->
                 <div class="pos-card-wrapper">
                     <div class="pos-card-header">
                         <div class="pos-card-title"><i class="fas fa-wallet"></i> Payment Breakdown</div>
                     </div>
-                    <div style="height: 160px; position: relative; display: flex; justify-content: center;">
+                    <div class="payment-chart-canvas-wrapper">
                         <canvas id="paymentMethodsChart"></canvas>
                     </div>
                 </div>
 
-                <!-- System Notification Registry Framework Widget -->
                 <div class="pos-card-wrapper">
                     <div class="pos-card-header">
                         <div class="pos-card-title"><i class="fas fa-bell"></i> Live Notifications</div>
@@ -736,69 +378,76 @@
         </main>
     </div>
 
-    <!-- Chart Initializations Render Scripting Block -->
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            // 1. Weekly Sales Analytics Line Graph Architecture
-            const ctxSales = document.getElementById('weeklySalesChart').getContext('2d');
-            new Chart(ctxSales, {
-                type: 'line',
-                data: {
-                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                    datasets: [{
-                        label: 'Gross Sales (₱)',
-                        data: [12450, 14200, 11800, 15600, 18900, 22400, 19800],
-                        borderColor: '#D4AF37',
-                        backgroundColor: 'rgba(212, 175, 55, 0.06)',
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.35,
-                        pointBackgroundColor: '#D4AF37',
-                        pointHoverRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { 
-                            grid: { display: false },
-                            ticks: { color: '#8E9891', font: { size: 11 } }
-                        },
-                        y: { 
-                            grid: { color: 'rgba(212, 175, 55, 0.05)' },
-                            ticks: { color: '#8E9891', font: { size: 11 } }
-                        }
-                    }
-                }
-            });
+        function updateClock() {
+        const now = new Date();
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('currentDate').innerText = now.toLocaleDateString('en-US', options);
 
-            // 2. Payment Method Slices (Donut Diagram Setup)
-            const ctxPayment = document.getElementById('paymentMethodsChart').getContext('2d');
-            new Chart(ctxPayment, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Cash', 'GCash', 'Card'],
-                    datasets: [{
-                        data: [55, 30, 15],
-                        backgroundColor: ['#D4AF37', '#2ECC71', '#3498DB'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'right',
-                            labels: { color: '#F5F5F5', font: { size: 12 }, boxWidth: 12 }
-                        }
-                    },
-                    cutout: '72%'
-                }
-            });
+        let hours = now.getHours();
+        let minutes = now.getMinutes();
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        minutes = minutes < 10 ? '0' + minutes : minutes;
+        document.getElementById('currentTime').innerText = hours + ':' + minutes + ' ' + ampm;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        const rawTodaySales = parseFloat("@Model.TodayTotalSales") || 8500;
+
+        const ctxWeekly = document.getElementById('weeklySalesChart').getContext('2d');
+        new Chart(ctxWeekly, {
+        type: 'line',
+        data: {
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        datasets: [{
+        label: 'Sales (₱)',
+        data: [
+        rawTodaySales * 0.85,
+        rawTodaySales * 0.95,
+        rawTodaySales * 1.1,
+        rawTodaySales,
+        rawTodaySales * 1.25,
+        rawTodaySales * 1.4,
+        rawTodaySales * 1.3
+        ],
+        borderColor: '#D4AF37',
+        backgroundColor: 'rgba(212, 175, 55, 0.05)',
+        borderWidth: 3,
+        fill: true,
+        tension: 0.35
+        }]
+        },
+        options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } }
+        }
         });
+
+        const ctxPayment = document.getElementById('paymentMethodsChart').getContext('2d');
+        new Chart(ctxPayment, {
+        type: 'doughnut',
+        data: {
+        labels: ['Cash', 'GCash', 'Card'],
+        datasets: [{
+        data: [55, 30, 15],
+        backgroundColor: ['#D4AF37', '#2ECC71', '#F39C12'],
+        borderWidth: 0
+        }]
+        },
+        options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'right' } },
+        cutout: '72%'
+        }
+        });
+        });
+
     </script>
 </body>
 </html>

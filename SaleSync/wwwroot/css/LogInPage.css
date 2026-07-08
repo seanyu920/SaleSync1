@@ -413,3 +413,6 @@ form {
         font-size: 42px;
     }
 }
+.slide-up {
+    animation: slideUp 0.3s ease-out;
+}

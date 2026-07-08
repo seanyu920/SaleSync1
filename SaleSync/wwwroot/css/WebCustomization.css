@@ -268,3 +268,6 @@
         grid-column: span 1;
     }
 }
+.slide-up {
+    animation: slideUp 0.3s ease-out;
+}
