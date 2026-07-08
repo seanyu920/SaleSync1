@@ -15,7 +15,6 @@
 
     <link rel="stylesheet" href="~/css/AdminDashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/Products.css" asp-append-version="true" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
@@ -86,9 +85,6 @@
 <body>
     <div class="dashboard-container">
 
-        <!-- ==========================================================================
-           SIDEBAR PANEL INTEGRATION
-           ========================================================================== -->
         <aside class="sidebar">
             <div>
                 <div class="logo-section">
@@ -106,72 +102,64 @@
 
                 <nav class="sidebar-menu">
                     <a href="/@homeController/Dashboard" class="menu-btn @(currentAction == "Dashboard" ? "active" : "")">
-                        <i class="fas fa-chart-line"></i> Dashboard
+                        Dashboard
                     </a>
-                    <a href="/Admin/QueueOrder" class="menu-btn @(currentAction == "QueueOrder" ? "active" : "")"><i class="fas fa-list-ol"></i> Queue</a>
+                    <a href="/Admin/QueueOrder" class="menu-btn @(currentAction == "QueueOrder" ? "active" : "")">Queue</a>
 
                     @if (User.IsInRole("Admin"))
                     {
                         <a href="/Admin/ActivityLog" class="menu-btn @(currentAction == "ActivityLog" ? "active" : "")">
-                            <i class="fas fa-clipboard-list"></i> Activity Log
+                            Activity Log
                         </a>
                     }
 
                     <a href="/Admin/Analytics" class="menu-btn @(currentAction == "Analytics" ? "active" : "")">
-                        <i class="fas fa-chart-pie"></i> Analytics
+                        Analytics
                     </a>
 
 
                     <a href="/Admin/Products" class="menu-btn @(currentAction == "Products" ? "active" : "")">
-                        <i class="fas fa-tags"></i> Products
+                        Products
                     </a>
 
                     <a href="/Admin/Inventory" class="menu-btn @(currentAction == "Inventory" ? "active" : "")">
-                        <i class="fas fa-box-open"></i> Inventory
+                        Inventory
                     </a>
 
                     <a href="/Admin/ArchivedProducts" class="menu-btn @(currentAction == "ArchivedProducts" || currentAction == "Archive" ? "active" : "")">
-                        <i class="fas fa-archive"></i> Archived
+                        Archived
                     </a>
 
                     @if (User.IsInRole("Admin"))
                     {
                         <a href="/Admin/ManageAccounts" class="menu-btn @(currentAction == "ManageAccounts" ? "active" : "")">
-                            <i class="fas fa-credit-card"></i> Accounts
+                            Accounts
                         </a>
                     }
-                    <a href="/Admin/WebCustomization" class="menu-btn @(currentAction == "WebCustomization" ? "active" : "")"><i class="fas fa-sliders-h"></i> Customization</a>
+                    <a href="/Admin/WebCustomization" class="menu-btn @(currentAction == "WebCustomization" ? "active" : "")">Customization</a>
                 </nav>
             </div>
 
             <div class="logout-section">
                 <form method="post" action="/Home/Logout">
                     <button type="submit" class="menu-btn logout-btn">
-                        <i class="fas fa-sign-out-alt"></i> Log Out
+                        Log Out
                     </button>
                 </form>
             </div>
         </aside>
 
-        <!-- ==========================================================================
-           MAIN CONTENT AREA
-           ========================================================================== -->
         <main class="main-content slide-up">
-            <!-- PAGE HEADER -->
             <div class="card-header-flex" style="align-items: flex-end; margin-bottom: 30px;">
                 <div>
                     <h1 class="greeting-title" style="font-size: 22px; font-weight: 800; letter-spacing: -0.5px;">
-                        <i class="fas fa-history" style="font-size: 20px; color: var(--gold); margin-right: 6px;"></i> System Archives
+                        System Archives
                     </h1>
                     <p class="widget-subtitle">Completely isolated data states. Restore layers to bring them back to live POS tracking or stock calculations.</p>
                 </div>
-                <div style="display: flex; gap: 15px;">
-
-                </div>
             </div>
 
-            <!-- ================= TABLE 1: MENU PRODUCTS ARCHIVE ================= -->
-            <h2 class="section-divider-title"><i class="fas fa-utensils" style="font-size: 16px; margin-right: 4px;"></i> Archived Menu Items</h2>
+            <h2 class="section-divider-title">Archived Menu Items</h2>
             <div class="table-card-wrapper">
                 <table class="archive-table">
                     <thead>
@@ -201,7 +189,7 @@
                                     </td>
                                     <td style="text-align: center;">
                                         <button type="button" class="restore-btn" onclick="restoreProduct(@item.ProductId, '@safeName')">
-                                            <i class="fas fa-trash-restore-alt"></i> Restore
+                                            Restore
                                         </button>
                                     </td>
                                 </tr>
@@ -211,7 +199,6 @@
                         {
                             <tr>
                                 <td colspan="6" style="text-align:center; padding: 48px; color: var(--muted); font-size: 14px;">
-                                    <div style="font-size: 24px; margin-bottom: 12px; color: var(--muted); opacity: 0.4;"><i class="fas fa-folder-open"></i></div>
                                     No isolated product lines currently matching archive parameters.
                                 </td>
                             </tr>
@@ -220,8 +207,7 @@
                 </table>
             </div>
 
-            <!-- ================= TABLE 2: INVENTORY INGREDIENTS ARCHIVE ================= -->
-            <h2 class="section-divider-title"><i class="fas fa-box" style="font-size: 16px; margin-right: 4px;"></i> Archived Inventory Ingredients</h2>
+            <h2 class="section-divider-title">Archived Inventory Ingredients</h2>
             <div class="table-card-wrapper">
                 <table class="archive-table">
                     <thead>
@@ -249,7 +235,7 @@
                                     <td style="font-weight: 700;">@item.Quantity.ToString("0.##") @item.Unit</td>
                                     <td style="text-align: center;">
                                         <button type="button" class="restore-btn" onclick="restoreIngredient(@item.ProductId, '@safeName')">
-                                            <i class="fas fa-trash-restore-alt"></i> Restore
+                                            Restore
                                         </button>
                                     </td>
                                 </tr>
@@ -259,7 +245,6 @@
                         {
                             <tr>
                                 <td colspan="6" style="text-align:center; padding: 48px; color: var(--muted); font-size: 14px;">
-                                    <div style="font-size: 24px; margin-bottom: 12px; color: var(--muted); opacity: 0.4;"><i class="fas fa-boxes"></i></div>
                                     No ingredient profiles or recipes locked in the historical archive.
                                 </td>
                             </tr>
@@ -270,9 +255,7 @@
         </main>
     </div>
 
-    <!-- SCRIPTS FOR RESTORATION LIFECYCLES -->
     <script>
-        // 🛍️ Restore Finished Menu Product
         function restoreProduct(id, name) {
         Swal.fire({
         title: 'Restore Product Layer?',
@@ -305,7 +288,6 @@
         });
         }
 
-        // 📦 Restore Raw Ingredient/Stock Item
         function restoreIngredient(id, name) {
         Swal.fire({
         title: 'Restore Inventory Stock Profile?',

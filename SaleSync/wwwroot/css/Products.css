@@ -56,21 +56,13 @@ body {
     height: 100vh;
     border-right: 1px solid var(--border-sub);
     flex-shrink: 0;
-    overflow-y: auto;
 }
-
-    .sidebar::-webkit-scrollbar {
-        width: 3px;
-    }
-
-    .sidebar::-webkit-scrollbar-thumb {
-        background: var(--border-sub);
-        border-radius: 10px;
-    }
 
 /* Logo block */
 .logo-section {
-    margin-bottom: 28px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px dashed var(--border);
 }
 
 .sidebar .logo-title {
@@ -91,7 +83,7 @@ body {
     display: block;
 }
 
-/* Profile — with proper breathing room */
+/* Profile */
 .profile-section {
     display: flex;
     align-items: center;
@@ -121,7 +113,6 @@ body {
     font-weight: 700;
     color: var(--cream);
     line-height: 1.3;
-    margin: 0;
 }
 
 .admin-role {
@@ -130,73 +121,92 @@ body {
     margin-top: 1px;
 }
 
-/* Menu */
+/* Menu Layout */
 .sidebar-menu {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
     flex: 1;
 }
 
 .menu-btn {
     display: flex;
     align-items: center;
-    gap: 11px;
     width: 100%;
     text-decoration: none;
     color: var(--muted);
-    font-size: 14px;
-    font-weight: 600;
-    padding: 11px 14px;
-    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 500;
+    padding: 12px 16px;
+    border-radius: 12px;
     background: transparent;
-    border: none;
-    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    border-left: 3px solid transparent;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     font-family: 'Outfit', sans-serif;
-    letter-spacing: 0.2px;
+    letter-spacing: 0.4px;
 }
 
     .menu-btn:hover {
         color: var(--cream);
-        background: var(--border-sub);
+        background: rgba(255, 255, 255, 0.03);
+        border-color: var(--border-sub);
+        border-left-color: rgba(201, 168, 76, 0.5);
+        transform: translateX(4px);
     }
 
     .menu-btn.active {
-        background: var(--gold);
+        background: linear-gradient(135deg, var(--gold), var(--gold-light));
         color: var(--bg-base);
-        font-weight: 800;
+        font-weight: 700;
+        border-color: transparent;
+        border-left-color: var(--cream);
+        box-shadow: 0 4px 16px rgba(201, 168, 76, 0.25);
     }
 
-/* Menu icon support */
-.menu-icon {
-    font-size: 15px;
-    width: 18px;
-    text-align: center;
-    flex-shrink: 0;
-    opacity: 0.9;
-}
+    .menu-btn i {
+        font-size: 15px;
+        width: 18px;
+        text-align: center;
+        flex-shrink: 0;
+        margin-right: 12px;
+        opacity: 0.9;
+    }
 
-.menu-btn.active .menu-icon {
-    opacity: 1;
-}
+    .menu-btn.active i {
+        opacity: 1;
+    }
 
-/* Logout */
+/* Logout Option */
 .logout-section {
     margin-top: auto;
-    padding-top: 16px;
+    padding-top: 20px;
     border-top: 1px solid var(--border-sub);
 }
 
 .logout-btn {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 12px 16px;
+    border-radius: 12px;
     color: var(--muted);
+    font-weight: 600;
+    border-left: 3px solid transparent;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
     .logout-btn:hover {
         color: var(--danger);
-        background: rgba(224, 85, 85, 0.07);
+        background: rgba(224, 85, 85, 0.08);
+        border-color: rgba(224, 85, 85, 0.15);
+        border-left-color: var(--danger);
+        transform: translateX(4px);
     }
-
 /* ==========================================================================
    MAIN CONTENT & PRODUCTS SPECIFIC STYLES
    ========================================================================== */
@@ -601,4 +611,7 @@ body {
     font-weight: 800;
     border: 1px solid rgba(61, 191, 120, 0.2);
     display: inline-block;
+}
+.slide-up {
+    animation: slideUp 0.3s ease-out;
 }

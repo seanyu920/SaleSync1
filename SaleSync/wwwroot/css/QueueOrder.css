@@ -1,194 +1,393 @@
 ﻿/* ==========================================================================
-   CAFÈRO DASHBOARD — Dark Theme (Queue Order Sidebar)
+   CAFÈRO PRODUCTION PIPELINE & LIVE QUEUE COMPONENT
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght=300;400;600;700;800;900&display=swap');
-
-:root {
-    --bg-base: #0D110D;
-    --bg-surface: #141A14;
-    --bg-card: #1C241C;
-    --bg-card-2: #212B21;
-    --gold: #C9A84C;
-    --gold-light: #DDB95E;
-    --gold-glow: rgba(201, 168, 76, 0.15);
-    --cream: #F2EDE4;
-    --muted: rgba(242, 237, 228, 0.5);
-    --muted-2: rgba(242, 237, 228, 0.75);
-    --border: rgba(201, 168, 76, 0.18);
-    --border-sub: rgba(255, 255, 255, 0.06);
-    --green-hint: rgba(45, 106, 79, 0.25);
-    --danger: #e05555;
-    --success: #3dbf78;
-}
-
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: 'Outfit', 'Segoe UI', system-ui, sans-serif;
-    background: var(--bg-base);
-    color: var(--cream);
-    -webkit-font-smoothing: antialiased;
-    line-height: 1.6;
-}
-
-.dashboard-container {
+/* Layout & Typography Overrides */
+.queue-header {
     display: flex;
-    min-height: 100vh;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--border-sub);
+    padding-bottom: 20px;
 }
 
-/* ==========================================================================
-   SIDEBAR — Replicated directly from image_7dfe99.png
-   ========================================================================== */
-.sidebar {
-    width: 255px;
+    .queue-header h1 {
+        font-size: 26px;
+        font-weight: 800;
+        color: var(--cream);
+        letter-spacing: -0.5px;
+    }
+
+    .queue-header p {
+        font-size: 14px;
+        color: var(--muted);
+        margin-top: 4px;
+    }
+
+/* Operational Statistics System */
+.queue-stats {
+    display: flex;
+    gap: 12px;
+}
+
+.stat-badge {
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+
+    .stat-badge.badge-pending {
+        background: rgba(201, 168, 76, 0.12);
+        border: 1px solid var(--border);
+        color: var(--gold-light);
+    }
+
+    .stat-badge.badge-preparing {
+        background: rgba(61, 191, 120, 0.1);
+        border: 1px solid rgba(61, 191, 120, 0.25);
+        color: var(--success);
+    }
+
+/* Ticket Grid Architecture */
+.queue-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+    align-items: start;
+}
+
+/* Production Card Engineering */
+.queue-card {
     background: var(--bg-surface);
-    padding: 30px 20px;
+    border: 1px solid var(--border-sub);
+    border-radius: 14px;
+    padding: 20px;
     display: flex;
     flex-direction: column;
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    border-right: 1px solid var(--border-sub);
-    flex-shrink: 0;
+    justify-content: space-between;
+    min-height: 280px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
-/* Logo block */
-.logo-section {
-    margin-bottom: 28px;
+    .queue-card:hover {
+        transform: translateY(-2px);
+        border-color: var(--border);
+    }
+
+/* Card Header Framework */
+.card-header-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
 }
 
-.sidebar .logo-title {
-    font-size: 22px;
+.order-id {
+    font-size: 15px;
     font-weight: 800;
     color: var(--cream);
-    letter-spacing: -0.5px;
-    line-height: 1.2;
+    letter-spacing: 0.2px;
 }
 
-.sidebar .logo-subtitle {
+.order-time {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 600;
+}
+
+/* Contextual Status Badges */
+.badge-q {
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.badge-q-default {
+    background: #2c302e;
+    color: #a0a5a1;
+}
+
+.badge-q-pending {
+    background: #3a2f14;
+    color: #ffc107;
+}
+
+.badge-q-preparing {
+    background: #143222;
+    color: var(--success);
+}
+
+.badge-q-delivery {
+    background: #12283a;
+    color: #00bcff;
+}
+
+.badge-q-done {
+    background: #202b24;
+    color: #28a745;
+}
+
+/* Customer Identity Metadata */
+.customer-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gold-light);
+    margin-bottom: 8px;
+    letter-spacing: -0.2px;
+}
+
+.order-meta {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.meta-tag {
+    font-size: 11px;
+    color: var(--muted-2);
+    background: var(--bg-card);
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-weight: 600;
+}
+
+    .meta-tag i {
+        margin-right: 4px;
+        color: var(--gold);
+    }
+
+/* Ticket Contents Component */
+.items-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border-sub);
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 13px;
+    color: var(--cream);
+    margin-bottom: 16px;
+    line-height: 1.5;
+    max-height: 95px;
+    overflow-y: auto;
+}
+
+.items-box-label {
+    display: block;
     font-size: 11px;
     color: var(--gold);
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 2px;
-    margin-top: 4px;
-    display: block;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
 }
 
-/* Profile Section */
-.profile-section {
+/* Action Control Strip */
+.card-actions {
     display: flex;
-    align-items: center;
-    gap: 13px;
-    margin-bottom: 32px;
-    padding-bottom: 20px;
-    padding-top: 4px;
-    border-bottom: 1px solid var(--border-sub);
+    gap: 8px;
+    margin-top: auto;
 }
 
-.profile-circle {
-    width: 40px;
-    height: 40px;
-    background: var(--green-hint);
-    border: 1.5px solid var(--gold);
-    border-radius: 50%;
-    display: flex;
+.btn-action {
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 15px;
-    color: var(--gold);
-    flex-shrink: 0;
-}
-
-.admin-name {
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--cream);
-    line-height: 1.3;
-}
-
-.admin-role {
-    font-size: 11px;
-    color: var(--muted);
-    margin-top: 1px;
-}
-
-/* Menu Customization */
-.sidebar-menu {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    flex: 1;
-}
-
-.menu-btn {
-    display: flex;
-    align-items: center;
-    gap: 11px;
-    width: 100%;
-    text-decoration: none;
-    color: var(--muted);
-    font-size: 14px;
-    font-weight: 600;
-    padding: 11px 14px;
-    border-radius: 10px;
-    background: transparent;
-    border: none;
-    transition: all 0.2s ease;
-    cursor: pointer;
+    gap: 6px;
+    transition: all 0.15s ease;
     font-family: 'Outfit', sans-serif;
-    letter-spacing: 0.2px;
 }
 
-    .menu-btn:hover {
-        color: var(--cream);
-        background: var(--border-sub);
+.btn-view {
+    background: var(--bg-card-2);
+    color: var(--cream);
+    flex: 1;
+    border: 1px solid var(--border-sub);
+}
+
+    .btn-view:hover {
+        background: #2a362a;
+        border-color: var(--border);
     }
 
-    .menu-btn.active {
+.btn-start {
+    background: rgba(201, 168, 76, 0.15);
+    color: var(--gold-light);
+    border: 1px solid var(--border);
+    flex: 1.3;
+}
+
+    .btn-start:hover {
         background: var(--gold);
         color: var(--bg-base);
-        font-weight: 800;
     }
 
-/* Menu icon styling */
-.menu-icon {
-    font-size: 15px;
-    width: 18px;
-    text-align: center;
-    flex-shrink: 0;
-    opacity: 0.9;
+.btn-complete {
+    background: rgba(61, 191, 120, 0.15);
+    color: var(--success);
+    border: 1px solid rgba(61, 191, 120, 0.3);
+    flex: 1.3;
 }
 
-.menu-btn.active .menu-icon {
-    opacity: 1;
+    .btn-complete:hover {
+        background: var(--success);
+        color: var(--bg-base);
+    }
+
+.btn-void {
+    background: rgba(224, 85, 85, 0.08);
+    color: var(--danger);
+    width: 40px;
+    border: 1px solid rgba(224, 85, 85, 0.2);
 }
 
-/* Logout Window Alignment */
-.logout-section {
-    margin-top: auto;
-    padding-top: 16px;
-    border-top: 1px solid var(--border-sub);
+    .btn-void:hover {
+        background: var(--danger);
+        color: var(--cream);
+    }
+
+/* Overlaid Modal Systems */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(13, 17, 13, 0.85);
+    backdrop-filter: blur(5px);
+    z-index: 1050;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s ease-out;
 }
 
-.logout-btn {
+.modal-content {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 500px;
+    padding: 24px;
+    animation: slideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-sub);
+    padding-bottom: 14px;
+    margin-bottom: 18px;
+}
+
+.modal-close {
+    background: transparent;
+    border: none;
     color: var(--muted);
+    font-size: 24px;
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.15s ease;
 }
 
-    .logout-btn:hover {
+    .modal-close:hover {
         color: var(--danger);
-        background: rgba(224, 85, 85, 0.07);
     }
 
-/* Empty Main Content Window Workspace */
-.main-content {
-    flex: 1;
-    padding: 36px 40px;
-    overflow-y: auto;
+/* Micro-Components Inside Modals */
+.list-group {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+    .list-group li {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border-sub);
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+    }
+
+        .list-group li:last-child {
+            border-bottom: none;
+        }
+
+.form-control {
+    width: 100%;
     background: var(--bg-base);
+    border: 1px solid var(--border-sub);
+    padding: 12px;
+    border-radius: 8px;
+    color: #fff;
+    font-family: inherit;
+    font-size: 14px;
+    margin-top: 6px;
+    transition: border-color 0.15s ease;
+}
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--gold);
+    }
+
+/* Animation Matrices */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(15px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 0.6;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0.6;
+    }
+}
+
+.animate-pulse {
+    animation: pulse 1.8s infinite ease-in-out;
+}
+.slide-up {
+    animation: slideUp 0.3s ease-out;
 }
