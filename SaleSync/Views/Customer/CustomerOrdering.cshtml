@@ -68,7 +68,11 @@
             </div>
 
             <div class="logout-section">
-                <a href="/Home/Logout" class="menu-btn logout-btn">🚪 Log Out</a>
+                <form method="post" action="/Home/Logout" id="logoutForm">
+                    <button type="button" class="menu-btn logout-btn" onclick="confirmLogout()">
+                        Log Out
+                    </button>
+                </form>
             </div>
         </aside>
 
@@ -336,6 +340,22 @@
 }
 
 <script>
+    function confirmLogout() {
+    Swal.fire({
+    title: 'Are you sure?',
+    text: "You will be logged out of your session.",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Yes, log out',
+    cancelButtonText: 'Cancel'
+    }).then((result) => {
+    if (result.isConfirmed) {
+    document.getElementById('logoutForm').submit();
+    }
+    });
+    }
     // ── DATA from Razor ────────────────────────────────────────────────────────
     const allItems = {};
     @if (Model?.MenuItems != null)

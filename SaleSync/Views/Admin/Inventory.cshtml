@@ -68,8 +68,8 @@
             </div>
 
             <div class="logout-section">
-                <form method="post" action="/Home/Logout">
-                    <button type="submit" class="menu-btn logout-btn">
+                <form method="post" action="/Home/Logout" id="logoutForm">
+                    <button type="button" class="menu-btn logout-btn" onclick="confirmLogout()">
                         Log Out
                     </button>
                 </form>
@@ -279,6 +279,22 @@
     </form>
 
     <script>
+        function confirmLogout() {
+        Swal.fire({
+        title: 'Are you sure?',
+        text: "You will be logged out of your session.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, log out',
+        cancelButtonText: 'Cancel'
+        }).then((result) => {
+        if (result.isConfirmed) {
+        document.getElementById('logoutForm').submit();
+        }
+        });
+        }
         const standardConversions = {
         "gallon_ml": 3785.41,
         "L_ml": 1000,
