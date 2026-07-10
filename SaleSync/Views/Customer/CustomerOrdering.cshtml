@@ -1,4 +1,4 @@
-﻿@model List<SaleSync.Models.MenuItemModel>
+﻿@model SaleSync.Models.CustomerDashboardViewModel
 @{
     Layout = null;
 }
@@ -11,33 +11,36 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="~/css/CustomerOrdering.css" asp-append-version="true" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        .product-uploaded-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: inherit;
+        }
+    </style>
 </head>
 <body>
     <div class="dashboard-container">
 
-        <!-- ===== SIDEBAR ===== -->
         <aside class="sidebar">
             <div class="sidebar-top">
-
-                <!-- Logo -->
                 <div class="logo-section">
                     <div class="brand-name">Cafero</div>
                     <div class="brand-sub">Coffee & Pastries</div>
                 </div>
 
-                <!-- Store status banner -->
                 <div class="store-status-banner" id="storeBanner">
                     <span class="store-dot"></span>
                     <span id="storeStatusText">We're Open</span>
                 </div>
 
-                <!-- Tab switcher -->
                 <div class="sidebar-tabs">
                     <button class="tab-btn active" onclick="switchTab('menu', this)">🍽️ Order</button>
                     <button class="tab-btn" onclick="switchTab('orders', this)">📦 My Orders</button>
                 </div>
 
-                <!-- Category nav (shown on menu tab) -->
                 <div id="catNav">
                     <p class="sidebar-section-label">Categories</p>
                     <nav class="sidebar-menu">
@@ -52,7 +55,6 @@
                     </nav>
                 </div>
 
-                <!-- Loyalty points -->
                 <div class="loyalty-box" id="loyaltyBox">
                     <div class="loyalty-header">
                         <span>⭐ Loyalty Points</span>
@@ -70,16 +72,12 @@
             </div>
         </aside>
 
-        <!-- ===== MAIN CONTENT ===== -->
         <main class="main-content slide-up">
-
-            <!-- Announcement banner -->
             <div class="announcement-banner" id="announcementBanner">
                 🎉 <strong>Welcome to Cafero!</strong> Free delivery on orders ₱300+
                 <button class="close-announcement" onclick="this.parentElement.style.display='none'">✕</button>
             </div>
 
-            <!-- ── TAB 1: MENU ── -->
             <div id="tabMenu">
                 <header class="pos-header">
                     <div>
@@ -99,13 +97,12 @@
                 </header>
 
                 <div class="product-container" id="menuGrid" data-current-cat="all">
-                    @if (Model != null && Model.Count > 0)
+                    @if (Model?.MenuItems != null && Model.MenuItems.Count > 0)
                     {
-                        // Best seller list — customize as needed
                         var bestSellers = new[] { "Americano - Small", "Spanish Latte", "Iced Latte", "Wintermelon", "Carbonara" };
                         var newItems = new[] { "Hot Matcha Latte", "Iced Matcha Latte", "Gambas Pasta" };
 
-                        foreach (var item in Model)
+                        foreach (var item in Model.MenuItems)
                         {
                             string catRaw = (item.CategoryName ?? "Uncategorized").ToLower().Replace(" ", "");
                             bool isBest = bestSellers.Contains(item.ProductName);
@@ -121,9 +118,18 @@
                                  data-price="@item.Price">
                                 @Html.Raw(badgeHtml)
                                 <button class="fav-heart" onclick="toggleFav(this, '@item.ProductId')" title="Add to favorites">♡</button>
+
                                 <div class="product-img-placeholder">
-                                    <span class="product-img-emoji">@GetCategoryEmoji(item.CategoryName)</span>
+                                    @if (!string.IsNullOrEmpty(item.ImagePath))
+                                    {
+                                        <img src="@item.ImagePath" alt="@item.ProductName" class="product-uploaded-img" />
+                                    }
+                                    else
+                                    {
+                                        <span class="product-img-emoji">@GetCategoryEmoji(item.CategoryName)</span>
+                                    }
                                 </div>
+
                                 <div class="product-info">
                                     <div class="info-top">
                                         <h3>@item.ProductName</h3>
@@ -145,36 +151,95 @@
                 </div>
             </div>
 
-            <!-- ── TAB 2: MY ORDERS ── -->
             <div id="tabOrders" style="display:none;">
                 <header class="pos-header">
                     <div>
                         <h1>My Orders</h1>
                         <p>Track your active orders and view past purchases</p>
                     </div>
-                    <button class="refresh-btn" onclick="loadMyOrders()">↻ Refresh</button>
+                    <button class="refresh-btn" onclick="location.reload()">↻ Refresh</button>
                 </header>
 
-                <!-- Active order tracker -->
                 <div class="orders-section">
                     <h2 class="section-title">Active Orders</h2>
                     <div id="activeOrdersList">
-                        <div class="empty-orders-msg">No active orders right now.</div>
+                        @{
+                            var activeStatuses = new List<string> { "Pending", "Preparing", "Ready", "On the Way" };
+                            var activeOrders = Model?.OrderHistory?.Where(o => activeStatuses.Contains(o.Status)).ToList();
+                        }
+                        @if (activeOrders != null && activeOrders.Any())
+                        {
+                            foreach (var order in activeOrders)
+                            {
+                                int step = order.Status == "Preparing" ? 2 : (order.Status == "Ready" || order.Status == "On the Way") ? 3 : 1;
+                                string eta = order.Status == "Preparing" ? "Est. 10–15 mins" : (order.Status == "Ready" || order.Status == "On the Way") ? "Ready for pickup!" : "Est. 15–20 mins";
+
+                                <div class="track-card">
+                                    <div class="track-header">
+                                        <span class="track-id">Order #@order.SaleId</span>
+                                        <span class="track-badge status-@order.Status.ToLower().Replace(" ", "-")">@order.Status</span>
+                                    </div>
+                                    <div class="track-meta">
+                                        <span class="track-price">₱@order.TotalAmount.ToString("F2")</span>
+                                        <span class="track-time">@order.SaleDate.ToString("hh:mm tt")</span>
+                                    </div>
+                                    <div class="eta-bar">⏱ @eta</div>
+                                    <div class="track-steps">
+                                        <div class="track-step @(step >= 1 ? "done" : "")">
+                                            <div class="step-dot">@(step >= 1 ? "✓" : "1")</div>
+                                            <span>Received</span>
+                                        </div>
+                                        <div class="track-line @(step >= 2 ? "done" : "")"></div>
+                                        <div class="track-step @(step >= 2 ? "done" : "")">
+                                            <div class="step-dot">@(step >= 2 ? "✓" : "2")</div>
+                                            <span>Preparing</span>
+                                        </div>
+                                        <div class="track-line @(step >= 3 ? "done" : "")"></div>
+                                        <div class="track-step @(step >= 3 ? "done" : "")">
+                                            <div class="step-dot">@(step >= 3 ? "✓" : "3")</div>
+                                            <span>Ready</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="empty-orders-msg">No active orders right now.</div>
+                        }
                     </div>
                 </div>
 
-                <!-- Order history -->
                 <div class="orders-section">
                     <h2 class="section-title">Order History</h2>
                     <div id="orderHistoryList">
-                        <div class="empty-orders-msg">No past orders yet.</div>
+                        @if (Model?.OrderHistory != null && Model.OrderHistory.Any())
+                        {
+                            foreach (var order in Model.OrderHistory)
+                            {
+                                <div class="history-row">
+                                    <div class="history-left">
+                                        <div class="history-id">Order #@order.SaleId</div>
+                                        <div class="history-items">Type: @order.OrderType</div>
+                                        <div class="history-time">@order.SaleDate.ToString("MMM dd, hh:mm tt")</div>
+                                    </div>
+                                    <div class="history-right">
+                                        <span class="track-badge badge-@order.Status.ToLower()">@order.Status</span>
+                                        <div class="history-total">₱@order.TotalAmount.ToString("F2")</div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="empty-orders-msg">No past orders yet.</div>
+                        }
                     </div>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- ===== SIZE + NOTES MODAL ===== -->
     <div id="sizeModal" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-header">
@@ -209,7 +274,6 @@
                 <button type="button" class="qty-btn" onclick="updateQty(1)">+</button>
             </div>
 
-            <!-- Special instructions -->
             <p class="modal-label">Special Instructions <span class="optional-tag">(Optional)</span></p>
             <textarea id="itemNotes" class="notes-textarea" placeholder="e.g. less sugar, no ice, extra hot..."></textarea>
 
@@ -217,7 +281,6 @@
         </div>
     </div>
 
-    <!-- ===== CART SIDEBAR ===== -->
     <div id="cartSidebar" class="cart-sidebar">
         <div class="cart-header">
             <h2>🛒 Your Order</h2>
@@ -275,9 +338,9 @@
 <script>
     // ── DATA from Razor ────────────────────────────────────────────────────────
     const allItems = {};
-    @if (Model != null)
+    @if (Model?.MenuItems != null)
     {
-        foreach (var item in Model)
+        foreach (var item in Model.MenuItems)
         {
             @:allItems[@item.ProductId] = {
             @:    id: @item.ProductId,
@@ -299,9 +362,10 @@
     function checkStoreStatus() {
     const now  = new Date();
     const hour = now.getHours();
-    const open = hour >= 7 && hour < 21; // 7AM–9PM
+    const open = hour >= 7 && hour < 21;
     const banner = document.getElementById('storeBanner');
     const text   = document.getElementById('storeStatusText');
+    if (banner && text) {
     if (open) {
     banner.classList.add('open');
     text.innerText = "We're Open · Closes 9PM";
@@ -310,17 +374,24 @@
     text.innerText = "We're Closed · Opens 7AM";
     }
     }
+    }
 
     // ── LOYALTY ────────────────────────────────────────────────────────────────
     function updateLoyaltyUI() {
     const goal = 500;
-    document.getElementById('loyaltyPoints').innerText = loyaltyPts + ' pts';
+    const display = document.getElementById('loyaltyPoints');
+    const fillBar = document.getElementById('loyaltyBarFill');
+    const hint = document.getElementById('loyaltyHint');
+
+    if (display) display.innerText = loyaltyPts + ' pts';
+    if (fillBar) {
     const pct = Math.min((loyaltyPts / goal) * 100, 100);
-    document.getElementById('loyaltyBarFill').style.width = pct + '%';
+    fillBar.style.width = pct + '%';
+    }
+    if (hint) {
     const remaining = goal - loyaltyPts;
-    document.getElementById('loyaltyHint').innerText =
-    loyaltyPts >= goal ? '🎁 You have a reward ready!'
-    : `${remaining} pts until your next reward`;
+    hint.innerText = loyaltyPts >= goal ? '🎁 You have a reward ready!' : `${remaining} pts until your next reward`;
+    }
     }
 
     // ── FAVORITES ─────────────────────────────────────────────────────────────
@@ -360,7 +431,6 @@
     document.getElementById('catNav').style.display    = tab === 'menu'   ? 'block' : 'none';
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    if (tab === 'orders') loadMyOrders();
     }
 
     // ── CART TOGGLE ───────────────────────────────────────────────────────────
@@ -380,7 +450,7 @@
     function openModal(itemId, itemName, basePrice) {
     activeModalId = parseInt(itemId);
     const price   = parseFloat(basePrice);
-    const cat     = allItems[activeModalId]?.cat || '';
+    const cat      = allItems[activeModalId]?.cat || '';
     const hasSizes = sizedCategories.some(c => cat.includes(c));
 
     document.getElementById('modalItemName').innerText = itemName;
@@ -398,15 +468,17 @@
     document.getElementById('sizeModal').style.display = 'flex';
     }
 
+    // ── CLOSE MODAL ──
     function closeModal() { document.getElementById('sizeModal').style.display = 'none'; }
 
+    // ── QUANTITY CONTROL ──
     function updateQty(change) {
     const el = document.getElementById('itemQty');
     el.value = Math.max(1, parseInt(el.value) + change);
     }
 
     function confirmAddToCart() {
-    const item   = allItems[activeModalId];
+    const item = allItems[activeModalId];
     if (!item) { Swal.fire('Error','Item not found in menu.','error'); return; }
 
     const cat      = item.cat || '';
@@ -443,8 +515,10 @@
     function updateCartBadge() {
     const total  = customerCart.reduce((s, i) => s + i.qty, 0);
     const badge  = document.getElementById('cartBadge');
+    if (badge) {
     badge.style.display = total > 0 ? 'flex' : 'none';
     badge.innerText = total;
+    }
     }
 
     function renderCustomerCart() {
@@ -452,9 +526,11 @@
     const totalDisplay = document.getElementById('customerCartTotal');
     updateCartBadge();
 
+    if (!container) return;
+
     if (customerCart.length === 0) {
     container.innerHTML = '<div class="empty-cart-msg">Your cart is empty.</div>';
-    totalDisplay.innerText = '₱0.00';
+    if (totalDisplay) totalDisplay.innerText = '₱0.00';
     return;
     }
 
@@ -478,7 +554,7 @@
     });
 
     container.innerHTML = html;
-    totalDisplay.innerText = '₱' + grandTotal.toFixed(2);
+    if (totalDisplay) totalDisplay.innerText = '₱' + grandTotal.toFixed(2);
     }
 
     function updateCustomerQty(index, change) {
@@ -488,7 +564,7 @@
     renderCustomerCart();
     }
 
-    // ── SUBMIT ORDER ──────────────────────────────────────────────────────────
+    // ── SUBMIT ORDER VIA API ──────────────────────────────────────────────────
     async function submitOnlineOrder() {
     if (customerCart.length === 0) {
     Swal.fire('Empty Cart', 'Please add items before checking out.', 'warning');
@@ -516,10 +592,11 @@
     PaymentMethod:   paymentMethod,
     DeliveryAddress: orderType === 'Delivery' ? address : null,
     Items: customerCart.map(i => ({
-    ProductId:   i.id,
-    Quantity:    i.qty,
-    Price:       i.price,
-    SpecialNote: i.notes || ''
+    ProductId:           i.id,
+    Quantity:            i.qty,
+    Price:               i.price,
+    Size:                i.size,
+    SpecialInstructions: i.notes || ''
     }))
     };
 
@@ -533,23 +610,10 @@
     if (response.ok) {
     const result = await response.json();
 
-    // Award loyalty points (1 pt per ₱10)
     const earned = Math.floor(grandTotal / 10);
     loyaltyPts  += earned;
     localStorage.setItem('caferoLoyaltyPoints', loyaltyPts);
     updateLoyaltyUI();
-
-    // Save to local order history
-    const history = JSON.parse(localStorage.getItem('caferoOrderHistory') || '[]');
-    history.unshift({
-    orderId:     result.orderId,
-    status:      'Pending',
-    orderType,
-    totalAmount: grandTotal,
-    placedAt:    new Date().toISOString(),
-    items:       [...customerCart]
-    });
-    localStorage.setItem('caferoOrderHistory', JSON.stringify(history));
 
     Swal.fire({
     title: 'Order Received! 🎉',
@@ -560,161 +624,18 @@
     }).then(() => {
     customerCart = [];
     localStorage.removeItem('caferoCustomerCart');
-    if (document.getElementById('customerAddress'))
-    document.getElementById('customerAddress').value = '';
-    renderCustomerCart();
-    toggleCart();
+    location.reload();
     });
     } else {
     const err = await response.json().catch(() => ({}));
     Swal.fire('Checkout Failed', err.message || 'Something went wrong. Please try again.', 'error');
     }
     } catch (e) {
-    Swal.fire('Network Error', 'Could not reach the server. Please check your connection.', 'error');
+    Swal.fire('Network Error', 'Could not reach the server.', 'error');
     } finally {
     btn.disabled = false;
     btn.innerText = 'Send Order to Kitchen';
     }
-    }
-
-    // ── ORDER TRACKER ─────────────────────────────────────────────────────────
-    async function loadMyOrders() {
-    renderOrderHistory();
-    await fetchLiveStatuses();
-    }
-
-    async function fetchLiveStatuses() {
-    const history = JSON.parse(localStorage.getItem('caferoOrderHistory') || '[]');
-    if (!history.length) {
-    document.getElementById('activeOrdersList').innerHTML =
-    '<div class="empty-orders-msg">No active orders right now.</div>';
-    return;
-    }
-
-    try {
-    const ids = history.map(o => o.orderId);
-    const res = await fetch('/Customer/GetOrderStatuses', {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify(ids)
-    });
-    if (res.ok) {
-    const statuses = await res.json();
-    statuses.forEach(s => {
-    const match = history.find(o => o.orderId === s.orderId);
-    if (match) match.status = s.status;
-    });
-    localStorage.setItem('caferoOrderHistory', JSON.stringify(history));
-    }
-    } catch (e) { /* fall back to local */ }
-
-    renderActiveOrders(history);
-    }
-
-    function renderActiveOrders(history) {
-    const active    = history.filter(o => !['Completed','Voided','Delivered'].includes(o.status));
-    const container = document.getElementById('activeOrdersList');
-
-    if (!active.length) {
-    container.innerHTML = '<div class="empty-orders-msg">No active orders right now.</div>';
-    return;
-    }
-
-    container.innerHTML = active.map(order => {
-    const { step, labelClass, label, eta } = getTrackInfo(order.status);
-    const items = (order.items || []).map(i => `<span class="track-item-tag">${i.qty}× ${i.name}</span>`).join('');
-    return `
-    <div class="track-card">
-    <div class="track-header">
-    <span class="track-id">Order #${order.orderId}</span>
-    <span class="track-badge ${labelClass}">${label}</span>
-    </div>
-    <div class="track-meta">
-    <span class="track-price">₱${parseFloat(order.totalAmount).toFixed(2)}</span>
-    <span class="track-time">${formatTime(order.placedAt)}</span>
-    </div>
-    <div class="eta-bar">⏱ ${eta}</div>
-    <div class="track-steps">
-    <div class="track-step ${step >= 1 ? 'done' : ''}">
-    <div class="step-dot">${step >= 1 ? '✓' : '1'}</div>
-    <span>Received</span>
-    </div>
-    <div class="track-line ${step >= 2 ? 'done' : ''}"></div>
-    <div class="track-step ${step >= 2 ? 'done' : ''}">
-    <div class="step-dot">${step >= 2 ? '✓' : '2'}</div>
-    <span>Preparing</span>
-    </div>
-    <div class="track-line ${step >= 3 ? 'done' : ''}"></div>
-    <div class="track-step ${step >= 3 ? 'done' : ''}">
-    <div class="step-dot">${step >= 3 ? '✓' : '3'}</div>
-    <span>Ready</span>
-    </div>
-    </div>
-    <div class="track-items">${items}</div>
-    </div>`;
-    }).join('');
-    }
-
-    function renderOrderHistory() {
-    const history   = JSON.parse(localStorage.getItem('caferoOrderHistory') || '[]');
-    const container = document.getElementById('orderHistoryList');
-    if (!history.length) {
-    container.innerHTML = '<div class="empty-orders-msg">No past orders yet.</div>'; return;
-    }
-    container.innerHTML = history.map((order, idx) => {
-    const { labelClass, label } = getTrackInfo(order.status);
-    const items = (order.items || []).map(i => `${i.qty}× ${i.name} (${i.size})`).join(', ');
-    return `
-    <div class="history-row">
-    <div class="history-left">
-    <div class="history-id">Order #${order.orderId}</div>
-    <div class="history-items">${items}</div>
-    <div class="history-time">${formatDate(order.placedAt)}</div>
-    </div>
-    <div class="history-right">
-    <span class="track-badge ${labelClass}">${label}</span>
-    <div class="history-total">₱${parseFloat(order.totalAmount).toFixed(2)}</div>
-    <button class="reorder-btn" onclick="reorder(${idx})">🔄 Reorder</button>
-    </div>
-    </div>`;
-    }).join('');
-    }
-
-    function getTrackInfo(status) {
-    const s = (status || '').toLowerCase();
-    if (s === 'completed' || s === 'delivered')
-    return { step: 3, labelClass: 'badge-delivered', label: 'Completed', eta: 'Order completed!' };
-    if (s === 'ready' || s === 'on the way')
-    return { step: 3, labelClass: 'badge-ready',     label: 'Ready / On the Way', eta: 'Ready for pickup!' };
-    if (s === 'preparing')
-    return { step: 2, labelClass: 'badge-preparing', label: 'Preparing', eta: 'Est. 10–15 mins' };
-    if (s === 'voided')
-    return { step: 0, labelClass: 'badge-voided',    label: 'Voided', eta: '—' };
-    return   { step: 1, labelClass: 'badge-pending',   label: 'Pending', eta: 'Est. 15–20 mins' };
-    }
-
-    function formatTime(iso) {
-    if (!iso) return '';
-    return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    }
-
-    function formatDate(iso) {
-    if (!iso) return '';
-    return new Date(iso).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-    }
-
-    function reorder(idx) {
-    const history = JSON.parse(localStorage.getItem('caferoOrderHistory') || '[]');
-    const order   = history[idx];
-    if (!order?.items) return;
-    order.items.forEach(item => {
-    const existIdx = customerCart.findIndex(i => i.id === item.id && i.size === item.size);
-    if (existIdx > -1) customerCart[existIdx].qty += item.qty;
-    else customerCart.push({ ...item });
-    });
-    localStorage.setItem('caferoCustomerCart', JSON.stringify(customerCart));
-    updateCartBadge();
-    Swal.fire({ title: 'Added to Cart!', text: 'Previous order items have been added.', icon: 'success', timer: 1500, showConfirmButton: false });
     }
 
     // ── MENU FILTER ───────────────────────────────────────────────────────────
@@ -729,7 +650,7 @@
     const search     = (document.getElementById('menuSearch').value || '').toLowerCase();
 
     document.querySelectorAll('.product-card').forEach(card => {
-    const cardCat  = (card.getAttribute('data-category') || '').toLowerCase().replace(/\s/g, '');
+    const cardCat   = (card.getAttribute('data-category') || '').toLowerCase().replace(/\s/g, '');
     const cardName = (card.getAttribute('data-name') || '').toLowerCase();
     const cardId   = card.getAttribute('data-id');
 
