@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Hosting;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -9,13 +10,14 @@ using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using SaleSync.Models;
 using static SaleSync.Models.MenuItemModel;
-
 namespace SaleSync.Controllers
+
 {
     [Authorize(Roles = "Admin,Manager")]
     public class AdminController : Controller
     {
         private readonly IConfiguration _configuration;
+        private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly string connectionString = "Server=(localdb)\\MSSQLLocalDB; Database=SaleSync; Trusted_Connection=True; TrustServerCertificate=True;";
 
         public AdminController(IConfiguration configuration)
@@ -1435,6 +1437,58 @@ namespace SaleSync.Controllers
                 LogActivity(currentUserId, "Product Edited", $"Updated price for {oldData["ProductName"]}", oldData, newData);
             }
             return Ok();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UploadProductPhoto(int productId, IFormFile productImageFile)
+        {
+            if (productImageFile == null || productImageFile.Length == 0)
+            {
+                return BadRequest("Invalid processing asset attachment stream validation layout failure.");
+            }
+
+            try
+            {
+                // 1. Setup secure storage target arrays under the application root hosting paths
+                string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(productImageFile.FileName);
+                string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "products");
+
+                if (!Directory.Exists(uploadsFolder))
+                {
+                    Directory.CreateDirectory(uploadsFolder);
+                }
+
+                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                // 2. Stream the binary file input directly to the application folder target locations
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await productImageFile.CopyToAsync(fileStream);
+                }
+
+                // 3. Formulate structural relative routing web context configurations
+                string relativeImagePath = "/images/products/" + uniqueFileName;
+
+                // 4. Update the SQL DB row mapping data field target location pointer values
+                using (SqlConnection conn = new SqlConnection(connectionString))
+                {
+                    string updateSql = "UPDATE products SET image_path = @img WHERE product_id = @id";
+                    using (SqlCommand cmd = new SqlCommand(updateSql, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@img", relativeImagePath);
+                        cmd.Parameters.AddWithValue("@id", productId);
+
+                        conn.Open();
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+
+                return Ok(); // Return a clean HTTP 200 validation statement back to AJAX layer
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal execution error sequence context interrupt: {ex.Message}");
+            }
         }
         // ==========================================
         // ⭐ THE ARCHIVE ROOM

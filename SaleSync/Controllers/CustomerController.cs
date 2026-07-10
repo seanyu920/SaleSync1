@@ -5,6 +5,7 @@ using SaleSync.Models;
 using System.Collections.Generic;
 using System;
 using System.Security.Claims;
+using System.Linq;
 
 namespace SaleSync.Controllers
 {
@@ -16,38 +17,73 @@ namespace SaleSync.Controllers
         [HttpGet]
         public IActionResult CustomerOrdering()
         {
-            var menuList = new List<MenuItemModel>();
+            string userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            int currentUserId = string.IsNullOrEmpty(userIdClaim) ? 0 : int.Parse(userIdClaim);
+
+            var dashboardData = new CustomerDashboardViewModel();
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                string sql = @"
-                    SELECT p.product_id, p.product_name, c.category_name, p.selling_price
-                    FROM products p
-                    LEFT JOIN categories c ON p.category_id = c.category_id
-                    WHERE (p.is_ingredient = 0 OR p.is_ingredient IS NULL)
-                    AND p.is_archived = 0
-                    ORDER BY c.category_name, p.product_name";
+                conn.Open();
 
-                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                // 1. Fetch live menu data (ADDED p.image_path to SELECT)
+                string menuSql = @"
+            SELECT p.product_id, p.product_name, c.category_name, p.selling_price, p.image_path
+            FROM products p
+            LEFT JOIN categories c ON p.category_id = c.category_id
+            WHERE (p.is_ingredient = 0 OR p.is_ingredient IS NULL)
+            AND p.is_archived = 0
+            ORDER BY c.category_name, p.product_name";
+
+                using (SqlCommand cmd = new SqlCommand(menuSql, conn))
+                using (SqlDataReader r = cmd.ExecuteReader())
                 {
-                    conn.Open();
-                    using (SqlDataReader r = cmd.ExecuteReader())
+                    while (r.Read())
                     {
-                        while (r.Read())
+                        dashboardData.MenuItems.Add(new MenuItemModel
                         {
-                            menuList.Add(new MenuItemModel
+                            ProductId = Convert.ToInt32(r["product_id"]),
+                            ProductName = r["product_name"].ToString(),
+                            CategoryName = r["category_name"]?.ToString() ?? "Uncategorized",
+                            Price = r["selling_price"] != DBNull.Value ? Convert.ToDecimal(r["selling_price"]) : 0,
+
+                            // ADDED: Map the image path column from the database reader
+                            ImagePath = r["image_path"] != DBNull.Value ? r["image_path"].ToString() : null
+                        });
+                    }
+                }
+
+                // 2. Fetch live order tracking records for this customer
+                if (currentUserId != 0)
+                {
+                    string orderSql = @"
+                SELECT sale_id, sale_date, total_amount, status, order_type 
+                FROM sales 
+                WHERE user_id = @userId 
+                ORDER BY sale_date DESC";
+
+                    using (SqlCommand cmd = new SqlCommand(orderSql, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@userId", currentUserId);
+                        using (SqlDataReader r = cmd.ExecuteReader())
+                        {
+                            while (r.Read())
                             {
-                                ProductId = Convert.ToInt32(r["product_id"]),
-                                ProductName = r["product_name"].ToString(),
-                                CategoryName = r["category_name"]?.ToString() ?? "Uncategorized",
-                                Price = r["selling_price"] != DBNull.Value ? Convert.ToDecimal(r["selling_price"]) : 0
-                            });
+                                dashboardData.OrderHistory.Add(new CustomerOrderModel
+                                {
+                                    SaleId = Convert.ToInt32(r["sale_id"]),
+                                    SaleDate = Convert.ToDateTime(r["sale_date"]),
+                                    TotalAmount = Convert.ToDecimal(r["total_amount"]),
+                                    Status = r["status"]?.ToString() ?? "Unknown",
+                                    OrderType = r["order_type"]?.ToString() ?? "Pick-up"
+                                });
+                            }
                         }
                     }
                 }
             }
 
-            return View(menuList);
+            return View(dashboardData);
         }
 
         [HttpPost]
@@ -57,8 +93,6 @@ namespace SaleSync.Controllers
                 return BadRequest(new { message = "Your cart is empty." });
 
             string customerName = User.Identity?.Name ?? "Online Guest";
-
-            // ⭐ THE FIX: Grab the logged-in customer's ID
             int currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
 
             using (SqlConnection conn = new SqlConnection(connectionString))
@@ -74,7 +108,7 @@ namespace SaleSync.Controllers
                             totalAmount += item.Quantity * item.Price;
                         }
 
-                        // ⭐ THE FIX: Added user_id to the SQL columns and VALUES
+                        // Insert Sale Head Record
                         string insertSale = @"
                             INSERT INTO sales (sale_date, total_amount, status, customer_name, order_type, payment_method, delivery_address, user_id) 
                             OUTPUT INSERTED.sale_id
@@ -87,19 +121,16 @@ namespace SaleSync.Controllers
                             cmd.Parameters.AddWithValue("@custName", customerName);
                             cmd.Parameters.AddWithValue("@orderType", request.OrderType ?? "Pick-up");
                             cmd.Parameters.AddWithValue("@paymentMethod", request.PaymentMethod ?? "Cash");
-
-                            // Save the Delivery Address (handles null automatically)
                             cmd.Parameters.AddWithValue("@address", string.IsNullOrEmpty(request.DeliveryAddress) ? (object)DBNull.Value : request.DeliveryAddress);
-
-                            // ⭐ THE FIX: Save the User ID to the database
                             cmd.Parameters.AddWithValue("@userId", currentUserId);
 
                             newSaleId = (int)cmd.ExecuteScalar();
                         }
 
+                        // Connected Customization: size and special_instructions added to columns
                         string insertItem = @"
-                            INSERT INTO sale_items (sale_id, product_id, quantity, price, subtotal) 
-                            VALUES (@sid, @pid, @qty, @price, @sub)";
+                            INSERT INTO sale_items (sale_id, product_id, quantity, price, subtotal, size, special_instructions) 
+                            VALUES (@sid, @pid, @qty, @price, @sub, @size, @instructions)";
 
                         foreach (var item in request.Items)
                         {
@@ -110,6 +141,11 @@ namespace SaleSync.Controllers
                                 cmd.Parameters.AddWithValue("@qty", item.Quantity);
                                 cmd.Parameters.AddWithValue("@price", item.Price);
                                 cmd.Parameters.AddWithValue("@sub", item.Quantity * item.Price);
+
+                                // Direct custom bindings safely fall back to avoiding schema validation issues
+                                cmd.Parameters.AddWithValue("@size", string.IsNullOrEmpty(item.Size) ? "Regular" : item.Size);
+                                cmd.Parameters.AddWithValue("@instructions", string.IsNullOrEmpty(item.SpecialInstructions) ? (object)DBNull.Value : item.SpecialInstructions);
+
                                 cmd.ExecuteNonQuery();
                             }
                         }
@@ -125,10 +161,23 @@ namespace SaleSync.Controllers
                 }
             }
         }
-        public IActionResult Orders()
-        {
-            // Fetch your customer order history data here if needed
-            return View();
-        }
+    }
+
+    // --- Data Transfer Objects supporting matching Frontend Property structures ---
+    public class OnlineOrderRequest
+    {
+        public string OrderType { get; set; }
+        public string PaymentMethod { get; set; }
+        public string DeliveryAddress { get; set; }
+        public List<OnlineOrderItemRequest> Items { get; set; }
+    }
+
+    public class OnlineOrderItemRequest
+    {
+        public int ProductId { get; set; }
+        public int Quantity { get; set; }
+        public decimal Price { get; set; }
+        public string Size { get; set; }
+        public string SpecialInstructions { get; set; }
     }
 }

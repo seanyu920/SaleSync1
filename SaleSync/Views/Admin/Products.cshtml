@@ -232,7 +232,7 @@
         <div class="menu-item-card">
         <div class="item-image-placeholder" style="height:130px;">
         ${imgTag}
-        <button type="button" class="change-photo-btn" onclick="event.stopPropagation(); openCategoryPhotoUpload('${item.name.replace(/'/g, "\\'")}');">📷 Add Photo</button>
+        <button type="button" class="change-photo-btn" onclick="event.stopPropagation(); openCategoryPhotoUpload('${item.name.replace(/'/g, "\\'")}', ${item.id});">📷 Add Photo</button>
         </div>
         <div class="item-details" style="flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 12px;">
         <div>
@@ -301,13 +301,60 @@
         document.getElementById('backBtn').style.display = 'none';
         }
 
-        function openCategoryPhotoUpload(targetName) {
-        Swal.fire({
+        // MODIFIED: Updated this function to accept an optional productId parameter and handle the file upload
+        async function openCategoryPhotoUpload(targetName, productId = null) {
+        const { value: file } = await Swal.fire({
         title: `Asset Registration`,
         html: `Select interface render file for <strong>${targetName}</strong>`,
+        input: 'file',
+        inputAttributes: {
+        'accept': 'image/*',
+        'aria-label': 'Upload product image file'
+        },
         showCancelButton: true,
-        confirmButtonText: 'Bind System Asset'
+        confirmButtonText: 'Bind System Asset',
+        customClass: {
+        input: 'swal2-file-custom'
+        }
         });
+
+        if (file) {
+        // Construct standard Multipart FormData payload
+        const formData = new FormData();
+        formData.append("productImageFile", file);
+        formData.append("productId", productId || 0);
+
+        // Show a loading state during server transit
+        Swal.fire({
+        title: 'Syncing Asset...',
+        text: 'Uploading file to local system environment architecture.',
+        allowOutsideClick: false,
+        didOpen: () => {
+        Swal.showLoading();
+        }
+        });
+
+        try {
+        const response = await fetch('/Admin/UploadProductPhoto', {
+        method: 'POST',
+        body: formData // Form data handles content headers automatically
+        });
+
+        if (response.ok) {
+        Swal.fire({
+        title: 'Success!',
+        text: 'Image uploaded and system asset synchronized.',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false
+        }).then(() => location.reload());
+        } else {
+        Swal.fire('Upload Failed', 'The server architecture rejected the file stream.', 'error');
+        }
+        } catch (error) {
+        Swal.fire('Network Fault', 'Unable to reach backend system server structural pipeline.', 'error');
+        }
+        }
         }
 
         document.querySelector('#mainAddBtn').addEventListener('click', async function() {
