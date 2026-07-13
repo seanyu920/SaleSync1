@@ -7,15 +7,15 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Log In - Cafero</title>
-    
+
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Playfair+Display:wght@800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="~/css/LogInPage.css" asp-append-version="true" />
-    
+
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
     <div class="login-split-container">
-        
+
         <div class="login-left">
             <div class="brand-content">
                 <div class="brand-lockup">
@@ -59,7 +59,7 @@
 
                 <div class="register-prompt">
                     <p>Don't have an account?</p>
-                    <a href="/Home/Register" class="register-link">Register here</a>
+                    <a asp-controller="Account" asp-action="Register" class="register-link">Register here</a>
                 </div>
 
             </div>
@@ -111,7 +111,7 @@
         }
         });
     </script>
-    
+
     <style>
         /* Adds a subtle shadow and border radius to the toast for a cleaner look */
         .modern-toast-popup {
@@ -119,6 +119,5 @@
         box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
         border: 1px solid #dcbca5 !important;
         }
-    </style>
-</body>
+    </style></body>
 </html>
