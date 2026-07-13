@@ -18,11 +18,13 @@ namespace SaleSync.Controllers
     {
         private readonly IConfiguration _configuration;
         private readonly IWebHostEnvironment _webHostEnvironment;
-        private readonly string connectionString = "Server=(localdb)\\MSSQLLocalDB; Database=SaleSync; Trusted_Connection=True; TrustServerCertificate=True;";
+        private readonly string connectionString; // Remove the hardcoded string here!
 
-        public AdminController(IConfiguration configuration)
+        public AdminController(IConfiguration configuration, IWebHostEnvironment webHostEnvironment)
         {
             _configuration = configuration;
+            _webHostEnvironment = webHostEnvironment;
+            connectionString = _configuration.GetConnectionString("DefaultConnection"); // Reads from appsettings
         }
 
         // ==========================================
