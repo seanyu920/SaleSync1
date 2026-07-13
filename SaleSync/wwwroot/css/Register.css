@@ -192,3 +192,15 @@ form {
 .slide-up {
     animation: slideUp 0.3s ease-out;
 }
+/* Change the autofill background to match your --bg-main theme color */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+    /* Use your --bg-main color (#111613) to eliminate the grey box */
+    -webkit-box-shadow: 0 0 0 30px #111613 inset !important;
+    /* Set the text color to white */
+    -webkit-text-fill-color: #ffffff !important;
+    /* Smooth transition */
+    transition: background-color 5000s ease-in-out 0s;
+}
