@@ -1,0 +1,71 @@
+﻿@model string
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Verify OTP - Cafero</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/Register.css" asp-append-version="true" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+    <div class="register-split-container">
+        <div class="register-left">
+            <div class="brand-content">
+                <div class="brand-lockup">
+                    <h1 class="register-logo">Cafero</h1>
+                    <div class="software-tag">POWERED BY <strong>SALESYNC</strong></div>
+                </div>
+                <p>Security first! We sent a 6-digit verification code to your email inbox. Please enter it to activate your profile.</p>
+            </div>
+        </div>
+        <div class="register-right">
+            <div class="register-card">
+                <div class="register-header">
+                    <span class="top-user-icon">🔑</span>
+                    <h2>Enter OTP Code</h2>
+                    <p>Verifying for: <strong>@ViewBag.UserEmail</strong></p>
+                </div>
+
+                <form asp-controller="Account" asp-action="VerifyOtp" method="post">
+                    <input type="hidden" name="email" value="@ViewBag.UserEmail" />
+
+                    <div class="input-group">
+                        <label for="enteredOtp">6-DIGIT VERIFICATION CODE</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">🔒</span>
+                            <input type="text" id="enteredOtp" name="enteredOtp" placeholder="Enter code (e.g. 123456)" required autocomplete="off" maxlength="6" style="letter-spacing: 4px; font-weight: bold; font-size: 1.1rem;" />
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-register" style="margin-top: 15px;">Verify Account</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+        const modernToast = Swal.mixin({
+        toast: true, position: 'top-end', showConfirmButton: false, timer: 4000, timerProgressBar: true,
+        background: '#fdfaf6', color: '#4a2511', iconColor: '#f46a05',
+        customClass: { popup: 'modern-toast-popup' }
+        });
+
+        @if (ViewBag.Message != null)
+        {
+            <text>modernToast.fire({ icon: 'error', title: '@Html.Raw(ViewBag.Message)' });</text>
+        }
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <text>modernToast.fire({ icon: 'success', title: '@Html.Raw(TempData["SuccessMessage"])' });</text>
+        }
+        });
+    </script>
+</body></html>

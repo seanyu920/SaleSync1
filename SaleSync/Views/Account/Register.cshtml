@@ -7,15 +7,15 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Register - Cafero</title>
-    
+
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Playfair+Display:wght@800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="~/css/Register.css" asp-append-version="true" />
-    
+
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
     <div class="register-split-container">
-        
+
         <div class="register-left">
             <div class="brand-content">
                 <div class="brand-lockup">
@@ -34,13 +34,14 @@
                     <p>Fill in your details to get started.</p>
                 </div>
 
-                <form asp-controller="Home" asp-action="Register" method="post">
-                    
+                <form asp-controller="Account" asp-action="Register" method="post">
+
                     <div class="input-group">
                         <label for="fullName">FULL NAME</label>
                         <div class="input-wrapper">
                             <span class="input-icon">👤</span>
-                            <input type="text" id="fullName" name="fullName" placeholder="e.g. Juan Dela Cruz" required />
+                            <input type="text" id="fullName" name="fullName" placeholder="e.g. Juan Dela Cruz"
+                                   value="@(Context.Request.HasFormContentType ? Context.Request.Form["fullName"].ToString() : "")" required />
                         </div>
                     </div>
 
@@ -48,7 +49,8 @@
                         <label for="username">USERNAME</label>
                         <div class="input-wrapper">
                             <span class="input-icon">&#64;</span>
-                            <input type="text" id="username" name="username" placeholder="Choose a username" required />
+                            <input type="text" id="username" name="username" placeholder="Choose a username"
+                                   value="@(Context.Request.HasFormContentType ? Context.Request.Form["username"].ToString() : "")" required />
                         </div>
                     </div>
 
@@ -56,7 +58,8 @@
                         <label for="email">EMAIL ADDRESS</label>
                         <div class="input-wrapper">
                             <span class="input-icon">✉️</span>
-                            <input type="email" id="email" name="email" placeholder="e.g. juan@example.com" required />
+                            <input type="email" id="email" name="email" placeholder="e.g. juan@example.com"
+                                   value="@(Context.Request.HasFormContentType ? Context.Request.Form["email"].ToString() : "")" required />
                         </div>
                     </div>
 
@@ -135,7 +138,7 @@
         }
         });
     </script>
-    
+
     <style>
         /* Optional: Add a subtle shadow and border radius to the toast for a cleaner look */
         .modern-toast-popup {
@@ -143,6 +146,5 @@
         box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
         border: 1px solid #dcbca5 !important;
         }
-    </style>
-</body>
+    </style></body>
 </html>
