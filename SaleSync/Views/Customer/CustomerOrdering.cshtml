@@ -137,7 +137,7 @@
                                     </div>
                                     <p class="description">Freshly prepared @item.ProductName.</p>
                                     <button class="btn-add-order"
-                                            onclick="openModal('@item.ProductId','@Html.Raw(item.ProductName.Replace("'", "\\'"))','@item.Price')">
+                                            onclick="openModal(@item.ProductId, @Json.Serialize(item.ProductName), @item.Price)">
                                         + Add to Order
                                     </button>
                                 </div>
@@ -344,9 +344,9 @@
         {
             @:allItems[@item.ProductId] = {
             @:    id: @item.ProductId,
-            @:    name: "@Html.Raw(item.ProductName.Replace("\"", "\\\"").Replace("'", "\\'"))",
+            @:    name: @Html.Raw(Json.Serialize(item.ProductName)),
             @:    price: @item.Price,
-            @:    cat: "@Html.Raw((item.CategoryName ?? "").ToLower().Replace(" ", "").Replace("\"", "\\\""))"
+            @:    cat: @Html.Raw(Json.Serialize((item.CategoryName ?? "").ToLower().Replace(" ", "")))
             @:};
         }
     }

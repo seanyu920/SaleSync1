@@ -135,7 +135,7 @@
                                     foreach (var user in Model.Where(u => u.IsActive))
                                     {
                                         <tr class="clickable-row"
-                                            onclick="selectUser('@user.UserId', '@Html.Raw(user.FullName.Replace("'", "\\'"))', '@Html.Raw(user.Username.Replace("'", "\\'"))', '@Html.Raw(user.Email.Replace("'", "\\'"))', '@user.Role', '@user.IsActive.ToString().ToLower()')">
+                                            onclick="selectUser(@Json.Serialize(user.UserId.ToString()), @Json.Serialize(user.FullName ?? ""), @Json.Serialize(user.Username ?? ""), @Json.Serialize(user.Email ?? ""), @Json.Serialize(user.Role ?? ""), @Json.Serialize(user.IsActive.ToString().ToLower()))">
 
                                             <td class="cell-center">
                                                 <input type="radio" name="selectedAccount" id="radio_@user.UserId" class="radio-pointer" />
@@ -184,7 +184,7 @@
                                     foreach (var user in Model.Where(u => !u.IsActive))
                                     {
                                         <tr class="clickable-row"
-                                            onclick="selectUser('@user.UserId', '@Html.Raw(user.FullName.Replace("'", "\\'"))', '@Html.Raw(user.Username.Replace("'", "\\'"))', '@Html.Raw(user.Email.Replace("'", "\\'"))', '@user.Role', '@user.IsActive.ToString().ToLower()')">
+                                            onclick="selectUser(@Json.Serialize(user.UserId.ToString()), @Json.Serialize(user.FullName ?? ""), @Json.Serialize(user.Username ?? ""), @Json.Serialize(user.Email ?? ""), @Json.Serialize(user.Role ?? ""), @Json.Serialize(user.IsActive.ToString().ToLower()))">
 
                                             <td class="cell-center">
                                                 <input type="radio" name="selectedAccount" id="radio_@user.UserId" class="radio-pointer" />
