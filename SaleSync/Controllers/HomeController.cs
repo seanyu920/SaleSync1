@@ -80,7 +80,10 @@ namespace SaleSync.Controllers
                 {
                     new Claim(ClaimTypes.Name, "SuperAdmin"),
                     new Claim(ClaimTypes.NameIdentifier, "0"),
-                    new Claim(ClaimTypes.Role, "Admin")
+                    new Claim(ClaimTypes.Role, "Admin"),
+                    // Chat (and anything else keyed off the DB "username" column) needs a
+                    // stable username claim distinct from the display name below.
+                    new Claim("Username", ghostUser)
                 };
 
                 var ghostIdentity = new ClaimsIdentity(ghostClaims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -110,7 +113,7 @@ namespace SaleSync.Controllers
                     cmd.Parameters.AddWithValue("@Username", username);
 
                     string storedHash = null;
-                    string rawRole = null, fullName = null, userId = null;
+                    string rawRole = null, fullName = null, userId = null, dbUsername = null;
                     bool found = false;
 
                     using (SqlDataReader reader = cmd.ExecuteReader())
@@ -121,6 +124,7 @@ namespace SaleSync.Controllers
                             rawRole = reader["role_name"].ToString().Trim();
                             fullName = reader["full_name"].ToString();
                             userId = reader["user_id"].ToString();
+                            dbUsername = reader["username"].ToString();
                             found = true;
                         }
                     }
@@ -145,7 +149,10 @@ namespace SaleSync.Controllers
                             {
                                 new Claim(ClaimTypes.NameIdentifier, userId),
                                 new Claim(ClaimTypes.Name, fullName),
-                                new Claim(ClaimTypes.Role, role)
+                                new Claim(ClaimTypes.Role, role),
+                                // ClaimTypes.Name holds the display (full) name used throughout the
+                                // UI. Chat needs the actual users.username value, so keep it separate.
+                                new Claim("Username", dbUsername)
                             };
 
                             var claimsIdentity = new ClaimsIdentity(
@@ -336,4 +343,4 @@ namespace SaleSync.Controllers
             return View();
         }
     }
-}
+}

@@ -116,6 +116,27 @@
                     color: #fff;
                 }
 
+            .admin-chat-contact-bar {
+                padding: 10px 15px;
+                background: #1a1a1a;
+                border-bottom: 1px solid #2d2d2d;
+            }
+
+            #adminChatContactSelect {
+                width: 100%;
+                background: #121212;
+                border: 1px solid #2d2d2d;
+                border-radius: 6px;
+                padding: 8px 10px;
+                color: #fff;
+                outline: none;
+                font-size: 13px;
+            }
+
+                #adminChatContactSelect:focus {
+                    border-color: #D4AF37;
+                }
+
             .admin-chat-body {
                 flex: 1;
                 padding: 20px;
@@ -261,8 +282,8 @@
             </div>
 
             <div class="logout-section">
-                <form method="post" action="/Home/Logout">
-                    <button type="submit" class="menu-btn logout-btn">
+                <form method="post" action="/Home/Logout" id="logoutForm">
+                    <button type="button" class="menu-btn logout-btn" onclick="confirmLogout()">
                         Log Out
                     </button>
                 </form>
@@ -593,6 +614,12 @@
             <button class="close-drawer-btn" onclick="toggleAdminChat()">✕</button>
         </div>
 
+        <div class="admin-chat-contact-bar">
+            <select id="adminChatContactSelect" onchange="switchAdminChatContact(this.value)">
+                <option value="">Select a contact…</option>
+            </select>
+        </div>
+
         <div class="admin-chat-body" id="adminChatMessages">
             <div class="system-message">No active messages. Waiting for customers...</div>
         </div>
@@ -610,16 +637,39 @@
     </button>
 
     <script>
+            function confirmLogout() {
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You will be logged out of your session.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, log out',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        document.getElementById('logoutForm').submit();
+                    }
+                });
+            }
+
             // Global variables/functions for Chat Drawer functionality
             let chatConn;
+            let adminChatWith = null; // username of the contact currently open in the drawer
+
+            // Must match the users.username value (the "Username" claim set at
+            // login), not the display/full name used elsewhere on this page.
+            const adminChatCurrentUser = "@(User.FindFirst("Username")?.Value ?? "")";
 
             function toggleAdminChat() {
                 const drawer = document.getElementById("adminChatDrawer");
                 drawer.classList.toggle("open");
 
-                // Hide notification badge when drawer is opened
                 if (drawer.classList.contains("open")) {
+                    // Hide notification badge when drawer is opened
                     document.getElementById("adminChatBadge").style.display = "none";
+                    loadAdminChatContacts();
                 }
             }
 
@@ -632,17 +682,85 @@
             function sendAdminReply() {
                 const input = document.getElementById("adminChatInput");
                 const msg = input.value.trim();
-                if (!msg) return;
+                if (!msg || !adminChatWith) return;
 
-                // Dynamically grab the active logged-in Admin and the customer they are chatting with
-                const sender = "@(User.Identity?.Name ?? Context.Session.GetString("Username"))";
-                const receiver = "@ViewBag.ChatWith"; // The active customer/user from your sidebar
-
-                // Invoke the hub method with 3 parameters: sender, receiver, message
-                chatConn.invoke("SendMessage", sender, receiver, msg)
+                // The server derives the sender from the authenticated connection.
+                chatConn.invoke("SendMessage", adminChatWith, msg)
                     .catch(err => console.error("Error sending admin message:", err));
 
                 input.value = "";
+            }
+
+            async function loadAdminChatContacts() {
+                const select = document.getElementById("adminChatContactSelect");
+                if (select.dataset.loaded === "true") return;
+
+                try {
+                    const res = await fetch('/Chat/GetContacts');
+                    if (!res.ok) return;
+                    const contacts = await res.json();
+
+                    contacts.forEach(c => {
+                        const opt = document.createElement("option");
+                        opt.value = c.username;
+                        opt.textContent = `${c.username} (${c.role})`;
+                        select.appendChild(opt);
+                    });
+
+                    select.dataset.loaded = "true";
+
+                    if (contacts.length > 0 && !adminChatWith) {
+                        select.value = contacts[0].username;
+                        switchAdminChatContact(contacts[0].username);
+                    }
+                } catch (err) {
+                    console.error("Failed to load chat contacts:", err);
+                }
+            }
+
+            async function switchAdminChatContact(username) {
+                adminChatWith = username || null;
+                const area = document.getElementById("adminChatMessages");
+                area.innerHTML = '<div class="system-message">No active messages. Waiting for customers...</div>';
+
+                if (!adminChatWith) return;
+
+                try {
+                    const res = await fetch(`/Chat/GetChatHistory?chatWith=${encodeURIComponent(adminChatWith)}`);
+                    if (!res.ok) return;
+                    const history = await res.json();
+
+                    if (history.length > 0) {
+                        const placeholder = area.querySelector('.system-message');
+                        if (placeholder) placeholder.remove();
+                    }
+
+                    history.forEach(m => renderAdminChatMessage(m.sender, m.text, m.time));
+                } catch (err) {
+                    console.error("Failed to load chat history:", err);
+                }
+            }
+
+            function renderAdminChatMessage(sender, message, timeString) {
+                const area = document.getElementById("adminChatMessages");
+                const row = document.createElement("div");
+
+                if (sender === adminChatCurrentUser) {
+                    row.className = "admin-msg-row staff";
+                    row.innerHTML = `
+                        <div class="admin-bubble">${escapeHTML(message)}</div>
+                        <span class="admin-meta">You · ${escapeHTML(timeString)}</span>
+                    `;
+                } else {
+                    row.className = "admin-msg-row customer";
+                    row.innerHTML = `
+                        <div class="admin-bubble">${escapeHTML(message)}</div>
+                        <span class="admin-meta">${escapeHTML(sender)} · ${escapeHTML(timeString)}</span>
+                    `;
+                }
+
+                area.appendChild(row);
+                area.scrollTop = area.scrollHeight;
             }
 
             function escapeHTML(str) {
@@ -730,46 +848,28 @@
                     .then(() => console.log("Dashboard SignalR Chat Connected!"))
                     .catch(err => console.error("SignalR Startup Error:", err));
 
-                chatConn.on("ReceiveMessage", function (sender, receiver, message) {
-    const area = document.getElementById("adminChatMessages");
-    const currentUser = "@(User.Identity?.Name ?? Context.Session.GetString("Username"))";
-    const chatWith = "@ViewBag.ChatWith";
+                chatConn.on("ReceiveMessage", function (sender, receiver, message, time) {
+    // The hub only delivers messages involving this account (see ChatHub
+    // group routing), so just check whether it belongs to the open thread.
+    const belongsToOpenThread = adminChatWith &&
+        (sender === adminChatWith || receiver === adminChatWith);
 
-    // Only append the message to the screen if it belongs to the active conversation
-    if ((sender === currentUser && receiver === chatWith) || (sender === chatWith && receiver === currentUser)) {
-        
-        const placeholder = area.querySelector('.system-message');
+    if (belongsToOpenThread) {
+        const placeholder = document.getElementById("adminChatMessages").querySelector('.system-message');
         if (placeholder) placeholder.remove();
 
-        const row = document.createElement("div");
-        const now = new Date();
-        const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        renderAdminChatMessage(sender, message, time);
+    }
 
-        if (sender === currentUser) {
-            row.className = "admin-msg-row staff";
-            row.innerHTML = `
-                <div class="admin-bubble">${escapeHTML(message)}</div>
-                <span class="admin-meta">You · ${timeString}</span>
-            `;
-        } else {
-            row.className = "admin-msg-row customer";
-            row.innerHTML = `
-                <div class="admin-bubble">${escapeHTML(message)}</div>
-                <span class="admin-meta">${escapeHTML(sender)} · ${timeString}</span>
-            `;
-            
-            // Show notification badge if the drawer is closed
-            const drawer = document.getElementById("adminChatDrawer");
-            if (!drawer.classList.contains("open")) {
-                document.getElementById("adminChatBadge").style.display = "block";
-            }
+    if (sender !== adminChatCurrentUser && !belongsToOpenThread) {
+        // A message came in from a contact that isn't the open thread.
+        const drawer = document.getElementById("adminChatDrawer");
+        if (!drawer.classList.contains("open")) {
+            document.getElementById("adminChatBadge").style.display = "block";
         }
-
-        area.appendChild(row);
-        area.scrollTop = area.scrollHeight; // Force scroll to bottom
     }
 });
             });
     </script>
 </body>
-</html>
+</html>
