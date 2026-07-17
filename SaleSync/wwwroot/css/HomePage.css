@@ -716,6 +716,13 @@ body {
     animation: slideUp 0.3s ease-out;
 }
 
+    .category-modal-card h2 {
+        font-size: 2.2rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+        margin-bottom: 24px;
+    }
+
 @keyframes slideUp {
     from {
         transform: translateY(20px);
@@ -784,61 +791,74 @@ body {
     gap: 20px;
 }
 
+/* ===== UPDATED BACKGROUND IMAGE PRODUCT CARDS ===== */
 .product-card {
-    background: var(--bg-surface);
-    border-radius: 14px;
+    position: relative;
     overflow: hidden;
+    min-height: 360px;
+    border-radius: 14px;
     border: 1px solid var(--border-sub);
     display: flex;
     flex-direction: column;
-    transition: all 0.3s ease;
+    justify-content: flex-end; /* Pushes content wrapper to card baseline */
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s ease;
 }
 
     .product-card:hover {
         border-color: var(--border);
-        transform: translateY(-3px);
-        box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        transform: translateY(-5px);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
     }
 
 .product-image {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
-    height: 175px;
+    height: 100%;
     object-fit: cover;
-    opacity: 0.85;
+    z-index: 1;
+    opacity: 0.8; /* Subtle transparency matching hero styles */
 }
 
 .product-info {
-    padding: 16px 18px;
+    position: relative;
+    z-index: 2;
+    padding: 24px 20px 20px;
+    /* Rich, responsive fallback gradient utilizing the base variable background */
+    background: linear-gradient(to top, var(--bg-base) 0%, rgba(13, 17, 13, 0.5) 70%, transparent 100%);
     display: flex;
     flex-direction: column;
-    flex-grow: 1;
+    flex-grow: 0;
 }
 
 .info-top {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
+    align-items: baseline;
+    margin-bottom: 8px;
 }
 
-    .info-top h3 {
-        font-size: 16px;
-        font-weight: 700;
-        color: var(--cream);
-    }
-
-.price {
-    color: var(--gold);
+.product-card .product-info h3 {
+    font-size: 1.5rem;
     font-weight: 700;
-    font-size: 16px;
+    color: #ffffff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
 }
 
-.description {
-    color: var(--muted);
-    font-size: 14px;
-    margin-bottom: 16px;
-    flex-grow: 1;
-    line-height: 1.5;
+.product-card .product-info .price {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--gold);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+
+.product-card .product-info .description {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #dcdcdc;
+    margin-bottom: 18px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
 }
 
 .btn-add-order {
@@ -847,10 +867,10 @@ body {
     width: 100%;
     background: var(--gold);
     color: var(--bg-base);
-    padding: 11px;
+    padding: 12px 24px;
     border-radius: 8px;
-    font-weight: 800;
-    font-size: 14.5px;
+    font-weight: 600;
+    font-size: 1.1rem;
     transition: all 0.2s ease;
     display: block;
 }
@@ -1012,29 +1032,27 @@ body {
    ABOUT STORY SECTION (CENTERED & LARGE TYPOGRAPHY)
    ========================================================================== */
 .about-story-section {
-    padding: 100px 10%; /* Generous spacing on top and bottom */
-    background-color: #0b0e0c; /* Matches your dark theme background */
-    text-align: center; /* Centers all inner text elements */
+    padding: 100px 10%;
+    background-color: #0b0e0c;
+    text-align: center;
 }
 
 .story-container {
-    max-width: 850px; /* Prevents long-form lines from spanning too wide */
-    margin: 0 auto; /* Centers the whole container box on the page */
+    max-width: 850px;
+    margin: 0 auto;
 }
 
-    /* Enhancing the small section eyebrow */
     .story-container .section-eyebrow {
         font-size: 14px;
         letter-spacing: 3px;
         text-transform: uppercase;
-        color: #c9a054; /* Gold accent */
+        color: #c9a054;
         display: block;
         margin-bottom: 15px;
     }
 
-    /* Large, impactful heading */
     .story-container h2 {
-        font-size: 3.8rem; /* Bold display size */
+        font-size: 3.8rem;
         line-height: 1.2;
         margin-bottom: 30px;
         color: #ffffff;
@@ -1042,76 +1060,106 @@ body {
     }
 
         .story-container h2 span {
-            color: #c9a054; /* Gold accent for brand name */
+            color: #c9a054;
         }
 
-/* Premium, high-visibility story paragraph */
 .about-story-text {
     color: #a0a0a0;
-    font-size: 20px; /* Enlarged for maximum impact and readability */
-    line-height: 1.8; /* Generous line spacing so it doesn't feel cramped */
+    font-size: 20px;
+    line-height: 1.8;
     margin: 0;
-    font-weight: 300; /* Keeping it light ensures large text stays clean, not heavy */
+    font-weight: 300;
 }
 
     .about-story-text strong {
-        color: #ffffff; /* Highlights the brand name in pure white */
+        color: #ffffff;
         font-weight: 600;
     }
 
-/* Mobile responsive scaling */
 @media (max-width: 768px) {
     .about-story-section {
         padding: 70px 5%;
     }
 
     .story-container h2 {
-        font-size: 2.6rem; /* Scales heading down so it fits perfectly on mobile */
+        font-size: 2.6rem;
         margin-bottom: 20px;
     }
 
     .about-story-text {
-        font-size: 17px; /* Comfortably large reading size for phone viewports */
+        font-size: 17px;
         line-height: 1.7;
     }
 }
 
-/* Modern Text Sizing for Enhanced Readability inside the Popup Modal */
-#categoryModalTitle {
-    font-size: 2.2rem !important;
-    font-weight: 700 !important;
-    letter-spacing: 1px;
-}
-
-.product-card .product-info h3 {
-    font-size: 1.5rem !important;
-    font-weight: 700 !important;
-    margin-bottom: 5px;
-}
-
-.product-card .product-info .price {
-    font-size: 1.4rem !important;
-    font-weight: 800 !important;
-    color: #c9a054 !important; /* Gold accent emphasis */
-}
-
-.product-card .product-info .description {
-    font-size: 1.1rem !important;
-    line-height: 1.6 !important;
-    color: #dcdcdc !important;
-    margin-bottom: 15px;
-}
-
-.btn-add-order {
-    font-size: 1.1rem !important;
-    padding: 12px 24px !important;
-    font-weight: 600 !important;
-}
-
-/* Adjust cursor indicator on feature cards */
+/* Cleanup Utilities */
 .feature-grid .feature-card {
     cursor: pointer;
 }
+
 .slide-up {
     animation: slideUp 0.3s ease-out;
+}
+/* 1. Prepare the card container to hold absolute elements */
+.card-front {
+    position: relative;
+    overflow: hidden; /* Clips the background image to the card's rounded corners */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    height: 100%;
+    min-height: 300px; /* Adjust height if needed */
+    z-index: 1;
+}
+
+    /* 2. Force the image container to stretch full-screen behind the card */
+    .card-front .card-icon {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        margin: 0; /* Clears any previous margins/spacing */
+        padding: 0;
+        background: none;
+        border-radius: 0;
+        z-index: -2; /* Sends it to the absolute bottom layer */
+    }
+
+        /* 3. Make the image cover the card beautifully without stretching distortion */
+        .card-front .card-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Ensures the image covers the background area proportionally */
+            border-radius: 0;
+        }
+
+    /* 4. CRUCIAL: Add a dark overlay gradient so your white text stays highly readable */
+    .card-front::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient( to bottom, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.75) 100% );
+        z-index: -1; /* Sits exactly on top of the image, but beneath the text */
+        transition: background 0.3s ease;
+    }
+
+    /* 5. Ensure text layers correctly on top */
+    .card-front h3,
+    .card-front p,
+    .card-front .card-tap-hint {
+        position: relative;
+        z-index: 2; /* Forces text to the top layer */
+        color: #ffffff; /* Ensures contrast */
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5); /* Adds an extra layer of text crispness */
+    }
+
+/* Optional: Cool hover effect that brightens the background image slightly */
+.feature-card:hover .card-front::after {
+    background: linear-gradient( to bottom, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.6) 100% );
 }

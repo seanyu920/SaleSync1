@@ -207,12 +207,13 @@ body {
         border-left-color: var(--danger);
         transform: translateX(4px);
     }
+
 /* ==========================================================================
    MAIN CONTENT & PRODUCTS SPECIFIC STYLES
    ========================================================================== */
 .main-content {
     flex: 1;
-    padding: 36px 40px; /* Aligned with dashboard padding */
+    padding: 36px 40px;
     overflow-y: auto;
     background: var(--bg-base);
 }
@@ -226,8 +227,14 @@ body {
         border-radius: 10px;
     }
 
-.page-header {
+/* ADDED/UPDATED: Added explicit styling for the active HTML card container element */
+.card-header-flex, .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    width: 100%;
     margin-bottom: 30px;
+    gap: 20px; /* Protects layout layout on narrower viewports */
 }
 
 .greeting-title {
@@ -238,7 +245,7 @@ body {
     margin-bottom: 4px;
 }
 
-.greeting-subtitle {
+.greeting-subtitle, .widget-subtitle {
     color: var(--muted);
     font-size: 13px;
 }
@@ -612,6 +619,7 @@ body {
     border: 1px solid rgba(61, 191, 120, 0.2);
     display: inline-block;
 }
+
 .slide-up {
     animation: slideUp 0.3s ease-out;
 }

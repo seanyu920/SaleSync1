@@ -9,66 +9,103 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Daily Report - SyncScale</title>
     <link rel="stylesheet" href="~/css/AdminDashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/DailyReport.css" asp-append-version="true" />
 </head>
 <body>
     <div class="dashboard-container">
-        
+
         <aside class="sidebar">
             <div>
                 <div class="logo-section">
                     <div class="logo-title">Cafero</div>
                     <div class="logo-subtitle">Coffee & Pastries</div>
                 </div>
+
+                <div class="profile-section">
+                    <div class="profile-circle">👤</div>
+                    <div>
+                        <h2 class="admin-name">Admin</h2>
+                        <div class="admin-role">Administrator</div>
+                    </div>
+                </div>
+
                 <nav class="sidebar-menu">
-                    <a href="/Admin/Dashboard" class="menu-btn">← Back to Dashboard</a>
+                    <a href="/Admin/Dashboard" class="menu-btn">Dashboard</a>
+                    <a href="/Admin/QueueOrder" class="menu-btn">Queue</a>
+
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a href="/Admin/ActivityLog" class="menu-btn">Activity Log</a>
+                    }
+
+                    <a href="/Admin/Analytics" class="menu-btn">Analytics</a>
+                    <a href="/Admin/Products" class="menu-btn">Products</a>
+                    <a href="/Admin/Inventory" class="menu-btn">Inventory</a>
+
+                    <a href="/Admin/ArchivedProducts" class="menu-btn">Archived</a>
+
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a href="/Admin/ManageAccounts" class="menu-btn">Accounts</a>
+                    }
+                    <a href="/Admin/WebCustomization" class="menu-btn">Customization</a>
                 </nav>
+            </div>
+
+            <div class="logout-section">
+                <form method="post" action="/Home/Logout" id="logoutForm">
+                    <button type="button" class="menu-btn logout-btn" onclick="confirmLogout()">
+                        Log Out
+                    </button>
+                </form>
             </div>
         </aside>
 
-        <main class="main-content slide-up">
-            <div class="page-header" style="margin-bottom: 20px;">
-                <h1 class="greeting-title">End of Day Report 📊</h1>
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="greeting-title">End of Day Report</h1>
                 <p class="greeting-subtitle">Sales and Profit analysis for @DateTime.Now.ToString("MMMM dd, yyyy")</p>
             </div>
 
-            <div class="summary-dashboard" style="grid-template-columns: repeat(3, 1fr);">
-                <div class="summary-card" style="background: #fff;">
-                    <div class="card-icon-box icon-green">💵</div>
+            <div class="summary-dashboard">
+                <!-- Gross Sales Card -->
+                <div class="summary-card gross-card">
                     <div class="card-label">Gross Sales</div>
                     <div class="card-value">₱@Model.TotalSales.ToString("N2")</div>
-                    <span class="trend-badge" style="color: #666;">Money taken in today</span>
+                    <span class="trend-badge">Money taken in today</span>
                 </div>
 
-                <div class="summary-card" style="background: #fff;">
-                    <div class="card-icon-box icon-red">📉</div>
+                <!-- COGS Card -->
+                <div class="summary-card cogs-card">
                     <div class="card-label">Cost of Goods (COGS)</div>
-                    <div class="card-value" style="color: #b91c1c;">- ₱@Model.TotalCost.ToString("N2")</div>
-                    <span class="trend-badge" style="color: #666;">Total cost of ingredients used</span>
+                    <div class="card-value negative-value">- ₱@Model.TotalCost.ToString("N2")</div>
+                    <span class="trend-badge">Total cost of ingredients used</span>
                 </div>
 
-                <div class="summary-card" style="background: #f46a05; color: white;">
-                    <div class="card-icon-box" style="background: rgba(255,255,255,0.2);">💎</div>
-                    <div class="card-label" style="color: #ffe0cc;">Net Profit</div>
-                    <div class="card-value" style="color: white;">₱@Model.NetProfit.ToString("N2")</div>
-                    <span class="trend-badge" style="background: rgba(255,255,255,0.2); color: white;">Actual money earned</span>
+                <!-- Net Profit Card -->
+                <div class="summary-card profit-card">
+                    <div class="card-label profit-label">Net Profit</div>
+                    <div class="card-value profit-value">₱@Model.NetProfit.ToString("N2")</div>
+                    <span class="trend-badge profit-trend">Actual money earned</span>
                 </div>
             </div>
 
-            <div class="recent-sales-card" style="margin-top: 20px;">
+            <!-- Products Sold Table Card -->
+            <div class="recent-sales-card products-sold-card">
                 <div class="card-header-flex">
                     <div>
                         <h2 class="widget-title">Products Sold Today</h2>
                         <p class="widget-subtitle">Total Transactions: @Model.TransactionCount</p>
                     </div>
                 </div>
-                
+
                 <div class="table-responsive">
                     <table class="recent-sales-table">
                         <thead>
                             <tr>
                                 <th>Product Name</th>
-                                <th style="text-align: center;">Quantity Sold</th>
-                                <th style="text-align: right;">Total Revenue</th>
+                                <th class="th-center">Quantity Sold</th>
+                                <th class="th-right">Total Revenue</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -78,19 +115,19 @@
                                 {
                                     <tr>
                                         <td class="td-bold">@item.ProductName</td>
-                                        <td style="text-align: center;">
-                                            <span style="background: #fdf5f0; color: #f46a05; padding: 4px 12px; border-radius: 20px; font-weight: bold;">
+                                        <td class="td-center">
+                                            <span class="qty-badge-sold">
                                                 @item.QuantitySold
                                             </span>
                                         </td>
-                                        <td class="td-price" style="text-align: right;">₱@item.TotalRevenue.ToString("N2")</td>
+                                        <td class="td-price td-right">₱@item.TotalRevenue.ToString("N2")</td>
                                     </tr>
                                 }
                             }
                             else
                             {
                                 <tr>
-                                    <td colspan="3" style="text-align: center; padding: 30px; color: #999;">No products sold yet today.</td>
+                                    <td colspan="3" class="no-data-cell">No products sold yet today.</td>
                                 </tr>
                             }
                         </tbody>
@@ -98,21 +135,22 @@
                 </div>
             </div>
 
-            <div class="recent-sales-card" style="margin-top: 30px; border-top: 4px solid #f46a05;">
+            <!-- Inventory Spend Table Card -->
+            <div class="recent-sales-card inventory-spend-card">
                 <div class="card-header-flex">
                     <div>
                         <h2 class="widget-title">Inventory Purchased Today</h2>
-                        <p class="widget-subtitle">Total Cash Spent on Supplies: <strong style="color: #b91c1c;">₱@Model.TotalInventorySpend.ToString("N2")</strong></p>
+                        <p class="widget-subtitle">Total Cash Spent on Supplies: <strong class="total-spend-highlight">₱@Model.TotalInventorySpend.ToString("N2")</strong></p>
                     </div>
                 </div>
-                
+
                 <div class="table-responsive">
                     <table class="recent-sales-table">
                         <thead>
                             <tr>
                                 <th>Ingredient Name</th>
-                                <th style="text-align: center;">Quantity Added</th>
-                                <th style="text-align: right;">Total Cost</th>
+                                <th class="th-center">Quantity Added</th>
+                                <th class="th-right">Total Cost</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -120,21 +158,21 @@
                             {
                                 foreach (var item in Model.IngredientsBought)
                                 {
-                                    <tr style="background: #faf8f5;">
-                                        <td class="td-bold" style="color: #8c5b3e;">@item.ItemName</td>
-                                        <td style="text-align: center;">
-                                            <span style="background: #fee2e2; color: #b91c1c; padding: 4px 12px; border-radius: 20px; font-weight: bold;">
+                                    <tr class="row-alternate">
+                                        <td class="td-bold ingredient-name">@item.ItemName</td>
+                                        <td class="td-center">
+                                            <span class="qty-badge-bought">
                                                 +@item.QuantityBought
                                             </span>
                                         </td>
-                                        <td class="td-price" style="text-align: right; color: #b91c1c;">₱@item.TotalCost.ToString("N2")</td>
+                                        <td class="td-price td-right cost-value">₱@item.TotalCost.ToString("N2")</td>
                                     </tr>
                                 }
                             }
                             else
                             {
                                 <tr>
-                                    <td colspan="3" style="text-align: center; padding: 30px; color: #999;">No inventory was purchased today.</td>
+                                    <td colspan="3" class="no-data-cell">No inventory was purchased today.</td>
                                 </tr>
                             }
                         </tbody>
@@ -143,6 +181,5 @@
             </div>
 
         </main>
-    </div>
-</body>
+    </div></body>
 </html>
