@@ -342,10 +342,9 @@
                 const message = input.value.trim();
                 if (message === "") return;
 
-                const sender = "@ViewBag.CurrentUser";
                 const receiver = "@chatWith";
 
-                connection.invoke("SendMessage", sender, receiver, message)
+                connection.invoke("SendMessage", receiver, message)
                     .then(() => {
                         input.value = "";
                     })

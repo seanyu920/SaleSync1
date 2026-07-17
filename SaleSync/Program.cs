@@ -6,7 +6,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 
 // 🚀 ADDED FOR SIGNALR: Register the SignalR service engine
-builder.Services.AddSignalR();
+builder.Services.AddSignalR(options =>
+{
+    options.EnableDetailedErrors = true; // TEMPORARY — remove before real deployment
+});
 
 // ⭐ 1. UPDATED SESSION SETTINGS
 builder.Services.AddSession(options =>
