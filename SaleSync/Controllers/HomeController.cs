@@ -24,6 +24,7 @@ namespace SaleSync.Controllers
             _configuration = configuration;
             connectionString = _configuration.GetConnectionString("DefaultConnection");
         }
+        
 
         public IActionResult Index()
         {
