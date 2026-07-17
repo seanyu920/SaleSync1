@@ -1,21 +1,29 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using SaleSync.Models;
+using SaleSync.Services;
 using System;
 using System.Collections.Generic;
 
 namespace SaleSync.Controllers
 {
+    // Baseline: must be logged in as Admin, Manager, or Cashier to reach
+    // anything in this controller (this used to be wide open — PointOfSale
+    // had no check at all). IsManager() below adds a stricter check on top
+    // for actions that only Admin/Manager should use.
+    [Authorize(Roles = "Admin,Manager,Cashier")]
     public class ManagerController : Controller
     {
         private readonly IConfiguration _configuration;
-        private readonly string connectionString = "Server=(localdb)\\MSSQLLocalDB; Database=SaleSync; Trusted_Connection=True; TrustServerCertificate=True;";
+        private readonly string connectionString;
 
         public ManagerController(IConfiguration configuration)
         {
             _configuration = configuration;
+            connectionString = _configuration.GetConnectionString("DefaultConnection");
         }
 
         // ⭐ 1. THE SECURITY BOUNCER
@@ -95,8 +103,9 @@ namespace SaleSync.Controllers
 
                 if (userIdClaim == "0")
                 {
-                    var ghostPass = _configuration["SuperAdminConfig:Password"];
-                    if (request.Pass != ghostPass) return BadRequest(new { message = "Incorrect password." });
+                    var ghostPassHash = _configuration["SuperAdminConfig:PasswordHash"];
+                    if (!PasswordHasher.Verify(request.Pass, ghostPassHash, out _))
+                        return BadRequest(new { message = "Incorrect password." });
                 }
                 else
                 {
@@ -105,7 +114,19 @@ namespace SaleSync.Controllers
                     {
                         cmd.Parameters.AddWithValue("@id", userIdClaim);
                         var dbPass = cmd.ExecuteScalar()?.ToString();
-                        if (dbPass != request.Pass) return BadRequest(new { message = "Incorrect password." });
+                        if (!PasswordHasher.Verify(request.Pass, dbPass, out bool needsUpgrade))
+                            return BadRequest(new { message = "Incorrect password." });
+
+                        if (needsUpgrade)
+                        {
+                            using (SqlCommand upgradeCmd = new SqlCommand(
+                                "UPDATE users SET password_hash = @hash WHERE user_id = @id", conn))
+                            {
+                                upgradeCmd.Parameters.AddWithValue("@hash", PasswordHasher.Hash(request.Pass));
+                                upgradeCmd.Parameters.AddWithValue("@id", userIdClaim);
+                                upgradeCmd.ExecuteNonQuery();
+                            }
+                        }
                     }
                 }
 

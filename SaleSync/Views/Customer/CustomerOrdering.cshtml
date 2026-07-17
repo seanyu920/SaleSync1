@@ -12,12 +12,249 @@
     <link rel="stylesheet" href="~/css/CustomerOrdering.css" asp-append-version="true" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+    <!-- Real-Time Chat SignalR Client -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+
     <style>
         .product-uploaded-img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        border-radius: inherit;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: inherit;
+        }
+
+        /* ── FLOATING CHAT WIDGET STYLES ── */
+        .chat-widget {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            z-index: 1100;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .chat-fab {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #8B5A2B; /* Cozy Coffee Accent */
+            color: white;
+            border: none;
+            font-size: 26px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s ease, background-color 0.3s ease;
+            position: relative;
+        }
+
+        .chat-fab:hover {
+            transform: scale(1.08);
+            background: #70441E;
+        }
+
+        .chat-badge-dot {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 12px;
+            height: 12px;
+            background: #ff4757;
+            border-radius: 50%;
+            border: 2px solid white;
+            display: block;
+        }
+
+        .chat-window {
+            position: absolute;
+            bottom: 75px;
+            right: 0;
+            width: 350px;
+            height: 460px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transform: scale(0.8) translateY(30px);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+        }
+
+        .chat-window.open {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .chat-header {
+            background: #8B5A2B;
+            color: white;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chat-header-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chat-avatar {
+            width: 35px;
+            height: 35px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .chat-title {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .chat-status {
+            font-size: 11px;
+            opacity: 0.9;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .chat-status::before {
+            content: '';
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background: #2ed573;
+            border-radius: 50%;
+        }
+
+        .close-chat-widget {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+
+        .close-chat-widget:hover {
+            opacity: 1;
+        }
+
+        .chat-body {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background: #fdfaf7; /* Creamy tone background */
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .chat-msg {
+            max-width: 80%;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .chat-msg.bot {
+            align-self: flex-start;
+        }
+
+        .chat-msg.user {
+            align-self: flex-end;
+        }
+
+        .msg-bubble {
+            padding: 10px 14px;
+            border-radius: 14px;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .chat-msg.bot .msg-bubble {
+            background: white;
+            color: #333;
+            border-bottom-left-radius: 2px;
+            border: 1px solid #e9ecef;
+        }
+
+        .chat-msg.user .msg-bubble {
+            background: #8B5A2B;
+            color: white;
+            border-bottom-right-radius: 2px;
+        }
+
+        .msg-time {
+            font-size: 10px;
+            color: #999;
+            margin: 0 4px;
+        }
+
+        .chat-msg.user .msg-time {
+            align-self: flex-end;
+        }
+
+        .chat-footer {
+            padding: 12px;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 8px;
+            background: white;
+        }
+
+        #chatInput {
+            flex: 1;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        #chatInput:focus {
+            border-color: #8B5A2B;
+        }
+
+        .chat-send-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #8B5A2B;
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .chat-send-btn:hover {
+            background: #70441E;
+        }
+
+        @@media (max-width: 480px) {
+            .chat-window {
+                width: calc(100vw - 40px);
+                height: calc(100vh - 120px);
+                bottom: 70px;
+            }
         }
     </style>
 </head>
@@ -137,7 +374,7 @@
                                     </div>
                                     <p class="description">Freshly prepared @item.ProductName.</p>
                                     <button class="btn-add-order"
-                                            onclick="openModal('@item.ProductId','@Html.Raw(item.ProductName.Replace("'", "\\'"))','@item.Price')">
+                                            onclick="openModal(@item.ProductId, @Json.Serialize(item.ProductName), @item.Price)">
                                         + Add to Order
                                     </button>
                                 </div>
@@ -240,6 +477,7 @@
         </main>
     </div>
 
+    <!-- Modals & Overlays -->
     <div id="sizeModal" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-header">
@@ -316,7 +554,35 @@
             </button>
         </div>
     </div>
-<div id="cartOverlay" class="cart-overlay" onclick="toggleCart()"></div>
+    <div id="cartOverlay" class="cart-overlay" onclick="toggleCart()"></div>
+
+    <!-- ── FLOATING CHAT WIDGET HTML ── -->
+    <div class="chat-widget" id="chatWidget">
+        <button class="chat-fab" onclick="toggleChatWidget()" id="chatFab">
+            💬
+            <span class="chat-badge-dot" id="chatBadgeDot" style="display: none;"></span>
+        </button>
+        
+        <div class="chat-window" id="chatWindow">
+            <div class="chat-header">
+                <div class="chat-header-info">
+                    <span class="chat-avatar">☕</span>
+                    <div>
+                        <h4 class="chat-title">Cafero Assistant</h4>
+                        <span class="chat-status">Online</span>
+                    </div>
+                </div>
+                <button class="close-chat-widget" onclick="toggleChatWidget()">✕</button>
+            </div>
+            <div class="chat-body" id="chatBody">
+                <div class="system-message">No active messages. Introduce yourself to start chatting...</div>
+            </div>
+            <div class="chat-footer">
+                <input type="text" id="chatInput" placeholder="Type a message..." onkeypress="handleChatKey(event)">
+                <button class="chat-send-btn" onclick="sendChatMessage()">➔</button>
+            </div>
+        </div>
+    </div>
 
 @functions {
     string GetCategoryEmoji(string category)
@@ -344,9 +610,9 @@
         {
             @:allItems[@item.ProductId] = {
             @:    id: @item.ProductId,
-            @:    name: "@Html.Raw(item.ProductName.Replace("\"", "\\\"").Replace("'", "\\'"))",
+            @:    name: @Html.Raw(Json.Serialize(item.ProductName)),
             @:    price: @item.Price,
-            @:    cat: "@Html.Raw((item.CategoryName ?? "").ToLower().Replace(" ", "").Replace("\"", "\\\""))"
+            @:    cat: @Html.Raw(Json.Serialize((item.CategoryName ?? "").ToLower().Replace(" ", "")))
             @:};
         }
     }
@@ -360,112 +626,113 @@
 
     // ── STORE STATUS ───────────────────────────────────────────────────────────
     function checkStoreStatus() {
-    const now  = new Date();
-    const hour = now.getHours();
-    const open = hour >= 7 && hour < 21;
-    const banner = document.getElementById('storeBanner');
-    const text   = document.getElementById('storeStatusText');
-    if (banner && text) {
-    if (open) {
-    banner.classList.add('open');
-    text.innerText = "We're Open · Closes 9PM";
-    } else {
-    banner.classList.remove('open');
-    text.innerText = "We're Closed · Opens 7AM";
-    }
-    }
+        const now  = new Date();
+        const hour = now.getHours();
+        const open = hour >= 7 && hour < 21;
+        const banner = document.getElementById('storeBanner');
+        const text   = document.getElementById('storeStatusText');
+        if (banner && text) {
+            if (open) {
+                banner.classList.add('open');
+                text.innerText = "We're Open · Closes 9PM";
+            } else {
+                banner.classList.remove('open');
+                text.innerText = "We're Closed · Opens 7AM";
+            }
+        }
     }
 
     // ── LOYALTY ────────────────────────────────────────────────────────────────
     function updateLoyaltyUI() {
-    const goal = 500;
-    const display = document.getElementById('loyaltyPoints');
-    const fillBar = document.getElementById('loyaltyBarFill');
-    const hint = document.getElementById('loyaltyHint');
+        const goal = 500;
+        const display = document.getElementById('loyaltyPoints');
+        const fillBar = document.getElementById('loyaltyBarFill');
+        const hint = document.getElementById('loyaltyHint');
 
-    if (display) display.innerText = loyaltyPts + ' pts';
-    if (fillBar) {
-    const pct = Math.min((loyaltyPts / goal) * 100, 100);
-    fillBar.style.width = pct + '%';
-    }
-    if (hint) {
-    const remaining = goal - loyaltyPts;
-    hint.innerText = loyaltyPts >= goal ? '🎁 You have a reward ready!' : `${remaining} pts until your next reward`;
-    }
+        if (display) display.innerText = loyaltyPts + ' pts';
+        if (fillBar) {
+            const pct = Math.min((loyaltyPts / goal) * 100, 100);
+            fillBar.style.width = pct + '%';
+        }
+        if (hint) {
+            const remaining = goal - loyaltyPts;
+            hint.innerText = loyaltyPts >= goal ? '🎁 You have a reward ready!' : `${remaining} pts until your next reward`;
+        }
     }
 
     // ── FAVORITES ─────────────────────────────────────────────────────────────
     function toggleFav(btn, itemId) {
-    event.stopPropagation();
-    const id  = String(itemId);
-    const idx = favoriteIds.indexOf(id);
-    if (idx > -1) {
-    favoriteIds.splice(idx, 1);
-    btn.innerText = '♡';
-    btn.classList.remove('fav-active');
-    } else {
-    favoriteIds.push(id);
-    btn.innerText = '❤️';
-    btn.classList.add('fav-active');
-    }
-    localStorage.setItem('caferoFavorites', JSON.stringify(favoriteIds));
-    if (document.getElementById('menuGrid').getAttribute('data-current-cat') === 'favorites') {
-    filterMenu('favorites');
-    }
+        event.stopPropagation();
+        const id  = String(itemId);
+        const idx = favoriteIds.indexOf(id);
+        if (idx > -1) {
+            favoriteIds.splice(idx, 1);
+            btn.innerText = '♡';
+            btn.classList.remove('fav-active');
+        } else {
+            favoriteIds.push(id);
+            btn.innerText = '❤️';
+            btn.classList.add('fav-active');
+        }
+        localStorage.setItem('caferoFavorites', JSON.stringify(favoriteIds));
+        if (document.getElementById('menuGrid').getAttribute('data-current-cat') === 'favorites') {
+            filterMenu('favorites');
+        }
     }
 
+    // ── RESTORE FAVORITES ──
     function restoreFavHearts() {
-    document.querySelectorAll('.product-card').forEach(card => {
-    const id = card.getAttribute('data-id');
-    if (favoriteIds.includes(String(id))) {
-    const btn = card.querySelector('.fav-heart');
-    if (btn) { btn.innerText = '❤️'; btn.classList.add('fav-active'); }
-    }
-    });
+        document.querySelectorAll('.product-card').forEach(card => {
+            const id = card.getAttribute('data-id');
+            if (favoriteIds.includes(String(id))) {
+                const btn = card.querySelector('.fav-heart');
+                if (btn) { btn.innerText = '❤️'; btn.classList.add('fav-active'); }
+            }
+        });
     }
 
     // ── TAB SWITCHER ──────────────────────────────────────────────────────────
     function switchTab(tab, btn) {
-    document.getElementById('tabMenu').style.display   = tab === 'menu'   ? 'block' : 'none';
-    document.getElementById('tabOrders').style.display = tab === 'orders' ? 'block' : 'none';
-    document.getElementById('catNav').style.display    = tab === 'menu'   ? 'block' : 'none';
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
+        document.getElementById('tabMenu').style.display   = tab === 'menu'   ? 'block' : 'none';
+        document.getElementById('tabOrders').style.display = tab === 'orders' ? 'block' : 'none';
+        document.getElementById('catNav').style.display    = tab === 'menu'   ? 'block' : 'none';
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
     }
 
     // ── CART TOGGLE ───────────────────────────────────────────────────────────
     function toggleCart() {
-    document.getElementById('cartSidebar').classList.toggle('open');
-    document.getElementById('cartOverlay').classList.toggle('open');
-    renderCustomerCart();
+        document.getElementById('cartSidebar').classList.toggle('open');
+        document.getElementById('cartOverlay').classList.toggle('open');
+        renderCustomerCart();
     }
 
     function toggleAddressField() {
-    const v = document.getElementById('customerOrderType').value;
-    document.getElementById('addressContainer').style.display  = v === 'Delivery' ? 'block' : 'none';
-    document.getElementById('minOrderNote').style.display      = v === 'Delivery' ? 'block' : 'none';
+        const v = document.getElementById('customerOrderType').value;
+        document.getElementById('addressContainer').style.display  = v === 'Delivery' ? 'block' : 'none';
+        document.getElementById('minOrderNote').style.display      = v === 'Delivery' ? 'block' : 'none';
     }
 
     // ── MODAL ─────────────────────────────────────────────────────────────────
     function openModal(itemId, itemName, basePrice) {
-    activeModalId = parseInt(itemId);
-    const price   = parseFloat(basePrice);
-    const cat      = allItems[activeModalId]?.cat || '';
-    const hasSizes = sizedCategories.some(c => cat.includes(c));
+        activeModalId = parseInt(itemId);
+        const price   = parseFloat(basePrice);
+        const cat      = allItems[activeModalId]?.cat || '';
+        const hasSizes = sizedCategories.some(c => cat.includes(c));
 
-    document.getElementById('modalItemName').innerText = itemName;
-    document.getElementById('sizeSection').style.display = hasSizes ? 'block' : 'none';
-    document.getElementById('smallPrice').innerText = '₱' + price.toFixed(2);
-    document.getElementById('largePrice').innerText = '₱' + (price + 20).toFixed(2);
-    document.getElementById('itemQty').value = 1;
-    document.getElementById('itemNotes').value = '';
+        document.getElementById('modalItemName').innerText = itemName;
+        document.getElementById('sizeSection').style.display = hasSizes ? 'block' : 'none';
+        document.getElementById('smallPrice').innerText = '₱' + price.toFixed(2);
+        document.getElementById('largePrice').innerText = '₱' + (price + 20).toFixed(2);
+        document.getElementById('itemQty').value = 1;
+        document.getElementById('itemNotes').value = '';
 
-    if (!hasSizes) {
-    const radios = document.querySelectorAll('input[name="itemSize"]');
-    radios.forEach(r => r.checked = (r.value === 'Small'));
-    }
+        if (!hasSizes) {
+            const radios = document.querySelectorAll('input[name="itemSize"]');
+            radios.forEach(r => r.checked = (r.value === 'Small'));
+        }
 
-    document.getElementById('sizeModal').style.display = 'flex';
+        document.getElementById('sizeModal').style.display = 'flex';
     }
 
     // ── CLOSE MODAL ──
@@ -473,207 +740,308 @@
 
     // ── QUANTITY CONTROL ──
     function updateQty(change) {
-    const el = document.getElementById('itemQty');
-    el.value = Math.max(1, parseInt(el.value) + change);
+        const el = document.getElementById('itemQty');
+        el.value = Math.max(1, parseInt(el.value) + change);
     }
 
     function confirmAddToCart() {
-    const item = allItems[activeModalId];
-    if (!item) { Swal.fire('Error','Item not found in menu.','error'); return; }
+        const item = allItems[activeModalId];
+        if (!item) { Swal.fire('Error','Item not found in menu.','error'); return; }
 
-    const cat      = item.cat || '';
-    const hasSizes = sizedCategories.some(c => cat.includes(c));
-    const size     = hasSizes ? document.querySelector('input[name="itemSize"]:checked').value : 'Regular';
-    const qty      = parseInt(document.getElementById('itemQty').value);
-    const notes    = document.getElementById('itemNotes').value.trim();
-    const price    = size === 'Large' ? item.price + 20 : item.price;
+        const cat      = item.cat || '';
+        const hasSizes = sizedCategories.some(c => cat.includes(c));
+        const size     = hasSizes ? document.querySelector('input[name="itemSize"]:checked').value : 'Regular';
+        const qty      = parseInt(document.getElementById('itemQty').value);
+        const notes    = document.getElementById('itemNotes').value.trim();
+        const price    = size === 'Large' ? item.price + 20 : item.price;
 
-    const existingIdx = customerCart.findIndex(
-    i => i.id === item.id && i.size === size && i.notes === notes
-    );
+        const existingIdx = customerCart.findIndex(
+            i => i.id === item.id && i.size === size && i.notes === notes
+        );
 
-    if (existingIdx > -1) {
-    customerCart[existingIdx].qty += qty;
-    } else {
-    customerCart.push({ id: item.id, name: item.name, size, qty, price, notes });
-    }
+        if (existingIdx > -1) {
+            customerCart[existingIdx].qty += qty;
+        } else {
+            customerCart.push({ id: item.id, name: item.name, size, qty, price, notes });
+        }
 
-    localStorage.setItem('caferoCustomerCart', JSON.stringify(customerCart));
-    updateCartBadge();
-    closeModal();
+        localStorage.setItem('caferoCustomerCart', JSON.stringify(customerCart));
+        updateCartBadge();
+        closeModal();
 
-    Swal.fire({
-    title: 'Added! 🛒',
-    text: `${qty}× ${item.name} (${size}) added to your order.`,
-    icon: 'success',
-    timer: 1200,
-    showConfirmButton: false
-    });
+        Swal.fire({
+            title: 'Added! 🛒',
+            text: `${qty}× ${item.name} (${size}) added to your order.`,
+            icon: 'success',
+            timer: 1200,
+            showConfirmButton: false
+        });
     }
 
     // ── CART RENDER ───────────────────────────────────────────────────────────
     function updateCartBadge() {
-    const total  = customerCart.reduce((s, i) => s + i.qty, 0);
-    const badge  = document.getElementById('cartBadge');
-    if (badge) {
-    badge.style.display = total > 0 ? 'flex' : 'none';
-    badge.innerText = total;
-    }
+        const total  = customerCart.reduce((s, i) => s + i.qty, 0);
+        const badge  = document.getElementById('cartBadge');
+        if (badge) {
+            badge.style.display = total > 0 ? 'flex' : 'none';
+            badge.innerText = total;
+        }
     }
 
     function renderCustomerCart() {
-    const container    = document.getElementById('customerCartList');
-    const totalDisplay = document.getElementById('customerCartTotal');
-    updateCartBadge();
+        const container    = document.getElementById('customerCartList');
+        const totalDisplay = document.getElementById('customerCartTotal');
+        updateCartBadge();
 
-    if (!container) return;
+        if (!container) return;
 
-    if (customerCart.length === 0) {
-    container.innerHTML = '<div class="empty-cart-msg">Your cart is empty.</div>';
-    if (totalDisplay) totalDisplay.innerText = '₱0.00';
-    return;
-    }
+        if (customerCart.length === 0) {
+            container.innerHTML = '<div class="empty-cart-msg">Your cart is empty.</div>';
+            if (totalDisplay) totalDisplay.innerText = '₱0.00';
+            return;
+        }
 
-    let html = '', grandTotal = 0;
-    customerCart.forEach((item, idx) => {
-    const sub = item.qty * item.price;
-    grandTotal += sub;
-    html += `
-    <div class="cart-item-row">
-    <div class="cart-item-info">
-    <h4>${item.name}</h4>
-    <p>${item.size} · ₱${item.price.toFixed(2)}/ea${item.notes ? '<br><em class="cart-notes">📝 ' + item.notes + '</em>' : ''}</p>
-    </div>
-    <div class="cart-item-controls">
-    <button class="cart-qty-btn" onclick="updateCustomerQty(${idx},-1)">-</button>
-    <span class="cart-qty-val">${item.qty}</span>
-    <button class="cart-qty-btn" onclick="updateCustomerQty(${idx},1)">+</button>
-    </div>
-    <div class="cart-subtotal-val">₱${sub.toFixed(2)}</div>
-    </div>`;
-    });
+        let html = '', grandTotal = 0;
+        customerCart.forEach((item, idx) => {
+            const sub = item.qty * item.price;
+            grandTotal += sub;
+            html += `
+                <div class="cart-item-row">
+                    <div class="cart-item-info">
+                        <h4>${item.name}</h4>
+                        <p>${item.size} · ₱${item.price.toFixed(2)}/ea${item.notes ? '<br><em class="cart-notes">📝 ' + item.notes + '</em>' : ''}</p>
+                    </div>
+                    <div class="cart-item-controls">
+                        <button class="cart-qty-btn" onclick="updateCustomerQty(${idx},-1)">-</button>
+                        <span class="cart-qty-val">${item.qty}</span>
+                        <button class="cart-qty-btn" onclick="updateCustomerQty(${idx},1)">+</button>
+                    </div>
+                    <div class="cart-subtotal-val">₱${sub.toFixed(2)}</div>
+                </div>`;
+        });
 
-    container.innerHTML = html;
-    if (totalDisplay) totalDisplay.innerText = '₱' + grandTotal.toFixed(2);
+        container.innerHTML = html;
+        if (totalDisplay) totalDisplay.innerText = '₱' + grandTotal.toFixed(2);
     }
 
     function updateCustomerQty(index, change) {
-    customerCart[index].qty += change;
-    if (customerCart[index].qty <= 0) customerCart.splice(index, 1);
-    localStorage.setItem('caferoCustomerCart', JSON.stringify(customerCart));
-    renderCustomerCart();
+        customerCart[index].qty += change;
+        if (customerCart[index].qty <= 0) customerCart.splice(index, 1);
+        localStorage.setItem('caferoCustomerCart', JSON.stringify(customerCart));
+        renderCustomerCart();
     }
 
     // ── SUBMIT ORDER VIA API ──────────────────────────────────────────────────
     async function submitOnlineOrder() {
-    if (customerCart.length === 0) {
-    Swal.fire('Empty Cart', 'Please add items before checking out.', 'warning');
-    return;
-    }
+        if (customerCart.length === 0) {
+            Swal.fire('Empty Cart', 'Please add items before checking out.', 'warning');
+            return;
+        }
 
-    const orderType     = document.getElementById('customerOrderType').value;
-    const paymentMethod = document.getElementById('customerPaymentMethod').value;
-    const address       = document.getElementById('customerAddress')?.value.trim() || '';
-    const grandTotal    = customerCart.reduce((s, i) => s + i.qty * i.price, 0);
+        const orderType     = document.getElementById('customerOrderType').value;
+        const paymentMethod = document.getElementById('customerPaymentMethod').value;
+        const address       = document.getElementById('customerAddress')?.value.trim() || '';
+        const grandTotal    = customerCart.reduce((s, i) => s + i.qty * i.price, 0);
 
-    if (orderType === 'Delivery' && !address) {
-    Swal.fire('Missing Address', 'Please enter your delivery address.', 'warning'); return;
-    }
-    if (orderType === 'Delivery' && grandTotal < 200) {
-    Swal.fire('Minimum Order', 'Delivery requires a minimum order of ₱200.', 'warning'); return;
-    }
+        if (orderType === 'Delivery' && !address) {
+            Swal.fire('Missing Address', 'Please enter your delivery address.', 'warning'); return;
+        }
+        if (orderType === 'Delivery' && grandTotal < 200) {
+            Swal.fire('Minimum Order', 'Delivery requires a minimum order of ₱200.', 'warning'); return;
+        }
 
-    const btn = document.getElementById('checkoutBtn');
-    btn.disabled = true;
-    btn.innerText = 'Sending to kitchen...';
+        const btn = document.getElementById('checkoutBtn');
+        btn.disabled = true;
+        btn.innerText = 'Sending to kitchen...';
 
-    const payload = {
-    OrderType:       orderType,
-    PaymentMethod:   paymentMethod,
-    DeliveryAddress: orderType === 'Delivery' ? address : null,
-    Items: customerCart.map(i => ({
-    ProductId:           i.id,
-    Quantity:            i.qty,
-    Price:               i.price,
-    Size:                i.size,
-    SpecialInstructions: i.notes || ''
-    }))
-    };
+        const payload = {
+            OrderType:       orderType,
+            PaymentMethod:   paymentMethod,
+            DeliveryAddress: orderType === 'Delivery' ? address : null,
+            Items: customerCart.map(i => ({
+                ProductId:           i.id,
+                Quantity:            i.qty,
+                Price:               i.price,
+                Size:                i.size,
+                SpecialInstructions: i.notes || ''
+            }))
+        };
 
-    try {
-    const response = await fetch('/Customer/PlaceOnlineOrder', {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify(payload)
-    });
+        try {
+            const response = await fetch('/Customer/PlaceOnlineOrder', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify(payload)
+            });
 
-    if (response.ok) {
-    const result = await response.json();
+            if (response.ok) {
+                const result = await response.json();
 
-    const earned = Math.floor(grandTotal / 10);
-    loyaltyPts  += earned;
-    localStorage.setItem('caferoLoyaltyPoints', loyaltyPts);
-    updateLoyaltyUI();
+                const earned = Math.floor(grandTotal / 10);
+                loyaltyPts  += earned;
+                localStorage.setItem('caferoLoyaltyPoints', loyaltyPts);
+                updateLoyaltyUI();
 
-    Swal.fire({
-    title: 'Order Received! 🎉',
-    html:  `<b>Order #${result.orderId}</b> sent to the kitchen.<br>
-    Estimated wait: <b>15–20 minutes</b><br>
-    <small>+${earned} loyalty points earned!</small>`,
-    icon:  'success'
-    }).then(() => {
-    customerCart = [];
-    localStorage.removeItem('caferoCustomerCart');
-    location.reload();
-    });
-    } else {
-    const err = await response.json().catch(() => ({}));
-    Swal.fire('Checkout Failed', err.message || 'Something went wrong. Please try again.', 'error');
-    }
-    } catch (e) {
-    Swal.fire('Network Error', 'Could not reach the server.', 'error');
-    } finally {
-    btn.disabled = false;
-    btn.innerText = 'Send Order to Kitchen';
-    }
+                Swal.fire({
+                    title: 'Order Received! 🎉',
+                    html:  `<b>Order #${result.orderId}</b> sent to the kitchen.<br>
+                            Estimated wait: <b>15–20 minutes</b><br>
+                            <small>+${earned} loyalty points earned!</small>`,
+                    icon:  'success'
+                }).then(() => {
+                    customerCart = [];
+                    localStorage.removeItem('caferoCustomerCart');
+                    location.reload();
+                });
+            } else {
+                const err = await response.json().catch(() => ({}));
+                Swal.fire('Checkout Failed', err.message || 'Something went wrong. Please try again.', 'error');
+            }
+        } catch (e) {
+            Swal.fire('Network Error', 'Could not reach the server.', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerText = 'Send Order to Kitchen';
+        }
     }
 
     // ── MENU FILTER ───────────────────────────────────────────────────────────
     function filterMenu(category, btnEl) {
-    if (category) {
-    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-    if (btnEl) btnEl.classList.add('active');
-    document.getElementById('menuGrid').setAttribute('data-current-cat', category);
+        if (category) {
+            document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+            if (btnEl) btnEl.classList.add('active');
+            document.getElementById('menuGrid').setAttribute('data-current-cat', category);
+        }
+
+        const currentCat = document.getElementById('menuGrid').getAttribute('data-current-cat');
+        const search     = (document.getElementById('menuSearch').value || '').toLowerCase();
+
+        document.querySelectorAll('.product-card').forEach(card => {
+            const cardCat   = (card.getAttribute('data-category') || '').toLowerCase().replace(/\s/g, '');
+            const cardName = (card.getAttribute('data-name') || '').toLowerCase();
+            const cardId   = card.getAttribute('data-id');
+
+            let matchCat;
+            if      (currentCat === 'all')       matchCat = true;
+            else if (currentCat === 'favorites')  matchCat = favoriteIds.includes(String(cardId));
+            else matchCat = cardCat.includes(currentCat.replace(/\s/g, ''));
+
+            const matchSearch = !search || cardName.includes(search);
+            card.style.display = (matchCat && matchSearch) ? '' : 'none';
+        });
     }
 
-    const currentCat = document.getElementById('menuGrid').getAttribute('data-current-cat');
-    const search     = (document.getElementById('menuSearch').value || '').toLowerCase();
+    // ── FLOATING CHAT WIDGET LOGIC (SIGNALR INTEGRATION) ──────────────────────
+    let chatConn;
 
-    document.querySelectorAll('.product-card').forEach(card => {
-    const cardCat   = (card.getAttribute('data-category') || '').toLowerCase().replace(/\s/g, '');
-    const cardName = (card.getAttribute('data-name') || '').toLowerCase();
-    const cardId   = card.getAttribute('data-id');
+    function toggleChatWidget() {
+        const chatWindow = document.getElementById('chatWindow');
+        const dot = document.getElementById('chatBadgeDot');
+        
+        chatWindow.classList.toggle('open');
+        
+        // Hide red dot notifier on first click
+        if (chatWindow.classList.contains('open') && dot) {
+            dot.style.display = 'none';
+        }
+    }
 
-    let matchCat;
-    if      (currentCat === 'all')       matchCat = true;
-    else if (currentCat === 'favorites')  matchCat = favoriteIds.includes(String(cardId));
-    else matchCat = cardCat.includes(currentCat.replace(/\s/g, ''));
+    function handleChatKey(event) {
+        if (event.key === 'Enter') {
+            sendChatMessage();
+        }
+    }
 
-    const matchSearch = !search || cardName.includes(search);
-    card.style.display = (matchCat && matchSearch) ? '' : 'none';
-    });
+    function sendChatMessage() {
+        const input = document.getElementById('chatInput');
+        const messageText = input.value.trim();
+        if (!messageText) return;
+
+        const sender = "@(User.Identity?.Name ?? Context.Session.GetString("Username") ?? "Customer")";
+        const receiver = "Admin"; // Directly route to active admin dashboards
+
+        if (chatConn && chatConn.state === signalR.HubConnectionState.Connected) {
+            chatConn.invoke("SendMessage", sender, receiver, messageText)
+                .catch(err => console.error("Error sending message:", err));
+        } else {
+            // Echo locally when disconnected
+            appendChatMessage(messageText, 'user', sender);
+            setTimeout(() => {
+                appendChatMessage("Connecting you back to our customer service...", 'bot', "System");
+            }, 1000);
+        }
+
+        input.value = '';
+    }
+
+    function appendChatMessage(text, alignment, displayName) {
+        const body = document.getElementById('chatBody');
+        const now = new Date();
+        const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `chat-msg ${alignment}`;
+
+        // Clear dynamic fallback warning or empty text if it exists
+        const staticMsg = body.querySelector(".system-message");
+        if (staticMsg) {
+            staticMsg.remove();
+        }
+
+        const label = displayName ? `${displayName} • ` : '';
+        msgDiv.innerHTML = `
+            <div class="msg-bubble">${escapeHTML(text)}</div>
+            <span class="msg-time">${label}${timeString}</span>
+        `;
+
+        body.appendChild(msgDiv);
+        body.scrollTop = body.scrollHeight; // Auto-scroll to bottom
+    }
+
+    function escapeHTML(str) {
+        return str.replace(/[&<>'"]/g, 
+            tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+        );
     }
 
     // ── INIT ──────────────────────────────────────────────────────────────────
     window.onload = () => {
-    updateCartBadge();
-    updateLoyaltyUI();
-    checkStoreStatus();
-    restoreFavHearts();
+        updateCartBadge();
+        updateLoyaltyUI();
+        checkStoreStatus();
+        restoreFavHearts();
+
+        // ── Real-Time SignalR Connection Setup ──
+        chatConn = new signalR.HubConnectionBuilder()
+            .withUrl("/chatHub")
+            .build();
+
+        chatConn.start()
+            .then(() => console.log("Customer SignalR Chat Connected!"))
+            .catch(err => console.error("SignalR Startup Error:", err));
+
+        chatConn.on("ReceiveMessage", function(sender, receiver, message) {
+            const currentUser = "@(User.Identity?.Name ?? Context.Session.GetString("Username") ?? "Customer")";
+            
+            // Security Filter: Only show the message if it belongs to THIS customer's conversation
+            if (sender === currentUser || receiver === currentUser) {
+                const isUser = (sender === currentUser);
+                const alignment = isUser ? 'user' : 'bot';
+                
+                appendChatMessage(message, alignment, sender);
+
+                // Show red notification badge if the chat window is closed
+                const chatWindow = document.getElementById('chatWindow');
+                const dot = document.getElementById('chatBadgeDot');
+                if (!chatWindow.classList.contains('open') && !isUser && dot) {
+                    dot.style.display = 'block';
+                }
+            }
+        });
     };
 
     window.onclick = e => {
-    if (e.target === document.getElementById('sizeModal')) closeModal();
+        if (e.target === document.getElementById('sizeModal')) closeModal();
     };
 </script>
 </body>

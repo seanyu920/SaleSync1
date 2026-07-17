@@ -5,6 +5,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+// 🚀 ADDED FOR SIGNALR: Register the SignalR service engine
+builder.Services.AddSignalR();
+
 // ⭐ 1. UPDATED SESSION SETTINGS
 builder.Services.AddSession(options =>
 {
@@ -50,5 +53,8 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
+
+// 🚀 ADDED FOR SIGNALR: Map the ChatHub websocket route
+app.MapHub<SaleSync.Hubs.ChatHub>("/chatHub");
 
 app.Run();
