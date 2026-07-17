@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using SaleSync.Models;
+using SaleSync.Services;
 using static SaleSync.Models.MenuItemModel;
 namespace SaleSync.Controllers
 
@@ -251,14 +252,46 @@ namespace SaleSync.Controllers
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
-                string checkAuth = @"     SELECT COUNT(*)      FROM users u      JOIN roles r ON u.role_id = r.role_id      WHERE u.password_hash = @pass      AND (r.role_name = 'Admin' OR r.role_name = 'Manager')";
 
+                // An Admin/Manager override PIN can belong to any Admin or Manager
+                // account, not just the currently logged-in user — fetch the
+                // candidates and verify the hash in code rather than comparing
+                // plaintext in SQL.
+                string checkAuth = @"SELECT u.user_id, u.password_hash FROM users u
+                                      JOIN roles r ON u.role_id = r.role_id
+                                      WHERE (r.role_name = 'Admin' OR r.role_name = 'Manager')";
+
+                bool isValid = false;
                 using (SqlCommand cmd = new SqlCommand(checkAuth, conn))
+                using (SqlDataReader r = cmd.ExecuteReader())
                 {
-                    cmd.Parameters.AddWithValue("@pass", request.Pass ?? "");
-                    int isValid = Convert.ToInt32(cmd.ExecuteScalar());
+                    var candidates = new List<(string id, string hash)>();
+                    while (r.Read())
+                        candidates.Add((r["user_id"].ToString(), r["password_hash"]?.ToString()));
+                    r.Close();
 
-                    if (isValid == 0)
+                    foreach (var (id, hash) in candidates)
+                    {
+                        if (PasswordHasher.Verify(request.Pass ?? "", hash, out bool needsUpgrade))
+                        {
+                            isValid = true;
+                            if (needsUpgrade)
+                            {
+                                using (SqlCommand upgradeCmd = new SqlCommand(
+                                    "UPDATE users SET password_hash = @hash WHERE user_id = @id", conn))
+                                {
+                                    upgradeCmd.Parameters.AddWithValue("@hash", PasswordHasher.Hash(request.Pass ?? ""));
+                                    upgradeCmd.Parameters.AddWithValue("@id", id);
+                                    upgradeCmd.ExecuteNonQuery();
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+
+                {
+                    if (!isValid)
                         return Unauthorized(new { message = "Invalid credentials. Void denied." });
 
                     string voidSql = "UPDATE sales SET status = 'Voided' WHERE sale_id = @id";
@@ -279,7 +312,6 @@ namespace SaleSync.Controllers
         public IActionResult Analytics(string timeframe = "week")
         {
             var model = new AnalyticsViewModel { SelectedTimeframe = timeframe.ToLower() };
-            string connectionString = "Server=(localdb)\\MSSQLLocalDB; Database=SaleSync; Trusted_Connection=True; TrustServerCertificate=True;";
 
             // Define T-SQL filtering criteria based on your exact column parameters
             string dateCondition = "CAST(s.sale_date AS DATE) = CAST(GETDATE() AS DATE)";
@@ -872,7 +904,7 @@ namespace SaleSync.Controllers
             {
 
                 string sql = @"
-            SELECT u.user_id, u.username, u.full_name, u.email, u.password_hash, r.role_name, u.is_active 
+            SELECT u.user_id, u.username, u.full_name, u.email, r.role_name, u.is_active 
             FROM users u
             LEFT JOIN roles r ON u.role_id = r.role_id
             WHERE u.user_id <> 0 
@@ -891,7 +923,6 @@ namespace SaleSync.Controllers
                                 FullName = r["full_name"]?.ToString() ?? "",
                                 Username = r["username"]?.ToString() ?? "",
                                 Email = r["email"]?.ToString() ?? "",
-                                Password = r["password_hash"]?.ToString() ?? "",
                                 Role = r["role_name"]?.ToString() ?? "Unknown",
                                 IsActive = r["is_active"] != DBNull.Value ? Convert.ToBoolean(r["is_active"]) : true
                             });
@@ -986,7 +1017,7 @@ namespace SaleSync.Controllers
                     cmd.Parameters.AddWithValue("@fullName", model.FullName ?? "");
                     cmd.Parameters.AddWithValue("@username", model.Username ?? "");
                     cmd.Parameters.AddWithValue("@email", model.Email ?? "");
-                    cmd.Parameters.AddWithValue("@password", model.Password ?? "");
+                    cmd.Parameters.AddWithValue("@password", PasswordHasher.Hash(model.Password ?? Guid.NewGuid().ToString("N")));
                     cmd.Parameters.AddWithValue("@role", model.Role ?? "Cashier");
                     cmd.ExecuteNonQuery();
                 }

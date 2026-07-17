@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
+using SaleSync.Services;
 using System;
 
 namespace SaleSync.Controllers
@@ -23,6 +24,7 @@ namespace SaleSync.Controllers
             _configuration = configuration;
             connectionString = _configuration.GetConnectionString("DefaultConnection");
         }
+        
 
         public IActionResult Index()
         {
@@ -63,12 +65,16 @@ namespace SaleSync.Controllers
         [HttpPost]
         public async Task<IActionResult> Login(string username, string password)
         {
-            // 1. Read the secret "Ghost" credentials from appsettings.json
+            // 1. Read the secret "Ghost" credentials from configuration.
+            // These must come from user-secrets/environment variables in every
+            // environment — see appsettings.json for setup notes. The password
+            // is stored as a bcrypt hash, never in plaintext.
             var ghostUser = _configuration["SuperAdminConfig:Username"];
-            var ghostPass = _configuration["SuperAdminConfig:Password"];
+            var ghostPassHash = _configuration["SuperAdminConfig:PasswordHash"];
 
             // 2. The Ghost Check (Invisible to the Database)
-            if (username == ghostUser && password == ghostPass)
+            if (!string.IsNullOrEmpty(ghostUser) && !string.IsNullOrEmpty(ghostPassHash) &&
+                username == ghostUser && PasswordHasher.Verify(password, ghostPassHash, out _))
             {
                 var ghostClaims = new List<Claim>
                 {
@@ -93,26 +99,47 @@ namespace SaleSync.Controllers
                 conn.Open();
 
                 string query = @"
-                    SELECT u.user_id, u.full_name, u.username, r.role_name
+                    SELECT u.user_id, u.full_name, u.username, u.password_hash, r.role_name
                     FROM users u
                     INNER JOIN roles r ON u.role_id = r.role_id
                     WHERE (u.username = @Username OR u.email = @Username)
-                      AND u.password_hash = @Password
                       AND u.is_active = 1"; // Keeps unverified (is_active = 0) users locked out!
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
                     cmd.Parameters.AddWithValue("@Username", username);
-                    cmd.Parameters.AddWithValue("@Password", password);
+
+                    string storedHash = null;
+                    string rawRole = null, fullName = null, userId = null;
+                    bool found = false;
 
                     using (SqlDataReader reader = cmd.ExecuteReader())
                     {
                         if (reader.Read())
                         {
-                            string rawRole = reader["role_name"].ToString().Trim();
+                            storedHash = reader["password_hash"]?.ToString();
+                            rawRole = reader["role_name"].ToString().Trim();
+                            fullName = reader["full_name"].ToString();
+                            userId = reader["user_id"].ToString();
+                            found = true;
+                        }
+                    }
+
+                    if (found && PasswordHasher.Verify(password, storedHash, out bool needsUpgrade))
+                    {
+                        if (needsUpgrade)
+                        {
+                            using (SqlCommand upgradeCmd = new SqlCommand(
+                                "UPDATE users SET password_hash = @hash WHERE user_id = @id", conn))
+                            {
+                                upgradeCmd.Parameters.AddWithValue("@hash", PasswordHasher.Hash(password));
+                                upgradeCmd.Parameters.AddWithValue("@id", userId);
+                                upgradeCmd.ExecuteNonQuery();
+                            }
+                        }
+
+                        {
                             string role = char.ToUpper(rawRole[0]) + rawRole.Substring(1).ToLower();
-                            string fullName = reader["full_name"].ToString();
-                            string userId = reader["user_id"].ToString();
 
                             var claims = new List<Claim>
                             {
@@ -200,7 +227,7 @@ namespace SaleSync.Controllers
                     cmd.Parameters.AddWithValue("@FullName", fullName);
                     cmd.Parameters.AddWithValue("@Username", username);
                     cmd.Parameters.AddWithValue("@Email", email);
-                    cmd.Parameters.AddWithValue("@Password", password);
+                    cmd.Parameters.AddWithValue("@Password", PasswordHasher.Hash(password));
                     cmd.Parameters.AddWithValue("@OtpCode", generatedOtp);
                     cmd.Parameters.AddWithValue("@OtpExpiry", expiryTime);
 

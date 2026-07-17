@@ -205,18 +205,18 @@
                                                        name="selectedItem"
                                                        value="@item.ProductId"
                                                        onclick="fillForm(
-                                                '@item.ProductId',
-                                                '@Html.Raw((item.ItemCategory ?? "").Replace("'", "\\'"))',
-                                                '@Html.Raw((item.ItemName ?? "").Replace("'", "\\'"))',
-                                                '@Html.Raw((item.ItemID ?? "").Replace("'", "\\'"))',
-                                                '@item.PurchasePrice',
-                                                '@item.Quantity',
-                                                '@item.Unit',
-                                                '@Html.Raw((item.StockSupplier ?? "").Replace("'", "\\'"))',
-                                                '@item.DateAcquired',
-                                                '@item.ExpirationDate',
-                                                '@Html.Raw((item.RecipeUnit ?? "").Replace("'", "\\'"))',
-                                                '@item.ConversionFactor'
+                                                @Json.Serialize(item.ProductId.ToString()),
+                                                @Json.Serialize(item.ItemCategory ?? ""),
+                                                @Json.Serialize(item.ItemName ?? ""),
+                                                @Json.Serialize(item.ItemID ?? ""),
+                                                @Json.Serialize(item.PurchasePrice.ToString()),
+                                                @Json.Serialize(item.Quantity.ToString()),
+                                                @Json.Serialize(item.Unit ?? ""),
+                                                @Json.Serialize(item.StockSupplier ?? ""),
+                                                @Json.Serialize(item.DateAcquired.ToString()),
+                                                @Json.Serialize(item.ExpirationDate.ToString()),
+                                                @Json.Serialize(item.RecipeUnit ?? ""),
+                                                @Json.Serialize(item.ConversionFactor.ToString())
                                                 )" />
                                             </td>
                                             <td><strong>@item.ItemCategory</strong></td>

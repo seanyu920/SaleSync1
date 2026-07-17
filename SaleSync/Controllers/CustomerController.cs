@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Configuration;
 using SaleSync.Models;
 using System.Collections.Generic;
 using System;
@@ -12,7 +13,14 @@ namespace SaleSync.Controllers
     [Authorize(Roles = "Customer")]
     public class CustomerController : Controller
     {
-        private readonly string connectionString = "Server=(localdb)\\MSSQLLocalDB; Database=SaleSync; Trusted_Connection=True; TrustServerCertificate=True;";
+        private readonly IConfiguration _configuration;
+        private readonly string connectionString;
+
+        public CustomerController(IConfiguration configuration)
+        {
+            _configuration = configuration;
+            connectionString = _configuration.GetConnectionString("DefaultConnection");
+        }
 
         [HttpGet]
         public IActionResult CustomerOrdering()

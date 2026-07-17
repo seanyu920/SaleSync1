@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Configuration;
 using SaleSync.Models;
+using SaleSync.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +13,14 @@ namespace SaleSync.Controllers
     [Authorize(Roles = "Cashier,Admin,Manager")]
     public class CashierController : Controller
     {
-        private readonly string connectionString = "Server=(localdb)\\MSSQLLocalDB; Database=SaleSync; Trusted_Connection=True; TrustServerCertificate=True;";
+        private readonly IConfiguration _configuration;
+        private readonly string connectionString;
+
+        public CashierController(IConfiguration configuration)
+        {
+            _configuration = configuration;
+            connectionString = _configuration.GetConnectionString("DefaultConnection");
+        }
 
         // --- DASHBOARD ---
         public IActionResult Dashboard()
@@ -259,15 +268,38 @@ namespace SaleSync.Controllers
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
-                string checkAuth = @"SELECT r.role_name FROM users u JOIN roles r ON u.role_id = r.role_id 
-                                    WHERE u.username = @user AND u.password_hash = @pass AND (r.role_name = 'Admin' OR r.role_name = 'Manager')";
+                string checkAuth = @"SELECT u.user_id, u.password_hash FROM users u JOIN roles r ON u.role_id = r.role_id 
+                                    WHERE u.username = @user AND (r.role_name = 'Admin' OR r.role_name = 'Manager')";
 
+                string overrideUserId = null, overrideHash = null;
                 using (SqlCommand cmd = new SqlCommand(checkAuth, conn))
                 {
-                    cmd.Parameters.AddWithValue("@user", request.AdminUser);
-                    cmd.Parameters.AddWithValue("@pass", request.AdminPass);
-                    if (cmd.ExecuteScalar() == null) return Unauthorized(new { message = "Invalid Admin credentials" });
+                    cmd.Parameters.AddWithValue("@user", request.AdminUser ?? "");
+                    using (SqlDataReader r = cmd.ExecuteReader())
+                    {
+                        if (r.Read())
+                        {
+                            overrideUserId = r["user_id"].ToString();
+                            overrideHash = r["password_hash"]?.ToString();
+                        }
+                    }
+                }
 
+                if (overrideHash == null || !PasswordHasher.Verify(request.AdminPass ?? "", overrideHash, out bool needsUpgrade))
+                    return Unauthorized(new { message = "Invalid Admin credentials" });
+
+                if (needsUpgrade)
+                {
+                    using (SqlCommand upgradeCmd = new SqlCommand(
+                        "UPDATE users SET password_hash = @hash WHERE user_id = @id", conn))
+                    {
+                        upgradeCmd.Parameters.AddWithValue("@hash", PasswordHasher.Hash(request.AdminPass ?? ""));
+                        upgradeCmd.Parameters.AddWithValue("@id", overrideUserId);
+                        upgradeCmd.ExecuteNonQuery();
+                    }
+                }
+
+                {
                     using (SqlCommand vCmd = new SqlCommand("UPDATE sales SET status = 'Voided' WHERE sale_id = @id", conn))
                     {
                         vCmd.Parameters.AddWithValue("@id", request.SaleId);

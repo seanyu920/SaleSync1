@@ -5,6 +5,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using System.Net;        // Added for NetworkCredential
 using System.Net.Mail;   // Added for MailMessage and SmtpClient
+using SaleSync.Services;
 
 namespace SaleSync.Controllers
 {
@@ -90,7 +91,7 @@ namespace SaleSync.Controllers
                     cmd.Parameters.AddWithValue("@FullName", fullName);
                     cmd.Parameters.AddWithValue("@Username", username);
                     cmd.Parameters.AddWithValue("@Email", email);
-                    cmd.Parameters.AddWithValue("@Password", password);
+                    cmd.Parameters.AddWithValue("@Password", PasswordHasher.Hash(password));
                     cmd.Parameters.AddWithValue("@OtpCode", generatedOtp);
                     cmd.Parameters.AddWithValue("@OtpExpiry", expiryTime);
 

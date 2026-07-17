@@ -1,0 +1,355 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+@{
+    Layout = null;
+    var messages = ViewBag.Messages as List<dynamic>;
+    var contacts = ViewBag.Contacts as List<dynamic>;
+    string chatWith = ViewBag.ChatWith;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cafero - Dispatch & Order Coordination</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+            body {
+                font-family: 'Outfit', sans-serif;
+                background-color: #fdfaf6;
+                margin: 0;
+                padding: 0;
+                color: #4a2511;
+            }
+
+            .chat-container {
+                display: flex;
+                height: 100vh;
+                max-width: 1300px;
+                margin: 0 auto;
+                background-color: #fff;
+                box-shadow: 0 4px 20px rgba(74,37,17,0.08);
+            }
+
+            /* Sidebar Contact Directory */
+            .chat-sidebar {
+                width: 32%;
+                border-right: 1px solid #dcbca5;
+                background-color: #fcf8f2;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .sidebar-header {
+                padding: 20px;
+                background-color: #4a2511;
+                color: #fff;
+                font-size: 1.1rem;
+                font-weight: bold;
+            }
+
+            .user-list {
+                flex-grow: 1;
+                overflow-y: auto;
+                list-style: none;
+                padding: 0;
+                margin: 0;
+            }
+
+            .user-item {
+                padding: 15px 20px;
+                border-bottom: 1px solid #f3ece6;
+                cursor: pointer;
+                transition: 0.2s;
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+                text-decoration: none;
+            }
+
+                .user-item:hover {
+                    background-color: #fcf1e8;
+                }
+
+                .user-item.active {
+                    background-color: #f46a05;
+                }
+
+                    .user-item.active .contact-name, .user-item.active .role-badge {
+                        color: #fff;
+                    }
+
+            .contact-name {
+                font-weight: 700;
+                color: #4a2511;
+                font-size: 1rem;
+            }
+
+            .role-badge {
+                font-size: 0.75rem;
+                color: #f46a05;
+                font-weight: bold;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+            }
+
+            .user-item.active .role-badge {
+                color: #ffe6d5;
+            }
+
+            /* Main Messaging panel */
+            .chat-main {
+                flex-grow: 1;
+                display: flex;
+                flex-direction: column;
+                background-color: #fff;
+            }
+
+            .chat-header {
+                padding: 20px;
+                border-bottom: 1px solid #dcbca5;
+                background-color: #fcf8f2;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+                .chat-header h3 {
+                    margin: 0;
+                    font-size: 1.2rem;
+                    color: #4a2511;
+                }
+
+            .back-btn {
+                background-color: #4a2511;
+                color: #fff;
+                padding: 8px 15px;
+                border-radius: 6px;
+                text-decoration: none;
+                font-size: 0.9rem;
+                font-weight: 600;
+                transition: 0.2s;
+            }
+
+                .back-btn:hover {
+                    background-color: #f46a05;
+                }
+
+            /* Messages stream */
+            .chat-messages {
+                flex-grow: 1;
+                padding: 20px;
+                overflow-y: auto;
+                background-color: #fdfaf6;
+                display: flex;
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .message {
+                display: flex;
+                flex-direction: column;
+                max-width: 70%;
+            }
+
+            .message-sent {
+                align-self: flex-end;
+                align-items: flex-end;
+            }
+
+            .message-received {
+                align-self: flex-start;
+                align-items: flex-start;
+            }
+
+            .message-bubble {
+                padding: 12px 16px;
+                border-radius: 16px;
+                font-size: 0.95rem;
+                line-height: 1.4;
+            }
+
+            .message-sent .message-bubble {
+                background-color: #f46a05;
+                color: #fff;
+                border-bottom-right-radius: 2px;
+            }
+
+            .message-received .message-bubble {
+                background-color: #eae1d8;
+                color: #4a2511;
+                border-bottom-left-radius: 2px;
+            }
+
+            .message-time {
+                font-size: 0.75rem;
+                color: #a39081;
+                margin-top: 4px;
+            }
+
+            /* Bottom input controller */
+            .chat-input-area {
+                padding: 20px;
+                border-top: 1px solid #dcbca5;
+                background-color: #fff;
+                display: flex;
+                gap: 12px;
+            }
+
+                .chat-input-area input {
+                    flex-grow: 1;
+                    padding: 12px 16px;
+                    border: 1px solid #dcbca5;
+                    border-radius: 30px;
+                    outline: none;
+                    font-size: 0.95rem;
+                    font-family: inherit;
+                }
+
+                    .chat-input-area input:focus {
+                        border-color: #f46a05;
+                    }
+
+            .chat-send-btn {
+                background-color: #f46a05;
+                color: #fff;
+                border: none;
+                padding: 0 25px;
+                border-radius: 30px;
+                font-weight: bold;
+                cursor: pointer;
+                transition: 0.2s;
+            }
+
+                .chat-send-btn:hover {
+                    background-color: #4a2511;
+                }
+    </style>
+</head>
+<body>
+
+    <div class="chat-container">
+        <div class="chat-sidebar">
+            <div class="sidebar-header">💬 Active Contacts</div>
+            <div class="user-list">
+                @if (contacts != null && contacts.Count > 0)
+                {
+                    foreach (var contact in contacts)
+                    {
+                        <a href="/Chat?chatWith=@contact.Username" class="user-item @(chatWith == contact.Username ? "active" : "")">
+                            <span class="contact-name">@contact.Username</span>
+                            <span class="role-badge">🏷️ @contact.Role</span>
+                        </a>
+                    }
+                }
+                else
+                {
+                    <div style="padding: 20px; text-align: center; color: #a39081;">No other active users found.</div>
+                }
+            </div>
+        </div>
+
+        <div class="chat-main">
+            @if (!string.IsNullOrEmpty(chatWith))
+            {
+                <div class="chat-header">
+                    <h3>Chatting with: <strong>@chatWith</strong></h3>
+                    <a href="/" class="back-btn">Go to Dashboard</a>
+                </div>
+
+                <div class="chat-messages" id="chatMessages">
+                    @foreach (var msg in messages)
+                    {
+                        bool isMe = msg.Sender == ViewBag.CurrentUser;
+                        <div class="message @(isMe ? "message-sent" : "message-received")">
+                            <div class="message-bubble">@msg.Text</div>
+                            <div class="message-time">@msg.Time</div>
+                        </div>
+                    }
+                </div>
+
+                <div class="chat-input-area">
+                    <input type="text" id="messageInput" placeholder="Send delivery updates or coordinates..." autocomplete="off" />
+                    <button type="button" id="sendButton" class="chat-send-btn">Send</button>
+                </div>
+            }
+            else
+            {
+                <div style="flex-grow: 1; display: flex; align-items: center; justify-content: center; background-color: #fdfaf6; flex-direction: column;">
+                    <span style="font-size: 3rem;">💬</span>
+                    <h3>Select a contact to begin coordinating</h3>
+                </div>
+            }
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+    <script>
+            const chatMessages = document.getElementById("chatMessages");
+            if (chatMessages) {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl("/chatHub")
+                .build();
+
+            connection.on("ReceiveMessage", function(sender, receiver, message, time) {
+                const currentUser = "@ViewBag.CurrentUser";
+                const chatWith = "@chatWith";
+
+                const isRelevant =
+                    (sender === currentUser && receiver === chatWith) ||
+                    (sender === chatWith && receiver === currentUser);
+
+                if (isRelevant && chatMessages) {
+                    const isMe = sender === currentUser;
+                    const messageHtml = `
+                                <div class="message ${isMe ? 'message-sent' : 'message-received'}">
+                                    <div class="message-bubble">${message}</div>
+                                    <div class="message-time">${time}</div>
+                                </div>`;
+
+                    chatMessages.innerHTML += messageHtml;
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+            });
+
+            connection.start().catch(err => console.error(err.toString()));
+
+            const sendButton = document.getElementById("sendButton");
+            const messageInput = document.getElementById("messageInput");
+
+            if (sendButton && messageInput) {
+                sendButton.addEventListener("click", function(event) {
+                    sendMessage();
+                    event.preventDefault();
+                });
+
+                messageInput.addEventListener("keydown", function(event) {
+                    if (event.key === "Enter") {
+                        sendMessage();
+                        event.preventDefault();
+                    }
+                });
+            }
+
+            function sendMessage() {
+                const input = document.getElementById("messageInput");
+                const message = input.value.trim();
+                if (message === "") return;
+
+                const sender = "@ViewBag.CurrentUser";
+                const receiver = "@chatWith";
+
+                connection.invoke("SendMessage", sender, receiver, message)
+                    .then(() => {
+                        input.value = "";
+                    })
+                    .catch(err => console.error(err.toString()));
+            }
+    </script></body>
+</html>
