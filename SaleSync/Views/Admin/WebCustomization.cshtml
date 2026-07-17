@@ -10,22 +10,26 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Web Customization - SyncScale</title>
+
+    <!-- Added SweetAlert2 Library -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <link rel="stylesheet" href="~/css/Inventory.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/WebCustomization.css" asp-append-version="true" />
 
     <!-- Runtime Database Token Mappings Only -->
     <style id="theme-styles">
-            :root {
-                --primary-color: @(Model?.PrimaryColor ?? "var(--gold)");
-                --sidebar-bg: @(Model?.SidebarColor ?? "var(--bg-surface)");
-                --accent-color: @(Model?.AccentColor ?? "var(--gold)");
-                --main-bg: @(Model?.BackgroundColor ?? "var(--bg-base)");
-            }
+        :root {
+        --primary-color: @(Model?.PrimaryColor ?? "var(--gold)");
+        --sidebar-bg: @(Model?.SidebarColor ?? "var(--bg-surface)");
+        --accent-color: @(Model?.AccentColor ?? "var(--gold)");
+        --main-bg: @(Model?.BackgroundColor ?? "var(--bg-base)");
+        }
 
-            .dashboard-container {
-                display: flex;
-                flex-direction: @(Model?.SidebarPosition == "right" ? "row-reverse" : "row");
-            }
+        .dashboard-container {
+        display: flex;
+        flex-direction: @(Model?.SidebarPosition == "right" ? "row-reverse" : "row");
+        }
     </style>
 </head>
 <body>
@@ -71,8 +75,8 @@
             </div>
 
             <div class="logout-section">
-                <form method="post" action="/Home/Logout">
-                    <button type="submit" class="menu-btn logout-btn">
+                <form method="post" action="/Home/Logout" id="logoutForm">
+                    <button type="button" class="menu-btn logout-btn" onclick="confirmLogout()">
                         Log Out
                     </button>
                 </form>
@@ -215,23 +219,39 @@
 
     <!-- Live Preview Script -->
     <script>
-            const root = document.documentElement;
+        function confirmLogout() {
+        Swal.fire({
+        title: 'Are you sure?',
+        text: "You will be logged out of your session.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, log out',
+        cancelButtonText: 'Cancel'
+        }).then((result) => {
+        if (result.isConfirmed) {
+        document.getElementById('logoutForm').submit();
+        }
+        });
+        }
+        const root = document.documentElement;
 
-            document.getElementById('PrimaryColor').addEventListener('input', (e) => {
-                root.style.setProperty('--primary-color', e.target.value);
-            });
-            document.getElementById('SidebarColor').addEventListener('input', (e) => {
-                root.style.setProperty('--sidebar-bg', e.target.value);
-            });
-            document.getElementById('AccentColor').addEventListener('input', (e) => {
-                root.style.setProperty('--accent-color', e.target.value);
-            });
-            document.getElementById('BackgroundColor').addEventListener('input', (e) => {
-                root.style.setProperty('--main-bg', e.target.value);
-            });
-            document.getElementById('SidebarPosition').addEventListener('change', (e) => {
-                document.getElementById('dashboardContainer').style.flexDirection = e.target.value === 'right' ? 'row-reverse' : 'row';
-            });
+        document.getElementById('PrimaryColor').addEventListener('input', (e) => {
+        root.style.setProperty('--primary-color', e.target.value);
+        });
+        document.getElementById('SidebarColor').addEventListener('input', (e) => {
+        root.style.setProperty('--sidebar-bg', e.target.value);
+        });
+        document.getElementById('AccentColor').addEventListener('input', (e) => {
+        root.style.setProperty('--accent-color', e.target.value);
+        });
+        document.getElementById('BackgroundColor').addEventListener('input', (e) => {
+        root.style.setProperty('--main-bg', e.target.value);
+        });
+        document.getElementById('SidebarPosition').addEventListener('change', (e) => {
+        document.getElementById('dashboardContainer').style.flexDirection = e.target.value === 'right' ? 'row-reverse' : 'row';
+        });
     </script>
 </body>
 </html>

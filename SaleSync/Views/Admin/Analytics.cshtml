@@ -11,6 +11,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>@displayRole Analytics - Cafero</title>
+
+    <!-- Required library for confirmLogout -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <link rel="stylesheet" href="~/css/AdminDashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/Analytics.css" asp-append-version="true" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -68,8 +72,8 @@
             </div>
 
             <div class="logout-section">
-                <form method="post" action="/Home/Logout">
-                    <button type="submit" class="menu-btn logout-btn">
+                <form method="post" action="/Home/Logout" id="logoutForm">
+                    <button type="button" class="menu-btn logout-btn" onclick="confirmLogout()">
                         Log Out
                     </button>
                 </form>
@@ -79,7 +83,7 @@
         <main class="main-content slide-up">
             <div class="page-header">
                 <div>
-                    <h1 class="greeting-title">Analytics Overview 📊</h1>
+                    <h1 class="greeting-title">Analytics Overview </h1>
                     <p class="greeting-subtitle">Deep dive into your sales and performance metrics.</p>
                 </div>
 
@@ -166,6 +170,22 @@
     </div>
 
     <script>
+        function confirmLogout() {
+        Swal.fire({
+        title: 'Are you sure?',
+        text: "You will be logged out of your session.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, log out',
+        cancelButtonText: 'Cancel'
+        }).then((result) => {
+        if (result.isConfirmed) {
+        document.getElementById('logoutForm').submit();
+        }
+        });
+        }
         document.addEventListener('DOMContentLoaded', function () {
 
         // --- 1. Dynamic Sales Bar Chart Initialization ---
