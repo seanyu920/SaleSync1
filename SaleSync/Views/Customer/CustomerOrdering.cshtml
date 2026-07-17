@@ -953,6 +953,11 @@
 
     // ── FLOATING CHAT WIDGET LOGIC (SIGNALR INTEGRATION) ──────────────────────
     let chatConn;
+    let supportAgent = null; // resolved staff username the customer talks to
+
+    // This must be the users.username value (matches the "Username" claim set
+    // at login), not the display/full name, or message routing breaks.
+    const currentUser = "@(User.FindFirst("Username")?.Value ?? "Customer")";
 
     function toggleChatWidget() {
         const chatWindow = document.getElementById('chatWindow');
@@ -977,15 +982,17 @@
         const messageText = input.value.trim();
         if (!messageText) return;
 
-        const sender = "@(User.Identity?.Name ?? Context.Session.GetString("Username") ?? "Customer")";
-        const receiver = "Admin"; // Directly route to active admin dashboards
+        if (!supportAgent) {
+            appendChatMessage("We couldn't reach a staff member right now. Please try again shortly.", 'bot', 'System');
+            return;
+        }
 
         if (chatConn && chatConn.state === signalR.HubConnectionState.Connected) {
-            chatConn.invoke("SendMessage", sender, receiver, messageText)
+            chatConn.invoke("SendMessage", supportAgent, messageText)
                 .catch(err => console.error("Error sending message:", err));
         } else {
             // Echo locally when disconnected
-            appendChatMessage(messageText, 'user', sender);
+            appendChatMessage(messageText, 'user', currentUser);
             setTimeout(() => {
                 appendChatMessage("Connecting you back to our customer service...", 'bot', "System");
             }, 1000);
@@ -1024,12 +1031,46 @@
         );
     }
 
+    async function loadChatHistory() {
+        if (!supportAgent) return;
+
+        try {
+            const res = await fetch(`/Chat/GetChatHistory?chatWith=${encodeURIComponent(supportAgent)}`);
+            if (!res.ok) return;
+
+            const history = await res.json();
+            const body = document.getElementById('chatBody');
+            if (history.length > 0) {
+                const staticMsg = body.querySelector(".system-message");
+                if (staticMsg) staticMsg.remove();
+            }
+
+            history.forEach(msg => {
+                const isUser = msg.sender === currentUser;
+                appendChatMessage(msg.text, isUser ? 'user' : 'bot', msg.sender);
+            });
+        } catch (err) {
+            console.error("Failed to load chat history:", err);
+        }
+    }
+
     // ── INIT ──────────────────────────────────────────────────────────────────
-    window.onload = () => {
+    window.onload = async () => {
         updateCartBadge();
         updateLoyaltyUI();
         checkStoreStatus();
         restoreFavHearts();
+
+        // Resolve which staff account this customer's messages should go to.
+        try {
+            const res = await fetch('/Chat/GetSupportAgent');
+            if (res.ok) {
+                const data = await res.json();
+                supportAgent = data.agent;
+            }
+        } catch (err) {
+            console.error("Failed to resolve support agent:", err);
+        }
 
         // ── Real-Time SignalR Connection Setup ──
         chatConn = new signalR.HubConnectionBuilder()
@@ -1037,25 +1078,25 @@
             .build();
 
         chatConn.start()
-            .then(() => console.log("Customer SignalR Chat Connected!"))
+            .then(() => {
+                console.log("Customer SignalR Chat Connected!");
+                loadChatHistory();
+            })
             .catch(err => console.error("SignalR Startup Error:", err));
 
-        chatConn.on("ReceiveMessage", function(sender, receiver, message) {
-            const currentUser = "@(User.Identity?.Name ?? Context.Session.GetString("Username") ?? "Customer")";
-            
-            // Security Filter: Only show the message if it belongs to THIS customer's conversation
-            if (sender === currentUser || receiver === currentUser) {
-                const isUser = (sender === currentUser);
-                const alignment = isUser ? 'user' : 'bot';
-                
-                appendChatMessage(message, alignment, sender);
+        chatConn.on("ReceiveMessage", function(sender, receiver, message, time) {
+            // The hub only delivers messages that belong to this conversation
+            // (see ChatHub group routing), so no client-side filtering needed.
+            const isUser = (sender === currentUser);
+            const alignment = isUser ? 'user' : 'bot';
 
-                // Show red notification badge if the chat window is closed
-                const chatWindow = document.getElementById('chatWindow');
-                const dot = document.getElementById('chatBadgeDot');
-                if (!chatWindow.classList.contains('open') && !isUser && dot) {
-                    dot.style.display = 'block';
-                }
+            appendChatMessage(message, alignment, sender);
+
+            // Show red notification badge if the chat window is closed
+            const chatWindow = document.getElementById('chatWindow');
+            const dot = document.getElementById('chatBadgeDot');
+            if (!chatWindow.classList.contains('open') && !isUser && dot) {
+                dot.style.display = 'block';
             }
         });
     };
