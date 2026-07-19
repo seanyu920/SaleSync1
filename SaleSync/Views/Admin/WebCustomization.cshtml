@@ -1,8 +1,22 @@
 ﻿@model SaleSync.Models.WebCustomization
 @{
     Layout = null;
-    string displayRole = User.IsInRole("Manager") ? "Manager" : "Admin";
-    string homeController = User.IsInRole("Manager") ? "Manager" : "Admin";
+
+    // Default fallback values
+    string displayRole = "Admin";
+    string homeController = "Admin";
+
+    // Explicitly check for each role sequence
+    if (User.IsInRole("Manager"))
+    {
+        displayRole = "Manager";
+        homeController = "Manager";
+    }
+    else if (User.IsInRole("Cashier"))
+    {
+        displayRole = "Cashier";
+        homeController = "Cashier";
+    }
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -51,25 +65,43 @@
                 </div>
 
                 <nav class="sidebar-menu">
+                    <!-- Dashboard (Visible to Everyone) -->
                     <a href="/@homeController/Dashboard" class="menu-btn">Dashboard</a>
-                    <a href="/Admin/QueueOrder" class="menu-btn">Queue</a>
 
+                    <!-- POS (Only visible to the Cashier) -->
+                    @if (User.IsInRole("Cashier"))
+                    {
+                        <a href="/@homeController/CashierMenu" class="menu-btn">POS</a>
+                    }
+
+                    <!-- Queue (Hidden from Cashier) -->
+                    @if (!User.IsInRole("Cashier"))
+                    {
+                        <a href="/@homeController/QueueOrder" class="menu-btn">Queue</a>
+                    }
+
+                    <!-- Activity Log (Admin Only) -->
                     @if (User.IsInRole("Admin"))
                     {
                         <a href="/Admin/ActivityLog" class="menu-btn">Activity Log</a>
                     }
 
-                    <a href="/@homeController/Analytics" class="menu-btn">Analytics</a>
+                    <!-- Management Tabs (Hidden from Cashier) -->
+                    @if (!User.IsInRole("Cashier"))
+                    {
+                        <a href="/@homeController/Analytics" class="menu-btn">Analytics</a>
+                        <a href="/@homeController/Products" class="menu-btn">Products</a>
+                        <a href="/@homeController/Inventory" class="menu-btn">Inventory</a>
+                        <a href="/@homeController/ArchivedProducts" class="menu-btn">Archive</a>
+                    }
 
-                    <a href="/@homeController/Products" class="menu-btn">Products</a>
-                    <a href="/@homeController/Inventory" class="menu-btn">Inventory</a>
-                    <a href="/@homeController/ArchivedProducts" class="menu-btn">Archive</a>
-
+                    <!-- Accounts (Admin Only) -->
                     @if (User.IsInRole("Admin"))
                     {
                         <a href="/Admin/ManageAccounts" class="menu-btn">Accounts</a>
                     }
 
+                    <!-- Customization (Visible to Everyone) -->
                     <a href="/@homeController/WebCustomization" class="menu-btn active">Customization</a>
                 </nav>
             </div>

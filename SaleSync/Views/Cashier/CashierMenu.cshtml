@@ -54,9 +54,13 @@
                     <a href="/@homeController/Dashboard" class="menu-btn">
                         Dashboard
                     </a>
-                    <a href="javascript:void(0)" class="menu-btn active">
-                        POS
-                    </a>
+
+                    @if (User.IsInRole("Cashier"))
+                    {
+                        <a href="javascript:void(0)" class="menu-btn active">
+                            POS
+                        </a>
+                    }
 
                     @if (User.IsInRole("Admin"))
                     {
@@ -67,17 +71,17 @@
 
                     @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
                     {
-                        <a href="/Admin/Analytics" class="menu-btn">
+                        <a href="/@homeController/Analytics" class="menu-btn">
                             Analytics
                         </a>
-                        <a href="/Admin/QueueOrder" class="menu-btn">Queue</a>
-                        <a href="/Admin/Products" class="menu-btn">
+                        <a href="/@homeController/QueueOrder" class="menu-btn">Queue</a>
+                        <a href="/@homeController/Products" class="menu-btn">
                             Products
                         </a>
-                        <a href="/Admin/Inventory" class="menu-btn">
+                        <a href="/@homeController/Inventory" class="menu-btn">
                             Inventory
                         </a>
-                        <a href="/Admin/ArchivedProducts" class="menu-btn">Archived</a>
+                        <a href="/@homeController/ArchivedProducts" class="menu-btn">Archived</a>
                     }
 
                     @if (User.IsInRole("Admin"))
@@ -86,8 +90,7 @@
                             Accounts
                         </a>
                     }
-                    <a href="/Admin/WebCustomization" class="menu-btn">Customization</a>
-
+                    <a href="/@homeController/WebCustomization" class="menu-btn">Customization</a>
                 </nav>
             </div>
 
@@ -266,7 +269,7 @@
         </div>
     </div>
 
-    <!-- SCRIPTS (unchanged) -->
+    <!-- SCRIPTS -->
     <script>
         function confirmLogout() {
         Swal.fire({

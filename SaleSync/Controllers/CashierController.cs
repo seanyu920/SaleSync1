@@ -261,7 +261,12 @@ namespace SaleSync.Controllers
             }
             return Ok();
         }
-
+        // Inside CashierController.cs and ManagerController.cs
+        public IActionResult WebCustomization()
+        {
+            // Explicitly point to the Admin folder view
+            return View("~/Views/Admin/WebCustomization.cshtml");
+        }
         [HttpPost]
         public IActionResult VerifyAndVoid([FromBody] VoidRequestModel request)
         {

@@ -12,6 +12,8 @@
     <title>Dashboard - Cafero</title>
     <link rel="stylesheet" href="~/css/CashierDashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <!-- Added Chart.js CDN to fix potential chart rendering errors -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
@@ -29,7 +31,7 @@
 
     <div class="dashboard-container">
 
-        <!-- ===== SIDEBAR — copied from Admin Dashboard ===== -->
+        <!-- ===== SIDEBAR ===== -->
         <aside class="sidebar">
             <div>
                 <div class="logo-section">
@@ -50,18 +52,8 @@
                         Dashboard
                     </a>
                     <a href="/Cashier/CashierMenu" class="menu-btn"> POS</a>
-                    @if (User.IsInRole("Manager"))
-                    {
-                        <a href="/Manager/Analytics" class="menu-btn">
-                            <i class="fas fa-chart-pie"></i> Analytics
-                        </a>
-                        <a href="/Manager/Products" class="menu-btn">
-                            <i class="fas fa-tags"></i> Products
-                        </a>
-                        <a href="/Manager/Inventory" class="menu-btn">
-                            <i class="fas fa-box-open"></i> Inventory
-                        </a>
-                    }
+                    <!-- Added Customization Navigation -->
+                    <a href="/Cashier/WebCustomization" class="menu-btn"> Customization</a>
                 </nav>
             </div>
 
@@ -74,7 +66,7 @@
             </div>
         </aside>
 
-        <!-- ===== MAIN CONTENT — copied from Admin Dashboard ===== -->
+        <!-- ===== MAIN CONTENT ===== -->
         <main class="main-content slide-up">
 
             <div class="top-navbar">
@@ -406,6 +398,7 @@
         }
         });
         }
+
         document.addEventListener("DOMContentLoaded", function () {
         function updateClock() {
         const now = new Date();

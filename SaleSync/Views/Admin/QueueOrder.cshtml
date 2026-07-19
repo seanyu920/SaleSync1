@@ -3,7 +3,6 @@
     ViewData["Title"] = "Queue Orders";
     Layout = null;
     bool isManager = User.IsInRole("Manager");
-    string homeController = isManager ? "Manager" : "Admin";
     string displayRole = isManager ? "Manager" : "Admin";
     string currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "QueueOrder";
 }
@@ -37,64 +36,63 @@
                 <div class="profile-section">
                     <div class="profile-circle">👤</div>
                     <div>
-                        <h2 class="admin-name">@displayRole</h2>
-                        <div class="admin-role">System Access</div>
+                        <h2 class="admin-name">Manager</h2>
+                        <div class="admin-role">Manager Portal</div>
                     </div>
                 </div>
 
                 <nav class="sidebar-menu">
-                    <a href="/@homeController/Dashboard" class="menu-btn @(currentAction == "Dashboard" ? "active" : "")">
+                    <a href="@Url.Action("Dashboard", "Admin")" class="menu-btn @(currentAction == "Dashboard" ? "active" : "")">
                         Dashboard
                     </a>
 
-                    <a href="/@homeController/QueueOrder" class="menu-btn @(currentAction == "QueueOrder" || currentAction == "QueueOrders" ? "active" : "")">
-                        Queue
-                    </a>
-
-                    @if (!User.IsInRole("Admin"))
+                    @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
                     {
-                        <a href="/@homeController/PointOfSale" class="menu-btn @(currentAction == "PointOfSale" ? "active" : "")">
-                            POS
+                        <a href="@Url.Action("QueueOrder", "Admin")" class="menu-btn @(currentAction == "QueueOrder" || currentAction == "QueueOrders" ? "active" : "")">
+                            Queue
                         </a>
                     }
 
                     @if (User.IsInRole("Admin"))
                     {
-                        <a href="/Admin/ActivityLog" class="menu-btn @(currentAction == "ActivityLog" ? "active" : "")">
+                        <a href="@Url.Action("ActivityLog", "Admin")" class="menu-btn @(currentAction == "ActivityLog" ? "active" : "")">
                             Activity Log
                         </a>
                     }
 
-                    <a href="/Admin/Analytics" class="menu-btn @(currentAction == "Analytics" ? "active" : "")">
-                        Analytics
-                    </a>
+                    @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+                    {
+                        <a href="@Url.Action("Analytics", "Admin")" class="menu-btn @(currentAction == "Analytics" ? "active" : "")">
+                            Analytics
+                        </a>
 
-                    <a href="/Admin/Products" class="menu-btn @(currentAction == "Products" ? "active" : "")">
-                        Products
-                    </a>
+                        <a href="@Url.Action("Products", "Admin")" class="menu-btn @(currentAction == "Products" ? "active" : "")">
+                            Products
+                        </a>
 
-                    <a href="/Admin/Inventory" class="menu-btn @(currentAction == "Inventory" ? "active" : "")">
-                        Inventory
-                    </a>
+                        <a href="@Url.Action("Inventory", "Admin")" class="menu-btn @(currentAction == "Inventory" ? "active" : "")">
+                            Inventory
+                        </a>
 
-                    <a href="/Admin/ArchivedProducts" class="menu-btn @(currentAction == "ArchivedProducts" || currentAction == "Archive" ? "active" : "")">
-                        Archived
-                    </a>
+                        <a href="@Url.Action("ArchivedProducts", "Admin")" class="menu-btn @(currentAction == "ArchivedProducts" || currentAction == "Archive" ? "active" : "")">
+                            Archived
+                        </a>
+                    }
 
                     @if (User.IsInRole("Admin"))
                     {
-                        <a href="/Admin/ManageAccounts" class="menu-btn @(currentAction == "ManageAccounts" ? "active" : "")">
+                        <a href="@Url.Action("ManageAccounts", "Admin")" class="menu-btn @(currentAction == "ManageAccounts" ? "active" : "")">
                             Accounts
                         </a>
                     }
-                    <a href="/Admin/WebCustomization" class="menu-btn @(currentAction == "WebCustomization" ? "active" : "")">
+                    <a href="@Url.Action("WebCustomization", "Admin")" class="menu-btn @(currentAction == "WebCustomization" ? "active" : "")">
                         Customization
                     </a>
                 </nav>
             </div>
 
             <div class="logout-section">
-                <form method="post" action="/Home/Logout" id="logoutForm">
+                <form method="post" action="@Url.Action("Logout", "Home")" id="logoutForm">
                     <button type="button" class="menu-btn logout-btn" onclick="confirmLogout()">
                         Log Out
                     </button>
@@ -177,11 +175,6 @@
                                     <span class="meta-tag"><i class="fas fa-utensils"></i> @(order.OrderType ?? "Dine-In")</span>
                                     <span class="meta-tag"><i class="fas fa-wallet"></i> @(order.PaymentMethod ?? "Cash")</span>
                                 </div>
-
-                                <div class="items-box">
-                                    <span class="items-box-label">Items Summary:</span>
-                                    @order.ItemsSummary
-                                </div>
                             </div>
 
                             <div class="card-actions">
@@ -191,14 +184,20 @@
 
                                 @if (order.Status == "Pending")
                                 {
-                                    <button class="btn-action btn-start" onclick="updateStatus(@order.SaleId, 'Preparing')">
+                                    <button class="btn-action btn-start" onclick="promptPrepare(@order.SaleId)">
                                         <i class="fas fa-coffee"></i> Prepare
                                     </button>
                                 }
                                 else if (order.Status == "Preparing" || order.Status == "Processing")
                                 {
-                                    <button class="btn-action btn-complete" onclick="updateStatus(@order.SaleId, 'Completed')">
-                                        <i class="fas fa-check"></i> Complete
+                                    <button class="btn-action btn-complete" onclick="promptPreparingOptions(@order.SaleId, '@(order.OrderType ?? "Dine-In")')">
+                                        <i class="fas fa-spinner fa-spin"></i> Preparing
+                                    </button>
+                                }
+                                else if (order.Status == "Out for Delivery" || order.Status == "Delivery")
+                                {
+                                    <button class="btn-action btn-complete" onclick="promptDeliveryComplete(@order.SaleId)" style="background-color: #2eb872;">
+                                        <i class="fas fa-shipping-fast"></i> Complete Delivery
                                     </button>
                                 }
 
@@ -267,20 +266,90 @@
         }
         });
         }
-        // 1. Handle Order Status Progression (Prepare / Complete)
+
+        function promptPrepare(saleId) {
+        Swal.fire({
+        title: 'Prepare Order?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#5a5e5b',
+        confirmButtonText: 'Yes',
+        cancelButtonText: 'Cancel',
+        background: '#1e201f',
+        color: '#ffffff'
+        }).then((result) => {
+        if (result.isConfirmed) {
+        updateStatus(saleId, 'Preparing');
+        }
+        });
+        }
+
+        function promptPreparingOptions(saleId, orderType) {
+        const isDelivery = orderType && orderType.toLowerCase().includes('delivery');
+
+        Swal.fire({
+        title: isDelivery ? 'Dispatch Order?' : 'Complete Order?',
+        text: isDelivery ? 'Mark this order as out for delivery.' : 'Mark this order as fulfilled and completed.',
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonColor: '#2eb872',
+        cancelButtonColor: '#5a5e5b',
+        confirmButtonText: isDelivery ? 'Dispatch for Delivery' : 'Complete Order',
+        cancelButtonText: 'Cancel',
+        background: '#1e201f',
+        color: '#ffffff'
+        }).then((result) => {
+        if (result.isConfirmed) {
+        const nextStatus = isDelivery ? 'Out for Delivery' : 'Completed';
+        updateStatus(saleId, nextStatus);
+        }
+        });
+        }
+
+        function promptDeliveryComplete(saleId) {
+        Swal.fire({
+        title: 'Order Delivered?',
+        text: 'Confirm that this order has reached the customer safely.',
+        icon: 'success',
+        showCancelButton: true,
+        confirmButtonColor: '#2eb872',
+        cancelButtonColor: '#5a5e5b',
+        confirmButtonText: 'Yes, Delivered',
+        cancelButtonText: 'Cancel',
+        background: '#1e201f',
+        color: '#ffffff'
+        }).then((result) => {
+        if (result.isConfirmed) {
+        updateStatus(saleId, 'Completed');
+        }
+        });
+        }
+
         async function updateStatus(saleId, targetStatus) {
         try {
-        const res = await fetch('/@homeController/UpdateSaleStatus', {
+        const res = await fetch('@Url.Action("UpdateSaleStatus", "Admin")', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ saleId: saleId, status: targetStatus })
         });
 
         if (res.ok) {
+        let alertTitle = 'Order Completed';
+        let alertText = `Order #ORD-${saleId} has been successfully fulfilled.`;
+
+        if (targetStatus === 'Preparing') {
+        alertTitle = 'Order Started';
+        alertText = `Order #ORD-${saleId} is now being prepared.`;
+        } else if (targetStatus === 'Out for Delivery') {
+        alertTitle = 'Dispatched';
+        alertText = `Order #ORD-${saleId} is now out with the courier.`;
+        }
+
         await Swal.fire({
         icon: 'success',
-        title: 'Pipeline Updated',
-        text: `Order #ORD-${saleId} moved to ${targetStatus}.`,
+        title: alertTitle,
+        text: alertText,
         background: '#1e201f',
         color: '#ffffff',
         timer: 1500,
@@ -288,7 +357,7 @@
         });
         location.reload();
         } else {
-        let serverErrorMessage = 'Could not modify status pipelines successfully.';
+        let serverErrorMessage = 'Could not update the order status.';
         try {
         const errorData = await res.json();
         if (errorData && errorData.message) {
@@ -298,7 +367,7 @@
 
         Swal.fire({
         icon: 'error',
-        title: 'Pipeline Error',
+        title: 'Update Failed',
         text: serverErrorMessage,
         background: '#1e201f',
         color: '#ffffff',
@@ -318,7 +387,6 @@
         }
         }
 
-        // 2. Fetch and View Production Recipe Details
         async function openDetailsModal(saleId) {
         try {
         document.getElementById('modalOrderTitle').innerText = `Order Details: #ORD-${saleId}`;
@@ -329,7 +397,7 @@
         ingList.innerHTML = '<li>Calculating inventory weights...</li>';
         document.getElementById('detailsModal').style.display = 'flex';
 
-        const res = await fetch(`/@homeController/GetOrderDetails?saleId=${saleId}`);
+        const res = await fetch(`@Url.Action("GetOrderDetails", "Admin")?saleId=${saleId}`);
         if (!res.ok) throw new Error('Server returned error status');
 
         const data = await res.json();
@@ -361,7 +429,6 @@
         }
         }
 
-        // 3. Admin Authorization Controls for Voiding
         function openVoidModal(saleId) {
         document.getElementById('voidSaleId').value = saleId;
         document.getElementById('voidTargetLabel').innerText = `#ORD-${saleId}`;
@@ -386,7 +453,7 @@
         }
 
         try {
-        const res = await fetch('/@homeController/VerifyAndVoid', {
+        const res = await fetch('@Url.Action("VerifyAndVoid", "Admin")', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ saleId: saleId, pass: pass })
@@ -437,7 +504,6 @@
         }
         }
 
-        // 4. Modal Window Interface Handlers
         function closeModal(modalId) {
         document.getElementById(modalId).style.display = 'none';
         }
