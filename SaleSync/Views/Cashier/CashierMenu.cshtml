@@ -32,6 +32,8 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
     <div class="dashboard-container">
 
         <!-- ===================== SIDEBAR ===================== -->
@@ -45,8 +47,8 @@
                 <div class="profile-section">
                     <div class="profile-circle">👤</div>
                     <div>
-                        <h2 class="admin-name">@roleName</h2>
-                        <div class="admin-role">@subtitle</div>
+                        <h2 class="admin-name">@(User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? User.Identity?.Name ?? "User")</h2>
+                        <div class="admin-role">@(User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "User")</div>
                     </div>
                 </div>
 
@@ -102,6 +104,12 @@
                 </form>
             </div>
         </aside>
+        <div class="mobile-header">
+            <button class="hamburger-btn" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="mobile-brand">Cafero</div>
+        </div>
         <!-- ===================== END SIDEBAR ===================== -->
         <!-- MAIN POS AREA -->
         <main class="menu-side no-print slide-up">
@@ -533,6 +541,14 @@
         } else { Swal.fire("Error", "Failed to save transaction.", "error"); }
         } catch (err) { Swal.fire("Error", "Server error", "error"); }
         finally { buttons.forEach(btn => { btn.disabled = false; btn.style.opacity = '1'; }); }
+        }
+
+        function toggleSidebar() {
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.querySelector('.sidebar-overlay');
+
+        if (sidebar) sidebar.classList.toggle('mobile-open');
+        if (overlay) overlay.classList.toggle('mobile-open');
         }
     </script>
 </body>

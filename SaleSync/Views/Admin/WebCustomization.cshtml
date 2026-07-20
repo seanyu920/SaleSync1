@@ -25,26 +25,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Web Customization - SyncScale</title>
 
-    <!-- Added SweetAlert2 Library -->
+    <!-- FontAwesome Library for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <!-- SweetAlert2 Library -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <link rel="stylesheet" href="~/css/Inventory.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/WebCustomization.css" asp-append-version="true" />
-
-    <!-- Runtime Database Token Mappings Only -->
-    <style id="theme-styles">
-        :root {
-        --primary-color: @(Model?.PrimaryColor ?? "var(--gold)");
-        --sidebar-bg: @(Model?.SidebarColor ?? "var(--bg-surface)");
-        --accent-color: @(Model?.AccentColor ?? "var(--gold)");
-        --main-bg: @(Model?.BackgroundColor ?? "var(--bg-base)");
-        }
-
-        .dashboard-container {
-        display: flex;
-        flex-direction: @(Model?.SidebarPosition == "right" ? "row-reverse" : "row");
-        }
-    </style>
 </head>
 <body>
     <div class="dashboard-container" id="dashboardContainer">
@@ -59,8 +47,8 @@
                 <div class="profile-section">
                     <div class="profile-circle">👤</div>
                     <div>
-                        <h2 class="admin-name">@displayRole</h2>
-                        <div class="admin-role">@displayRole Panel</div>
+                        <h2 class="admin-name">@(User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? User.Identity?.Name ?? "User")</h2>
+                        <div class="admin-role">@(User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "User")</div>
                     </div>
                 </div>
 
@@ -114,6 +102,13 @@
                 </form>
             </div>
         </aside>
+
+        <div class="mobile-header">
+            <button class="hamburger-btn" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="mobile-brand">Cafero</div>
+        </div>
 
         <!-- MAIN CONTENT -->
         <main class="main-content slide-up">
@@ -249,7 +244,7 @@
         </main>
     </div>
 
-    <!-- Live Preview Script -->
+    <!-- Live Preview & Interaction Scripts -->
     <script>
         function confirmLogout() {
         Swal.fire({
@@ -267,6 +262,7 @@
         }
         });
         }
+
         const root = document.documentElement;
 
         document.getElementById('PrimaryColor').addEventListener('input', (e) => {
@@ -283,6 +279,34 @@
         });
         document.getElementById('SidebarPosition').addEventListener('change', (e) => {
         document.getElementById('dashboardContainer').style.flexDirection = e.target.value === 'right' ? 'row-reverse' : 'row';
+        });
+
+        // Safe toggle logic for mobile sidebar
+        function toggleSidebar() {
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.querySelector('.sidebar-overlay');
+
+        if (sidebar) {
+        sidebar.classList.toggle('mobile-open');
+        }
+        if (overlay) {
+        overlay.classList.toggle('mobile-open');
+        }
+        }
+
+        // Close sidebar when clicking outside on mobile devices
+        document.addEventListener('click', function (event) {
+        const sidebar = document.querySelector('.sidebar');
+        const hamburger = document.querySelector('.hamburger-btn');
+
+        if (sidebar && hamburger) {
+        if (sidebar.classList.contains('mobile-open') &&
+        !sidebar.contains(event.target) &&
+        !hamburger.contains(event.target)) {
+
+        sidebar.classList.remove('mobile-open');
+        }
+        }
         });
     </script>
 </body>

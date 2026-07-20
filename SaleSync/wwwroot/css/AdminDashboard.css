@@ -957,3 +957,311 @@ body {
 .slide-up {
     animation: slideUp 0.3s ease-out;
 }
+/* --- Mobile Specific Overrides --- */
+/* --- Mobile Specific Overrides --- */
+@media (max-width: 1024px) {
+    .dashboard-container {
+        display: block;
+    }
+
+    .sidebar {
+        position: fixed;
+        left: -255px;
+        top: 0;
+        z-index: 1001;
+        transition: left 0.3s ease;
+        height: 100vh;
+        box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+        .sidebar.mobile-open {
+            left: 0;
+        }
+
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.7);
+        z-index: 1000;
+        backdrop-filter: blur(4px);
+    }
+
+        .sidebar-overlay.mobile-open {
+            display: block;
+        }
+
+    /* Mobile Header Panel */
+    .mobile-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 20px;
+        background: var(--bg-base);
+        border-bottom: 1px solid var(--border-sub);
+        margin-bottom: 20px;
+    }
+
+    /* Modern Hamburger */
+    .hamburger-btn {
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        color: var(--gold);
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 18px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    }
+
+        .hamburger-btn:hover {
+            background: var(--gold);
+            color: var(--bg-base);
+            border-color: var(--gold);
+            transform: translateY(-2px);
+        }
+
+    /* Brand Name */
+    .mobile-brand {
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--cream);
+        letter-spacing: -0.5px;
+    }
+}
+
+@media (min-width: 1025px) {
+    .mobile-header, .sidebar-overlay {
+        display: none !important;
+    }
+}
+/* ── ADMIN LIVE CHAT DRAWER INTEGRATION ── */
+.admin-chat-trigger {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #D4AF37; /* Matches your dashboard gold */
+    color: #121212;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease, background-color 0.2s;
+    z-index: 1050;
+}
+
+    .admin-chat-trigger:hover {
+        transform: scale(1.08);
+        background: #e5c158;
+    }
+
+.admin-chat-alert-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 12px;
+    height: 12px;
+    background: #ff4757;
+    border-radius: 50%;
+    border: 2px solid #1a1a1a;
+}
+
+.admin-chat-drawer {
+    position: fixed;
+    top: 0;
+    right: -400px; /* Hidden offscreen by default */
+    width: 380px;
+    height: 100vh;
+    background: #1a1a1a; /* Dark slate matching your sidebar/cards */
+    border-left: 1px solid #2d2d2d;
+    box-shadow: -5px 0 25px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 1090;
+}
+
+    .admin-chat-drawer.open {
+        right: 0;
+    }
+
+.admin-chat-header {
+    background: #242424;
+    padding: 20px;
+    border-bottom: 1px solid #2d2d2d;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.admin-chat-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.admin-chat-header h3 {
+    margin: 0;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.chat-status-dot {
+    width: 8px;
+    height: 8px;
+    background: #2ed573; /* Syncing green */
+    border-radius: 50%;
+}
+
+.close-drawer-btn {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 18px;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+    .close-drawer-btn:hover {
+        color: #fff;
+    }
+
+.admin-chat-contact-bar {
+    padding: 10px 15px;
+    background: #1a1a1a;
+    border-bottom: 1px solid #2d2d2d;
+}
+
+#adminChatContactSelect {
+    width: 100%;
+    background: #121212;
+    border: 1px solid #2d2d2d;
+    border-radius: 6px;
+    padding: 8px 10px;
+    color: #fff;
+    outline: none;
+    font-size: 13px;
+}
+
+    #adminChatContactSelect:focus {
+        border-color: #D4AF37;
+    }
+
+.admin-chat-body {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    background: #121212; /* Deep background matching container */
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.system-message {
+    color: #555;
+    text-align: center;
+    font-size: 12px;
+    margin-top: 20px;
+}
+
+.admin-msg-row {
+    display: flex;
+    flex-direction: column;
+    max-width: 80%;
+}
+
+    .admin-msg-row.customer {
+        align-self: flex-start;
+    }
+
+    .admin-msg-row.staff {
+        align-self: flex-end;
+    }
+
+.admin-bubble {
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.admin-msg-row.customer .admin-bubble {
+    background: #242424;
+    color: #e0e0e0;
+    border: 1px solid #2d2d2d;
+    border-bottom-left-radius: 2px;
+}
+
+.admin-msg-row.staff .admin-bubble {
+    background: #D4AF37; /* Gold */
+    color: #121212;
+    font-weight: 600;
+    border-bottom-right-radius: 2px;
+}
+
+.admin-meta {
+    font-size: 9px;
+    color: #666;
+    margin-top: 4px;
+    padding: 0 4px;
+}
+
+.admin-msg-row.staff .admin-meta {
+    align-self: flex-end;
+}
+
+.admin-chat-footer {
+    padding: 15px;
+    background: #1a1a1a;
+    border-top: 1px solid #2d2d2d;
+    display: flex;
+    gap: 10px;
+}
+
+#adminChatInput {
+    flex: 1;
+    background: #121212;
+    border: 1px solid #2d2d2d;
+    border-radius: 6px;
+    padding: 10px 12px;
+    color: #fff;
+    outline: none;
+    font-size: 13px;
+}
+
+    #adminChatInput:focus {
+        border-color: #D4AF37;
+    }
+
+.admin-chat-send-btn {
+    background: #D4AF37;
+    color: #121212;
+    border: none;
+    padding: 0 15px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background 0.2s;
+}
+
+    .admin-chat-send-btn:hover {
+        background: #e5c158;
+    }

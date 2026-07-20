@@ -36,8 +36,8 @@
                 <div class="profile-section">
                     <div class="profile-circle">👤</div>
                     <div>
-                        <h2 class="admin-name">Manager</h2>
-                        <div class="admin-role">Manager Portal</div>
+                        <h2 class="admin-name">@(User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? User.Identity?.Name ?? "User")</h2>
+                        <div class="admin-role">@(User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "User")</div>
                     </div>
                 </div>
 
@@ -99,6 +99,12 @@
                 </form>
             </div>
         </aside>
+        <div class="mobile-header">
+            <button class="hamburger-btn" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="mobile-brand">Cafero</div>
+        </div>
 
         <!-- Main Workspace Grid -->
         <main class="main-content slide-up">
@@ -513,6 +519,14 @@
         event.target.style.display = 'none';
         }
         }
+        function toggleSidebar() {
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.querySelector('.sidebar-overlay');
+
+        sidebar.classList.toggle('mobile-open');
+        overlay.classList.toggle('mobile-open');
+        }
+
     </script>
 </body>
 </html>

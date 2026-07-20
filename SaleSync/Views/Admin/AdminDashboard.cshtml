@@ -16,229 +16,6 @@
 
     <!-- Real-Time Chat SignalR Client -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
-
-    <style>
-            /* ── ADMIN LIVE CHAT DRAWER INTEGRATION ── */
-            .admin-chat-trigger {
-                position: fixed;
-                bottom: 25px;
-                right: 25px;
-                width: 60px;
-                height: 60px;
-                border-radius: 50%;
-                background: #D4AF37; /* Matches your dashboard gold */
-                color: #121212;
-                border: none;
-                font-size: 22px;
-                cursor: pointer;
-                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                transition: transform 0.2s ease, background-color 0.2s;
-                z-index: 1050;
-            }
-
-                .admin-chat-trigger:hover {
-                    transform: scale(1.08);
-                    background: #e5c158;
-                }
-
-            .admin-chat-alert-badge {
-                position: absolute;
-                top: 2px;
-                right: 2px;
-                width: 12px;
-                height: 12px;
-                background: #ff4757;
-                border-radius: 50%;
-                border: 2px solid #1a1a1a;
-            }
-
-            .admin-chat-drawer {
-                position: fixed;
-                top: 0;
-                right: -400px; /* Hidden offscreen by default */
-                width: 380px;
-                height: 100vh;
-                background: #1a1a1a; /* Dark slate matching your sidebar/cards */
-                border-left: 1px solid #2d2d2d;
-                box-shadow: -5px 0 25px rgba(0, 0, 0, 0.5);
-                display: flex;
-                flex-direction: column;
-                transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-                z-index: 1090;
-            }
-
-                .admin-chat-drawer.open {
-                    right: 0;
-                }
-
-            .admin-chat-header {
-                background: #242424;
-                padding: 20px;
-                border-bottom: 1px solid #2d2d2d;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-            }
-
-            .admin-chat-header-left {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-            }
-
-            .admin-chat-header h3 {
-                margin: 0;
-                color: #fff;
-                font-size: 16px;
-                font-weight: 700;
-            }
-
-            .chat-status-dot {
-                width: 8px;
-                height: 8px;
-                background: #2ed573; /* Syncing green */
-                border-radius: 50%;
-            }
-
-            .close-drawer-btn {
-                background: none;
-                border: none;
-                color: #888;
-                font-size: 18px;
-                cursor: pointer;
-                transition: color 0.2s;
-            }
-
-                .close-drawer-btn:hover {
-                    color: #fff;
-                }
-
-            .admin-chat-contact-bar {
-                padding: 10px 15px;
-                background: #1a1a1a;
-                border-bottom: 1px solid #2d2d2d;
-            }
-
-            #adminChatContactSelect {
-                width: 100%;
-                background: #121212;
-                border: 1px solid #2d2d2d;
-                border-radius: 6px;
-                padding: 8px 10px;
-                color: #fff;
-                outline: none;
-                font-size: 13px;
-            }
-
-                #adminChatContactSelect:focus {
-                    border-color: #D4AF37;
-                }
-
-            .admin-chat-body {
-                flex: 1;
-                padding: 20px;
-                overflow-y: auto;
-                background: #121212; /* Deep background matching container */
-                display: flex;
-                flex-direction: column;
-                gap: 12px;
-            }
-
-            .system-message {
-                color: #555;
-                text-align: center;
-                font-size: 12px;
-                margin-top: 20px;
-            }
-
-            .admin-msg-row {
-                display: flex;
-                flex-direction: column;
-                max-width: 80%;
-            }
-
-                .admin-msg-row.customer {
-                    align-self: flex-start;
-                }
-
-                .admin-msg-row.staff {
-                    align-self: flex-end;
-                }
-
-            .admin-bubble {
-                padding: 10px 14px;
-                border-radius: 10px;
-                font-size: 13px;
-                line-height: 1.4;
-            }
-
-            .admin-msg-row.customer .admin-bubble {
-                background: #242424;
-                color: #e0e0e0;
-                border: 1px solid #2d2d2d;
-                border-bottom-left-radius: 2px;
-            }
-
-            .admin-msg-row.staff .admin-bubble {
-                background: #D4AF37; /* Gold */
-                color: #121212;
-                font-weight: 600;
-                border-bottom-right-radius: 2px;
-            }
-
-            .admin-meta {
-                font-size: 9px;
-                color: #666;
-                margin-top: 4px;
-                padding: 0 4px;
-            }
-
-            .admin-msg-row.staff .admin-meta {
-                align-self: flex-end;
-            }
-
-            .admin-chat-footer {
-                padding: 15px;
-                background: #1a1a1a;
-                border-top: 1px solid #2d2d2d;
-                display: flex;
-                gap: 10px;
-            }
-
-            #adminChatInput {
-                flex: 1;
-                background: #121212;
-                border: 1px solid #2d2d2d;
-                border-radius: 6px;
-                padding: 10px 12px;
-                color: #fff;
-                outline: none;
-                font-size: 13px;
-            }
-
-                #adminChatInput:focus {
-                    border-color: #D4AF37;
-                }
-
-            .admin-chat-send-btn {
-                background: #D4AF37;
-                color: #121212;
-                border: none;
-                padding: 0 15px;
-                border-radius: 6px;
-                font-weight: bold;
-                cursor: pointer;
-                font-size: 13px;
-                transition: background 0.2s;
-            }
-
-                .admin-chat-send-btn:hover {
-                    background: #e5c158;
-                }
-    </style>
 </head>
 <body>
 
@@ -253,8 +30,8 @@
                 <div class="profile-section">
                     <div class="profile-circle">👤</div>
                     <div>
-                        <h2 class="admin-name">Admin</h2>
-                        <div class="admin-role">Administrator</div>
+                        <h2 class="admin-name">@(User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? User.Identity?.Name ?? "User")</h2>
+                        <div class="admin-role">@(User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? User.FindFirst("Role")?.Value ?? "User")</div>
                     </div>
                 </div>
 
@@ -290,6 +67,14 @@
             </div>
         </aside>
 
+        <div class="mobile-header">
+            <button class="hamburger-btn" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="mobile-brand">Cafero</div>
+        </div>
+
+        <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
         <main class="main-content slide-up">
 
             <div class="top-navbar">
@@ -593,7 +378,7 @@
                         </div>
                         <div class="notification-item success-node">
                             <div class="notification-info">
-                                <p>System database database backup completed securely</p>
+                                <p>System database backup completed securely</p>
                                 <div class="notification-time">1 hour ago</div>
                             </div>
                         </div>
@@ -637,239 +422,247 @@
     </button>
 
     <script>
-            function confirmLogout() {
-                Swal.fire({
-                    title: 'Are you sure?',
-                    text: "You will be logged out of your session.",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#d33',
-                    cancelButtonColor: '#3085d6',
-                    confirmButtonText: 'Yes, log out',
-                    cancelButtonText: 'Cancel'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        document.getElementById('logoutForm').submit();
-                    }
-                });
-            }
+        function confirmLogout() {
+        Swal.fire({
+        title: 'Are you sure?',
+        text: "You will be logged out of your session.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, log out',
+        cancelButtonText: 'Cancel'
+        }).then((result) => {
+        if (result.isConfirmed) {
+        document.getElementById('logoutForm').submit();
+        }
+        });
+        }
 
-            // Global variables/functions for Chat Drawer functionality
-            let chatConn;
-            let adminChatWith = null; // username of the contact currently open in the drawer
+        // Global variables/functions for Chat Drawer functionality
+        let chatConn;
+        let adminChatWith = null; // username of the contact currently open in the drawer
 
-            // Must match the users.username value (the "Username" claim set at
-            // login), not the display/full name used elsewhere on this page.
-            const adminChatCurrentUser = "@(User.FindFirst("Username")?.Value ?? "")";
+        // Must match the users.username value (the "Username" claim set at
+        // login), not the display/full name used elsewhere on this page.
+        const adminChatCurrentUser = "@(User.FindFirst("Username")?.Value ?? "")";
 
-            function toggleAdminChat() {
-                const drawer = document.getElementById("adminChatDrawer");
-                drawer.classList.toggle("open");
+        function toggleAdminChat() {
+        const drawer = document.getElementById("adminChatDrawer");
+        drawer.classList.toggle("open");
 
-                if (drawer.classList.contains("open")) {
-                    // Hide notification badge when drawer is opened
-                    document.getElementById("adminChatBadge").style.display = "none";
-                    loadAdminChatContacts();
-                }
-            }
+        if (drawer.classList.contains("open")) {
+        // Hide notification badge when drawer is opened
+        document.getElementById("adminChatBadge").style.display = "none";
+        loadAdminChatContacts();
+        }
+        }
 
-            function handleAdminChatKey(event) {
-                if (event.key === 'Enter') {
-                    sendAdminReply();
-                }
-            }
+        function handleAdminChatKey(event) {
+        if (event.key === 'Enter') {
+        sendAdminReply();
+        }
+        }
 
-            function sendAdminReply() {
-                const input = document.getElementById("adminChatInput");
-                const msg = input.value.trim();
-                if (!msg || !adminChatWith) return;
+        function sendAdminReply() {
+        const input = document.getElementById("adminChatInput");
+        const msg = input.value.trim();
+        if (!msg || !adminChatWith) return;
 
-                // The server derives the sender from the authenticated connection.
-                chatConn.invoke("SendMessage", adminChatWith, msg)
-                    .catch(err => console.error("Error sending admin message:", err));
+        // The server derives the sender from the authenticated connection.
+        chatConn.invoke("SendMessage", adminChatWith, msg)
+        .catch(err => console.error("Error sending admin message:", err));
 
-                input.value = "";
-            }
+        input.value = "";
+        }
 
-            async function loadAdminChatContacts() {
-                const select = document.getElementById("adminChatContactSelect");
-                if (select.dataset.loaded === "true") return;
+        async function loadAdminChatContacts() {
+        const select = document.getElementById("adminChatContactSelect");
+        if (select.dataset.loaded === "true") return;
 
-                try {
-                    const res = await fetch('/Chat/GetContacts');
-                    if (!res.ok) return;
-                    const contacts = await res.json();
+        try {
+        const res = await fetch('/Chat/GetContacts');
+        if (!res.ok) return;
+        const contacts = await res.json();
 
-                    contacts.forEach(c => {
-                        const opt = document.createElement("option");
-                        opt.value = c.username;
-                        opt.textContent = `${c.username} (${c.role})`;
-                        select.appendChild(opt);
-                    });
+        contacts.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c.username;
+        opt.textContent = `${c.username} (${c.role})`;
+        select.appendChild(opt);
+        });
 
-                    select.dataset.loaded = "true";
+        select.dataset.loaded = "true";
 
-                    if (contacts.length > 0 && !adminChatWith) {
-                        select.value = contacts[0].username;
-                        switchAdminChatContact(contacts[0].username);
-                    }
-                } catch (err) {
-                    console.error("Failed to load chat contacts:", err);
-                }
-            }
+        if (contacts.length > 0 && !adminChatWith) {
+        select.value = contacts[0].username;
+        switchAdminChatContact(contacts[0].username);
+        }
+        } catch (err) {
+        console.error("Failed to load chat contacts:", err);
+        }
+        }
 
-            async function switchAdminChatContact(username) {
-                adminChatWith = username || null;
-                const area = document.getElementById("adminChatMessages");
-                area.innerHTML = '<div class="system-message">No active messages. Waiting for customers...</div>';
+        async function switchAdminChatContact(username) {
+        adminChatWith = username || null;
+        const area = document.getElementById("adminChatMessages");
+        area.innerHTML = '<div class="system-message">No active messages. Waiting for customers...</div>';
 
-                if (!adminChatWith) return;
+        if (!adminChatWith) return;
 
-                try {
-                    const res = await fetch(`/Chat/GetChatHistory?chatWith=${encodeURIComponent(adminChatWith)}`);
-                    if (!res.ok) return;
-                    const history = await res.json();
+        try {
+        const res = await fetch(`/Chat/GetChatHistory?chatWith=${encodeURIComponent(adminChatWith)}`);
+        if (!res.ok) return;
+        const history = await res.json();
 
-                    if (history.length > 0) {
-                        const placeholder = area.querySelector('.system-message');
-                        if (placeholder) placeholder.remove();
-                    }
+        if (history.length > 0) {
+        const placeholder = area.querySelector('.system-message');
+        if (placeholder) placeholder.remove();
+        }
 
-                    history.forEach(m => renderAdminChatMessage(m.sender, m.text, m.time));
-                } catch (err) {
-                    console.error("Failed to load chat history:", err);
-                }
-            }
+        history.forEach(m => renderAdminChatMessage(m.sender, m.text, m.time));
+        } catch (err) {
+        console.error("Failed to load chat history:", err);
+        }
+        }
 
-            function renderAdminChatMessage(sender, message, timeString) {
-                const area = document.getElementById("adminChatMessages");
-                const row = document.createElement("div");
+        function renderAdminChatMessage(sender, message, timeString) {
+        const area = document.getElementById("adminChatMessages");
+        const row = document.createElement("div");
 
-                if (sender === adminChatCurrentUser) {
-                    row.className = "admin-msg-row staff";
-                    row.innerHTML = `
-                        <div class="admin-bubble">${escapeHTML(message)}</div>
-                        <span class="admin-meta">You · ${escapeHTML(timeString)}</span>
-                    `;
-                } else {
-                    row.className = "admin-msg-row customer";
-                    row.innerHTML = `
-                        <div class="admin-bubble">${escapeHTML(message)}</div>
-                        <span class="admin-meta">${escapeHTML(sender)} · ${escapeHTML(timeString)}</span>
-                    `;
-                }
+        if (sender === adminChatCurrentUser) {
+        row.className = "admin-msg-row staff";
+        row.innerHTML = `
+        <div class="admin-bubble">${escapeHTML(message)}</div>
+        <span class="admin-meta">You · ${escapeHTML(timeString)}</span>
+        `;
+        } else {
+        row.className = "admin-msg-row customer";
+        row.innerHTML = `
+        <div class="admin-bubble">${escapeHTML(message)}</div>
+        <span class="admin-meta">${escapeHTML(sender)} · ${escapeHTML(timeString)}</span>
+        `;
+        }
 
-                area.appendChild(row);
-                area.scrollTop = area.scrollHeight;
-            }
+        area.appendChild(row);
+        area.scrollTop = area.scrollHeight;
+        }
 
-            function escapeHTML(str) {
-                return str.replace(/[&<>'"]/g,
-                    tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
-                );
-            }
+        function escapeHTML(str) {
+        return str.replace(/[&<>'"]/g,
+        tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+        );
+        }
 
-            document.addEventListener("DOMContentLoaded", function() {
-                // Clock Logic
-                function updateClock() {
-                    const now = new Date();
-                    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-                    document.getElementById('currentDate').innerText = now.toLocaleDateString('en-US', options);
+        document.addEventListener("DOMContentLoaded", function() {
+        // Clock Logic
+        function updateClock() {
+        const now = new Date();
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('currentDate').innerText = now.toLocaleDateString('en-US', options);
 
-                    let hours = now.getHours();
-                    let minutes = now.getMinutes();
-                    const ampm = hours >= 12 ? 'PM' : 'AM';
-                    hours = hours % 12;
-                    hours = hours ? hours : 12;
-                    minutes = minutes < 10 ? '0' + minutes : minutes;
-                    document.getElementById('currentTime').innerText = hours + ':' + minutes + ' ' + ampm;
-                }
-                setInterval(updateClock, 1000);
-                updateClock();
+        let hours = now.getHours();
+        let minutes = now.getMinutes();
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        minutes = minutes < 10 ? '0' + minutes : minutes;
+        document.getElementById('currentTime').innerText = hours + ':' + minutes + ' ' + ampm;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
 
-                // Weekly Sales Chart Logic
-                const rawTodaySales = parseFloat("@Model.TodayTotalSales") || 8500;
-                const ctxWeekly = document.getElementById('weeklySalesChart').getContext('2d');
-                new Chart(ctxWeekly, {
-                    type: 'line',
-                    data: {
-                        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                        datasets: [{
-                            label: 'Sales (₱)',
-                            data: [
-                                rawTodaySales * 0.85,
-                                rawTodaySales * 0.95,
-                                rawTodaySales * 1.1,
-                                rawTodaySales,
-                                rawTodaySales * 1.25,
-                                rawTodaySales * 1.4,
-                                rawTodaySales * 1.3
-                            ],
-                            borderColor: '#D4AF37',
-                            backgroundColor: 'rgba(212, 175, 55, 0.05)',
-                            borderWidth: 3,
-                            fill: true,
-                            tension: 0.35
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } }
-                    }
-                });
+        // Weekly Sales Chart Logic
+        const rawTodaySales = parseFloat("@Model.TodayTotalSales") || 8500;
+        const ctxWeekly = document.getElementById('weeklySalesChart').getContext('2d');
+        new Chart(ctxWeekly, {
+        type: 'line',
+        data: {
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        datasets: [{
+        label: 'Sales (₱)',
+        data: [
+        rawTodaySales * 0.85,
+        rawTodaySales * 0.95,
+        rawTodaySales * 1.1,
+        rawTodaySales,
+        rawTodaySales * 1.25,
+        rawTodaySales * 1.4,
+        rawTodaySales * 1.3
+        ],
+        borderColor: '#D4AF37',
+        backgroundColor: 'rgba(212, 175, 55, 0.05)',
+        borderWidth: 3,
+        fill: true,
+        tension: 0.35
+        }]
+        },
+        options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } }
+        }
+        });
 
-                // Payment Methods Chart Logic
-                const ctxPayment = document.getElementById('paymentMethodsChart').getContext('2d');
-                new Chart(ctxPayment, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Cash', 'GCash', 'Card'],
-                        datasets: [{
-                            data: [55, 30, 15],
-                            backgroundColor: ['#D4AF37', '#2ECC71', '#F39C12'],
-                            borderWidth: 0
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { position: 'right' } },
-                        cutout: '72%'
-                    }
-                });
+        // Payment Methods Chart Logic
+        const ctxPayment = document.getElementById('paymentMethodsChart').getContext('2d');
+        new Chart(ctxPayment, {
+        type: 'doughnut',
+        data: {
+        labels: ['Cash', 'GCash', 'Card'],
+        datasets: [{
+        data: [55, 30, 15],
+        backgroundColor: ['#D4AF37', '#2ECC71', '#F39C12'],
+        borderWidth: 0
+        }]
+        },
+        options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'right' } },
+        cutout: '72%'
+        }
+        });
 
-                // ── Real-Time SignalR Connection Setup ──
-                chatConn = new signalR.HubConnectionBuilder()
-                    .withUrl("/chatHub")
-                    .build();
+        // ── Real-Time SignalR Connection Setup ──
+        chatConn = new signalR.HubConnectionBuilder()
+        .withUrl("/chatHub")
+        .build();
 
-                chatConn.start()
-                    .then(() => console.log("Dashboard SignalR Chat Connected!"))
-                    .catch(err => console.error("SignalR Startup Error:", err));
+        chatConn.start()
+        .then(() => console.log("Dashboard SignalR Chat Connected!"))
+        .catch(err => console.error("SignalR Startup Error:", err));
 
-                chatConn.on("ReceiveMessage", function (sender, receiver, message, time) {
-    // The hub only delivers messages involving this account (see ChatHub
-    // group routing), so just check whether it belongs to the open thread.
-    const belongsToOpenThread = adminChatWith &&
+        chatConn.on("ReceiveMessage", function (sender, receiver, message, time) {
+        // The hub only delivers messages involving this account (see ChatHub
+        // group routing), so just check whether it belongs to the open thread.
+        const belongsToOpenThread = adminChatWith &&
         (sender === adminChatWith || receiver === adminChatWith);
 
-    if (belongsToOpenThread) {
+        if (belongsToOpenThread) {
         const placeholder = document.getElementById("adminChatMessages").querySelector('.system-message');
         if (placeholder) placeholder.remove();
 
         renderAdminChatMessage(sender, message, time);
-    }
+        }
 
-    if (sender !== adminChatCurrentUser && !belongsToOpenThread) {
+        if (sender !== adminChatCurrentUser && !belongsToOpenThread) {
         // A message came in from a contact that isn't the open thread.
         const drawer = document.getElementById("adminChatDrawer");
         if (!drawer.classList.contains("open")) {
-            document.getElementById("adminChatBadge").style.display = "block";
+        document.getElementById("adminChatBadge").style.display = "block";
         }
-    }
-});
-            });
+        }
+        });
+        });
+
+        function toggleSidebar() {
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.querySelector('.sidebar-overlay');
+
+        sidebar.classList.toggle('mobile-open');
+        overlay.classList.toggle('mobile-open');
+        }
     </script>
 </body>
 </html>

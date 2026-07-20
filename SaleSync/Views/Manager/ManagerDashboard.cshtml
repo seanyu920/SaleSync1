@@ -10,9 +10,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Manager Dashboard - Cafero</title>
     <link rel="stylesheet" href="~/css/AdminDashboard.css" asp-append-version="true" />
+
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
+
+    <!-- Overlay for closing sidebar on mobile -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
 
     <div id="voidModal" class="modal-overlay">
         <div class="auth-modal">
@@ -35,8 +46,8 @@
                 <div class="profile-section">
                     <div class="profile-circle">👤</div>
                     <div>
-                        <h2 class="admin-name">Manager</h2>
-                        <div class="admin-role">Manager</div>
+                        <h2 class="admin-name">@(User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? User.Identity?.Name ?? "User")</h2>
+                        <div class="admin-role">@(User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "User")</div>
                     </div>
                 </div>
 
@@ -59,6 +70,13 @@
                 </form>
             </div>
         </aside>
+
+        <div class="mobile-header">
+            <button class="hamburger-btn" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="mobile-brand">Cafero</div>
+        </div>
 
         <main class="main-content slide-up">
 
@@ -391,6 +409,7 @@
         }
         });
         }
+
         document.addEventListener("DOMContentLoaded", function () {
         function updateClock() {
         const now = new Date();
@@ -459,6 +478,14 @@
         }
         });
         });
+
+        function toggleSidebar() {
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.querySelector('.sidebar-overlay');
+
+        if (sidebar) sidebar.classList.toggle('mobile-open');
+        if (overlay) overlay.classList.toggle('mobile-open');
+        }
     </script>
 </body>
 </html>
