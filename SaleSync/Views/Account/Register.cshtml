@@ -68,6 +68,18 @@
                         <div class="input-wrapper">
                             <span class="input-icon">🔒</span>
                             <input type="password" id="password" name="password" placeholder="Create a password" required />
+
+                            <!-- Toggle Button for Main Password -->
+                            <button type="button" class="password-toggle-btn" id="togglePassword" aria-label="Toggle password visibility">
+                                <svg class="eye-icon eye-open" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-icon eye-closed" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </button>
                         </div>
                     </div>
 
@@ -76,6 +88,18 @@
                         <div class="input-wrapper">
                             <span class="input-icon">🔐</span>
                             <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Repeat password" required />
+
+                            <!-- Toggle Button for Confirm Password -->
+                            <button type="button" class="password-toggle-btn" id="toggleConfirmPassword" aria-label="Toggle confirm password visibility">
+                                <svg class="eye-icon eye-open" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-icon eye-closed" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </button>
                         </div>
                     </div>
 
@@ -136,15 +160,35 @@
                 });
             </text>
         }
+
+        // --- Reusable Password Toggle Handler ---
+        function setupPasswordToggle(buttonId, inputId) {
+        const toggleBtn = document.getElementById(buttonId);
+        const passwordInput = document.getElementById(inputId);
+
+        if (!toggleBtn || !passwordInput) return;
+
+        const eyeOpenIcon = toggleBtn.querySelector('.eye-open');
+        const eyeClosedIcon = toggleBtn.querySelector('.eye-closed');
+
+        toggleBtn.addEventListener('click', function () {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+
+        if (type === 'password') {
+        eyeOpenIcon.style.display = 'block';
+        eyeClosedIcon.style.display = 'none';
+        } else {
+        eyeOpenIcon.style.display = 'none';
+        eyeClosedIcon.style.display = 'block';
+        }
+        });
+        }
+
+        // Initialize both input components
+        setupPasswordToggle('togglePassword', 'password');
+        setupPasswordToggle('toggleConfirmPassword', 'confirmPassword');
         });
     </script>
-
-    <style>
-        /* Optional: Add a subtle shadow and border radius to the toast for a cleaner look */
-        .modern-toast-popup {
-        border-radius: 12px !important;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
-        border: 1px solid #dcbca5 !important;
-        }
-    </style></body>
+</body>
 </html>

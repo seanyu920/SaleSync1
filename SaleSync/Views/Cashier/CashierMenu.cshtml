@@ -32,6 +32,8 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
     <div class="dashboard-container">
 
         <!-- ===================== SIDEBAR ===================== -->
@@ -45,8 +47,8 @@
                 <div class="profile-section">
                     <div class="profile-circle">👤</div>
                     <div>
-                        <h2 class="admin-name">@roleName</h2>
-                        <div class="admin-role">@subtitle</div>
+                        <h2 class="admin-name">@(User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? User.Identity?.Name ?? "User")</h2>
+                        <div class="admin-role">@(User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "User")</div>
                     </div>
                 </div>
 
@@ -54,9 +56,13 @@
                     <a href="/@homeController/Dashboard" class="menu-btn">
                         Dashboard
                     </a>
-                    <a href="javascript:void(0)" class="menu-btn active">
-                        POS
-                    </a>
+
+                    @if (User.IsInRole("Cashier"))
+                    {
+                        <a href="javascript:void(0)" class="menu-btn active">
+                            POS
+                        </a>
+                    }
 
                     @if (User.IsInRole("Admin"))
                     {
@@ -67,17 +73,17 @@
 
                     @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
                     {
-                        <a href="/Admin/Analytics" class="menu-btn">
+                        <a href="/@homeController/Analytics" class="menu-btn">
                             Analytics
                         </a>
-                        <a href="/Admin/QueueOrder" class="menu-btn">Queue</a>
-                        <a href="/Admin/Products" class="menu-btn">
+                        <a href="/@homeController/QueueOrder" class="menu-btn">Queue</a>
+                        <a href="/@homeController/Products" class="menu-btn">
                             Products
                         </a>
-                        <a href="/Admin/Inventory" class="menu-btn">
+                        <a href="/@homeController/Inventory" class="menu-btn">
                             Inventory
                         </a>
-                        <a href="/Admin/ArchivedProducts" class="menu-btn">Archived</a>
+                        <a href="/@homeController/ArchivedProducts" class="menu-btn">Archived</a>
                     }
 
                     @if (User.IsInRole("Admin"))
@@ -86,8 +92,7 @@
                             Accounts
                         </a>
                     }
-                    <a href="/Admin/WebCustomization" class="menu-btn">Customization</a>
-
+                    <a href="/@homeController/WebCustomization" class="menu-btn">Customization</a>
                 </nav>
             </div>
 
@@ -99,6 +104,12 @@
                 </form>
             </div>
         </aside>
+        <div class="mobile-header">
+            <button class="hamburger-btn" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="mobile-brand">Cafero</div>
+        </div>
         <!-- ===================== END SIDEBAR ===================== -->
         <!-- MAIN POS AREA -->
         <main class="menu-side no-print slide-up">
@@ -266,7 +277,7 @@
         </div>
     </div>
 
-    <!-- SCRIPTS (unchanged) -->
+    <!-- SCRIPTS -->
     <script>
         function confirmLogout() {
         Swal.fire({
@@ -530,6 +541,14 @@
         } else { Swal.fire("Error", "Failed to save transaction.", "error"); }
         } catch (err) { Swal.fire("Error", "Server error", "error"); }
         finally { buttons.forEach(btn => { btn.disabled = false; btn.style.opacity = '1'; }); }
+        }
+
+        function toggleSidebar() {
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.querySelector('.sidebar-overlay');
+
+        if (sidebar) sidebar.classList.toggle('mobile-open');
+        if (overlay) overlay.classList.toggle('mobile-open');
         }
     </script>
 </body>

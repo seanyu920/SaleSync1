@@ -191,6 +191,12 @@ namespace SaleSync.Controllers
             }
             return Json(result);
         }
+        public IActionResult QueueOrder()
+        {
+            // Your logic here (e.g., fetching pending orders)
+            return View();
+        }
+        
 
         // ==========================================
         // ⭐ 5. MARK ORDER COMPLETED & DEDUCT STOCK
@@ -340,6 +346,7 @@ namespace SaleSync.Controllers
             return View("~/Views/Cashier/CashierMenu.cshtml", menuList);
         }
     }
+    
 
     // ==========================================
     // ⭐ REQUEST MODELS

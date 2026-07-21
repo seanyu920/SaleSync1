@@ -2,6 +2,61 @@
    CAFÈRO WEB CUSTOMIZATION — Theme Settings Layout
    ========================================================================== */
 
+/* Root CSS Variable Defaults & Fallbacks */
+:root {
+    --primary-color: var(--gold, #C9A84C);
+    --sidebar-bg: var(--bg-surface, #141A14);
+    --accent-color: var(--gold, #C9A84C);
+    --main-bg: var(--bg-base, #0D110D);
+    --gold: #C9A84C;
+    --gold-light: #E0BF60;
+    --gold-glow: rgba(201, 168, 76, 0.15);
+    --bg-base: #0D110D;
+    --bg-surface: #141A14;
+    --bg-card: #182018;
+    --bg-card-2: #1F2A1F;
+    --cream: #F5F0EB;
+    --muted: #8E9B8E;
+    --muted-2: #A3B2A3;
+    --border: rgba(201, 168, 76, 0.2);
+    --border-sub: rgba(255, 255, 255, 0.08);
+}
+
+/* Base resets */
+body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--main-bg);
+}
+
+/* ==========================================================================
+   GLOBAL APP LAYOUT STRUCTURE
+   ========================================================================== */
+
+.dashboard-container {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+}
+
+.sidebar {
+    width: 260px;
+    flex-shrink: 0;
+}
+
+.main-content {
+    flex: 1;
+    width: 100%;
+    padding: 2rem;
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+/* Mobile Header — Hidden on Desktop Viewports */
+.mobile-header {
+    display: none;
+}
+
 /* Outer form styling mimicking recent sales structure spacing */
 .settings-form {
     display: flex;
@@ -257,8 +312,36 @@
         transform: translateY(-1px);
     }
 
-/* Custom Component Layout Adjustments For Lower Breakpoints */
+/* Animations */
+.slide-up {
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ==========================================================================
+   MEDIA QUERIES & BREAKPOINTS
+   ========================================================================== */
+
 @media (max-width: 1024px) {
+    .dashboard-container {
+        display: block;
+    }
+
+    .main-content {
+        padding: 1.25rem;
+    }
+
     .form-grid,
     .form-group-triple {
         grid-template-columns: 1fr;
@@ -267,7 +350,85 @@
     .form-group.full-width {
         grid-column: span 1;
     }
+
+    .sidebar {
+        position: fixed;
+        left: -260px;
+        top: 0;
+        z-index: 1001;
+        transition: left 0.3s ease;
+        height: 100vh;
+        box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+        .sidebar.mobile-open {
+            left: 0;
+        }
+
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.7);
+        z-index: 1000;
+        backdrop-filter: blur(4px);
+    }
+
+        .sidebar-overlay.mobile-open {
+            display: block;
+        }
+
+    /* Mobile Header Panel */
+    .mobile-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 20px;
+        background: var(--bg-base);
+        border-bottom: 1px solid var(--border-sub);
+        margin-bottom: 20px;
+    }
+
+    /* Modern Hamburger */
+    .hamburger-btn {
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        color: var(--gold);
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 18px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    }
+
+        .hamburger-btn:hover {
+            background: var(--gold);
+            color: var(--bg-base);
+            border-color: var(--gold);
+            transform: translateY(-2px);
+        }
+
+    /* Brand Name */
+    .mobile-brand {
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--cream);
+        letter-spacing: -0.5px;
+    }
 }
-.slide-up {
-    animation: slideUp 0.3s ease-out;
+
+@media (min-width: 1025px) {
+    .mobile-header, .sidebar-overlay {
+        display: none !important;
+    }
 }

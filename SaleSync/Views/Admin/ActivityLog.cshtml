@@ -25,8 +25,8 @@
                 <div class="profile-section">
                     <div class="profile-circle">👤</div>
                     <div>
-                        <h2 class="admin-name">Admin</h2>
-                        <div class="admin-role">Administrator</div>
+                        <h2 class="admin-name">@(User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? User.Identity?.Name ?? "User")</h2>
+                        <div class="admin-role">@(User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "User")</div>
                     </div>
                 </div>
 
@@ -73,6 +73,12 @@
                 </form>
             </div>
         </aside>
+        <div class="mobile-header">
+            <button class="hamburger-btn" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="mobile-brand">Cafero</div>
+        </div>
 
         <main class="main-content slide-up">
             <div class="page-header">
@@ -270,6 +276,13 @@
         width: '700px',
         confirmButtonColor: '#f46a05'
         });
+        }
+        function toggleSidebar() {
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.querySelector('.sidebar-overlay');
+
+        sidebar.classList.toggle('mobile-open');
+        overlay.classList.toggle('mobile-open');
         }
     </script>
 </body>
