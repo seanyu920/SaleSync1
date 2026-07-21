@@ -1,5 +1,18 @@
 ﻿/* ==========================================================================
-   1. GLOBAL RESETS & BASE STYLES
+   1. BRAND DESIGN SYSTEM & TOKENS
+   ========================================================================== */
+:root {
+    --bg-main: #111613; /* Warm dark moss slate base */
+    --bg-card: rgba(29, 38, 33, 0.88); /* Frosted glass panel container */
+    --border-color: #2b3931; /* Main boundary line color */
+    --text-pure: #ffffff; /* High contrast primary text */
+    --text-muted: #a7b7af; /* Mid-tone gray-sage for secondary text */
+    --accent-gold: #dfb756; /* Brand gold accent color */
+    --accent-gold-hover: #eed074; /* Hover state illumination gold */
+}
+
+/* ==========================================================================
+   2. GLOBAL RESETS & BASE STYLES
    ========================================================================== */
 * {
     margin: 0;
@@ -9,12 +22,12 @@
 }
 
 body {
-    background-color: #111613; /* Consistent dark moss base */
-    color: #ffffff;
+    background-color: var(--bg-main);
+    color: var(--text-pure);
 }
 
 /* ==========================================================================
-   2. FULL-SCREEN BACKGROUND REGISTRATION LAYOUT
+   3. FULL-SCREEN BACKGROUND REGISTRATION LAYOUT
    ========================================================================== */
 .register-split-container {
     position: relative;
@@ -52,7 +65,7 @@ body {
         z-index: -1;
     }
 
-/* Branding above the card */
+/* Branding layout placed above the card */
 .brand-content {
     text-align: center;
     margin-bottom: 30px;
@@ -63,14 +76,14 @@ body {
     font-family: 'Playfair Display', serif;
     font-size: 52px;
     font-weight: 800;
-    color: #ffffff;
+    color: var(--text-pure);
     text-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
 }
 
 .software-tag {
     font-size: 12px;
     letter-spacing: 2px;
-    color: #dfb756; /* Gold accent */
+    color: var(--accent-gold);
     text-transform: uppercase;
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
 }
@@ -84,10 +97,10 @@ body {
 
 .register-card {
     width: 100%;
-    background-color: rgba(29, 38, 33, 0.88); /* Frosted glass */
+    background-color: var(--bg-card);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(223, 183, 86, 0.25); /* Subtle gold border */
+    border: 1px solid rgba(223, 183, 86, 0.25);
     border-radius: 20px;
     padding: 40px 35px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
@@ -101,16 +114,18 @@ body {
     .register-header h2 {
         font-size: 28px;
         font-weight: 800;
-        color: #dfb756; /* Gold */
+        color: var(--accent-gold);
         margin-bottom: 6px;
     }
 
     .register-header p {
-        color: #a7b7af; /* Muted */
+        color: var(--text-muted);
         font-size: 14px;
     }
 
-/* --- FORM INPUTS --- */
+/* ==========================================================================
+   4. FORM FIELDS & ENCLOSURES
+   ========================================================================== */
 form {
     display: flex;
     flex-direction: column;
@@ -121,42 +136,87 @@ form {
     display: block;
     font-size: 11px;
     font-weight: 800;
-    color: #dfb756;
+    color: var(--accent-gold);
     text-transform: uppercase;
     margin-bottom: 6px;
 }
 
 .input-wrapper {
+    position: relative; /* Setup absolute coordinate reference point for inside icons */
     display: flex;
     align-items: center;
     background-color: rgba(17, 22, 19, 0.7);
-    border: 1px solid #2b3931;
+    border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 0 15px;
     transition: all 0.3s;
 }
 
     .input-wrapper:focus-within {
-        border-color: #dfb756;
+        border-color: var(--accent-gold);
         box-shadow: 0 0 12px rgba(223, 183, 86, 0.2);
     }
 
-    .input-wrapper input {
-        width: 100%;
-        padding: 14px 0;
-        border: none;
-        background: transparent;
-        font-size: 15px;
-        color: #ffffff;
-        outline: none;
+.input-icon {
+    font-size: 15px;
+    color: var(--accent-gold);
+    margin-right: 12px;
+}
+
+.input-wrapper input {
+    width: 100%;
+    padding: 14px 45px 14px 0; /* Padding-right creates safe boundary gap against eye buttons */
+    border: none;
+    background: transparent;
+    font-size: 15px;
+    color: var(--text-pure);
+    outline: none;
+}
+
+    .input-wrapper input::placeholder {
+        color: #5c6f64;
     }
 
-/* --- BUTTON & LINK --- */
+/* Password Toggle Controls */
+.password-toggle-btn {
+    position: absolute;
+    right: 15px;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    transition: color 0.2s ease;
+}
+
+    .password-toggle-btn:hover {
+        color: var(--accent-gold);
+    }
+
+.eye-icon {
+    width: 20px;
+    height: 20px;
+    display: block;
+}
+
+/* SweetAlert Modern Toast Custom Configurations overrides */
+.modern-toast-popup {
+    border-radius: 12px !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+    border: 1px solid #dcbca5 !important;
+}
+
+/* ==========================================================================
+   5. BUTTON & LINK ROUTING ACTIONS
+   ========================================================================== */
 .btn-register {
     width: 100%;
     padding: 15px;
-    background-color: #dfb756;
-    color: #111613;
+    background-color: var(--accent-gold);
+    color: var(--bg-main);
     border: none;
     border-radius: 12px;
     font-size: 16px;
@@ -167,40 +227,54 @@ form {
 }
 
     .btn-register:hover {
-        background-color: #eed074;
+        background-color: var(--accent-gold-hover);
     }
 
 .login-prompt {
     margin-top: 25px;
     text-align: center;
-    border-top: 1px solid #2b3931;
+    border-top: 1px solid var(--border-color);
     padding-top: 20px;
 }
 
+    .login-prompt p {
+        color: var(--text-muted);
+        font-size: 14px;
+        margin-bottom: 6px;
+    }
+
 .login-link {
-    color: #dfb756;
+    color: var(--accent-gold);
     font-weight: 800;
     text-decoration: none;
+    font-size: 15px;
+    transition: color 0.3s;
 }
 
-/* --- RESPONSIVE --- */
+    .login-link:hover {
+        color: var(--accent-gold-hover);
+        text-decoration: underline;
+    }
+
+/* ==========================================================================
+   6. RESPONSIVE ADAPTABILITY VIEWPORTS
+   ========================================================================== */
 @media (max-width: 480px) {
     .register-card {
         padding: 30px 20px;
     }
 }
+
 .slide-up {
     animation: slideUp 0.3s ease-out;
 }
+
 /* Change the autofill background to match your --bg-main theme color */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
-    /* Use your --bg-main color (#111613) to eliminate the grey box */
     -webkit-box-shadow: 0 0 0 30px #111613 inset !important;
-    /* Set the text color to white */
     -webkit-text-fill-color: #ffffff !important;
-    /* Smooth transition */
     transition: background-color 5000s ease-in-out 0s;
 }

@@ -278,6 +278,7 @@ form {
 }
 
 .input-wrapper {
+    position: relative; /* Modified: Configured for absolute icon positioning tracking */
     display: flex;
     align-items: center;
     background-color: rgba(17, 22, 19, 0.7); /* Deep dark background inside fields */
@@ -301,7 +302,7 @@ form {
 
 .input-wrapper input {
     width: 100%;
-    padding: 14px 0;
+    padding: 14px 35px 14px 0; /* Modified: Safe zone padding right prevents text from clipping under the eye */
     border: none;
     background: transparent;
     font-size: 15px;
@@ -312,6 +313,31 @@ form {
     .input-wrapper input::placeholder {
         color: #5c6f64;
     }
+
+/* Password Toggle Controls */
+.password-toggle-btn {
+    position: absolute;
+    right: 15px;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted); /* Leverages design token palettes */
+    transition: color 0.2s ease;
+}
+
+    .password-toggle-btn:hover {
+        color: var(--accent-gold); /* Illumination shift matching global actions */
+    }
+
+.eye-icon {
+    width: 20px;
+    height: 20px;
+    display: block;
+}
 
 /* Form Submission Actions */
 .form-actions {
@@ -413,6 +439,7 @@ form {
         font-size: 42px;
     }
 }
+
 .slide-up {
     animation: slideUp 0.3s ease-out;
 }
