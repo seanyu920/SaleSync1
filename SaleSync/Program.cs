@@ -41,6 +41,13 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// MapStaticAssets() below only serves files that existed in wwwroot at build time
+// (it works off a compile-time manifest). Files added at runtime — like uploaded
+// product photos — aren't in that manifest, so UseStaticFiles() is added here to
+// serve those too.
+app.UseStaticFiles();
+
 app.UseRouting();
 
 // ⭐ 3. SECURITY MIDDLEWARE (Order is critical!)

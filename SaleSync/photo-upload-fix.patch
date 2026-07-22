@@ -1,0 +1,373 @@
+diff --git a/SaleSync/Controllers/AdminController.cs b/SaleSync/Controllers/AdminController.cs
+index dfa6bc9..cb0b647 100644
+--- a/SaleSync/Controllers/AdminController.cs
++++ b/SaleSync/Controllers/AdminController.cs
+@@ -1,5 +1,6 @@
+ ﻿using System;
+ using System.Collections.Generic;
++using System.Linq;
+ using System.Security.Claims;
+ using Microsoft.AspNetCore.Hosting;
+ using System.Text.Json;
+@@ -511,7 +512,7 @@ namespace SaleSync.Controllers
+             using (SqlConnection conn = new SqlConnection(connectionString))
+             {
+                 string sql = @"
+-                    SELECT p.product_id, p.product_name, c.category_name, p.selling_price
++                    SELECT p.product_id, p.product_name, c.category_name, p.selling_price, p.image_path
+                     FROM products p
+                     LEFT JOIN categories c ON p.category_id = c.category_id
+                     WHERE (p.is_ingredient = 0 OR p.is_ingredient IS NULL)
+@@ -529,7 +530,8 @@ namespace SaleSync.Controllers
+                                 ProductId = Convert.ToInt32(r["product_id"]),
+                                 ProductName = r["product_name"].ToString(),
+                                 CategoryName = r["category_name"]?.ToString() ?? "Uncategorized",
+-                                Price = r["selling_price"] != DBNull.Value ? Convert.ToDecimal(r["selling_price"]) : 0
++                                Price = r["selling_price"] != DBNull.Value ? Convert.ToDecimal(r["selling_price"]) : 0,
++                                ImagePath = r["image_path"] != DBNull.Value ? r["image_path"].ToString() : null
+                             });
+                         }
+                     }
+@@ -1475,52 +1477,93 @@ namespace SaleSync.Controllers
+         [HttpPost]
+         public async Task<IActionResult> UploadProductPhoto(int productId, IFormFile productImageFile)
+         {
++            if (productId <= 0)
++            {
++                return BadRequest("A valid product must be selected before uploading a photo.");
++            }
++
+             if (productImageFile == null || productImageFile.Length == 0)
+             {
+-                return BadRequest("Invalid processing asset attachment stream validation layout failure.");
++                return BadRequest("No file was received.");
++            }
++
++            // Basic size guard (5 MB) so a huge file can't hang the request.
++            const long maxFileSizeBytes = 5 * 1024 * 1024;
++            if (productImageFile.Length > maxFileSizeBytes)
++            {
++                return BadRequest("Image is too large. Please choose a file under 5 MB.");
++            }
++
++            // Only allow actual image types.
++            string[] allowedExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
++            string extension = Path.GetExtension(productImageFile.FileName).ToLowerInvariant();
++            if (string.IsNullOrEmpty(extension) || !allowedExtensions.Contains(extension))
++            {
++                return BadRequest("Unsupported file type. Please upload a JPG, PNG, GIF, or WEBP image.");
+             }
+ 
+             try
+             {
+-                // 1. Setup secure storage target arrays under the application root hosting paths
+-                string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(productImageFile.FileName);
+                 string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "products");
+-
+                 if (!Directory.Exists(uploadsFolder))
+                 {
+                     Directory.CreateDirectory(uploadsFolder);
+                 }
+ 
++                string uniqueFileName = Guid.NewGuid().ToString() + extension;
+                 string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+ 
+-                // 2. Stream the binary file input directly to the application folder target locations
+                 using (var fileStream = new FileStream(filePath, FileMode.Create))
+                 {
+                     await productImageFile.CopyToAsync(fileStream);
+                 }
+ 
+-                // 3. Formulate structural relative routing web context configurations
+                 string relativeImagePath = "/images/products/" + uniqueFileName;
++                string previousImagePath = null;
+ 
+-                // 4. Update the SQL DB row mapping data field target location pointer values
+                 using (SqlConnection conn = new SqlConnection(connectionString))
+                 {
+-                    string updateSql = "UPDATE products SET image_path = @img WHERE product_id = @id";
+-                    using (SqlCommand cmd = new SqlCommand(updateSql, conn))
++                    conn.Open();
++
++                    // Grab the old image path first so we can clean it up after a successful update.
++                    using (SqlCommand getCmd = new SqlCommand("SELECT image_path FROM products WHERE product_id = @id", conn))
+                     {
+-                        cmd.Parameters.AddWithValue("@img", relativeImagePath);
+-                        cmd.Parameters.AddWithValue("@id", productId);
++                        getCmd.Parameters.AddWithValue("@id", productId);
++                        var result = getCmd.ExecuteScalar();
++                        previousImagePath = result != null && result != DBNull.Value ? result.ToString() : null;
++                    }
+ 
+-                        conn.Open();
+-                        cmd.ExecuteNonQuery();
++                    using (SqlCommand updateCmd = new SqlCommand("UPDATE products SET image_path = @img WHERE product_id = @id", conn))
++                    {
++                        updateCmd.Parameters.AddWithValue("@img", relativeImagePath);
++                        updateCmd.Parameters.AddWithValue("@id", productId);
++
++                        int rowsAffected = updateCmd.ExecuteNonQuery();
++                        if (rowsAffected == 0)
++                        {
++                            // No product matched this id — remove the file we just saved so it doesn't orphan on disk.
++                            System.IO.File.Delete(filePath);
++                            return NotFound($"No product found with id {productId}.");
++                        }
++                    }
++                }
++
++                // Clean up the old image file now that the DB points at the new one.
++                if (!string.IsNullOrEmpty(previousImagePath))
++                {
++                    string previousFullPath = Path.Combine(_webHostEnvironment.WebRootPath, previousImagePath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
++                    if (System.IO.File.Exists(previousFullPath))
++                    {
++                        try { System.IO.File.Delete(previousFullPath); } catch { /* non-fatal cleanup */ }
+                     }
+                 }
+ 
+-                return Ok(); // Return a clean HTTP 200 validation statement back to AJAX layer
++                return Ok(new { imagePath = relativeImagePath });
+             }
+             catch (Exception ex)
+             {
+-                return StatusCode(500, $"Internal execution error sequence context interrupt: {ex.Message}");
++                Console.Error.WriteLine($"[UploadProductPhoto] Failed for productId={productId}: {ex}");
++                return StatusCode(500, $"Upload failed: {ex.Message}");
+             }
+         }
+         // ==========================================
+diff --git a/SaleSync/Program.cs b/SaleSync/Program.cs
+index 611625f..83a8402 100644
+--- a/SaleSync/Program.cs
++++ b/SaleSync/Program.cs
+@@ -41,6 +41,13 @@ if (!app.Environment.IsDevelopment())
+ }
+ 
+ app.UseHttpsRedirection();
++
++// MapStaticAssets() below only serves files that existed in wwwroot at build time
++// (it works off a compile-time manifest). Files added at runtime — like uploaded
++// product photos — aren't in that manifest, so UseStaticFiles() is added here to
++// serve those too.
++app.UseStaticFiles();
++
+ app.UseRouting();
+ 
+ // ⭐ 3. SECURITY MIDDLEWARE (Order is critical!)
+diff --git a/SaleSync/Views/Admin/Products.cshtml b/SaleSync/Views/Admin/Products.cshtml
+index 4f887e5..fe8c11f 100644
+--- a/SaleSync/Views/Admin/Products.cshtml
++++ b/SaleSync/Views/Admin/Products.cshtml
+@@ -105,7 +105,7 @@
+                 <div class="menu-item-card" onclick="openSubMenu('COFFEE')">
+                     <div class="item-image-placeholder">
+                         ☕
+-                        <button type="button" class="change-photo-btn" onclick="event.stopPropagation(); openCategoryPhotoUpload('COFFEE');">📷 Add Photo</button>
++                        <button type="button" class="change-photo-btn" disabled title="Photos are set per menu item, not per category. Open this category and add a photo to an item instead." style="opacity:0.5; cursor:not-allowed;">📷 Add Photo</button>
+                     </div>
+                     <div class="item-details">
+                         <div class="item-category">Category</div>
+@@ -116,7 +116,7 @@
+                 <div class="menu-item-card" onclick="openSubMenu('MILKTEA')">
+                     <div class="item-image-placeholder">
+                         🧋
+-                        <button type="button" class="change-photo-btn" onclick="event.stopPropagation(); openCategoryPhotoUpload('MILK TEA');">📷 Add Photo</button>
++                        <button type="button" class="change-photo-btn" disabled title="Photos are set per menu item, not per category. Open this category and add a photo to an item instead." style="opacity:0.5; cursor:not-allowed;">📷 Add Photo</button>
+                     </div>
+                     <div class="item-details">
+                         <div class="item-category">Category</div>
+@@ -127,7 +127,7 @@
+                 <div class="menu-item-card" onclick="openSubMenu('FRUIT TEA')">
+                     <div class="item-image-placeholder">
+                         🍹
+-                        <button type="button" class="change-photo-btn" onclick="event.stopPropagation(); openCategoryPhotoUpload('FRUIT TEA');">📷 Add Photo</button>
++                        <button type="button" class="change-photo-btn" disabled title="Photos are set per menu item, not per category. Open this category and add a photo to an item instead." style="opacity:0.5; cursor:not-allowed;">📷 Add Photo</button>
+                     </div>
+                     <div class="item-details">
+                         <div class="item-category">Category</div>
+@@ -138,7 +138,7 @@
+                 <div class="menu-item-card" onclick="openSubMenu('RICE MEAL')">
+                     <div class="item-image-placeholder">
+                         🍱
+-                        <button type="button" class="change-photo-btn" onclick="event.stopPropagation(); openCategoryPhotoUpload('RICE MEAL');">📷 Add Photo</button>
++                        <button type="button" class="change-photo-btn" disabled title="Photos are set per menu item, not per category. Open this category and add a photo to an item instead." style="opacity:0.5; cursor:not-allowed;">📷 Add Photo</button>
+                     </div>
+                     <div class="item-details">
+                         <div class="item-category">Category</div>
+@@ -149,7 +149,7 @@
+                 <div class="menu-item-card" onclick="openSubMenu('BREAD & PASTRY')">
+                     <div class="item-image-placeholder">
+                         🥐
+-                        <button type="button" class="change-photo-btn" onclick="event.stopPropagation(); openCategoryPhotoUpload('BREAD & PASTRY');">📷 Add Photo</button>
++                        <button type="button" class="change-photo-btn" disabled title="Photos are set per menu item, not per category. Open this category and add a photo to an item instead." style="opacity:0.5; cursor:not-allowed;">📷 Add Photo</button>
+                     </div>
+                     <div class="item-details">
+                         <div class="item-category">Category</div>
+@@ -160,7 +160,7 @@
+                 <div class="menu-item-card" onclick="openSubMenu('SNACKS & PASTA')">
+                     <div class="item-image-placeholder">
+                         🍝
+-                        <button type="button" class="change-photo-btn" onclick="event.stopPropagation(); openCategoryPhotoUpload('SNACKS & PASTA');">📷 Add Photo</button>
++                        <button type="button" class="change-photo-btn" disabled title="Photos are set per menu item, not per category. Open this category and add a photo to an item instead." style="opacity:0.5; cursor:not-allowed;">📷 Add Photo</button>
+                     </div>
+                     <div class="item-details">
+                         <div class="item-category">Category</div>
+@@ -227,9 +227,10 @@
+             {
+                 var safeName = System.Web.HttpUtility.JavaScriptStringEncode(item.ProductName);
+                 var safeCategory = System.Web.HttpUtility.JavaScriptStringEncode(item.CategoryName.ToUpper());
++                var safeImagePath = System.Web.HttpUtility.JavaScriptStringEncode(item.ImagePath ?? "");
+ 
+                 @:if(!menuData["@safeCategory"]) menuData["@safeCategory"] = [];
+-                @:menuData["@safeCategory"].push({ id: @item.ProductId, name: "@safeName", price: @item.Price });
++                @:menuData["@safeCategory"].push({ id: @item.ProductId, name: "@safeName", price: @item.Price, imagePath: "@safeImagePath" });
+             }
+         }
+ 
+@@ -239,7 +240,6 @@
+             currentCategory = cat;
+             const items = menuData[cat] || [];
+             const container = document.getElementById('subItemsContainer');
+-            const catImg = localStorage.getItem(`cat_img_${cat}`) || "";
+ 
+             document.getElementById('pageTitle').innerText = cat;
+             document.getElementById('pageSubtitle').innerText = "Managing structural items and compositions for " + cat;
+@@ -248,13 +248,16 @@
+ 
+             container.innerHTML = "";
+             items.forEach(item => {
+-                let imgTag = catImg ? `<img src="${catImg}">` : `<span style="font-size:40px;">📦</span>`;
++                let imgTag = item.imagePath ? `<img src="${item.imagePath}">` : `<span style="font-size:40px;">📦</span>`;
+ 
+                 container.innerHTML += `
+                 <div class="menu-item-card">
+-                    <div class="item-image-placeholder" style="height:130px;">
++                    <div class="item-image-placeholder" style="height:130px;" id="item-img-${item.id}">
+                         ${imgTag}
+-                        <button type="button" class="change-photo-btn" onclick="event.stopPropagation(); openCategoryPhotoUpload('${item.name.replace(/'/g, "\\'")}', ${item.id});">📷 Add Photo</button>
++                        <label class="change-photo-btn" style="cursor:pointer;">
++                            📷 Add Photo
++                            <input type="file" accept="image/png,image/jpeg,image/gif,image/webp" style="display:none;" onchange="uploadItemPhoto(${item.id}, this)">
++                        </label>
+                     </div>
+                     <div class="item-details" style="flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 12px;">
+                         <div>
+@@ -323,56 +326,73 @@
+             document.getElementById('backBtn').style.display = 'none';
+         }
+ 
+-        async function openCategoryPhotoUpload(targetName, productId = null) {
+-            const { value: file } = await Swal.fire({
+-                title: `Asset Registration`,
+-                html: `Select interface render file for <strong>${targetName}</strong>`,
+-                input: 'file',
+-                inputAttributes: {
+-                    'accept': 'image/*',
+-                    'aria-label': 'Upload product image file'
+-                },
+-                showCancelButton: true,
+-                confirmButtonText: 'Bind System Asset',
+-                customClass: {
+-                    input: 'swal2-file-custom'
+-                }
+-            });
++        async function uploadItemPhoto(productId, inputEl) {
++            const file = inputEl.files && inputEl.files[0];
++            if (!file) return;
+ 
+-            if (file) {
+-                const formData = new FormData();
+-                formData.append("productImageFile", file);
+-                formData.append("productId", productId || 0);
++            // Client-side guardrails matching the server so bad files are rejected instantly.
++            const maxSizeBytes = 5 * 1024 * 1024;
++            if (file.size > maxSizeBytes) {
++                Swal.fire('File Too Large', 'Please choose an image under 5 MB.', 'error');
++                inputEl.value = '';
++                return;
++            }
++            if (!file.type.startsWith('image/')) {
++                Swal.fire('Unsupported File', 'Please choose an image file (JPG, PNG, GIF, or WEBP).', 'error');
++                inputEl.value = '';
++                return;
++            }
+ 
+-                Swal.fire({
+-                    title: 'Syncing Asset...',
+-                    text: 'Uploading file to local system environment architecture.',
+-                    allowOutsideClick: false,
+-                    didOpen: () => {
+-                        Swal.showLoading();
+-                    }
++            const placeholder = document.getElementById(`item-img-${productId}`);
++            const originalContent = placeholder ? placeholder.innerHTML : null;
++
++            // Show a lightweight inline "uploading" state instead of a modal, so
++            // there's less going on and it's easier to see exactly what happens.
++            if (placeholder) {
++                placeholder.querySelector('img, span')?.remove();
++                placeholder.insertAdjacentHTML('afterbegin', '<span style="font-size:13px;">Uploading…</span>');
++            }
++
++            const formData = new FormData();
++            formData.append("productImageFile", file);
++            formData.append("productId", productId);
++
++            try {
++                const response = await fetch('/Admin/UploadProductPhoto', {
++                    method: 'POST',
++                    body: formData
+                 });
+ 
+-                try {
+-                    const response = await fetch('/Admin/UploadProductPhoto', {
+-                        method: 'POST',
+-                        body: formData
+-                    });
++                if (!response.ok) {
++                    const message = await response.text();
++                    throw new Error(message || `Server returned ${response.status}`);
++                }
+ 
+-                    if (response.ok) {
+-                        Swal.fire({
+-                            title: 'Success!',
+-                            text: 'Image uploaded and system asset synchronized.',
+-                            icon: 'success',
+-                            timer: 1500,
+-                            showConfirmButton: false
+-                        }).then(() => location.reload());
+-                    } else {
+-                        Swal.fire('Upload Failed', 'The server architecture rejected the file stream.', 'error');
+-                    }
+-                } catch (error) {
+-                    Swal.fire('Network Fault', 'Unable to reach backend system server structural pipeline.', 'error');
++                const result = await response.json();
++
++                if (placeholder) {
++                    placeholder.querySelector('span')?.remove();
++                    placeholder.insertAdjacentHTML('afterbegin', `<img src="${result.imagePath}">`);
++                }
++                if (currentCategory && menuData[currentCategory]) {
++                    const item = menuData[currentCategory].find(i => i.id === productId);
++                    if (item) item.imagePath = result.imagePath;
++                }
++
++                Swal.fire({
++                    title: 'Photo Updated',
++                    icon: 'success',
++                    timer: 1200,
++                    showConfirmButton: false
++                });
++            } catch (error) {
++                console.error('Photo upload failed:', error);
++                if (placeholder && originalContent !== null) {
++                    placeholder.innerHTML = originalContent;
+                 }
++                Swal.fire('Upload Failed', error.message || 'Something went wrong uploading the photo.', 'error');
++            } finally {
++                inputEl.value = '';
+             }
+         }
+ 
