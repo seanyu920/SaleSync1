@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Hosting;
 using System.Text.Json;
@@ -511,7 +512,7 @@ namespace SaleSync.Controllers
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 string sql = @"
-                    SELECT p.product_id, p.product_name, c.category_name, p.selling_price
+                    SELECT p.product_id, p.product_name, c.category_name, p.selling_price, p.image_path
                     FROM products p
                     LEFT JOIN categories c ON p.category_id = c.category_id
                     WHERE (p.is_ingredient = 0 OR p.is_ingredient IS NULL)
@@ -529,7 +530,8 @@ namespace SaleSync.Controllers
                                 ProductId = Convert.ToInt32(r["product_id"]),
                                 ProductName = r["product_name"].ToString(),
                                 CategoryName = r["category_name"]?.ToString() ?? "Uncategorized",
-                                Price = r["selling_price"] != DBNull.Value ? Convert.ToDecimal(r["selling_price"]) : 0
+                                Price = r["selling_price"] != DBNull.Value ? Convert.ToDecimal(r["selling_price"]) : 0,
+                                ImagePath = r["image_path"] != DBNull.Value ? r["image_path"].ToString() : null
                             });
                         }
                     }
@@ -1475,52 +1477,93 @@ namespace SaleSync.Controllers
         [HttpPost]
         public async Task<IActionResult> UploadProductPhoto(int productId, IFormFile productImageFile)
         {
+            if (productId <= 0)
+            {
+                return BadRequest("A valid product must be selected before uploading a photo.");
+            }
+
             if (productImageFile == null || productImageFile.Length == 0)
             {
-                return BadRequest("Invalid processing asset attachment stream validation layout failure.");
+                return BadRequest("No file was received.");
+            }
+
+            // Basic size guard (5 MB) so a huge file can't hang the request.
+            const long maxFileSizeBytes = 5 * 1024 * 1024;
+            if (productImageFile.Length > maxFileSizeBytes)
+            {
+                return BadRequest("Image is too large. Please choose a file under 5 MB.");
+            }
+
+            // Only allow actual image types.
+            string[] allowedExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+            string extension = Path.GetExtension(productImageFile.FileName).ToLowerInvariant();
+            if (string.IsNullOrEmpty(extension) || !allowedExtensions.Contains(extension))
+            {
+                return BadRequest("Unsupported file type. Please upload a JPG, PNG, GIF, or WEBP image.");
             }
 
             try
             {
-                // 1. Setup secure storage target arrays under the application root hosting paths
-                string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(productImageFile.FileName);
                 string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "products");
-
                 if (!Directory.Exists(uploadsFolder))
                 {
                     Directory.CreateDirectory(uploadsFolder);
                 }
 
+                string uniqueFileName = Guid.NewGuid().ToString() + extension;
                 string filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
-                // 2. Stream the binary file input directly to the application folder target locations
                 using (var fileStream = new FileStream(filePath, FileMode.Create))
                 {
                     await productImageFile.CopyToAsync(fileStream);
                 }
 
-                // 3. Formulate structural relative routing web context configurations
                 string relativeImagePath = "/images/products/" + uniqueFileName;
+                string previousImagePath = null;
 
-                // 4. Update the SQL DB row mapping data field target location pointer values
                 using (SqlConnection conn = new SqlConnection(connectionString))
                 {
-                    string updateSql = "UPDATE products SET image_path = @img WHERE product_id = @id";
-                    using (SqlCommand cmd = new SqlCommand(updateSql, conn))
-                    {
-                        cmd.Parameters.AddWithValue("@img", relativeImagePath);
-                        cmd.Parameters.AddWithValue("@id", productId);
+                    conn.Open();
 
-                        conn.Open();
-                        cmd.ExecuteNonQuery();
+                    // Grab the old image path first so we can clean it up after a successful update.
+                    using (SqlCommand getCmd = new SqlCommand("SELECT image_path FROM products WHERE product_id = @id", conn))
+                    {
+                        getCmd.Parameters.AddWithValue("@id", productId);
+                        var result = getCmd.ExecuteScalar();
+                        previousImagePath = result != null && result != DBNull.Value ? result.ToString() : null;
+                    }
+
+                    using (SqlCommand updateCmd = new SqlCommand("UPDATE products SET image_path = @img WHERE product_id = @id", conn))
+                    {
+                        updateCmd.Parameters.AddWithValue("@img", relativeImagePath);
+                        updateCmd.Parameters.AddWithValue("@id", productId);
+
+                        int rowsAffected = updateCmd.ExecuteNonQuery();
+                        if (rowsAffected == 0)
+                        {
+                            // No product matched this id — remove the file we just saved so it doesn't orphan on disk.
+                            System.IO.File.Delete(filePath);
+                            return NotFound($"No product found with id {productId}.");
+                        }
                     }
                 }
 
-                return Ok(); // Return a clean HTTP 200 validation statement back to AJAX layer
+                // Clean up the old image file now that the DB points at the new one.
+                if (!string.IsNullOrEmpty(previousImagePath))
+                {
+                    string previousFullPath = Path.Combine(_webHostEnvironment.WebRootPath, previousImagePath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
+                    if (System.IO.File.Exists(previousFullPath))
+                    {
+                        try { System.IO.File.Delete(previousFullPath); } catch { /* non-fatal cleanup */ }
+                    }
+                }
+
+                return Ok(new { imagePath = relativeImagePath });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Internal execution error sequence context interrupt: {ex.Message}");
+                Console.Error.WriteLine($"[UploadProductPhoto] Failed for productId={productId}: {ex}");
+                return StatusCode(500, $"Upload failed: {ex.Message}");
             }
         }
         // ==========================================
