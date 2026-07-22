@@ -14,17 +14,23 @@ namespace SaleSync.Controllers
     public class CustomerController : Controller
     {
         private readonly IConfiguration _configuration;
+        private readonly SaleSync.Services.StoreSettingsService _storeSettingsService;
         private readonly string connectionString;
 
-        public CustomerController(IConfiguration configuration)
+        public CustomerController(IConfiguration configuration, SaleSync.Services.StoreSettingsService storeSettingsService)
         {
             _configuration = configuration;
+            _storeSettingsService = storeSettingsService;
             connectionString = _configuration.GetConnectionString("DefaultConnection");
         }
 
         [HttpGet]
         public IActionResult CustomerOrdering()
         {
+            var storeSettings = _storeSettingsService.GetSettings();
+            ViewBag.StoreSettings = storeSettings;
+            ViewBag.StoreStatus = _storeSettingsService.GetStoreStatus(storeSettings);
+
             string userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
             int currentUserId = string.IsNullOrEmpty(userIdClaim) ? 0 : int.Parse(userIdClaim);
 

@@ -389,6 +389,34 @@ body {
     color: var(--success);
 }
 
+.header-status-group {
+    display: flex;
+    align-items: center;
+}
+
+/* Store open/closed status badge, shown alongside System Status */
+.store-status-container {
+    margin-left: 28px;
+    padding-left: 28px;
+    border-left: 1px solid var(--border-sub, rgba(255,255,255,0.08));
+}
+
+.store-open-dot {
+    background: #4CAF50;
+}
+
+.store-closed-dot {
+    background: #F44336;
+}
+
+.store-open-text {
+    color: #4CAF50;
+}
+
+.store-closed-text {
+    color: #F44336;
+}
+
 
 /* ==========================================================================
    SUMMARY CARDS

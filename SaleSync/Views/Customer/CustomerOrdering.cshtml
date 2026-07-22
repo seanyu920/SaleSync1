@@ -1,13 +1,15 @@
 ﻿@model SaleSync.Models.CustomerDashboardViewModel
 @{
     Layout = null;
+    var storeSettings = ViewBag.StoreSettings as SaleSync.Models.WebCustomization ?? new SaleSync.Models.WebCustomization();
+    var storeStatus = ViewBag.StoreStatus as SaleSync.Models.StoreStatus;
 }
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Order Now | Cafero</title>
+    <title>Order Now | @storeSettings.StoreName</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="~/css/CustomerOrdering.css" asp-append-version="true" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -264,13 +266,26 @@
         <aside class="sidebar">
             <div class="sidebar-top">
                 <div class="logo-section">
-                    <div class="brand-name">Cafero</div>
-                    <div class="brand-sub">Coffee & Pastries</div>
+                    @if (!string.IsNullOrEmpty(storeSettings.LogoPath))
+                    {
+                        <img src="@storeSettings.LogoPath" alt="@storeSettings.StoreName logo" class="brand-logo" />
+                    }
+                    <div class="brand-name">@storeSettings.StoreName</div>
+                    <div class="brand-sub">@storeSettings.StoreTagline</div>
                 </div>
 
-                <div class="store-status-banner" id="storeBanner">
+                <div class="store-status-banner @(storeStatus != null && storeStatus.IsOpen ? "open" : "")" id="storeBanner">
                     <span class="store-dot"></span>
-                    <span id="storeStatusText">We're Open</span>
+                    <span id="storeStatusText">
+                        @if (storeStatus != null)
+                        {
+                            @(storeStatus.IsOpen ? $"We're Open · Closes {storeStatus.ClosingTimeLabel}" : $"We're {storeStatus.Label} · Opens {storeStatus.OpeningTimeLabel}")
+                        }
+                        else
+                        {
+                            @:We're Open
+                        }
+                    </span>
                 </div>
 
                 <div class="sidebar-tabs">
@@ -315,7 +330,7 @@
 
         <main class="main-content slide-up">
             <div class="announcement-banner" id="announcementBanner">
-                🎉 <strong>Welcome to Cafero!</strong> Free delivery on orders ₱300+
+                🎉 <strong>Welcome to @storeSettings.StoreName!</strong> Free delivery on orders ₱300+
                 <button class="close-announcement" onclick="this.parentElement.style.display='none'">✕</button>
             </div>
 
@@ -572,7 +587,7 @@
                 <div class="chat-header-info">
                     <span class="chat-avatar">☕</span>
                     <div>
-                        <h4 class="chat-title">Cafero Assistant</h4>
+                        <h4 class="chat-title">@storeSettings.StoreName Assistant</h4>
                         <span class="chat-status">Online</span>
                     </div>
                 </div>
@@ -645,20 +660,49 @@
     let sizedCategories = ['coffee','milktea','fruittea'];
 
     // ── STORE STATUS ───────────────────────────────────────────────────────────
+    // Real store hours from settings (falls back to 07:00–21:00 if not configured).
+    const storeOpeningTime = @Html.Raw(Json.Serialize(storeSettings.OpeningTime ?? "07:00"));
+    const storeClosingTime = @Html.Raw(Json.Serialize(storeSettings.ClosingTime ?? "21:00"));
+    const storeTemporarilyClosed = @Html.Raw(Json.Serialize(storeSettings.IsTemporarilyClosed));
+
+    function parseTimeToMinutes(hhmm) {
+        const parts = hhmm.split(':');
+        return (parseInt(parts[0], 10) * 60) + parseInt(parts[1], 10);
+    }
+
+    function formatMinutesAsClock(totalMinutes) {
+        const d = new Date();
+        d.setHours(Math.floor(totalMinutes / 60), totalMinutes % 60, 0, 0);
+        return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    }
+
     function checkStoreStatus() {
-        const now  = new Date();
-        const hour = now.getHours();
-        const open = hour >= 7 && hour < 21;
         const banner = document.getElementById('storeBanner');
         const text   = document.getElementById('storeStatusText');
-        if (banner && text) {
-            if (open) {
-                banner.classList.add('open');
-                text.innerText = "We're Open · Closes 9PM";
-            } else {
-                banner.classList.remove('open');
-                text.innerText = "We're Closed · Opens 7AM";
-            }
+        if (!banner || !text) return;
+
+        if (storeTemporarilyClosed) {
+            banner.classList.remove('open');
+            text.innerText = `We're Temporarily Closed · Opens ${formatMinutesAsClock(parseTimeToMinutes(storeOpeningTime))}`;
+            return;
+        }
+
+        const now = new Date();
+        const nowMinutes = (now.getHours() * 60) + now.getMinutes();
+        const openMinutes = parseTimeToMinutes(storeOpeningTime);
+        const closeMinutes = parseTimeToMinutes(storeClosingTime);
+
+        // Handles overnight schedules (e.g. 18:00–02:00) the same way the server does.
+        const open = closeMinutes > openMinutes
+            ? (nowMinutes >= openMinutes && nowMinutes < closeMinutes)
+            : (nowMinutes >= openMinutes || nowMinutes < closeMinutes);
+
+        if (open) {
+            banner.classList.add('open');
+            text.innerText = `We're Open · Closes ${formatMinutesAsClock(closeMinutes)}`;
+        } else {
+            banner.classList.remove('open');
+            text.innerText = `We're Closed · Opens ${formatMinutesAsClock(openMinutes)}`;
         }
     }
 

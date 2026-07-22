@@ -14,17 +14,22 @@ namespace SaleSync.Controllers
     public class CashierController : Controller
     {
         private readonly IConfiguration _configuration;
+        private readonly StoreSettingsService _storeSettingsService;
         private readonly string connectionString;
 
-        public CashierController(IConfiguration configuration)
+        public CashierController(IConfiguration configuration, StoreSettingsService storeSettingsService)
         {
             _configuration = configuration;
+            _storeSettingsService = storeSettingsService;
             connectionString = _configuration.GetConnectionString("DefaultConnection");
         }
 
         // --- DASHBOARD ---
         public IActionResult Dashboard()
         {
+            var storeSettings = _storeSettingsService.GetSettings();
+            ViewBag.StoreStatus = _storeSettingsService.GetStoreStatus(storeSettings);
+
             var model = new CashierDashboardViewModel { RecentSales = new List<SaleHistoryItem>() };
 
             using (SqlConnection conn = new SqlConnection(connectionString))
@@ -264,8 +269,9 @@ namespace SaleSync.Controllers
         // Inside CashierController.cs and ManagerController.cs
         public IActionResult WebCustomization()
         {
+            var settings = _storeSettingsService.GetSettings();
             // Explicitly point to the Admin folder view
-            return View("~/Views/Admin/WebCustomization.cshtml");
+            return View("~/Views/Admin/WebCustomization.cshtml", settings);
         }
         [HttpPost]
         public IActionResult VerifyAndVoid([FromBody] VoidRequestModel request)

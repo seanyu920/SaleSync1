@@ -18,11 +18,13 @@ namespace SaleSync.Controllers
     public class ManagerController : Controller
     {
         private readonly IConfiguration _configuration;
+        private readonly StoreSettingsService _storeSettingsService;
         private readonly string connectionString;
 
-        public ManagerController(IConfiguration configuration)
+        public ManagerController(IConfiguration configuration, StoreSettingsService storeSettingsService)
         {
             _configuration = configuration;
+            _storeSettingsService = storeSettingsService;
             connectionString = _configuration.GetConnectionString("DefaultConnection");
         }
 
@@ -38,6 +40,9 @@ namespace SaleSync.Controllers
         public IActionResult Dashboard()
         {
             if (!IsManager()) return RedirectToAction("Index", "Home");
+
+            var storeSettings = _storeSettingsService.GetSettings();
+            ViewBag.StoreStatus = _storeSettingsService.GetStoreStatus(storeSettings);
 
             var model = new CashierDashboardViewModel { RecentSales = new List<SaleHistoryItem>() };
 
@@ -195,6 +200,16 @@ namespace SaleSync.Controllers
         {
             // Your logic here (e.g., fetching pending orders)
             return View();
+        }
+
+        // ==========================================
+        // ⭐ WEB CUSTOMIZATION (shared view, Admin/Manager can edit)
+        // ==========================================
+        [HttpGet]
+        public IActionResult WebCustomization()
+        {
+            var settings = _storeSettingsService.GetSettings();
+            return View("~/Views/Admin/WebCustomization.cshtml", settings);
         }
         
 

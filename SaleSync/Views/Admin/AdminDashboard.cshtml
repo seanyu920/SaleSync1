@@ -103,12 +103,27 @@
                     <p class="header-label">Today's Net Sales</p>
                     <h1 class="header-sales-value">₱@Model.TodayTotalSales.ToString("N2")</h1>
                 </div>
-                <div class="system-status-container">
-                    <p class="status-label">System Status</p>
-                    <div class="status-indicator-flex">
-                        <span class="status-dot animate-pulse"></span>
-                        <span class="status-text">Online & Syncing</span>
+                <div class="header-status-group">
+                    <div class="system-status-container">
+                        <p class="status-label">System Status</p>
+                        <div class="status-indicator-flex">
+                            <span class="status-dot animate-pulse"></span>
+                            <span class="status-text">Online & Syncing</span>
+                        </div>
                     </div>
+                    @{
+                        var storeStatus = ViewBag.StoreStatus as SaleSync.Models.StoreStatus;
+                    }
+                    @if (storeStatus != null)
+                    {
+                        <div class="system-status-container store-status-container">
+                            <p class="status-label">Store Status</p>
+                            <div class="status-indicator-flex">
+                                <span class="status-dot @(storeStatus.IsOpen ? "store-open-dot" : "store-closed-dot")"></span>
+                                <span class="status-text @(storeStatus.IsOpen ? "store-open-text" : "store-closed-text")">@storeStatus.Label · @storeStatus.HoursLabel</span>
+                            </div>
+                        </div>
+                    }
                 </div>
             </div>
 
