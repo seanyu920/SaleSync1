@@ -21,67 +21,101 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        /* Custom Table Styling overrides to align nicely with the unified CSS structure */
+        /* Custom Table Styling overrides & Layout Responsiveness */
+        .table-card-wrapper {
+        background: var(--bg-card, #1C241C);
+        border: 1px solid var(--border-sub, rgba(255, 255, 255, 0.06));
+        border-radius: 14px;
+        padding: 16px;
+        box-shadow: 0 10px 32px rgba(0, 0, 0, 0.2);
+        margin-bottom: 40px;
+        box-sizing: border-box;
+        }
+
+        /* Container that prevents table clipping and enables smooth touch scrolling */
+        .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 8px;
+        }
+
         .archive-table {
         width: 100%;
-        border-collapse: collapse;
+        border-collapse: separate;
+        border-spacing: 0;
         text-align: left;
-        background: var(--bg-surface);
-        border-radius: 12px;
-        overflow: hidden;
-        margin-bottom: 10px;
+        background: transparent;
+        min-width: 650px;
         }
 
         .archive-table th {
-        background: #4a2511;
-        color: #fff;
+        background: var(--bg-card-2, #212B21) !important;
+        color: var(--gold, #C9A84C);
         padding: 14px 18px;
-        font-size: 13px;
+        font-size: 11px;
+        font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 1.5px;
+        border-bottom: 1px solid var(--border, rgba(201, 168, 76, 0.18));
+        white-space: nowrap;
         }
 
         .archive-table td {
         padding: 14px 18px;
-        border-bottom: 1px solid var(--border-sub);
-        color: var(--cream);
-        font-size: 14px;
+        border-bottom: 1px solid var(--border-sub, rgba(255, 255, 255, 0.06));
+        color: var(--cream, #F2EDE4);
+        font-size: 13.5px;
+        vertical-align: middle;
+        white-space: nowrap;
+        }
+
+        .archive-table tbody tr:hover {
+        background: rgba(201, 168, 76, 0.03) !important;
         }
 
         .restore-btn {
-        background: #d1fae5;
-        color: #065f46;
-        border: none;
+        background: rgba(61, 191, 120, 0.15);
+        color: var(--success, #3dbf78);
+        border: 1px solid rgba(61, 191, 120, 0.3);
         padding: 8px 16px;
         border-radius: 8px;
         font-weight: 700;
         cursor: pointer;
         transition: all 0.2s ease;
         font-family: 'Outfit', sans-serif;
+        white-space: nowrap;
         }
 
         .restore-btn:hover {
-        background: #a7f3d0;
+        background: var(--success, #3dbf78);
+        color: var(--bg-base, #0D110D);
         transform: translateY(-1px);
-        }
-
-        .table-card-wrapper {
-        background: var(--bg-surface);
-        border: 1px solid var(--border-sub);
-        border-radius: 14px;
-        padding: 8px;
-        box-shadow: var(--shadow-sm);
-        margin-bottom: 40px;
         }
 
         .section-divider-title {
         font-size: 18px;
         font-weight: 700;
-        color: var(--gold);
+        color: var(--gold, #C9A84C);
         margin-bottom: 15px;
         display: flex;
         align-items: center;
         gap: 10px;
+        }
+
+        /* Subtle scrollbar touch for table overflow */
+        .table-responsive::-webkit-scrollbar {
+        height: 6px;
+        }
+
+        .table-responsive::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+        }
+
+        .table-responsive::-webkit-scrollbar-thumb {
+        background: var(--border, rgba(201, 168, 76, 0.3));
+        border-radius: 10px;
         }
     </style>
 </head>
@@ -151,6 +185,8 @@
             </div>
         </aside>
 
+        <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
         <div class="mobile-header">
             <button class="hamburger-btn" onclick="toggleSidebar()">
                 <i class="fas fa-bars"></i>
@@ -170,96 +206,100 @@
 
             <h2 class="section-divider-title">Archived Menu Items</h2>
             <div class="table-card-wrapper">
-                <table class="archive-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 80px;">ID</th>
-                            <th>Category</th>
-                            <th>Product Name</th>
-                            <th>Historical Price</th>
-                            <th>System State</th>
-                            <th style="text-align: center; width: 140px;">Action Lifecycle</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (Model.ArchivedProducts != null && Model.ArchivedProducts.Any())
-                        {
-                            foreach (var item in Model.ArchivedProducts)
+                <div class="table-responsive">
+                    <table class="archive-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 80px;">ID</th>
+                                <th>Category</th>
+                                <th>Product Name</th>
+                                <th>Historical Price</th>
+                                <th>System State</th>
+                                <th style="text-align: center; width: 140px;">Action Lifecycle</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.ArchivedProducts != null && Model.ArchivedProducts.Any())
                             {
-                                var safeName = System.Web.HttpUtility.JavaScriptStringEncode(item.ProductName);
+                                foreach (var item in Model.ArchivedProducts)
+                                {
+                                    var safeName = System.Web.HttpUtility.JavaScriptStringEncode(item.ProductName);
 
-                                <tr class="inventory-row">
-                                    <td><strong style="color: var(--gold); font-family: 'Outfit';">#@item.ProductId</strong></td>
-                                    <td><span style="font-size: 11px; text-transform: uppercase; background: var(--border-sub); padding: 4px 8px; border-radius: 4px; font-weight: 600;">@item.CategoryName</span></td>
-                                    <td style="color: var(--cream); font-weight: 500;">@item.ProductName</td>
-                                    <td style="font-weight: 600; color: var(--gold-light);">₱@item.Price.ToString("0.00")</td>
-                                    <td>
-                                        <span style="background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; border: 1px solid rgba(239, 68, 68, 0.25);">Archived</span>
-                                    </td>
-                                    <td style="text-align: center;">
-                                        <button type="button" class="restore-btn" onclick="restoreProduct(@item.ProductId, '@safeName')">
-                                            Restore
-                                        </button>
+                                    <tr class="inventory-row">
+                                        <td><strong style="color: var(--gold, #C9A84C); font-family: 'Outfit';">#@item.ProductId</strong></td>
+                                        <td><span style="font-size: 11px; text-transform: uppercase; background: var(--border-sub, rgba(255, 255, 255, 0.06)); padding: 4px 8px; border-radius: 4px; font-weight: 600;">@item.CategoryName</span></td>
+                                        <td style="color: var(--cream, #F2EDE4); font-weight: 500;">@item.ProductName</td>
+                                        <td style="font-weight: 600; color: var(--gold-light, #E2C675);">₱@item.Price.ToString("0.00")</td>
+                                        <td>
+                                            <span style="background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; border: 1px solid rgba(239, 68, 68, 0.25);">Archived</span>
+                                        </td>
+                                        <td style="text-align: center;">
+                                            <button type="button" class="restore-btn" onclick="restoreProduct(@item.ProductId, '@safeName')">
+                                                Restore
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="6" style="text-align:center; padding: 48px; color: var(--muted, rgba(242, 237, 228, 0.5)); font-size: 14px;">
+                                        No isolated product lines currently matching archive parameters.
                                     </td>
                                 </tr>
                             }
-                        }
-                        else
-                        {
-                            <tr>
-                                <td colspan="6" style="text-align:center; padding: 48px; color: var(--muted); font-size: 14px;">
-                                    No isolated product lines currently matching archive parameters.
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <h2 class="section-divider-title">Archived Inventory Ingredients</h2>
             <div class="table-card-wrapper">
-                <table class="archive-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 80px;">ID</th>
-                            <th>Class</th>
-                            <th>Ingredient Name</th>
-                            <th>Last Unit Cost</th>
-                            <th>Remaining Volume</th>
-                            <th style="text-align: center; width: 140px;">Action Lifecycle</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (Model.ArchivedIngredients != null && Model.ArchivedIngredients.Any())
-                        {
-                            foreach (var item in Model.ArchivedIngredients)
+                <div class="table-responsive">
+                    <table class="archive-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 80px;">ID</th>
+                                <th>Class</th>
+                                <th>Ingredient Name</th>
+                                <th>Last Unit Cost</th>
+                                <th>Remaining Volume</th>
+                                <th style="text-align: center; width: 140px;">Action Lifecycle</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.ArchivedIngredients != null && Model.ArchivedIngredients.Any())
                             {
-                                var safeName = System.Web.HttpUtility.JavaScriptStringEncode(item.ItemName);
+                                foreach (var item in Model.ArchivedIngredients)
+                                {
+                                    var safeName = System.Web.HttpUtility.JavaScriptStringEncode(item.ItemName);
 
-                                <tr class="inventory-row">
-                                    <td><strong style="color: var(--gold); font-family: 'Outfit';">#@item.ProductId</strong></td>
-                                    <td><span style="font-size: 11px; text-transform: uppercase; background: var(--border-sub); padding: 4px 8px; border-radius: 4px; font-weight: 600; color: #b45309;">@item.ItemCategory</span></td>
-                                    <td style="color: var(--cream); font-weight: 500;">@item.ItemName</td>
-                                    <td style="font-weight: 600; color: var(--gold-light);">₱@item.PurchasePrice.ToString("0.00")</td>
-                                    <td style="font-weight: 700;">@item.Quantity.ToString("0.##") @item.Unit</td>
-                                    <td style="text-align: center;">
-                                        <button type="button" class="restore-btn" onclick="restoreIngredient(@item.ProductId, '@safeName')">
-                                            Restore
-                                        </button>
+                                    <tr class="inventory-row">
+                                        <td><strong style="color: var(--gold, #C9A84C); font-family: 'Outfit';">#@item.ProductId</strong></td>
+                                        <td><span style="font-size: 11px; text-transform: uppercase; background: var(--border-sub, rgba(255, 255, 255, 0.06)); padding: 4px 8px; border-radius: 4px; font-weight: 600; color: #b45309;">@item.ItemCategory</span></td>
+                                        <td style="color: var(--cream, #F2EDE4); font-weight: 500;">@item.ItemName</td>
+                                        <td style="font-weight: 600; color: var(--gold-light, #E2C675);">₱@item.PurchasePrice.ToString("0.00")</td>
+                                        <td style="font-weight: 700;">@item.Quantity.ToString("0.##") @item.Unit</td>
+                                        <td style="text-align: center;">
+                                            <button type="button" class="restore-btn" onclick="restoreIngredient(@item.ProductId, '@safeName')">
+                                                Restore
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="6" style="text-align:center; padding: 48px; color: var(--muted, rgba(242, 237, 228, 0.5)); font-size: 14px;">
+                                        No ingredient profiles or recipes locked in the historical archive.
                                     </td>
                                 </tr>
                             }
-                        }
-                        else
-                        {
-                            <tr>
-                                <td colspan="6" style="text-align:center; padding: 48px; color: var(--muted); font-size: 14px;">
-                                    No ingredient profiles or recipes locked in the historical archive.
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </main>
     </div>
