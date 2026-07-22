@@ -105,7 +105,7 @@
                 <div class="menu-item-card" onclick="openSubMenu('COFFEE')">
                     <div class="item-image-placeholder">
                         ☕
-                        <button type="button" class="change-photo-btn" onclick="event.stopPropagation(); openCategoryPhotoUpload('COFFEE');">📷 Add Photo</button>
+                        <button type="button" class="change-photo-btn" disabled title="Photos are set per menu item, not per category. Open this category and add a photo to an item instead." style="opacity:0.5; cursor:not-allowed;">📷 Add Photo</button>
                     </div>
                     <div class="item-details">
                         <div class="item-category">Category</div>
@@ -116,7 +116,7 @@
                 <div class="menu-item-card" onclick="openSubMenu('MILKTEA')">
                     <div class="item-image-placeholder">
                         🧋
-                        <button type="button" class="change-photo-btn" onclick="event.stopPropagation(); openCategoryPhotoUpload('MILK TEA');">📷 Add Photo</button>
+                        <button type="button" class="change-photo-btn" disabled title="Photos are set per menu item, not per category. Open this category and add a photo to an item instead." style="opacity:0.5; cursor:not-allowed;">📷 Add Photo</button>
                     </div>
                     <div class="item-details">
                         <div class="item-category">Category</div>
@@ -127,7 +127,7 @@
                 <div class="menu-item-card" onclick="openSubMenu('FRUIT TEA')">
                     <div class="item-image-placeholder">
                         🍹
-                        <button type="button" class="change-photo-btn" onclick="event.stopPropagation(); openCategoryPhotoUpload('FRUIT TEA');">📷 Add Photo</button>
+                        <button type="button" class="change-photo-btn" disabled title="Photos are set per menu item, not per category. Open this category and add a photo to an item instead." style="opacity:0.5; cursor:not-allowed;">📷 Add Photo</button>
                     </div>
                     <div class="item-details">
                         <div class="item-category">Category</div>
@@ -138,7 +138,7 @@
                 <div class="menu-item-card" onclick="openSubMenu('RICE MEAL')">
                     <div class="item-image-placeholder">
                         🍱
-                        <button type="button" class="change-photo-btn" onclick="event.stopPropagation(); openCategoryPhotoUpload('RICE MEAL');">📷 Add Photo</button>
+                        <button type="button" class="change-photo-btn" disabled title="Photos are set per menu item, not per category. Open this category and add a photo to an item instead." style="opacity:0.5; cursor:not-allowed;">📷 Add Photo</button>
                     </div>
                     <div class="item-details">
                         <div class="item-category">Category</div>
@@ -149,7 +149,7 @@
                 <div class="menu-item-card" onclick="openSubMenu('BREAD & PASTRY')">
                     <div class="item-image-placeholder">
                         🥐
-                        <button type="button" class="change-photo-btn" onclick="event.stopPropagation(); openCategoryPhotoUpload('BREAD & PASTRY');">📷 Add Photo</button>
+                        <button type="button" class="change-photo-btn" disabled title="Photos are set per menu item, not per category. Open this category and add a photo to an item instead." style="opacity:0.5; cursor:not-allowed;">📷 Add Photo</button>
                     </div>
                     <div class="item-details">
                         <div class="item-category">Category</div>
@@ -160,7 +160,7 @@
                 <div class="menu-item-card" onclick="openSubMenu('SNACKS & PASTA')">
                     <div class="item-image-placeholder">
                         🍝
-                        <button type="button" class="change-photo-btn" onclick="event.stopPropagation(); openCategoryPhotoUpload('SNACKS & PASTA');">📷 Add Photo</button>
+                        <button type="button" class="change-photo-btn" disabled title="Photos are set per menu item, not per category. Open this category and add a photo to an item instead." style="opacity:0.5; cursor:not-allowed;">📷 Add Photo</button>
                     </div>
                     <div class="item-details">
                         <div class="item-category">Category</div>
@@ -227,9 +227,10 @@
             {
                 var safeName = System.Web.HttpUtility.JavaScriptStringEncode(item.ProductName);
                 var safeCategory = System.Web.HttpUtility.JavaScriptStringEncode(item.CategoryName.ToUpper());
+                var safeImagePath = System.Web.HttpUtility.JavaScriptStringEncode(item.ImagePath ?? "");
 
                 @:if(!menuData["@safeCategory"]) menuData["@safeCategory"] = [];
-                @:menuData["@safeCategory"].push({ id: @item.ProductId, name: "@safeName", price: @item.Price });
+                @:menuData["@safeCategory"].push({ id: @item.ProductId, name: "@safeName", price: @item.Price, imagePath: "@safeImagePath" });
             }
         }
 
@@ -239,7 +240,6 @@
             currentCategory = cat;
             const items = menuData[cat] || [];
             const container = document.getElementById('subItemsContainer');
-            const catImg = localStorage.getItem(`cat_img_${cat}`) || "";
 
             document.getElementById('pageTitle').innerText = cat;
             document.getElementById('pageSubtitle').innerText = "Managing structural items and compositions for " + cat;
@@ -248,13 +248,16 @@
 
             container.innerHTML = "";
             items.forEach(item => {
-                let imgTag = catImg ? `<img src="${catImg}">` : `<span style="font-size:40px;">📦</span>`;
+                let imgTag = item.imagePath ? `<img src="${item.imagePath}">` : `<span style="font-size:40px;">📦</span>`;
 
                 container.innerHTML += `
                 <div class="menu-item-card">
-                    <div class="item-image-placeholder" style="height:130px;">
+                    <div class="item-image-placeholder" style="height:130px;" id="item-img-${item.id}">
                         ${imgTag}
-                        <button type="button" class="change-photo-btn" onclick="event.stopPropagation(); openCategoryPhotoUpload('${item.name.replace(/'/g, "\\'")}', ${item.id});">📷 Add Photo</button>
+                        <label class="change-photo-btn" style="cursor:pointer;">
+                            📷 Add Photo
+                            <input type="file" accept="image/png,image/jpeg,image/gif,image/webp" style="display:none;" onchange="uploadItemPhoto(${item.id}, this)">
+                        </label>
                     </div>
                     <div class="item-details" style="flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 12px;">
                         <div>
@@ -323,56 +326,73 @@
             document.getElementById('backBtn').style.display = 'none';
         }
 
-        async function openCategoryPhotoUpload(targetName, productId = null) {
-            const { value: file } = await Swal.fire({
-                title: `Asset Registration`,
-                html: `Select interface render file for <strong>${targetName}</strong>`,
-                input: 'file',
-                inputAttributes: {
-                    'accept': 'image/*',
-                    'aria-label': 'Upload product image file'
-                },
-                showCancelButton: true,
-                confirmButtonText: 'Bind System Asset',
-                customClass: {
-                    input: 'swal2-file-custom'
-                }
-            });
+        async function uploadItemPhoto(productId, inputEl) {
+            const file = inputEl.files && inputEl.files[0];
+            if (!file) return;
 
-            if (file) {
-                const formData = new FormData();
-                formData.append("productImageFile", file);
-                formData.append("productId", productId || 0);
+            // Client-side guardrails matching the server so bad files are rejected instantly.
+            const maxSizeBytes = 5 * 1024 * 1024;
+            if (file.size > maxSizeBytes) {
+                Swal.fire('File Too Large', 'Please choose an image under 5 MB.', 'error');
+                inputEl.value = '';
+                return;
+            }
+            if (!file.type.startsWith('image/')) {
+                Swal.fire('Unsupported File', 'Please choose an image file (JPG, PNG, GIF, or WEBP).', 'error');
+                inputEl.value = '';
+                return;
+            }
 
-                Swal.fire({
-                    title: 'Syncing Asset...',
-                    text: 'Uploading file to local system environment architecture.',
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
+            const placeholder = document.getElementById(`item-img-${productId}`);
+            const originalContent = placeholder ? placeholder.innerHTML : null;
+
+            // Show a lightweight inline "uploading" state instead of a modal, so
+            // there's less going on and it's easier to see exactly what happens.
+            if (placeholder) {
+                placeholder.querySelector('img, span')?.remove();
+                placeholder.insertAdjacentHTML('afterbegin', '<span style="font-size:13px;">Uploading…</span>');
+            }
+
+            const formData = new FormData();
+            formData.append("productImageFile", file);
+            formData.append("productId", productId);
+
+            try {
+                const response = await fetch('/Admin/UploadProductPhoto', {
+                    method: 'POST',
+                    body: formData
                 });
 
-                try {
-                    const response = await fetch('/Admin/UploadProductPhoto', {
-                        method: 'POST',
-                        body: formData
-                    });
-
-                    if (response.ok) {
-                        Swal.fire({
-                            title: 'Success!',
-                            text: 'Image uploaded and system asset synchronized.',
-                            icon: 'success',
-                            timer: 1500,
-                            showConfirmButton: false
-                        }).then(() => location.reload());
-                    } else {
-                        Swal.fire('Upload Failed', 'The server architecture rejected the file stream.', 'error');
-                    }
-                } catch (error) {
-                    Swal.fire('Network Fault', 'Unable to reach backend system server structural pipeline.', 'error');
+                if (!response.ok) {
+                    const message = await response.text();
+                    throw new Error(message || `Server returned ${response.status}`);
                 }
+
+                const result = await response.json();
+
+                if (placeholder) {
+                    placeholder.querySelector('span')?.remove();
+                    placeholder.insertAdjacentHTML('afterbegin', `<img src="${result.imagePath}">`);
+                }
+                if (currentCategory && menuData[currentCategory]) {
+                    const item = menuData[currentCategory].find(i => i.id === productId);
+                    if (item) item.imagePath = result.imagePath;
+                }
+
+                Swal.fire({
+                    title: 'Photo Updated',
+                    icon: 'success',
+                    timer: 1200,
+                    showConfirmButton: false
+                });
+            } catch (error) {
+                console.error('Photo upload failed:', error);
+                if (placeholder && originalContent !== null) {
+                    placeholder.innerHTML = originalContent;
+                }
+                Swal.fire('Upload Failed', error.message || 'Something went wrong uploading the photo.', 'error');
+            } finally {
+                inputEl.value = '';
             }
         }
 
