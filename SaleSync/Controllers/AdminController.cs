@@ -596,8 +596,8 @@ namespace SaleSync.Controllers
                                 ItemCategory = r["category_name"]?.ToString() ?? "Raw Materials",
                                 RecipeUnit = r["recipe_unit"]?.ToString(),
                                 ConversionFactor = r["conversion_factor"] != DBNull.Value ? Convert.ToDouble(r["conversion_factor"]) : 1,
-                                DateAcquired = DateTime.MinValue,
-                                ExpirationDate = DateTime.MinValue
+                                DateAcquired = "",
+                                ExpirationDate = ""
                             });
                         }
                     }
