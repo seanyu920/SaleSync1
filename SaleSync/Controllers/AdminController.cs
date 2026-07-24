@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
@@ -568,40 +568,48 @@ namespace SaleSync.Controllers
         [HttpGet]
         public IActionResult Inventory()
         {
-            var inventoryList = new List<InventoryItems>();
-            using (SqlConnection conn = new SqlConnection(connectionString))
+            try
             {
-                string sql = @"
-                      SELECT p.product_id, p.product_name, p.stock_quantity, p.cost_price, p.sku, c.category_name, p.unit, p.recipe_unit, p.conversion_factor 
-                      FROM products p
-                      LEFT JOIN categories c ON p.category_id = c.category_id
-                      WHERE p.is_ingredient = 1
-                      ORDER BY c.category_name ASC, p.product_name ASC";
-
-                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                var inventoryList = new List<InventoryItems>();
+                using (SqlConnection conn = new SqlConnection(connectionString))
                 {
-                    conn.Open();
-                    using (SqlDataReader r = cmd.ExecuteReader())
+                    string sql = @"
+                          SELECT p.product_id, p.product_name, p.stock_quantity, p.cost_price, p.sku, c.category_name, p.unit, p.recipe_unit, p.conversion_factor 
+                          FROM products p
+                          LEFT JOIN categories c ON p.category_id = c.category_id
+                          WHERE p.is_ingredient = 1
+                          ORDER BY c.category_name ASC, p.product_name ASC";
+
+                    using (SqlCommand cmd = new SqlCommand(sql, conn))
                     {
-                        while (r.Read())
+                        conn.Open();
+                        using (SqlDataReader r = cmd.ExecuteReader())
                         {
-                            inventoryList.Add(new InventoryItems
+                            while (r.Read())
                             {
-                                ProductId = Convert.ToInt32(r["product_id"]),
-                                ItemID = r["sku"]?.ToString() ?? "N/A",
-                                ItemName = r["product_name"].ToString(),
-                                Quantity = Convert.ToDouble(r["stock_quantity"]),
-                                Unit = r["unit"]?.ToString() ?? "pcs",
-                                PurchasePrice = Convert.ToDecimal(r["cost_price"]),
-                                ItemCategory = r["category_name"]?.ToString() ?? "Raw Materials",
-                                RecipeUnit = r["recipe_unit"]?.ToString(),
-                                ConversionFactor = r["conversion_factor"] != DBNull.Value ? Convert.ToDouble(r["conversion_factor"]) : 1
-                            });
+                                inventoryList.Add(new InventoryItems
+                                {
+                                    ProductId = Convert.ToInt32(r["product_id"]),
+                                    ItemID = r["sku"]?.ToString() ?? "N/A",
+                                    ItemName = r["product_name"].ToString(),
+                                    Quantity = Convert.ToDouble(r["stock_quantity"]),
+                                    Unit = r["unit"]?.ToString() ?? "pcs",
+                                    PurchasePrice = Convert.ToDecimal(r["cost_price"]),
+                                    ItemCategory = r["category_name"]?.ToString() ?? "Raw Materials",
+                                    RecipeUnit = r["recipe_unit"]?.ToString(),
+                                    ConversionFactor = r["conversion_factor"] != DBNull.Value ? Convert.ToDouble(r["conversion_factor"]) : 1
+                                });
+                            }
                         }
                     }
                 }
+                return View(inventoryList);
             }
-            return View(inventoryList);
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Inventory Error: {ex.Message}";
+                return RedirectToAction("Dashboard");
+            }
         }
 
         [HttpPost]
