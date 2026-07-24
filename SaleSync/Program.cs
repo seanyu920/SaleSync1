@@ -34,11 +34,10 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Home/Error");
-    app.UseHsts();
-}
+// TEMPORARY: Show detailed errors for debugging deployment
+app.UseDeveloperExceptionPage();
+app.UseExceptionHandler("/Home/Error");
+app.UseHsts();
 
 app.UseHttpsRedirection();
 
