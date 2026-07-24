@@ -70,11 +70,10 @@ body {
     flex-shrink: 0;
 }
 
-/* Logo block */
 .logo-section {
     margin-bottom: 24px;
     padding-bottom: 16px;
-    border-bottom: 1px dashed var(--border); /* Beautiful decorative accent split under main branding */
+    border-bottom: 1px dashed var(--border);
 }
 
 .sidebar .logo-title {
@@ -95,7 +94,6 @@ body {
     display: block;
 }
 
-/* Profile */
 .profile-section {
     display: flex;
     align-items: center;
@@ -133,7 +131,6 @@ body {
     margin-top: 1px;
 }
 
-/* Menu Layout */
 .sidebar-menu {
     display: flex;
     flex-direction: column;
@@ -153,7 +150,7 @@ body {
     border-radius: 12px;
     background: transparent;
     border: 1px solid transparent;
-    border-left: 3px solid transparent; /* Hidden left text anchor border built-in */
+    border-left: 3px solid transparent;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     font-family: 'Outfit', sans-serif;
@@ -164,7 +161,7 @@ body {
         color: var(--cream);
         background: rgba(255, 255, 255, 0.03);
         border-color: var(--border-sub);
-        border-left-color: rgba(201, 168, 76, 0.5); /* Elegant gold glowing side indicator on hover */
+        border-left-color: rgba(201, 168, 76, 0.5);
         transform: translateX(4px);
     }
 
@@ -173,7 +170,7 @@ body {
         color: var(--bg-base);
         font-weight: 700;
         border-color: transparent;
-        border-left-color: var(--cream); /* Striking contrast cream anchor line embedded in text block */
+        border-left-color: var(--cream);
         box-shadow: 0 4px 16px rgba(201, 168, 76, 0.25);
     }
 
@@ -189,7 +186,6 @@ body {
         opacity: 1;
     }
 
-/* Logout Option */
 .logout-section {
     margin-top: auto;
     padding-top: 20px;
@@ -206,7 +202,7 @@ body {
         color: var(--danger);
         background: rgba(224, 85, 85, 0.08);
         border-color: rgba(224, 85, 85, 0.15);
-        border-left-color: var(--danger); /* Threat indicator color bar directly on text element */
+        border-left-color: var(--danger);
         transform: translateX(4px);
     }
 
@@ -311,7 +307,6 @@ body {
     margin-bottom: 30px;
 }
 
-/* Hero Banner */
 .dashboard-header-card {
     display: flex;
     justify-content: space-between;
@@ -469,7 +464,7 @@ body {
 
 
 /* ==========================================================================
-   TABLES & WORKSPACE CARDS (POS Grid Alignment)
+   TABLES & WORKSPACE CARDS (Horizontal + Vertical Scrolling Enabled)
    ========================================================================== */
 .pos-grid-container {
     display: grid;
@@ -484,13 +479,15 @@ body {
     padding: 24px;
     border: 1px solid var(--border-sub);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    width: 100%;
+    overflow: hidden;
 }
 
 .pos-card-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     padding-bottom: 12px;
     border-bottom: 1px solid var(--border-sub);
 }
@@ -540,17 +537,30 @@ body {
         color: var(--gold-light);
     }
 
+/* Scrollable Container (Vertical + Horizontal) */
 .table-responsive {
     width: 100%;
-    overflow-x: auto;
+    max-width: 100%;
+    max-height: 220px; /* Limits height so vertical scrolling activates */
+    overflow-y: auto !important; /* Enables vertical scrolling */
+    overflow-x: auto !important; /* Enables horizontal scrolling */
+    -webkit-overflow-scrolling: touch;
+    display: block;
+    margin-top: 8px;
 }
 
 .pos-table {
     width: 100%;
+    min-width: 500px;
     border-collapse: collapse;
 }
 
-    .pos-table th {
+    /* Sticky Headers so titles stay fixed during vertical scroll */
+    .pos-table thead th {
+        position: sticky;
+        top: 0;
+        background: var(--bg-card);
+        z-index: 2;
         color: var(--muted);
         font-size: 11px;
         font-weight: 700;
@@ -559,6 +569,7 @@ body {
         padding: 10px 12px;
         text-align: left;
         border-bottom: 2px solid var(--border);
+        white-space: nowrap;
     }
 
     .pos-table td {
@@ -567,6 +578,7 @@ body {
         color: var(--muted-2);
         border-bottom: 1px solid var(--border-sub);
         vertical-align: middle;
+        white-space: nowrap;
     }
 
     .pos-table tbody tr:last-child td {
@@ -589,6 +601,26 @@ body {
 .text-right {
     text-align: right !important;
 }
+
+/* Custom Dual-Axis Scrollbars */
+.table-responsive::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: var(--bg-surface);
+    border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+}
+
+    .table-responsive::-webkit-scrollbar-thumb:hover {
+        background: var(--gold);
+    }
 
 
 /* ==========================================================================
@@ -665,7 +697,6 @@ body {
         color: var(--bg-base);
     }
 
-/* Chart Canvas Nodes */
 .chart-container {
     position: relative;
     height: 220px;
@@ -721,7 +752,6 @@ body {
         font-size: 16px;
     }
 
-/* Notifications Engine Frame */
 .notification-list {
     display: flex;
     flex-direction: column;
@@ -957,8 +987,11 @@ body {
 .slide-up {
     animation: slideUp 0.3s ease-out;
 }
-/* --- Mobile Specific Overrides --- */
-/* --- Mobile Specific Overrides --- */
+
+
+/* ==========================================================================
+   MOBILE RESPONSIVE OVERRIDES & TABLE SCROLLING
+   ========================================================================== */
 @media (max-width: 1024px) {
     .dashboard-container {
         display: block;
@@ -996,7 +1029,6 @@ body {
             display: block;
         }
 
-    /* Mobile Header Panel */
     .mobile-header {
         display: flex;
         align-items: center;
@@ -1007,7 +1039,6 @@ body {
         margin-bottom: 20px;
     }
 
-    /* Modern Hamburger */
     .hamburger-btn {
         background: var(--bg-surface);
         border: 1px solid var(--border);
@@ -1031,12 +1062,112 @@ body {
             transform: translateY(-2px);
         }
 
-    /* Brand Name */
     .mobile-brand {
         font-size: 20px;
         font-weight: 800;
         color: var(--cream);
         letter-spacing: -0.5px;
+    }
+
+    .main-content {
+        padding: 20px 16px;
+    }
+
+    .summary-dashboard {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .pos-grid-container,
+    .bottom-three-column-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .pos-card-wrapper {
+        padding: 18px;
+    }
+
+    .dashboard-header-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+        padding: 22px 20px;
+    }
+
+    .header-sales-value {
+        font-size: 32px;
+    }
+
+    .system-status-container {
+        text-align: left;
+        width: 100%;
+    }
+
+    .status-indicator-flex {
+        justify-content: flex-start;
+    }
+
+    .top-navbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 14px;
+        margin-bottom: 20px;
+    }
+
+    .search-wrapper {
+        width: 100%;
+    }
+
+    .top-nav-controls {
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .pos-card-header {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .admin-chat-drawer {
+        width: 100%;
+        right: -100%;
+    }
+
+    .admin-chat-trigger {
+        bottom: 16px;
+        right: 16px;
+        width: 52px;
+        height: 52px;
+        font-size: 18px;
+    }
+}
+
+@media (max-width: 600px) {
+    .summary-dashboard {
+        grid-template-columns: 1fr;
+    }
+
+    .header-sales-value {
+        font-size: 28px;
+    }
+
+    .action-button-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .datetime-display {
+        display: none;
+    }
+
+    .auth-modal {
+        width: 90%;
+        padding: 24px;
+    }
+
+    .pos-table {
+        min-width: 480px;
     }
 }
 
@@ -1045,7 +1176,11 @@ body {
         display: none !important;
     }
 }
-/* ── ADMIN LIVE CHAT DRAWER INTEGRATION ── */
+
+
+/* ==========================================================================
+   ADMIN LIVE CHAT DRAWER INTEGRATION
+   ========================================================================== */
 .admin-chat-trigger {
     position: fixed;
     bottom: 25px;
@@ -1053,7 +1188,7 @@ body {
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    background: #D4AF37; /* Matches your dashboard gold */
+    background: #D4AF37;
     color: #121212;
     border: none;
     font-size: 22px;
@@ -1085,10 +1220,10 @@ body {
 .admin-chat-drawer {
     position: fixed;
     top: 0;
-    right: -400px; /* Hidden offscreen by default */
+    right: -400px;
     width: 380px;
     height: 100vh;
-    background: #1a1a1a; /* Dark slate matching your sidebar/cards */
+    background: #1a1a1a;
     border-left: 1px solid #2d2d2d;
     box-shadow: -5px 0 25px rgba(0, 0, 0, 0.5);
     display: flex;
@@ -1126,7 +1261,7 @@ body {
 .chat-status-dot {
     width: 8px;
     height: 8px;
-    background: #2ed573; /* Syncing green */
+    background: #2ed573;
     border-radius: 50%;
 }
 
@@ -1168,7 +1303,7 @@ body {
     flex: 1;
     padding: 20px;
     overflow-y: auto;
-    background: #121212; /* Deep background matching container */
+    background: #121212;
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -1210,7 +1345,7 @@ body {
 }
 
 .admin-msg-row.staff .admin-bubble {
-    background: #D4AF37; /* Gold */
+    background: #D4AF37;
     color: #121212;
     font-weight: 600;
     border-bottom-right-radius: 2px;

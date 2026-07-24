@@ -246,57 +246,60 @@
                         <div class="pos-card-title"><i class="fas fa-crown"></i> Best Selling Products</div>
                         <span class="volume-label">By Volume</span>
                     </div>
-                    <table class="pos-table">
-                        <thead>
-                            <tr>
-                                <th>Product Name</th>
-                                <th>Units Sold</th>
-                                <th class="text-right">Revenue Generated</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Spanish Latte (Iced)</td>
-                                <td>
-                                    <div class="progress-info">
-                                        <span>142 units</span>
-                                    </div>
-                                    <div class="progress-container"><div class="progress-bar" style="width: 92%;"></div></div>
-                                </td>
-                                <td class="text-right revenue-val">₱22,720.00</td>
-                            </tr>
-                            <tr>
-                                <td>Café Americana (Hot)</td>
-                                <td>
-                                    <div class="progress-info">
-                                        <span>98 units</span>
-                                    </div>
-                                    <div class="progress-container"><div class="progress-bar" style="width: 68%;"></div></div>
-                                </td>
-                                <td class="text-right revenue-val">₱10,780.00</td>
-                            </tr>
-                            <tr>
-                                <td>Cream Cheese Ensaymada</td>
-                                <td>
-                                    <div class="progress-info">
-                                        <span>75 units</span>
-                                    </div>
-                                    <div class="progress-container"><div class="progress-bar" style="width: 51%;"></div></div>
-                                </td>
-                                <td class="text-right revenue-val">₱6,375.00</td>
-                            </tr>
-                            <tr>
-                                <td>Caramel Macchiato</td>
-                                <td>
-                                    <div class="progress-info">
-                                        <span>64 units</span>
-                                    </div>
-                                    <div class="progress-container"><div class="progress-bar" style="width: 43%;"></div></div>
-                                </td>
-                                <td class="text-right revenue-val">₱10,880.00</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <!-- Scrollable Wrapper Added Below -->
+                    <div class="table-responsive">
+                        <table class="pos-table">
+                            <thead>
+                                <tr>
+                                    <th>Product Name</th>
+                                    <th>Units Sold</th>
+                                    <th class="text-right">Revenue Generated</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Spanish Latte (Iced)</td>
+                                    <td>
+                                        <div class="progress-info">
+                                            <span>142 units</span>
+                                        </div>
+                                        <div class="progress-container"><div class="progress-bar" style="width: 92%;"></div></div>
+                                    </td>
+                                    <td class="text-right revenue-val">₱22,720.00</td>
+                                </tr>
+                                <tr>
+                                    <td>Café Americana (Hot)</td>
+                                    <td>
+                                        <div class="progress-info">
+                                            <span>98 units</span>
+                                        </div>
+                                        <div class="progress-container"><div class="progress-bar" style="width: 68%;"></div></div>
+                                    </td>
+                                    <td class="text-right revenue-val">₱10,780.00</td>
+                                </tr>
+                                <tr>
+                                    <td>Cream Cheese Ensaymada</td>
+                                    <td>
+                                        <div class="progress-info">
+                                            <span>75 units</span>
+                                        </div>
+                                        <div class="progress-container"><div class="progress-bar" style="width: 51%;"></div></div>
+                                    </td>
+                                    <td class="text-right revenue-val">₱6,375.00</td>
+                                </tr>
+                                <tr>
+                                    <td>Caramel Macchiato</td>
+                                    <td>
+                                        <div class="progress-info">
+                                            <span>64 units</span>
+                                        </div>
+                                        <div class="progress-container"><div class="progress-bar" style="width: 43%;"></div></div>
+                                    </td>
+                                    <td class="text-right revenue-val">₱10,880.00</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <div class="pos-card-wrapper">
@@ -304,36 +307,39 @@
                         <div class="pos-card-title"><i class="fas fa-boxes"></i> Low Stock Details</div>
                         <a href="/Admin/Inventory" class="manage-link">Manage</a>
                     </div>
-                    <table class="pos-table">
-                        <thead>
-                            <tr>
-                                <th>Item Stock</th>
-                                <th>Current Qty</th>
-                                <th>Status</th>
-                                <th class="text-right">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Espresso Coffee Beans</td>
-                                <td>2.5 kg</td>
-                                <td><span class="badge badge-danger">Critical</span></td>
-                                <td class="text-right"><button class="btn-restock" onclick="location.href='/Admin/Inventory'">Restock</button></td>
-                            </tr>
-                            <tr>
-                                <td>Whole Milk (1L Cartons)</td>
-                                <td>12 units</td>
-                                <td><span class="badge badge-warning">Low</span></td>
-                                <td class="text-right"><button class="btn-restock" onclick="location.href='/Admin/Inventory'">Restock</button></td>
-                            </tr>
-                            <tr>
-                                <td>Caramel Syrup Base</td>
-                                <td>1.2 L</td>
-                                <td><span class="badge badge-warning">Low</span></td>
-                                <td class="text-right"><button class="btn-restock" onclick="location.href='/Admin/Inventory'">Restock</button></td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <!-- Scrollable Wrapper Added Below -->
+                    <div class="table-responsive">
+                        <table class="pos-table">
+                            <thead>
+                                <tr>
+                                    <th>Item Stock</th>
+                                    <th>Current Qty</th>
+                                    <th>Status</th>
+                                    <th class="text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Espresso Coffee Beans</td>
+                                    <td>2.5 kg</td>
+                                    <td><span class="badge badge-danger">Critical</span></td>
+                                    <td class="text-right"><button class="btn-restock" onclick="location.href='/Admin/Inventory'">Restock</button></td>
+                                </tr>
+                                <tr>
+                                    <td>Whole Milk (1L Cartons)</td>
+                                    <td>12 units</td>
+                                    <td><span class="badge badge-warning">Low</span></td>
+                                    <td class="text-right"><button class="btn-restock" onclick="location.href='/Admin/Inventory'">Restock</button></td>
+                                </tr>
+                                <tr>
+                                    <td>Caramel Syrup Base</td>
+                                    <td>1.2 L</td>
+                                    <td><span class="badge badge-warning">Low</span></td>
+                                    <td class="text-right"><button class="btn-restock" onclick="location.href='/Admin/Inventory'">Restock</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
