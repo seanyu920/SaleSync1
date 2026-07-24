@@ -568,48 +568,42 @@ namespace SaleSync.Controllers
         [HttpGet]
         public IActionResult Inventory()
         {
-            try
+            var inventoryList = new List<InventoryItems>();
+            using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                var inventoryList = new List<InventoryItems>();
-                using (SqlConnection conn = new SqlConnection(connectionString))
-                {
-                    string sql = @"
-                          SELECT p.product_id, p.product_name, p.stock_quantity, p.cost_price, p.sku, c.category_name, p.unit, p.recipe_unit, p.conversion_factor 
-                          FROM products p
-                          LEFT JOIN categories c ON p.category_id = c.category_id
-                          WHERE p.is_ingredient = 1
-                          ORDER BY c.category_name ASC, p.product_name ASC";
+                string sql = @"
+                      SELECT p.product_id, p.product_name, p.stock_quantity, p.cost_price, p.sku, c.category_name, p.unit, p.recipe_unit, p.conversion_factor 
+                      FROM products p
+                      LEFT JOIN categories c ON p.category_id = c.category_id
+                      WHERE p.is_ingredient = 1
+                      ORDER BY c.category_name ASC, p.product_name ASC";
 
-                    using (SqlCommand cmd = new SqlCommand(sql, conn))
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                {
+                    conn.Open();
+                    using (SqlDataReader r = cmd.ExecuteReader())
                     {
-                        conn.Open();
-                        using (SqlDataReader r = cmd.ExecuteReader())
+                        while (r.Read())
                         {
-                            while (r.Read())
+                            inventoryList.Add(new InventoryItems
                             {
-                                inventoryList.Add(new InventoryItems
-                                {
-                                    ProductId = Convert.ToInt32(r["product_id"]),
-                                    ItemID = r["sku"]?.ToString() ?? "N/A",
-                                    ItemName = r["product_name"].ToString(),
-                                    Quantity = Convert.ToDouble(r["stock_quantity"]),
-                                    Unit = r["unit"]?.ToString() ?? "pcs",
-                                    PurchasePrice = Convert.ToDecimal(r["cost_price"]),
-                                    ItemCategory = r["category_name"]?.ToString() ?? "Raw Materials",
-                                    RecipeUnit = r["recipe_unit"]?.ToString(),
-                                    ConversionFactor = r["conversion_factor"] != DBNull.Value ? Convert.ToDouble(r["conversion_factor"]) : 1
-                                });
-                            }
+                                ProductId = Convert.ToInt32(r["product_id"]),
+                                ItemID = r["sku"]?.ToString() ?? "N/A",
+                                ItemName = r["product_name"].ToString(),
+                                Quantity = Convert.ToDouble(r["stock_quantity"]),
+                                Unit = r["unit"]?.ToString() ?? "pcs",
+                                PurchasePrice = Convert.ToDecimal(r["cost_price"]),
+                                ItemCategory = r["category_name"]?.ToString() ?? "Raw Materials",
+                                RecipeUnit = r["recipe_unit"]?.ToString(),
+                                ConversionFactor = r["conversion_factor"] != DBNull.Value ? Convert.ToDouble(r["conversion_factor"]) : 1,
+                                DateAcquired = DateTime.MinValue,
+                                ExpirationDate = DateTime.MinValue
+                            });
                         }
                     }
                 }
-                return View(inventoryList);
             }
-            catch (Exception ex)
-            {
-                TempData["ErrorMessage"] = $"Inventory Error: {ex.Message}";
-                return RedirectToAction("Dashboard");
-            }
+            return View(inventoryList);
         }
 
         [HttpPost]
