@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
@@ -1745,6 +1745,93 @@ namespace SaleSync.Controllers
             }
 
             return RedirectToAction("WebCustomization");
+        }
+
+        // ==========================================
+        // GLOBAL SEARCH ENDPOINT
+        // ==========================================
+        [HttpGet]
+        public IActionResult GlobalSearch(string q)
+        {
+            if (string.IsNullOrWhiteSpace(q) || q.Length < 2)
+                return Json(new { products = new object[0], inventory = new object[0], transactions = new object[0] });
+
+            var products = new List<object>();
+            var inventory = new List<object>();
+            var transactions = new List<object>();
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+
+                // Search products (menu items + inventory) — match Products page query
+                string prodSql = @"SELECT TOP 10 p.product_id, p.product_name, p.selling_price, p.sku, p.is_ingredient
+                    FROM products p
+                    WHERE (p.is_archived = 0 OR p.is_archived IS NULL)
+                    AND (p.is_ingredient = 0 OR p.is_ingredient IS NULL)
+                    AND p.product_name LIKE @q
+                    ORDER BY p.product_name";
+                using (SqlCommand cmd = new SqlCommand(prodSql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@q", "%" + q + "%");
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                            products.Add(new {
+                                id = reader["product_id"],
+                                name = reader["product_name"].ToString(),
+                                price = reader["selling_price"] != DBNull.Value ? Convert.ToDecimal(reader["selling_price"]) : 0m,
+                                sku = reader["sku"]?.ToString(),
+                                url = "/Admin/Products"
+                            });
+                    }
+                }
+
+                // Search inventory (ingredient items)
+                string invSql = @"SELECT TOP 8 product_id, product_name, stock_quantity, cost_price, unit
+                    FROM products WHERE (is_archived = 0 OR is_archived IS NULL) AND is_ingredient = 1
+                    AND product_name LIKE @q ORDER BY product_name";
+                using (SqlCommand cmd = new SqlCommand(invSql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@q", "%" + q + "%");
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                            inventory.Add(new {
+                                id = reader["product_id"],
+                                name = reader["product_name"].ToString(),
+                                stock = reader["stock_quantity"],
+                                cost = Convert.ToDecimal(reader["cost_price"]),
+                                unit = reader["unit"]?.ToString(),
+                                url = "/Admin/Inventory"
+                            });
+                    }
+                }
+
+                // Search recent transactions
+                string transSql = @"SELECT TOP 8 s.sale_id, s.customer_name, s.total_amount, s.status, s.payment_method, s.sale_date
+                    FROM sales s
+                    WHERE s.customer_name LIKE @q OR CAST(s.sale_id AS VARCHAR) LIKE @q
+                    ORDER BY s.sale_date DESC";
+                using (SqlCommand cmd = new SqlCommand(transSql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@q", "%" + q + "%");
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                            transactions.Add(new {
+                                id = reader["sale_id"],
+                                name = (reader["customer_name"]?.ToString() ?? "Walk-in") + " (#" + reader["sale_id"] + ")",
+                                amount = Convert.ToDecimal(reader["total_amount"]),
+                                status = reader["status"]?.ToString(),
+                                method = reader["payment_method"]?.ToString(),
+                                url = "/Admin/DailyReport"
+                            });
+                    }
+                }
+            }
+
+            return Json(new { products, inventory, transactions });
         }
 
         public class AdminVoidRequest { public int SaleId { get; set; } public string Pass { get; set; } }

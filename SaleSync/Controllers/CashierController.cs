@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
@@ -347,6 +347,78 @@ namespace SaleSync.Controllers
                 }
             }
             return Json(new { items = itemsSold, ingredients = ingredientsDeducted });
+        }
+
+        // ==========================================
+        // GLOBAL SEARCH ENDPOINT (Cashier scope)
+        // ==========================================
+        [HttpGet]
+        public IActionResult GlobalSearch(string q)
+        {
+            if (string.IsNullOrWhiteSpace(q) || q.Length < 2)
+                return Json(new { products = new object[0], inventory = new object[0], transactions = new object[0] });
+
+            var products = new List<object>();
+            var inventory = new List<object>();
+            var transactions = new List<object>();
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+
+                // Cashier can see products (menu items) — no inventory access
+                string prodSql = @"SELECT TOP 8 p.product_id, p.product_name, p.selling_price, p.sku
+                    FROM products p
+                    LEFT JOIN categories c ON p.category_id = c.category_id
+                    WHERE (p.is_archived = 0 OR p.is_archived IS NULL) AND (p.is_ingredient = 0 OR p.is_ingredient IS NULL)
+                    AND (p.product_name LIKE @q OR c.category_name LIKE @q)
+                    ORDER BY p.product_name";
+                using (SqlCommand cmd = new SqlCommand(prodSql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@q", "%" + q + "%");
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                            products.Add(new {
+                                id = reader["product_id"],
+                                name = reader["product_name"].ToString(),
+                                price = reader["selling_price"] != DBNull.Value ? Convert.ToDecimal(reader["selling_price"]) : 0m,
+                                sku = reader["sku"]?.ToString(),
+                                url = "/Cashier/CashierMenu"
+                            });
+                    }
+                }
+
+                // Cashier does NOT see inventory — skip it
+
+                // Cashier can see their own recent sales only
+                string transSql = @"SELECT TOP 8 s.sale_id, s.customer_name, s.total_amount, s.status, s.payment_method, s.sale_date
+                    FROM sales s
+                    WHERE (s.customer_name LIKE @q OR CAST(s.sale_id AS VARCHAR) LIKE @q)
+                    AND s.user_id = @uid
+                    ORDER BY s.sale_date DESC";
+                using (SqlCommand cmd = new SqlCommand(transSql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@q", "%" + q + "%");
+                    var uidClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+                    int uid = uidClaim != null ? int.Parse(uidClaim.Value) : 0;
+                    cmd.Parameters.AddWithValue("@uid", uid);
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                            transactions.Add(new {
+                                id = reader["sale_id"],
+                                name = (reader["customer_name"]?.ToString() ?? "Walk-in") + " (#" + reader["sale_id"] + ")",
+                                amount = Convert.ToDecimal(reader["total_amount"]),
+                                status = reader["status"]?.ToString(),
+                                method = reader["payment_method"]?.ToString(),
+                                url = "/Cashier/CashierMenu"
+                            });
+                    }
+                }
+            }
+
+            return Json(new { products, inventory, transactions });
         }
 
         public class StatusUpdateModel { public int SaleId { get; set; } public string Status { get; set; } }

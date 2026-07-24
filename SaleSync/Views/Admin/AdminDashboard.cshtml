@@ -1,4 +1,4 @@
-﻿@model SaleSync.Models.CashierDashboardViewModel
+@model SaleSync.Models.CashierDashboardViewModel
 @{
     Layout = null;
     string homeController = "Admin";
@@ -80,7 +80,8 @@
             <div class="top-navbar">
                 <div class="search-wrapper">
                     <i class="fas fa-search"></i>
-                    <input type="text" class="search-input" placeholder="Search transactions, products, or inventory..." />
+                    <input type="text" class="search-input" placeholder="Search transactions, products, or inventory..." oninput="globalSearch(this.value)" autocomplete="off" />
+                    <div class="search-dropdown" id="searchDropdown"></div>
                 </div>
                 <div class="top-nav-controls">
                     <div class="datetime-display">
@@ -91,9 +92,9 @@
                         <i class="fas fa-bell"></i>
                         <span class="bell-badge"></span>
                     </div>
-                    <div class="user-dropdown">
-                        <span>Active Terminal: <strong>Station 1</strong></span>
-                        <i class="fas fa-angle-down"></i>
+                    <div class="nav-chat-icon" onclick="toggleChat()" id="chatTrigger">
+                        <i class="fas fa-comments"></i>
+                        <span class="chat-badge" id="chatBadge" style="display: none;"></span>
                     </div>
                 </div>
             </div>
@@ -405,36 +406,25 @@
     </div>
 
     <!-- ── SLIDE-OUT CHAT DRAWER FOR ADMIN ── -->
-    <div class="admin-chat-drawer" id="adminChatDrawer">
-        <div class="admin-chat-header">
-            <div class="admin-chat-header-left">
-                <span class="chat-status-dot"></span>
-                <h3>Customer Live Chat</h3>
-            </div>
-            <button class="close-drawer-btn" onclick="toggleAdminChat()">✕</button>
+    <!-- Chat Dropdown -->
+    <div class="chat-dropdown" id="chatDropdown">
+        <div class="chat-dropdown-header">
+            <span class="chat-status-dot"></span>
+            <span>Team Chat</span>
         </div>
-
-        <div class="admin-chat-contact-bar">
-            <select id="adminChatContactSelect" onchange="switchAdminChatContact(this.value)">
+        <div class="chat-dropdown-contact-bar">
+            <select id="chatContactSelect" onchange="switchChatContact(this.value)">
                 <option value="">Select a contact…</option>
             </select>
         </div>
-
-        <div class="admin-chat-body" id="adminChatMessages">
-            <div class="system-message">No active messages. Waiting for customers...</div>
+        <div class="chat-dropdown-body" id="chatMessages">
+            <div class="system-message">Select a contact to start chatting.</div>
         </div>
-
-        <div class="admin-chat-footer">
-            <input type="text" id="adminChatInput" placeholder="Type a reply to customer..." onkeypress="handleAdminChatKey(event)" />
-            <button class="admin-chat-send-btn" onclick="sendAdminReply()">Send</button>
+        <div class="chat-dropdown-footer">
+            <input type="text" id="chatInput" placeholder="Type a message..." onkeypress="handleChatKey(event)" />
+            <button class="chat-send-btn" onclick="sendChatMessage()">Send</button>
         </div>
     </div>
-
-    <!-- Floating Gold Chat Trigger Button -->
-    <button class="admin-chat-trigger" onclick="toggleAdminChat()" id="adminChatTrigger">
-        <i class="fas fa-comments"></i>
-        <span class="admin-chat-alert-badge" id="adminChatBadge" style="display: none;"></span>
-    </button>
 
     <script>
         function confirmLogout() {
@@ -454,119 +444,95 @@
         });
         }
 
-        // Global variables/functions for Chat Drawer functionality
+        // ── Chat Dropdown Logic ──
         let chatConn;
-        let adminChatWith = null; // username of the contact currently open in the drawer
+        let currentChatWith = null;
+        const chatCurrentUser = "@(User.FindFirst("Username")?.Value ?? "")";
 
-        // Must match the users.username value (the "Username" claim set at
-        // login), not the display/full name used elsewhere on this page.
-        const adminChatCurrentUser = "@(User.FindFirst("Username")?.Value ?? "")";
-
-        function toggleAdminChat() {
-        const drawer = document.getElementById("adminChatDrawer");
-        drawer.classList.toggle("open");
-
-        if (drawer.classList.contains("open")) {
-        // Hide notification badge when drawer is opened
-        document.getElementById("adminChatBadge").style.display = "none";
-        loadAdminChatContacts();
-        }
+        function toggleChat() {
+            const dd = document.getElementById("chatDropdown");
+            dd.classList.toggle("open");
+            if (dd.classList.contains("open")) {
+                document.getElementById("chatBadge").style.display = "none";
+                loadChatContacts();
+            }
         }
 
-        function handleAdminChatKey(event) {
-        if (event.key === 'Enter') {
-        sendAdminReply();
-        }
-        }
-
-        function sendAdminReply() {
-        const input = document.getElementById("adminChatInput");
-        const msg = input.value.trim();
-        if (!msg || !adminChatWith) return;
-
-        // The server derives the sender from the authenticated connection.
-        chatConn.invoke("SendMessage", adminChatWith, msg)
-        .catch(err => console.error("Error sending admin message:", err));
-
-        input.value = "";
-        }
-
-        async function loadAdminChatContacts() {
-        const select = document.getElementById("adminChatContactSelect");
-        if (select.dataset.loaded === "true") return;
-
-        try {
-        const res = await fetch('/Chat/GetContacts');
-        if (!res.ok) return;
-        const contacts = await res.json();
-
-        contacts.forEach(c => {
-        const opt = document.createElement("option");
-        opt.value = c.username;
-        opt.textContent = `${c.username} (${c.role})`;
-        select.appendChild(opt);
+        document.addEventListener("click", function(e) {
+            const dd = document.getElementById("chatDropdown");
+            const trigger = document.getElementById("chatTrigger");
+            if (dd && !dd.contains(e.target) && !trigger.contains(e.target)) {
+                dd.classList.remove("open");
+            }
         });
 
-        select.dataset.loaded = "true";
-
-        if (contacts.length > 0 && !adminChatWith) {
-        select.value = contacts[0].username;
-        switchAdminChatContact(contacts[0].username);
-        }
-        } catch (err) {
-        console.error("Failed to load chat contacts:", err);
-        }
+        function handleChatKey(event) {
+            if (event.key === 'Enter') sendChatMessage();
         }
 
-        async function switchAdminChatContact(username) {
-        adminChatWith = username || null;
-        const area = document.getElementById("adminChatMessages");
-        area.innerHTML = '<div class="system-message">No active messages. Waiting for customers...</div>';
-
-        if (!adminChatWith) return;
-
-        try {
-        const res = await fetch(`/Chat/GetChatHistory?chatWith=${encodeURIComponent(adminChatWith)}`);
-        if (!res.ok) return;
-        const history = await res.json();
-
-        if (history.length > 0) {
-        const placeholder = area.querySelector('.system-message');
-        if (placeholder) placeholder.remove();
+        function sendChatMessage() {
+            const input = document.getElementById("chatInput");
+            const msg = input.value.trim();
+            if (!msg || !currentChatWith) return;
+            chatConn.invoke("SendMessage", currentChatWith, msg)
+                .catch(err => console.error("Error sending message:", err));
+            input.value = "";
         }
 
-        history.forEach(m => renderAdminChatMessage(m.sender, m.text, m.time));
-        } catch (err) {
-        console.error("Failed to load chat history:", err);
-        }
-        }
-
-        function renderAdminChatMessage(sender, message, timeString) {
-        const area = document.getElementById("adminChatMessages");
-        const row = document.createElement("div");
-
-        if (sender === adminChatCurrentUser) {
-        row.className = "admin-msg-row staff";
-        row.innerHTML = `
-        <div class="admin-bubble">${escapeHTML(message)}</div>
-        <span class="admin-meta">You · ${escapeHTML(timeString)}</span>
-        `;
-        } else {
-        row.className = "admin-msg-row customer";
-        row.innerHTML = `
-        <div class="admin-bubble">${escapeHTML(message)}</div>
-        <span class="admin-meta">${escapeHTML(sender)} · ${escapeHTML(timeString)}</span>
-        `;
+        async function loadChatContacts() {
+            const select = document.getElementById("chatContactSelect");
+            if (select.dataset.loaded === "true") return;
+            try {
+                const res = await fetch('/Chat/GetContacts');
+                if (!res.ok) return;
+                const contacts = await res.json();
+                contacts.forEach(c => {
+                    const opt = document.createElement("option");
+                    opt.value = c.username;
+                    opt.textContent = c.username + " (" + c.role + ")";
+                    select.appendChild(opt);
+                });
+                select.dataset.loaded = "true";
+                if (contacts.length > 0 && !currentChatWith) {
+                    select.value = contacts[0].username;
+                    switchChatContact(contacts[0].username);
+                }
+            } catch (err) { console.error("Failed to load contacts:", err); }
         }
 
-        area.appendChild(row);
-        area.scrollTop = area.scrollHeight;
+        async function switchChatContact(username) {
+            currentChatWith = username || null;
+            const area = document.getElementById("chatMessages");
+            area.innerHTML = '<div class="system-message">Select a contact to start chatting.</div>';
+            if (!currentChatWith) return;
+            try {
+                const res = await fetch('/Chat/GetChatHistory?chatWith=' + encodeURIComponent(currentChatWith));
+                if (!res.ok) return;
+                const history = await res.json();
+                if (history.length > 0) {
+                    const ph = area.querySelector('.system-message');
+                    if (ph) ph.remove();
+                }
+                history.forEach(m => renderChatMessage(m.sender, m.text, m.time));
+            } catch (err) { console.error("Failed to load chat history:", err); }
+        }
+
+        function renderChatMessage(sender, message, timeString) {
+            const area = document.getElementById("chatMessages");
+            const row = document.createElement("div");
+            if (sender === chatCurrentUser) {
+                row.className = "chat-msg-row staff";
+                row.innerHTML = '<div class="chat-bubble">' + escapeHTML(message) + '</div><span class="chat-meta">You · ' + escapeHTML(timeString) + '</span>';
+            } else {
+                row.className = "chat-msg-row other";
+                row.innerHTML = '<div class="chat-bubble">' + escapeHTML(message) + '</div><span class="chat-meta">' + escapeHTML(sender) + ' · ' + escapeHTML(timeString) + '</span>';
+            }
+            area.appendChild(row);
+            area.scrollTop = area.scrollHeight;
         }
 
         function escapeHTML(str) {
-        return str.replace(/[&<>'"]/g,
-        tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
-        );
+            return str.replace(/[&<>'"]/g, function(t) { return {'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[t] || t; });
         }
 
         document.addEventListener("DOMContentLoaded", function() {
@@ -645,28 +611,21 @@
         .build();
 
         chatConn.start()
-        .then(() => console.log("Dashboard SignalR Chat Connected!"))
+        .then(() => console.log("Admin Chat Connected!"))
         .catch(err => console.error("SignalR Startup Error:", err));
 
         chatConn.on("ReceiveMessage", function (sender, receiver, message, time) {
-        // The hub only delivers messages involving this account (see ChatHub
-        // group routing), so just check whether it belongs to the open thread.
-        const belongsToOpenThread = adminChatWith &&
-        (sender === adminChatWith || receiver === adminChatWith);
-
-        if (belongsToOpenThread) {
-        const placeholder = document.getElementById("adminChatMessages").querySelector('.system-message');
-        if (placeholder) placeholder.remove();
-
-        renderAdminChatMessage(sender, message, time);
+        var belongs = currentChatWith && (sender === currentChatWith || receiver === currentChatWith);
+        if (belongs) {
+            var ph = document.getElementById("chatMessages").querySelector('.system-message');
+            if (ph) ph.remove();
+            renderChatMessage(sender, message, time);
         }
-
-        if (sender !== adminChatCurrentUser && !belongsToOpenThread) {
-        // A message came in from a contact that isn't the open thread.
-        const drawer = document.getElementById("adminChatDrawer");
-        if (!drawer.classList.contains("open")) {
-        document.getElementById("adminChatBadge").style.display = "block";
-        }
+        if (sender !== chatCurrentUser && !belongs) {
+            var dd = document.getElementById("chatDropdown");
+            if (!dd.classList.contains("open")) {
+                document.getElementById("chatBadge").style.display = "block";
+            }
         }
         });
         });
@@ -678,6 +637,56 @@
         sidebar.classList.toggle('mobile-open');
         overlay.classList.toggle('mobile-open');
         }
+
+        function filterDashboard(query) { /* unused - replaced by globalSearch */ }
+
+        let searchTimeout;
+        function globalSearch(query) {
+            const dd = document.getElementById("searchDropdown");
+            if (!query || query.length < 2) { dd.style.display = "none"; dd.innerHTML = ""; return; }
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(async () => {
+                try {
+                    const url = "/Admin/GlobalSearch?q=" + encodeURIComponent(query);
+                    console.log("Fetching:", url);
+                    const res = await fetch(url);
+                    console.log("Status:", res.status);
+                    if (!res.ok) { console.error("Search failed:", res.statusText); return; }
+                    const data = await res.json();
+                    console.log("Results:", data);
+                    let html = "";
+                    if (data.products.length) {
+                        html += '<div class="search-group-label">Products</div>';
+                        data.products.forEach(p => {
+                            html += '<a class="search-result-item" href="' + p.url + '"><i class="fas fa-coffee"></i><span>' + p.name + '</span><span class="search-price">₱' + p.price.toFixed(2) + '</span></a>';
+                        });
+                    }
+                    if (data.inventory.length) {
+                        html += '<div class="search-group-label">Inventory</div>';
+                        data.inventory.forEach(i => {
+                            html += '<a class="search-result-item" href="' + i.url + '"><i class="fas fa-box"></i><span>' + i.name + '</span><span class="search-stock">' + i.stock + ' ' + i.unit + '</span></a>';
+                        });
+                    }
+                    if (data.transactions.length) {
+                        html += '<div class="search-group-label">Transactions</div>';
+                        data.transactions.forEach(t => {
+                            html += '<a class="search-result-item" href="' + t.url + '"><i class="fas fa-receipt"></i><span>' + t.name + '</span><span class="search-price">₱' + t.amount.toFixed(2) + '</span></a>';
+                        });
+                    }
+                    if (!html) html = '<div class="search-empty">No results found</div>';
+                    dd.innerHTML = html;
+                    dd.style.display = "block";
+                } catch(e) { console.error("Search error:", e); }
+            }, 300);
+        }
+
+        document.addEventListener("click", function(e) {
+            const dd = document.getElementById("searchDropdown");
+            const wrapper = document.querySelector(".search-wrapper");
+            if (dd && wrapper && !wrapper.contains(e.target)) {
+                dd.style.display = "none";
+            }
+        });
     </script>
 </body>
 </html>

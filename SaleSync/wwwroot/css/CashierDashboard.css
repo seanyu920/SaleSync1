@@ -1,4 +1,4 @@
-﻿/* ==========================================================================
+/* ==========================================================================
    CAFÈRO DASHBOARD — Dark Theme (Aligned with HomePage)
    ========================================================================== */
 
@@ -228,9 +228,12 @@ body {
     margin-bottom: 28px;
     padding-bottom: 16px;
     border-bottom: 1px solid var(--border-sub);
+    position: relative;
+    z-index: 1000;
 }
 
 .search-wrapper {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 12px;
@@ -258,6 +261,72 @@ body {
     font-size: 14px;
     width: 100%;
     outline: none;
+}
+
+.search-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    max-height: 360px;
+    overflow-y: auto;
+    z-index: 1100;
+}
+
+.search-group-label {
+    padding: 8px 14px 4px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--gold);
+}
+
+.search-result-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 14px;
+    text-decoration: none;
+    color: var(--cream);
+    font-size: 13px;
+    transition: background 0.15s;
+}
+
+    .search-result-item:hover {
+        background: var(--bg-card-2);
+    }
+
+    .search-result-item i {
+        width: 18px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 12px;
+    }
+
+    .search-result-item span:first-of-type {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+.search-price, .search-stock {
+    font-size: 11px;
+    color: var(--muted);
+    white-space: nowrap;
+}
+
+.search-empty {
+    padding: 16px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
 }
 
 .top-nav-controls {
@@ -1071,3 +1140,179 @@ body {
         display: none !important;
     }
 }
+
+/* ── Chat Dropdown (Top Nav) ── */
+.nav-chat-icon {
+    position: relative;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 18px;
+    transition: color 0.2s;
+}
+
+    .nav-chat-icon:hover {
+        color: var(--gold);
+    }
+
+.chat-badge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 8px;
+    height: 8px;
+    background: var(--danger);
+    border-radius: 50%;
+}
+
+.chat-dropdown {
+    display: none;
+    position: fixed;
+    top: 60px;
+    right: 80px;
+    width: 380px;
+    height: 480px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    flex-direction: column;
+    z-index: 1090;
+    overflow: hidden;
+}
+
+    .chat-dropdown.open {
+        display: flex;
+    }
+
+.chat-dropdown-header {
+    padding: 14px 16px;
+    background: var(--bg-card-2);
+    border-bottom: 1px solid var(--border-sub);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--cream);
+}
+
+.chat-dropdown-contact-bar {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-sub);
+}
+
+#chatContactSelect {
+    width: 100%;
+    background: var(--bg-base);
+    border: 1px solid var(--border-sub);
+    border-radius: 6px;
+    padding: 7px 10px;
+    color: var(--cream);
+    outline: none;
+    font-size: 13px;
+}
+
+    #chatContactSelect:focus {
+        border-color: var(--gold);
+    }
+
+.chat-dropdown-body {
+    flex: 1;
+    padding: 14px;
+    overflow-y: auto;
+    background: var(--bg-base);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.system-message {
+    color: var(--muted);
+    text-align: center;
+    font-size: 12px;
+    margin-top: 20px;
+}
+
+.chat-msg-row {
+    display: flex;
+    flex-direction: column;
+    max-width: 80%;
+}
+
+    .chat-msg-row.other {
+        align-self: flex-start;
+    }
+
+    .chat-msg-row.staff {
+        align-self: flex-end;
+    }
+
+.chat-bubble {
+    padding: 9px 13px;
+    border-radius: 10px;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.chat-msg-row.other .chat-bubble {
+    background: var(--bg-card-2);
+    color: var(--cream);
+    border: 1px solid var(--border-sub);
+    border-bottom-left-radius: 2px;
+}
+
+.chat-msg-row.staff .chat-bubble {
+    background: var(--gold);
+    color: var(--bg-base);
+    font-weight: 600;
+    border-bottom-right-radius: 2px;
+}
+
+.chat-meta {
+    font-size: 9px;
+    color: var(--muted);
+    margin-top: 3px;
+    padding: 0 4px;
+}
+
+.chat-msg-row.staff .chat-meta {
+    align-self: flex-end;
+}
+
+.chat-dropdown-footer {
+    padding: 10px 12px;
+    border-top: 1px solid var(--border-sub);
+    display: flex;
+    gap: 8px;
+}
+
+#chatInput {
+    flex: 1;
+    background: var(--bg-base);
+    border: 1px solid var(--border-sub);
+    border-radius: 6px;
+    padding: 8px 10px;
+    color: var(--cream);
+    outline: none;
+    font-size: 13px;
+}
+
+    #chatInput:focus {
+        border-color: var(--gold);
+    }
+
+.chat-send-btn {
+    background: var(--gold);
+    color: var(--bg-base);
+    border: none;
+    padding: 0 14px;
+    border-radius: 6px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background 0.2s;
+}
+
+    .chat-send-btn:hover {
+        background: var(--gold-light);
+    }
