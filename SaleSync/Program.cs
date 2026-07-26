@@ -5,6 +5,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+// Shared store settings (branding, receipts, theme, business hours).
+builder.Services.AddScoped<SaleSync.Services.StoreSettingsService>();
+
 // 🚀 ADDED FOR SIGNALR: Register the SignalR service engine
 builder.Services.AddSignalR(options =>
 {

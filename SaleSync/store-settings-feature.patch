@@ -1,0 +1,1287 @@
+diff --git a/SaleSync/Controllers/AdminController.cs b/SaleSync/Controllers/AdminController.cs
+index dfa6bc9..0ac01e5 100644
+--- a/SaleSync/Controllers/AdminController.cs
++++ b/SaleSync/Controllers/AdminController.cs
+@@ -1,5 +1,6 @@
+ ﻿using System;
+ using System.Collections.Generic;
++using System.Linq;
+ using System.Security.Claims;
+ using Microsoft.AspNetCore.Hosting;
+ using System.Text.Json;
+@@ -19,12 +20,14 @@ namespace SaleSync.Controllers
+     {
+         private readonly IConfiguration _configuration;
+         private readonly IWebHostEnvironment _webHostEnvironment;
++        private readonly StoreSettingsService _storeSettingsService;
+         private readonly string connectionString; // Remove the hardcoded string here!
+ 
+-        public AdminController(IConfiguration configuration, IWebHostEnvironment webHostEnvironment)
++        public AdminController(IConfiguration configuration, IWebHostEnvironment webHostEnvironment, StoreSettingsService storeSettingsService)
+         {
+             _configuration = configuration;
+             _webHostEnvironment = webHostEnvironment;
++            _storeSettingsService = storeSettingsService;
+             connectionString = _configuration.GetConnectionString("DefaultConnection"); // Reads from appsettings
+         }
+ 
+@@ -55,6 +58,10 @@ namespace SaleSync.Controllers
+ 
+         public IActionResult Dashboard()
+         {
++            var storeSettings = _storeSettingsService.GetSettings();
++            var storeStatus = _storeSettingsService.GetStoreStatus(storeSettings);
++            ViewBag.StoreStatus = storeStatus;
++
+             var model = new CashierDashboardViewModel { RecentSales = new List<SaleHistoryItem>() };
+ 
+             using (SqlConnection conn = new SqlConnection(connectionString))
+@@ -511,7 +518,7 @@ namespace SaleSync.Controllers
+             using (SqlConnection conn = new SqlConnection(connectionString))
+             {
+                 string sql = @"
+-                    SELECT p.product_id, p.product_name, c.category_name, p.selling_price
++                    SELECT p.product_id, p.product_name, c.category_name, p.selling_price, p.image_path
+                     FROM products p
+                     LEFT JOIN categories c ON p.category_id = c.category_id
+                     WHERE (p.is_ingredient = 0 OR p.is_ingredient IS NULL)
+@@ -529,7 +536,8 @@ namespace SaleSync.Controllers
+                                 ProductId = Convert.ToInt32(r["product_id"]),
+                                 ProductName = r["product_name"].ToString(),
+                                 CategoryName = r["category_name"]?.ToString() ?? "Uncategorized",
+-                                Price = r["selling_price"] != DBNull.Value ? Convert.ToDecimal(r["selling_price"]) : 0
++                                Price = r["selling_price"] != DBNull.Value ? Convert.ToDecimal(r["selling_price"]) : 0,
++                                ImagePath = r["image_path"] != DBNull.Value ? r["image_path"].ToString() : null
+                             });
+                         }
+                     }
+@@ -1475,52 +1483,93 @@ namespace SaleSync.Controllers
+         [HttpPost]
+         public async Task<IActionResult> UploadProductPhoto(int productId, IFormFile productImageFile)
+         {
++            if (productId <= 0)
++            {
++                return BadRequest("A valid product must be selected before uploading a photo.");
++            }
++
+             if (productImageFile == null || productImageFile.Length == 0)
+             {
+-                return BadRequest("Invalid processing asset attachment stream validation layout failure.");
++                return BadRequest("No file was received.");
++            }
++
++            // Basic size guard (5 MB) so a huge file can't hang the request.
++            const long maxFileSizeBytes = 5 * 1024 * 1024;
++            if (productImageFile.Length > maxFileSizeBytes)
++            {
++                return BadRequest("Image is too large. Please choose a file under 5 MB.");
++            }
++
++            // Only allow actual image types.
++            string[] allowedExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
++            string extension = Path.GetExtension(productImageFile.FileName).ToLowerInvariant();
++            if (string.IsNullOrEmpty(extension) || !allowedExtensions.Contains(extension))
++            {
++                return BadRequest("Unsupported file type. Please upload a JPG, PNG, GIF, or WEBP image.");
+             }
+ 
+             try
+             {
+-                // 1. Setup secure storage target arrays under the application root hosting paths
+-                string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(productImageFile.FileName);
+                 string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "products");
+-
+                 if (!Directory.Exists(uploadsFolder))
+                 {
+                     Directory.CreateDirectory(uploadsFolder);
+                 }
+ 
++                string uniqueFileName = Guid.NewGuid().ToString() + extension;
+                 string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+ 
+-                // 2. Stream the binary file input directly to the application folder target locations
+                 using (var fileStream = new FileStream(filePath, FileMode.Create))
+                 {
+                     await productImageFile.CopyToAsync(fileStream);
+                 }
+ 
+-                // 3. Formulate structural relative routing web context configurations
+                 string relativeImagePath = "/images/products/" + uniqueFileName;
++                string previousImagePath = null;
+ 
+-                // 4. Update the SQL DB row mapping data field target location pointer values
+                 using (SqlConnection conn = new SqlConnection(connectionString))
+                 {
+-                    string updateSql = "UPDATE products SET image_path = @img WHERE product_id = @id";
+-                    using (SqlCommand cmd = new SqlCommand(updateSql, conn))
++                    conn.Open();
++
++                    // Grab the old image path first so we can clean it up after a successful update.
++                    using (SqlCommand getCmd = new SqlCommand("SELECT image_path FROM products WHERE product_id = @id", conn))
+                     {
+-                        cmd.Parameters.AddWithValue("@img", relativeImagePath);
+-                        cmd.Parameters.AddWithValue("@id", productId);
++                        getCmd.Parameters.AddWithValue("@id", productId);
++                        var result = getCmd.ExecuteScalar();
++                        previousImagePath = result != null && result != DBNull.Value ? result.ToString() : null;
++                    }
+ 
+-                        conn.Open();
+-                        cmd.ExecuteNonQuery();
++                    using (SqlCommand updateCmd = new SqlCommand("UPDATE products SET image_path = @img WHERE product_id = @id", conn))
++                    {
++                        updateCmd.Parameters.AddWithValue("@img", relativeImagePath);
++                        updateCmd.Parameters.AddWithValue("@id", productId);
++
++                        int rowsAffected = updateCmd.ExecuteNonQuery();
++                        if (rowsAffected == 0)
++                        {
++                            // No product matched this id — remove the file we just saved so it doesn't orphan on disk.
++                            System.IO.File.Delete(filePath);
++                            return NotFound($"No product found with id {productId}.");
++                        }
+                     }
+                 }
+ 
+-                return Ok(); // Return a clean HTTP 200 validation statement back to AJAX layer
++                // Clean up the old image file now that the DB points at the new one.
++                if (!string.IsNullOrEmpty(previousImagePath))
++                {
++                    string previousFullPath = Path.Combine(_webHostEnvironment.WebRootPath, previousImagePath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
++                    if (System.IO.File.Exists(previousFullPath))
++                    {
++                        try { System.IO.File.Delete(previousFullPath); } catch { /* non-fatal cleanup */ }
++                    }
++                }
++
++                return Ok(new { imagePath = relativeImagePath });
+             }
+             catch (Exception ex)
+             {
+-                return StatusCode(500, $"Internal execution error sequence context interrupt: {ex.Message}");
++                Console.Error.WriteLine($"[UploadProductPhoto] Failed for productId={productId}: {ex}");
++                return StatusCode(500, $"Upload failed: {ex.Message}");
+             }
+         }
+         // ==========================================
+@@ -1632,12 +1681,72 @@ namespace SaleSync.Controllers
+         [HttpGet]
+         public IActionResult WebCustomization()
+         {
+-            // Initialize a completely new instance directly to prevent database errors for now
+-            var settings = new WebCustomization();
+-
++            var settings = _storeSettingsService.GetSettings();
+             return View(settings);
+         }
+ 
++        [HttpPost]
++        public async Task<IActionResult> UpdateSettings(WebCustomization model, IFormFile? StoreLogo)
++        {
++            if (!ModelState.IsValid)
++            {
++                TempData["SettingsError"] = "Please check the form for missing or invalid values.";
++                return View("WebCustomization", model);
++            }
++
++            try
++            {
++                // Keep the existing logo unless a new one was uploaded.
++                var existing = _storeSettingsService.GetSettings();
++                model.LogoPath = existing.LogoPath;
++
++                if (StoreLogo != null && StoreLogo.Length > 0)
++                {
++                    const long maxLogoSizeBytes = 2 * 1024 * 1024; // 2 MB
++                    string[] allowedExtensions = { ".jpg", ".jpeg", ".png", ".webp", ".svg" };
++                    string extension = Path.GetExtension(StoreLogo.FileName).ToLowerInvariant();
++
++                    if (StoreLogo.Length > maxLogoSizeBytes)
++                    {
++                        TempData["SettingsError"] = "Logo image is too large. Please choose a file under 2 MB.";
++                        return RedirectToAction("WebCustomization");
++                    }
++
++                    if (string.IsNullOrEmpty(extension) || !allowedExtensions.Contains(extension))
++                    {
++                        TempData["SettingsError"] = "Unsupported logo file type. Please upload a JPG, PNG, WEBP, or SVG image.";
++                        return RedirectToAction("WebCustomization");
++                    }
++
++                    string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "branding");
++                    if (!Directory.Exists(uploadsFolder))
++                    {
++                        Directory.CreateDirectory(uploadsFolder);
++                    }
++
++                    string uniqueFileName = Guid.NewGuid().ToString() + extension;
++                    string filePath = Path.Combine(uploadsFolder, uniqueFileName);
++
++                    using (var fileStream = new FileStream(filePath, FileMode.Create))
++                    {
++                        await StoreLogo.CopyToAsync(fileStream);
++                    }
++
++                    model.LogoPath = "/images/branding/" + uniqueFileName;
++                }
++
++                _storeSettingsService.SaveSettings(model);
++                TempData["SettingsSuccess"] = "Settings saved successfully.";
++            }
++            catch (Exception ex)
++            {
++                Console.Error.WriteLine($"[UpdateSettings] Failed to save store settings: {ex}");
++                TempData["SettingsError"] = "Something went wrong while saving. Please try again.";
++            }
++
++            return RedirectToAction("WebCustomization");
++        }
++
+         public class AdminVoidRequest { public int SaleId { get; set; } public string Pass { get; set; } }
+         public class StatusUpdateModel { public int SaleId { get; set; } public string Status { get; set; } }
+ 
+diff --git a/SaleSync/Controllers/CashierController.cs b/SaleSync/Controllers/CashierController.cs
+index 16a4938..e0baa21 100644
+--- a/SaleSync/Controllers/CashierController.cs
++++ b/SaleSync/Controllers/CashierController.cs
+@@ -14,17 +14,22 @@ namespace SaleSync.Controllers
+     public class CashierController : Controller
+     {
+         private readonly IConfiguration _configuration;
++        private readonly StoreSettingsService _storeSettingsService;
+         private readonly string connectionString;
+ 
+-        public CashierController(IConfiguration configuration)
++        public CashierController(IConfiguration configuration, StoreSettingsService storeSettingsService)
+         {
+             _configuration = configuration;
++            _storeSettingsService = storeSettingsService;
+             connectionString = _configuration.GetConnectionString("DefaultConnection");
+         }
+ 
+         // --- DASHBOARD ---
+         public IActionResult Dashboard()
+         {
++            var storeSettings = _storeSettingsService.GetSettings();
++            ViewBag.StoreStatus = _storeSettingsService.GetStoreStatus(storeSettings);
++
+             var model = new CashierDashboardViewModel { RecentSales = new List<SaleHistoryItem>() };
+ 
+             using (SqlConnection conn = new SqlConnection(connectionString))
+@@ -264,8 +269,9 @@ namespace SaleSync.Controllers
+         // Inside CashierController.cs and ManagerController.cs
+         public IActionResult WebCustomization()
+         {
++            var settings = _storeSettingsService.GetSettings();
+             // Explicitly point to the Admin folder view
+-            return View("~/Views/Admin/WebCustomization.cshtml");
++            return View("~/Views/Admin/WebCustomization.cshtml", settings);
+         }
+         [HttpPost]
+         public IActionResult VerifyAndVoid([FromBody] VoidRequestModel request)
+diff --git a/SaleSync/Controllers/ManagerController.cs b/SaleSync/Controllers/ManagerController.cs
+index 8920a59..480907b 100644
+--- a/SaleSync/Controllers/ManagerController.cs
++++ b/SaleSync/Controllers/ManagerController.cs
+@@ -18,11 +18,13 @@ namespace SaleSync.Controllers
+     public class ManagerController : Controller
+     {
+         private readonly IConfiguration _configuration;
++        private readonly StoreSettingsService _storeSettingsService;
+         private readonly string connectionString;
+ 
+-        public ManagerController(IConfiguration configuration)
++        public ManagerController(IConfiguration configuration, StoreSettingsService storeSettingsService)
+         {
+             _configuration = configuration;
++            _storeSettingsService = storeSettingsService;
+             connectionString = _configuration.GetConnectionString("DefaultConnection");
+         }
+ 
+@@ -39,6 +41,9 @@ namespace SaleSync.Controllers
+         {
+             if (!IsManager()) return RedirectToAction("Index", "Home");
+ 
++            var storeSettings = _storeSettingsService.GetSettings();
++            ViewBag.StoreStatus = _storeSettingsService.GetStoreStatus(storeSettings);
++
+             var model = new CashierDashboardViewModel { RecentSales = new List<SaleHistoryItem>() };
+ 
+             using (SqlConnection conn = new SqlConnection(connectionString))
+@@ -196,6 +201,16 @@ namespace SaleSync.Controllers
+             // Your logic here (e.g., fetching pending orders)
+             return View();
+         }
++
++        // ==========================================
++        // ⭐ WEB CUSTOMIZATION (shared view, Admin/Manager can edit)
++        // ==========================================
++        [HttpGet]
++        public IActionResult WebCustomization()
++        {
++            var settings = _storeSettingsService.GetSettings();
++            return View("~/Views/Admin/WebCustomization.cshtml", settings);
++        }
+         
+ 
+         // ==========================================
+diff --git a/SaleSync/Models/WebCustomization.cs b/SaleSync/Models/WebCustomization.cs
+index 2d45f88..60b502a 100644
+--- a/SaleSync/Models/WebCustomization.cs
++++ b/SaleSync/Models/WebCustomization.cs
+@@ -9,12 +9,20 @@
+         public string ContactNumber { get; set; } = "";
+         public string TaxIdNumber { get; set; } = "";
+         public string ReceiptFooter { get; set; } = "";
++        public string? LogoPath { get; set; }
+ 
+         // --- POS & System Defaults ---
+         public string CurrencySymbol { get; set; } = "₱";
+         public decimal VatRate { get; set; } = 12.00m;
+         public int LowStockThreshold { get; set; } = 10;
+ 
++        // --- Business Hours ---
++        // Stored as "HH:mm" (24-hour) to work directly with <input type="time">.
++        public string OpeningTime { get; set; } = "07:00";
++        public string ClosingTime { get; set; } = "21:00";
++        // Manual override: when true, the store shows as closed regardless of the schedule above.
++        public bool IsTemporarilyClosed { get; set; } = false;
++
+         // --- UI Web Theme Colors ---
+         public string PrimaryColor { get; set; } = "#4a2511";   // Default Warm Coffee Brown
+         public string SidebarColor { get; set; } = "#2b1b17";   // Default Deep Dark Charcoal
+@@ -22,4 +30,12 @@
+         public string BackgroundColor { get; set; } = "#fdfbf7"; // Default Cream Background
+         public string SidebarPosition { get; set; } = "left";   // Sidebar alignment: left or right
+     }
++
++    // Lightweight result describing whether the store is currently open, for use on dashboards.
++    public class StoreStatus
++    {
++        public bool IsOpen { get; set; }
++        public string Label { get; set; } = "";       // e.g. "Open" or "Closed"
++        public string HoursLabel { get; set; } = "";   // e.g. "7:00 AM – 9:00 PM"
++    }
+ }
+\ No newline at end of file
+diff --git a/SaleSync/Program.cs b/SaleSync/Program.cs
+index 611625f..41cdca3 100644
+--- a/SaleSync/Program.cs
++++ b/SaleSync/Program.cs
+@@ -5,6 +5,9 @@ var builder = WebApplication.CreateBuilder(args);
+ // Add services to the container.
+ builder.Services.AddControllersWithViews();
+ 
++// Shared store settings (branding, receipts, theme, business hours).
++builder.Services.AddScoped<SaleSync.Services.StoreSettingsService>();
++
+ // 🚀 ADDED FOR SIGNALR: Register the SignalR service engine
+ builder.Services.AddSignalR(options =>
+ {
+@@ -41,6 +44,13 @@ if (!app.Environment.IsDevelopment())
+ }
+ 
+ app.UseHttpsRedirection();
++
++// MapStaticAssets() below only serves files that existed in wwwroot at build time
++// (it works off a compile-time manifest). Files added at runtime — like uploaded
++// product photos — aren't in that manifest, so UseStaticFiles() is added here to
++// serve those too.
++app.UseStaticFiles();
++
+ app.UseRouting();
+ 
+ // ⭐ 3. SECURITY MIDDLEWARE (Order is critical!)
+diff --git a/SaleSync/Services/StoreSettingsService.cs b/SaleSync/Services/StoreSettingsService.cs
+new file mode 100644
+index 0000000..17f6ac4
+--- /dev/null
++++ b/SaleSync/Services/StoreSettingsService.cs
+@@ -0,0 +1,215 @@
++﻿using Microsoft.Data.SqlClient;
++using Microsoft.Extensions.Configuration;
++using SaleSync.Models;
++
++namespace SaleSync.Services
++{
++    // Reads and writes the single row of store-wide settings (branding, receipt
++    // details, theme colors, business hours) and works out whether the store
++    // should currently show as open or closed. Used by every dashboard and by
++    // the Web Customization page, so there is one source of truth instead of
++    // each controller running its own copy of this logic.
++    public class StoreSettingsService
++    {
++        private readonly string _connectionString;
++
++        public StoreSettingsService(IConfiguration configuration)
++        {
++            _connectionString = configuration.GetConnectionString("DefaultConnection");
++        }
++
++        public WebCustomization GetSettings()
++        {
++            using (SqlConnection conn = new SqlConnection(_connectionString))
++            {
++                conn.Open();
++
++                string selectSql = "SELECT TOP 1 * FROM store_settings WHERE id = 1";
++                using (SqlCommand cmd = new SqlCommand(selectSql, conn))
++                using (SqlDataReader r = cmd.ExecuteReader())
++                {
++                    if (r.Read())
++                    {
++                        return new WebCustomization
++                        {
++                            StoreName = r["store_name"] as string ?? "Cafero",
++                            StoreTagline = r["store_tagline"] as string ?? "",
++                            BusinessAddress = r["business_address"] as string ?? "",
++                            ContactNumber = r["contact_number"] as string ?? "",
++                            TaxIdNumber = r["tax_id_number"] as string ?? "",
++                            ReceiptFooter = r["receipt_footer"] as string ?? "",
++                            LogoPath = r["logo_path"] as string,
++                            CurrencySymbol = r["currency_symbol"] as string ?? "₱",
++                            VatRate = r["vat_rate"] != DBNull.Value ? Convert.ToDecimal(r["vat_rate"]) : 12.00m,
++                            LowStockThreshold = r["low_stock_threshold"] != DBNull.Value ? Convert.ToInt32(r["low_stock_threshold"]) : 10,
++                            OpeningTime = r["opening_time"] as string ?? "07:00",
++                            ClosingTime = r["closing_time"] as string ?? "21:00",
++                            IsTemporarilyClosed = r["is_temporarily_closed"] != DBNull.Value && Convert.ToBoolean(r["is_temporarily_closed"]),
++                            PrimaryColor = r["primary_color"] as string ?? "#4a2511",
++                            SidebarColor = r["sidebar_color"] as string ?? "#2b1b17",
++                            AccentColor = r["accent_color"] as string ?? "#b58361",
++                            BackgroundColor = r["background_color"] as string ?? "#fdfbf7",
++                            SidebarPosition = r["sidebar_position"] as string ?? "left"
++                        };
++                    }
++                }
++
++                // No row yet (fresh install) — seed one with defaults so future saves have a row to UPDATE.
++                var defaults = new WebCustomization();
++                InsertDefaultRow(conn, defaults);
++                return defaults;
++            }
++        }
++
++        public void SaveSettings(WebCustomization settings)
++        {
++            using (SqlConnection conn = new SqlConnection(_connectionString))
++            {
++                conn.Open();
++
++                string updateSql = @"
++                    UPDATE store_settings SET
++                        store_name = @storeName,
++                        store_tagline = @storeTagline,
++                        business_address = @businessAddress,
++                        contact_number = @contactNumber,
++                        tax_id_number = @taxIdNumber,
++                        receipt_footer = @receiptFooter,
++                        logo_path = @logoPath,
++                        currency_symbol = @currencySymbol,
++                        vat_rate = @vatRate,
++                        low_stock_threshold = @lowStockThreshold,
++                        opening_time = @openingTime,
++                        closing_time = @closingTime,
++                        is_temporarily_closed = @isTemporarilyClosed,
++                        primary_color = @primaryColor,
++                        sidebar_color = @sidebarColor,
++                        accent_color = @accentColor,
++                        background_color = @backgroundColor,
++                        sidebar_position = @sidebarPosition
++                    WHERE id = 1";
++
++                using (SqlCommand cmd = new SqlCommand(updateSql, conn))
++                {
++                    cmd.Parameters.AddWithValue("@storeName", settings.StoreName ?? "");
++                    cmd.Parameters.AddWithValue("@storeTagline", settings.StoreTagline ?? "");
++                    cmd.Parameters.AddWithValue("@businessAddress", settings.BusinessAddress ?? "");
++                    cmd.Parameters.AddWithValue("@contactNumber", settings.ContactNumber ?? "");
++                    cmd.Parameters.AddWithValue("@taxIdNumber", settings.TaxIdNumber ?? "");
++                    cmd.Parameters.AddWithValue("@receiptFooter", settings.ReceiptFooter ?? "");
++                    cmd.Parameters.AddWithValue("@logoPath", (object?)settings.LogoPath ?? DBNull.Value);
++                    cmd.Parameters.AddWithValue("@currencySymbol", settings.CurrencySymbol ?? "₱");
++                    cmd.Parameters.AddWithValue("@vatRate", settings.VatRate);
++                    cmd.Parameters.AddWithValue("@lowStockThreshold", settings.LowStockThreshold);
++                    cmd.Parameters.AddWithValue("@openingTime", settings.OpeningTime ?? "07:00");
++                    cmd.Parameters.AddWithValue("@closingTime", settings.ClosingTime ?? "21:00");
++                    cmd.Parameters.AddWithValue("@isTemporarilyClosed", settings.IsTemporarilyClosed);
++                    cmd.Parameters.AddWithValue("@primaryColor", settings.PrimaryColor ?? "#4a2511");
++                    cmd.Parameters.AddWithValue("@sidebarColor", settings.SidebarColor ?? "#2b1b17");
++                    cmd.Parameters.AddWithValue("@accentColor", settings.AccentColor ?? "#b58361");
++                    cmd.Parameters.AddWithValue("@backgroundColor", settings.BackgroundColor ?? "#fdfbf7");
++                    cmd.Parameters.AddWithValue("@sidebarPosition", settings.SidebarPosition ?? "left");
++
++                    int rowsAffected = cmd.ExecuteNonQuery();
++                    if (rowsAffected == 0)
++                    {
++                        // No row existed yet — insert it directly with the values being saved.
++                        InsertDefaultRow(conn, settings);
++                    }
++                }
++            }
++        }
++
++        // Works out whether the store is currently open, honoring an overnight
++        // schedule (e.g. 18:00–02:00) and the manual "temporarily closed" override.
++        public StoreStatus GetStoreStatus(WebCustomization settings)
++        {
++            var status = new StoreStatus();
++
++            bool parsedOpen = TimeSpan.TryParse(settings.OpeningTime, out var openTime);
++            bool parsedClose = TimeSpan.TryParse(settings.ClosingTime, out var closeTime);
++
++            status.HoursLabel = parsedOpen && parsedClose
++                ? $"{FormatTime(openTime)} – {FormatTime(closeTime)}"
++                : "Hours not set";
++
++            if (settings.IsTemporarilyClosed)
++            {
++                status.IsOpen = false;
++                status.Label = "Temporarily Closed";
++                return status;
++            }
++
++            if (!parsedOpen || !parsedClose)
++            {
++                // No valid schedule configured — don't guess, just say so.
++                status.IsOpen = false;
++                status.Label = "Hours Not Set";
++                return status;
++            }
++
++            var now = DateTime.Now.TimeOfDay;
++            bool isOpen;
++
++            if (closeTime > openTime)
++            {
++                // Normal same-day schedule, e.g. 07:00 - 21:00
++                isOpen = now >= openTime && now < closeTime;
++            }
++            else
++            {
++                // Overnight schedule, e.g. 18:00 - 02:00
++                isOpen = now >= openTime || now < closeTime;
++            }
++
++            status.IsOpen = isOpen;
++            status.Label = isOpen ? "Open" : "Closed";
++            return status;
++        }
++
++        private static string FormatTime(TimeSpan time)
++        {
++            return DateTime.Today.Add(time).ToString("h:mm tt");
++        }
++
++        private void InsertDefaultRow(SqlConnection conn, WebCustomization settings)
++        {
++            string insertSql = @"
++                IF NOT EXISTS (SELECT 1 FROM store_settings WHERE id = 1)
++                INSERT INTO store_settings (
++                    id, store_name, store_tagline, business_address, contact_number, tax_id_number,
++                    receipt_footer, logo_path, currency_symbol, vat_rate, low_stock_threshold,
++                    opening_time, closing_time, is_temporarily_closed,
++                    primary_color, sidebar_color, accent_color, background_color, sidebar_position
++                ) VALUES (
++                    1, @storeName, @storeTagline, @businessAddress, @contactNumber, @taxIdNumber,
++                    @receiptFooter, @logoPath, @currencySymbol, @vatRate, @lowStockThreshold,
++                    @openingTime, @closingTime, @isTemporarilyClosed,
++                    @primaryColor, @sidebarColor, @accentColor, @backgroundColor, @sidebarPosition
++                )";
++
++            using (SqlCommand cmd = new SqlCommand(insertSql, conn))
++            {
++                cmd.Parameters.AddWithValue("@storeName", settings.StoreName ?? "Cafero");
++                cmd.Parameters.AddWithValue("@storeTagline", settings.StoreTagline ?? "");
++                cmd.Parameters.AddWithValue("@businessAddress", settings.BusinessAddress ?? "");
++                cmd.Parameters.AddWithValue("@contactNumber", settings.ContactNumber ?? "");
++                cmd.Parameters.AddWithValue("@taxIdNumber", settings.TaxIdNumber ?? "");
++                cmd.Parameters.AddWithValue("@receiptFooter", settings.ReceiptFooter ?? "");
++                cmd.Parameters.AddWithValue("@logoPath", (object?)settings.LogoPath ?? DBNull.Value);
++                cmd.Parameters.AddWithValue("@currencySymbol", settings.CurrencySymbol ?? "₱");
++                cmd.Parameters.AddWithValue("@vatRate", settings.VatRate);
++                cmd.Parameters.AddWithValue("@lowStockThreshold", settings.LowStockThreshold);
++                cmd.Parameters.AddWithValue("@openingTime", settings.OpeningTime ?? "07:00");
++                cmd.Parameters.AddWithValue("@closingTime", settings.ClosingTime ?? "21:00");
++                cmd.Parameters.AddWithValue("@isTemporarilyClosed", settings.IsTemporarilyClosed);
++                cmd.Parameters.AddWithValue("@primaryColor", settings.PrimaryColor ?? "#4a2511");
++                cmd.Parameters.AddWithValue("@sidebarColor", settings.SidebarColor ?? "#2b1b17");
++                cmd.Parameters.AddWithValue("@accentColor", settings.AccentColor ?? "#b58361");
++                cmd.Parameters.AddWithValue("@backgroundColor", settings.BackgroundColor ?? "#fdfbf7");
++                cmd.Parameters.AddWithValue("@sidebarPosition", settings.SidebarPosition ?? "left");
++                cmd.ExecuteNonQuery();
++            }
++        }
++    }
++}
+diff --git a/SaleSync/Sql/create_store_settings_table.sql b/SaleSync/Sql/create_store_settings_table.sql
+new file mode 100644
+index 0000000..f6d1f5c
+--- /dev/null
++++ b/SaleSync/Sql/create_store_settings_table.sql
+@@ -0,0 +1,30 @@
++-- Run this once against your SaleSync database (e.g. in SSMS or Azure Data Studio)
++-- before using the updated Web Customization feature. It creates the single-row
++-- table that stores branding, receipt, theme, and business-hours settings.
++
++IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'store_settings')
++BEGIN
++    CREATE TABLE store_settings (
++        id INT PRIMARY KEY,                          -- always 1; this table only ever holds one row
++        store_name NVARCHAR(100) NOT NULL DEFAULT 'Cafero',
++        store_tagline NVARCHAR(150) NOT NULL DEFAULT 'Coffee & Pastries',
++        business_address NVARCHAR(255) NOT NULL DEFAULT '',
++        contact_number NVARCHAR(50) NOT NULL DEFAULT '',
++        tax_id_number NVARCHAR(50) NOT NULL DEFAULT '',
++        receipt_footer NVARCHAR(255) NOT NULL DEFAULT '',
++        logo_path NVARCHAR(255) NULL,
++        currency_symbol NVARCHAR(5) NOT NULL DEFAULT '₱',
++        vat_rate DECIMAL(5,2) NOT NULL DEFAULT 12.00,
++        low_stock_threshold INT NOT NULL DEFAULT 10,
++        opening_time VARCHAR(5) NOT NULL DEFAULT '07:00',   -- stored as 'HH:mm'
++        closing_time VARCHAR(5) NOT NULL DEFAULT '21:00',   -- stored as 'HH:mm'
++        is_temporarily_closed BIT NOT NULL DEFAULT 0,
++        primary_color VARCHAR(7) NOT NULL DEFAULT '#4a2511',
++        sidebar_color VARCHAR(7) NOT NULL DEFAULT '#2b1b17',
++        accent_color VARCHAR(7) NOT NULL DEFAULT '#b58361',
++        background_color VARCHAR(7) NOT NULL DEFAULT '#fdfbf7',
++        sidebar_position VARCHAR(5) NOT NULL DEFAULT 'left'
++    );
++
++    INSERT INTO store_settings (id) VALUES (1);
++END
+diff --git a/SaleSync/Views/Admin/AdminDashboard.cshtml b/SaleSync/Views/Admin/AdminDashboard.cshtml
+index 86ff98b..6a9efce 100644
+--- a/SaleSync/Views/Admin/AdminDashboard.cshtml
++++ b/SaleSync/Views/Admin/AdminDashboard.cshtml
+@@ -103,12 +103,27 @@
+                     <p class="header-label">Today's Net Sales</p>
+                     <h1 class="header-sales-value">₱@Model.TodayTotalSales.ToString("N2")</h1>
+                 </div>
+-                <div class="system-status-container">
+-                    <p class="status-label">System Status</p>
+-                    <div class="status-indicator-flex">
+-                        <span class="status-dot animate-pulse"></span>
+-                        <span class="status-text">Online & Syncing</span>
++                <div class="header-status-group">
++                    <div class="system-status-container">
++                        <p class="status-label">System Status</p>
++                        <div class="status-indicator-flex">
++                            <span class="status-dot animate-pulse"></span>
++                            <span class="status-text">Online & Syncing</span>
++                        </div>
+                     </div>
++                    @{
++                        var storeStatus = ViewBag.StoreStatus as SaleSync.Models.StoreStatus;
++                    }
++                    @if (storeStatus != null)
++                    {
++                        <div class="system-status-container store-status-container">
++                            <p class="status-label">Store Status</p>
++                            <div class="status-indicator-flex">
++                                <span class="status-dot @(storeStatus.IsOpen ? "store-open-dot" : "store-closed-dot")"></span>
++                                <span class="status-text @(storeStatus.IsOpen ? "store-open-text" : "store-closed-text")">@storeStatus.Label · @storeStatus.HoursLabel</span>
++                            </div>
++                        </div>
++                    }
+                 </div>
+             </div>
+ 
+diff --git a/SaleSync/Views/Admin/Products.cshtml b/SaleSync/Views/Admin/Products.cshtml
+index 4f887e5..fe8c11f 100644
+--- a/SaleSync/Views/Admin/Products.cshtml
++++ b/SaleSync/Views/Admin/Products.cshtml
+@@ -105,7 +105,7 @@
+                 <div class="menu-item-card" onclick="openSubMenu('COFFEE')">
+                     <div class="item-image-placeholder">
+                         ☕
+-                        <button type="button" class="change-photo-btn" onclick="event.stopPropagation(); openCategoryPhotoUpload('COFFEE');">📷 Add Photo</button>
++                        <button type="button" class="change-photo-btn" disabled title="Photos are set per menu item, not per category. Open this category and add a photo to an item instead." style="opacity:0.5; cursor:not-allowed;">📷 Add Photo</button>
+                     </div>
+                     <div class="item-details">
+                         <div class="item-category">Category</div>
+@@ -116,7 +116,7 @@
+                 <div class="menu-item-card" onclick="openSubMenu('MILKTEA')">
+                     <div class="item-image-placeholder">
+                         🧋
+-                        <button type="button" class="change-photo-btn" onclick="event.stopPropagation(); openCategoryPhotoUpload('MILK TEA');">📷 Add Photo</button>
++                        <button type="button" class="change-photo-btn" disabled title="Photos are set per menu item, not per category. Open this category and add a photo to an item instead." style="opacity:0.5; cursor:not-allowed;">📷 Add Photo</button>
+                     </div>
+                     <div class="item-details">
+                         <div class="item-category">Category</div>
+@@ -127,7 +127,7 @@
+                 <div class="menu-item-card" onclick="openSubMenu('FRUIT TEA')">
+                     <div class="item-image-placeholder">
+                         🍹
+-                        <button type="button" class="change-photo-btn" onclick="event.stopPropagation(); openCategoryPhotoUpload('FRUIT TEA');">📷 Add Photo</button>
++                        <button type="button" class="change-photo-btn" disabled title="Photos are set per menu item, not per category. Open this category and add a photo to an item instead." style="opacity:0.5; cursor:not-allowed;">📷 Add Photo</button>
+                     </div>
+                     <div class="item-details">
+                         <div class="item-category">Category</div>
+@@ -138,7 +138,7 @@
+                 <div class="menu-item-card" onclick="openSubMenu('RICE MEAL')">
+                     <div class="item-image-placeholder">
+                         🍱
+-                        <button type="button" class="change-photo-btn" onclick="event.stopPropagation(); openCategoryPhotoUpload('RICE MEAL');">📷 Add Photo</button>
++                        <button type="button" class="change-photo-btn" disabled title="Photos are set per menu item, not per category. Open this category and add a photo to an item instead." style="opacity:0.5; cursor:not-allowed;">📷 Add Photo</button>
+                     </div>
+                     <div class="item-details">
+                         <div class="item-category">Category</div>
+@@ -149,7 +149,7 @@
+                 <div class="menu-item-card" onclick="openSubMenu('BREAD & PASTRY')">
+                     <div class="item-image-placeholder">
+                         🥐
+-                        <button type="button" class="change-photo-btn" onclick="event.stopPropagation(); openCategoryPhotoUpload('BREAD & PASTRY');">📷 Add Photo</button>
++                        <button type="button" class="change-photo-btn" disabled title="Photos are set per menu item, not per category. Open this category and add a photo to an item instead." style="opacity:0.5; cursor:not-allowed;">📷 Add Photo</button>
+                     </div>
+                     <div class="item-details">
+                         <div class="item-category">Category</div>
+@@ -160,7 +160,7 @@
+                 <div class="menu-item-card" onclick="openSubMenu('SNACKS & PASTA')">
+                     <div class="item-image-placeholder">
+                         🍝
+-                        <button type="button" class="change-photo-btn" onclick="event.stopPropagation(); openCategoryPhotoUpload('SNACKS & PASTA');">📷 Add Photo</button>
++                        <button type="button" class="change-photo-btn" disabled title="Photos are set per menu item, not per category. Open this category and add a photo to an item instead." style="opacity:0.5; cursor:not-allowed;">📷 Add Photo</button>
+                     </div>
+                     <div class="item-details">
+                         <div class="item-category">Category</div>
+@@ -227,9 +227,10 @@
+             {
+                 var safeName = System.Web.HttpUtility.JavaScriptStringEncode(item.ProductName);
+                 var safeCategory = System.Web.HttpUtility.JavaScriptStringEncode(item.CategoryName.ToUpper());
++                var safeImagePath = System.Web.HttpUtility.JavaScriptStringEncode(item.ImagePath ?? "");
+ 
+                 @:if(!menuData["@safeCategory"]) menuData["@safeCategory"] = [];
+-                @:menuData["@safeCategory"].push({ id: @item.ProductId, name: "@safeName", price: @item.Price });
++                @:menuData["@safeCategory"].push({ id: @item.ProductId, name: "@safeName", price: @item.Price, imagePath: "@safeImagePath" });
+             }
+         }
+ 
+@@ -239,7 +240,6 @@
+             currentCategory = cat;
+             const items = menuData[cat] || [];
+             const container = document.getElementById('subItemsContainer');
+-            const catImg = localStorage.getItem(`cat_img_${cat}`) || "";
+ 
+             document.getElementById('pageTitle').innerText = cat;
+             document.getElementById('pageSubtitle').innerText = "Managing structural items and compositions for " + cat;
+@@ -248,13 +248,16 @@
+ 
+             container.innerHTML = "";
+             items.forEach(item => {
+-                let imgTag = catImg ? `<img src="${catImg}">` : `<span style="font-size:40px;">📦</span>`;
++                let imgTag = item.imagePath ? `<img src="${item.imagePath}">` : `<span style="font-size:40px;">📦</span>`;
+ 
+                 container.innerHTML += `
+                 <div class="menu-item-card">
+-                    <div class="item-image-placeholder" style="height:130px;">
++                    <div class="item-image-placeholder" style="height:130px;" id="item-img-${item.id}">
+                         ${imgTag}
+-                        <button type="button" class="change-photo-btn" onclick="event.stopPropagation(); openCategoryPhotoUpload('${item.name.replace(/'/g, "\\'")}', ${item.id});">📷 Add Photo</button>
++                        <label class="change-photo-btn" style="cursor:pointer;">
++                            📷 Add Photo
++                            <input type="file" accept="image/png,image/jpeg,image/gif,image/webp" style="display:none;" onchange="uploadItemPhoto(${item.id}, this)">
++                        </label>
+                     </div>
+                     <div class="item-details" style="flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 12px;">
+                         <div>
+@@ -323,56 +326,73 @@
+             document.getElementById('backBtn').style.display = 'none';
+         }
+ 
+-        async function openCategoryPhotoUpload(targetName, productId = null) {
+-            const { value: file } = await Swal.fire({
+-                title: `Asset Registration`,
+-                html: `Select interface render file for <strong>${targetName}</strong>`,
+-                input: 'file',
+-                inputAttributes: {
+-                    'accept': 'image/*',
+-                    'aria-label': 'Upload product image file'
+-                },
+-                showCancelButton: true,
+-                confirmButtonText: 'Bind System Asset',
+-                customClass: {
+-                    input: 'swal2-file-custom'
+-                }
+-            });
++        async function uploadItemPhoto(productId, inputEl) {
++            const file = inputEl.files && inputEl.files[0];
++            if (!file) return;
+ 
+-            if (file) {
+-                const formData = new FormData();
+-                formData.append("productImageFile", file);
+-                formData.append("productId", productId || 0);
++            // Client-side guardrails matching the server so bad files are rejected instantly.
++            const maxSizeBytes = 5 * 1024 * 1024;
++            if (file.size > maxSizeBytes) {
++                Swal.fire('File Too Large', 'Please choose an image under 5 MB.', 'error');
++                inputEl.value = '';
++                return;
++            }
++            if (!file.type.startsWith('image/')) {
++                Swal.fire('Unsupported File', 'Please choose an image file (JPG, PNG, GIF, or WEBP).', 'error');
++                inputEl.value = '';
++                return;
++            }
+ 
+-                Swal.fire({
+-                    title: 'Syncing Asset...',
+-                    text: 'Uploading file to local system environment architecture.',
+-                    allowOutsideClick: false,
+-                    didOpen: () => {
+-                        Swal.showLoading();
+-                    }
++            const placeholder = document.getElementById(`item-img-${productId}`);
++            const originalContent = placeholder ? placeholder.innerHTML : null;
++
++            // Show a lightweight inline "uploading" state instead of a modal, so
++            // there's less going on and it's easier to see exactly what happens.
++            if (placeholder) {
++                placeholder.querySelector('img, span')?.remove();
++                placeholder.insertAdjacentHTML('afterbegin', '<span style="font-size:13px;">Uploading…</span>');
++            }
++
++            const formData = new FormData();
++            formData.append("productImageFile", file);
++            formData.append("productId", productId);
++
++            try {
++                const response = await fetch('/Admin/UploadProductPhoto', {
++                    method: 'POST',
++                    body: formData
+                 });
+ 
+-                try {
+-                    const response = await fetch('/Admin/UploadProductPhoto', {
+-                        method: 'POST',
+-                        body: formData
+-                    });
++                if (!response.ok) {
++                    const message = await response.text();
++                    throw new Error(message || `Server returned ${response.status}`);
++                }
+ 
+-                    if (response.ok) {
+-                        Swal.fire({
+-                            title: 'Success!',
+-                            text: 'Image uploaded and system asset synchronized.',
+-                            icon: 'success',
+-                            timer: 1500,
+-                            showConfirmButton: false
+-                        }).then(() => location.reload());
+-                    } else {
+-                        Swal.fire('Upload Failed', 'The server architecture rejected the file stream.', 'error');
+-                    }
+-                } catch (error) {
+-                    Swal.fire('Network Fault', 'Unable to reach backend system server structural pipeline.', 'error');
++                const result = await response.json();
++
++                if (placeholder) {
++                    placeholder.querySelector('span')?.remove();
++                    placeholder.insertAdjacentHTML('afterbegin', `<img src="${result.imagePath}">`);
++                }
++                if (currentCategory && menuData[currentCategory]) {
++                    const item = menuData[currentCategory].find(i => i.id === productId);
++                    if (item) item.imagePath = result.imagePath;
++                }
++
++                Swal.fire({
++                    title: 'Photo Updated',
++                    icon: 'success',
++                    timer: 1200,
++                    showConfirmButton: false
++                });
++            } catch (error) {
++                console.error('Photo upload failed:', error);
++                if (placeholder && originalContent !== null) {
++                    placeholder.innerHTML = originalContent;
+                 }
++                Swal.fire('Upload Failed', error.message || 'Something went wrong uploading the photo.', 'error');
++            } finally {
++                inputEl.value = '';
+             }
+         }
+ 
+diff --git a/SaleSync/Views/Admin/WebCustomization.cshtml b/SaleSync/Views/Admin/WebCustomization.cshtml
+index 3426d7c..28085ff 100644
+--- a/SaleSync/Views/Admin/WebCustomization.cshtml
++++ b/SaleSync/Views/Admin/WebCustomization.cshtml
+@@ -17,13 +17,16 @@
+         displayRole = "Cashier";
+         homeController = "Cashier";
+     }
++
++    // Only Admins and Managers can change store settings; Cashiers see a read-only view.
++    bool canEdit = User.IsInRole("Admin") || User.IsInRole("Manager");
+ }
+ <!DOCTYPE html>
+ <html lang="en">
+ <head>
+     <meta charset="utf-8" />
+     <meta name="viewport" content="width=device-width, initial-scale=1" />
+-    <title>Web Customization - SyncScale</title>
++    <title>Web Customization - @(Model?.StoreName ?? "Cafero")</title>
+ 
+     <!-- FontAwesome Library for Icons -->
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+@@ -113,11 +116,21 @@
+         <!-- MAIN CONTENT -->
+         <main class="main-content slide-up">
+             <div class="settings-header">
+-                <h2>Web Customization & Theme</h2>
+-                <p>Manage application branding, receipt headers, and live UI layout properties.</p>
++                <h2>Store Settings</h2>
++                <p>@(canEdit ? "Manage your store's branding, receipt details, business hours, and app theme." : "View your store's current branding, receipt details, business hours, and app theme.")</p>
+             </div>
+ 
+-            <form asp-action="UpdateSettings" method="post" enctype="multipart/form-data" class="settings-form">
++            @if (TempData["SettingsSuccess"] != null)
++            {
++                <div class="settings-alert settings-alert-success">@TempData["SettingsSuccess"]</div>
++            }
++            @if (TempData["SettingsError"] != null)
++            {
++                <div class="settings-alert settings-alert-error">@TempData["SettingsError"]</div>
++            }
++
++            <form asp-controller="Admin" asp-action="UpdateSettings" method="post" enctype="multipart/form-data" class="settings-form">
++                <fieldset class="settings-fieldset" @(canEdit ? "" : "disabled")>
+ 
+                 <!-- SECTION 1: WEB THEME DESIGN -->
+                 <div class="settings-card">
+@@ -173,8 +186,15 @@
+ 
+                         <div class="form-group full-width">
+                             <label for="StoreLogo">Upload Logo (Replaces default icons)</label>
++                            @if (!string.IsNullOrEmpty(Model?.LogoPath))
++                            {
++                                <div class="current-logo-preview">
++                                    <img src="@Model.LogoPath" alt="Current store logo" />
++                                    <span>Current logo</span>
++                                </div>
++                            }
+                             <div class="file-upload-wrapper">
+-                                <input type="file" id="StoreLogo" name="StoreLogo" accept="image/*" />
++                                <input type="file" id="StoreLogo" name="StoreLogo" accept="image/png,image/jpeg,image/webp,image/svg+xml" />
+                                 <div class="file-upload-btn">Choose Image...</div>
+                             </div>
+                         </div>
+@@ -234,10 +254,45 @@
+                     </div>
+                 </div>
+ 
++                <!-- SECTION 5: BUSINESS HOURS -->
++                <div class="settings-card">
++                    <h3>Business Hours</h3>
++                    <p class="card-desc">Set your regular opening and closing times. The dashboard and customer-facing pages will show your store as open or closed based on this schedule.</p>
++
++                    <div class="form-grid">
++                        <div class="form-group">
++                            <label for="OpeningTime">Opening Time</label>
++                            <input type="time" id="OpeningTime" name="OpeningTime" value="@(Model?.OpeningTime ?? "07:00")" required />
++                        </div>
++
++                        <div class="form-group">
++                            <label for="ClosingTime">Closing Time</label>
++                            <input type="time" id="ClosingTime" name="ClosingTime" value="@(Model?.ClosingTime ?? "21:00")" required />
++                        </div>
++
++                        <div class="form-group full-width toggle-group">
++                            <label class="toggle-label" for="IsTemporarilyClosed">
++                                <input type="checkbox" id="IsTemporarilyClosed" name="IsTemporarilyClosed" value="true" checked="@(Model?.IsTemporarilyClosed == true)" />
++                                <span>Mark store as temporarily closed</span>
++                            </label>
++                            <p class="card-desc">Turn this on for holidays, emergencies, or any day you're closed outside your regular schedule. This overrides the hours above until you turn it back off.</p>
++                        </div>
++                    </div>
++                </div>
++
++                </fieldset>
++
+                 <!-- ACTIONS -->
+                 <div class="form-actions">
+-                    <button type="button" class="btn-secondary" onclick="window.location.reload();">Discard Changes</button>
+-                    <button type="submit" class="btn-primary">Save Settings</button>
++                    @if (canEdit)
++                    {
++                        <button type="button" class="btn-secondary" onclick="window.location.reload();">Discard Changes</button>
++                        <button type="submit" class="btn-primary">Save Settings</button>
++                    }
++                    else
++                    {
++                        <p class="read-only-note">Only Admins and Managers can change these settings.</p>
++                    }
+                 </div>
+ 
+             </form>
+diff --git a/SaleSync/Views/Cashier/CashierDashboard.cshtml b/SaleSync/Views/Cashier/CashierDashboard.cshtml
+index 7ca82c0..8375554 100644
+--- a/SaleSync/Views/Cashier/CashierDashboard.cshtml
++++ b/SaleSync/Views/Cashier/CashierDashboard.cshtml
+@@ -101,12 +101,27 @@
+                     <p class="header-label">Today's Net Sales</p>
+                     <h1 class="header-sales-value">₱@Model.TodayTotalSales.ToString("N2")</h1>
+                 </div>
+-                <div class="system-status-container">
+-                    <p class="status-label">System Status</p>
+-                    <div class="status-indicator-flex">
+-                        <span class="status-dot animate-pulse"></span>
+-                        <span class="status-text">Online & Syncing</span>
++                <div class="header-status-group">
++                    <div class="system-status-container">
++                        <p class="status-label">System Status</p>
++                        <div class="status-indicator-flex">
++                            <span class="status-dot animate-pulse"></span>
++                            <span class="status-text">Online & Syncing</span>
++                        </div>
+                     </div>
++                    @{
++                        var storeStatus = ViewBag.StoreStatus as SaleSync.Models.StoreStatus;
++                    }
++                    @if (storeStatus != null)
++                    {
++                        <div class="system-status-container store-status-container">
++                            <p class="status-label">Store Status</p>
++                            <div class="status-indicator-flex">
++                                <span class="status-dot @(storeStatus.IsOpen ? "store-open-dot" : "store-closed-dot")"></span>
++                                <span class="status-text @(storeStatus.IsOpen ? "store-open-text" : "store-closed-text")">@storeStatus.Label · @storeStatus.HoursLabel</span>
++                            </div>
++                        </div>
++                    }
+                 </div>
+             </div>
+ 
+diff --git a/SaleSync/Views/Manager/ManagerDashboard.cshtml b/SaleSync/Views/Manager/ManagerDashboard.cshtml
+index 3b59327..f96ae66 100644
+--- a/SaleSync/Views/Manager/ManagerDashboard.cshtml
++++ b/SaleSync/Views/Manager/ManagerDashboard.cshtml
+@@ -106,12 +106,27 @@
+                     <p class="header-label">Today's Net Sales</p>
+                     <h1 class="header-sales-value">₱@Model.TodayTotalSales.ToString("N2")</h1>
+                 </div>
+-                <div class="system-status-container">
+-                    <p class="status-label">System Status</p>
+-                    <div class="status-indicator-flex">
+-                        <span class="status-dot animate-pulse"></span>
+-                        <span class="status-text">Online & Syncing</span>
++                <div class="header-status-group">
++                    <div class="system-status-container">
++                        <p class="status-label">System Status</p>
++                        <div class="status-indicator-flex">
++                            <span class="status-dot animate-pulse"></span>
++                            <span class="status-text">Online & Syncing</span>
++                        </div>
+                     </div>
++                    @{
++                        var storeStatus = ViewBag.StoreStatus as SaleSync.Models.StoreStatus;
++                    }
++                    @if (storeStatus != null)
++                    {
++                        <div class="system-status-container store-status-container">
++                            <p class="status-label">Store Status</p>
++                            <div class="status-indicator-flex">
++                                <span class="status-dot @(storeStatus.IsOpen ? "store-open-dot" : "store-closed-dot")"></span>
++                                <span class="status-text @(storeStatus.IsOpen ? "store-open-text" : "store-closed-text")">@storeStatus.Label · @storeStatus.HoursLabel</span>
++                            </div>
++                        </div>
++                    }
+                 </div>
+             </div>
+ 
+diff --git a/SaleSync/wwwroot/css/AdminDashboard.css b/SaleSync/wwwroot/css/AdminDashboard.css
+index 9834169..9f6bb59 100644
+--- a/SaleSync/wwwroot/css/AdminDashboard.css
++++ b/SaleSync/wwwroot/css/AdminDashboard.css
+@@ -389,6 +389,34 @@ body {
+     color: var(--success);
+ }
+ 
++.header-status-group {
++    display: flex;
++    align-items: center;
++}
++
++/* Store open/closed status badge, shown alongside System Status */
++.store-status-container {
++    margin-left: 28px;
++    padding-left: 28px;
++    border-left: 1px solid var(--border-sub, rgba(255,255,255,0.08));
++}
++
++.store-open-dot {
++    background: #4CAF50;
++}
++
++.store-closed-dot {
++    background: #F44336;
++}
++
++.store-open-text {
++    color: #4CAF50;
++}
++
++.store-closed-text {
++    color: #F44336;
++}
++
+ 
+ /* ==========================================================================
+    SUMMARY CARDS
+diff --git a/SaleSync/wwwroot/css/CashierDashboard.css b/SaleSync/wwwroot/css/CashierDashboard.css
+index e86d3b5..a3b30e9 100644
+--- a/SaleSync/wwwroot/css/CashierDashboard.css
++++ b/SaleSync/wwwroot/css/CashierDashboard.css
+@@ -389,6 +389,34 @@ body {
+     color: var(--success);
+ }
+ 
++.header-status-group {
++    display: flex;
++    align-items: center;
++}
++
++/* Store open/closed status badge, shown alongside System Status */
++.store-status-container {
++    margin-left: 28px;
++    padding-left: 28px;
++    border-left: 1px solid var(--border-sub, rgba(255,255,255,0.08));
++}
++
++.store-open-dot {
++    background: #4CAF50;
++}
++
++.store-closed-dot {
++    background: #F44336;
++}
++
++.store-open-text {
++    color: #4CAF50;
++}
++
++.store-closed-text {
++    color: #F44336;
++}
++
+ 
+ /* ==========================================================================
+    SUMMARY CARDS
+diff --git a/SaleSync/wwwroot/css/WebCustomization.css b/SaleSync/wwwroot/css/WebCustomization.css
+index 8a6fc3e..3df59ba 100644
+--- a/SaleSync/wwwroot/css/WebCustomization.css
++++ b/SaleSync/wwwroot/css/WebCustomization.css
+@@ -154,6 +154,7 @@ body {
+ 
+     .form-group input[type="text"],
+     .form-group input[type="number"],
++    .form-group input[type="time"],
+     .form-group select {
+         width: 100%;
+         padding: 12px 14px;
+@@ -164,6 +165,7 @@ body {
+         font-size: 14px;
+         font-family: 'Outfit', sans-serif;
+         transition: all 0.2s ease;
++        color-scheme: dark;
+     }
+ 
+         .form-group input:focus,
+@@ -264,6 +266,98 @@ body {
+     color: var(--cream);
+ }
+ 
++/* Fieldset wraps the whole form so it can be disabled in one go for read-only users */
++.settings-fieldset {
++    border: none;
++    margin: 0;
++    padding: 0;
++    display: flex;
++    flex-direction: column;
++    gap: 24px;
++}
++
++    .settings-fieldset:disabled .settings-card {
++        opacity: 0.7;
++    }
++
++/* Current logo preview shown above the upload field */
++.current-logo-preview {
++    display: flex;
++    align-items: center;
++    gap: 10px;
++    margin-bottom: 10px;
++}
++
++    .current-logo-preview img {
++        width: 44px;
++        height: 44px;
++        object-fit: cover;
++        border-radius: 8px;
++        border: 1px solid var(--border-sub);
++        background: var(--bg-surface);
++    }
++
++    .current-logo-preview span {
++        font-size: 12px;
++        color: var(--muted);
++    }
++
++/* Temporarily-closed toggle row */
++.toggle-group {
++    gap: 4px;
++}
++
++.toggle-label {
++    display: flex;
++    align-items: center;
++    gap: 10px;
++    cursor: pointer;
++    text-transform: none;
++    letter-spacing: normal;
++    font-size: 14px;
++    color: var(--cream);
++    font-weight: 600;
++}
++
++    .toggle-label input[type="checkbox"] {
++        width: 18px;
++        height: 18px;
++        accent-color: var(--gold);
++        cursor: pointer;
++    }
++
++.toggle-group .card-desc {
++    margin: 4px 0 0 0;
++}
++
++/* Save success / error banners */
++.settings-alert {
++    padding: 14px 18px;
++    border-radius: 10px;
++    font-size: 14px;
++    font-weight: 600;
++    margin-bottom: 18px;
++}
++
++.settings-alert-success {
++    background: rgba(76, 175, 80, 0.12);
++    border: 1px solid rgba(76, 175, 80, 0.35);
++    color: #8fd694;
++}
++
++.settings-alert-error {
++    background: rgba(244, 67, 54, 0.12);
++    border: 1px solid rgba(244, 67, 54, 0.35);
++    color: #f19a92;
++}
++
++/* Shown instead of the save/discard buttons for read-only (Cashier) users */
++.read-only-note {
++    font-size: 13px;
++    color: var(--muted);
++    margin: 0;
++}
++
+ /* Form Action Buttons Footer Area — Aligned with .swal2-actions */
+ .form-actions {
+     display: flex;

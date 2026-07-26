@@ -17,13 +17,16 @@
         displayRole = "Cashier";
         homeController = "Cashier";
     }
+
+    // Only Admins and Managers can change store settings; Cashiers see a read-only view.
+    bool canEdit = User.IsInRole("Admin") || User.IsInRole("Manager");
 }
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Web Customization - SyncScale</title>
+    <title>Web Customization - @(Model?.StoreName ?? "Cafero")</title>
 
     <!-- FontAwesome Library for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -113,11 +116,21 @@
         <!-- MAIN CONTENT -->
         <main class="main-content slide-up">
             <div class="settings-header">
-                <h2>Web Customization & Theme</h2>
-                <p>Manage application branding, receipt headers, and live UI layout properties.</p>
+                <h2>Store Settings</h2>
+                <p>@(canEdit ? "Manage your store's branding, receipt details, business hours, and app theme." : "View your store's current branding, receipt details, business hours, and app theme.")</p>
             </div>
 
-            <form asp-action="UpdateSettings" method="post" enctype="multipart/form-data" class="settings-form">
+            @if (TempData["SettingsSuccess"] != null)
+            {
+                <div class="settings-alert settings-alert-success">@TempData["SettingsSuccess"]</div>
+            }
+            @if (TempData["SettingsError"] != null)
+            {
+                <div class="settings-alert settings-alert-error">@TempData["SettingsError"]</div>
+            }
+
+            <form asp-controller="Admin" asp-action="UpdateSettings" method="post" enctype="multipart/form-data" class="settings-form">
+                <fieldset class="settings-fieldset" @(canEdit ? "" : "disabled")>
 
                 <!-- SECTION 1: WEB THEME DESIGN -->
                 <div class="settings-card">
@@ -173,8 +186,15 @@
 
                         <div class="form-group full-width">
                             <label for="StoreLogo">Upload Logo (Replaces default icons)</label>
+                            @if (!string.IsNullOrEmpty(Model?.LogoPath))
+                            {
+                                <div class="current-logo-preview">
+                                    <img src="@Model.LogoPath" alt="Current store logo" />
+                                    <span>Current logo</span>
+                                </div>
+                            }
                             <div class="file-upload-wrapper">
-                                <input type="file" id="StoreLogo" name="StoreLogo" accept="image/*" />
+                                <input type="file" id="StoreLogo" name="StoreLogo" accept="image/png,image/jpeg,image/webp,image/svg+xml" />
                                 <div class="file-upload-btn">Choose Image...</div>
                             </div>
                         </div>
@@ -234,10 +254,45 @@
                     </div>
                 </div>
 
+                <!-- SECTION 5: BUSINESS HOURS -->
+                <div class="settings-card">
+                    <h3>Business Hours</h3>
+                    <p class="card-desc">Set your regular opening and closing times. The dashboard and customer-facing pages will show your store as open or closed based on this schedule.</p>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="OpeningTime">Opening Time</label>
+                            <input type="time" id="OpeningTime" name="OpeningTime" value="@(Model?.OpeningTime ?? "07:00")" required />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="ClosingTime">Closing Time</label>
+                            <input type="time" id="ClosingTime" name="ClosingTime" value="@(Model?.ClosingTime ?? "21:00")" required />
+                        </div>
+
+                        <div class="form-group full-width toggle-group">
+                            <label class="toggle-label" for="IsTemporarilyClosed">
+                                <input type="checkbox" id="IsTemporarilyClosed" name="IsTemporarilyClosed" value="true" checked="@(Model?.IsTemporarilyClosed == true)" />
+                                <span>Mark store as temporarily closed</span>
+                            </label>
+                            <p class="card-desc">Turn this on for holidays, emergencies, or any day you're closed outside your regular schedule. This overrides the hours above until you turn it back off.</p>
+                        </div>
+                    </div>
+                </div>
+
+                </fieldset>
+
                 <!-- ACTIONS -->
                 <div class="form-actions">
-                    <button type="button" class="btn-secondary" onclick="window.location.reload();">Discard Changes</button>
-                    <button type="submit" class="btn-primary">Save Settings</button>
+                    @if (canEdit)
+                    {
+                        <button type="button" class="btn-secondary" onclick="window.location.reload();">Discard Changes</button>
+                        <button type="submit" class="btn-primary">Save Settings</button>
+                    }
+                    else
+                    {
+                        <p class="read-only-note">Only Admins and Managers can change these settings.</p>
+                    }
                 </div>
 
             </form>
