@@ -12,41 +12,113 @@
     animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Table overrides to maximize spacing layout continuity */
-.recent-sales-table tbody tr {
-    transition: background-color 0.2s ease, border-color 0.2s ease;
+/* --- TABLE CONTAINER & RESPONSIVENESS FIXES --- */
+.table-card {
+    background: var(--bg-card, #1C241C);
+    border-radius: 14px;
+    padding: 20px;
+    border: 1px solid var(--border-sub, rgba(255, 255, 255, 0.06));
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    margin-bottom: 30px;
+    box-sizing: border-box;
 }
 
-    .recent-sales-table tbody tr:hover {
-        background: rgba(201, 168, 76, 0.02) !important; /* Extremely faint gold glow trace line */
+/* Wrapper container to force smooth scroll without breaking borders */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 8px;
+}
+
+    /* Custom subtle scrollbar styling */
+    .table-responsive::-webkit-scrollbar {
+        height: 6px;
     }
+
+    .table-responsive::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: var(--border, rgba(201, 168, 76, 0.3));
+        border-radius: 10px;
+    }
+
+/* Table rules to maintain dark theme consistency and proper cell bounds */
+.recent-sales-table,
+.item-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    min-width: 600px;
+    table-layout: auto;
+}
+
+    /* Explicit header override to eliminate brown inline elements */
+    .recent-sales-table thead,
+    .item-table thead {
+        background: var(--bg-card-2, #212B21) !important;
+    }
+
+    .recent-sales-table th,
+    .item-table th {
+        background: var(--bg-card-2, #212B21) !important;
+        color: var(--gold, #C9A84C);
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        padding: 14px 16px;
+        text-align: left;
+        border-bottom: 1px solid var(--border, rgba(201, 168, 76, 0.18));
+        white-space: nowrap;
+    }
+
+    .recent-sales-table td,
+    .item-table td {
+        padding: 14px 16px;
+        font-size: 13.5px;
+        color: var(--muted-2, rgba(242, 237, 228, 0.75));
+        border-bottom: 1px solid var(--border-sub, rgba(255, 255, 255, 0.06));
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    .recent-sales-table tbody tr,
+    .item-table tbody tr {
+        transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+        .recent-sales-table tbody tr:hover,
+        .item-table tbody tr:hover {
+            background: rgba(201, 168, 76, 0.03) !important;
+        }
+
+        .recent-sales-table tbody tr:last-child td,
+        .item-table tbody tr:last-child td {
+            border-bottom: 1px solid var(--border-sub, rgba(255, 255, 255, 0.06));
+        }
 
 /* Action button groupings sizing match */
 .action-btn-group {
     display: flex;
     gap: 8px;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
-}
-
-/* Custom layout adjustments for clean inline spacing cells */
-.recent-sales-table td {
-    border-bottom: 1px solid var(--border-sub);
-}
-
-.recent-sales-table tbody tr:last-child td {
-    border-bottom: 1px solid var(--border-sub); /* Keeps bounds visible on long arrays */
 }
 
 /* Custom text utility indicators */
 .text-danger {
-    color: var(--danger) !important;
+    color: var(--danger, #e05555) !important;
     font-weight: 600;
     display: inline-block;
     margin-top: 6px;
 }
 
-/* --- Added Archive Component Specific Rules --- */
+/* --- ARCHIVE COMPONENT SPECIFIC RULES --- */
 
 /* Archive Layout Header Adjustments */
 .page-header {
@@ -54,7 +126,7 @@
 }
 
 .greeting-subtitle {
-    color: #b58361;
+    color: var(--muted, rgba(242, 237, 228, 0.5));
     margin-top: 5px;
 }
 
@@ -67,10 +139,10 @@
 
 /* Premium Back to Active Products Action Button Link */
 .action-link-btn {
-    background: #fdfaf7;
-    color: #4a2511;
-    border: 1.5px solid #4a2511;
-    padding: 8px 16px;
+    background: var(--bg-surface, #141A14);
+    color: var(--cream, #F2EDE4);
+    border: 1px solid var(--border-sub, rgba(255, 255, 255, 0.06));
+    padding: 10px 18px;
     border-radius: 8px;
     text-decoration: none;
     font-weight: 700;
@@ -79,7 +151,6 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    box-shadow: 0 2px 4px rgba(74, 37, 17, 0.04);
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -89,9 +160,9 @@
     }
 
     .action-link-btn:hover {
-        background: #4a2511;
-        color: #ffffff;
-        box-shadow: 0 4px 12px rgba(74, 37, 17, 0.15);
+        background: var(--bg-card-2, #212B21);
+        color: var(--gold, #C9A84C);
+        border-color: var(--border, rgba(201, 168, 76, 0.18));
     }
 
         .action-link-btn:hover i {
@@ -104,39 +175,48 @@
 
 /* Product list text adjustments */
 .product-muted-text {
-    color: #666;
+    color: var(--muted, rgba(242, 237, 228, 0.5));
 }
 
-/* Archived Badges styling indicators */
+/* Archived Badges styling indicators (Dark-Mode adapted) */
 .status-badge-archived {
-    background: #fee2e2;
-    color: #b91c1c;
+    background: rgba(224, 85, 85, 0.15);
+    color: var(--danger, #e05555);
+    border: 1px solid rgba(224, 85, 85, 0.3);
     padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: bold;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 800;
     display: inline-block;
 }
 
-/* Custom Interactive Restore Controls */
+/* Custom Interactive Restore Controls (Dark-Mode adapted) */
 .restore-btn {
-    background: #d1fae5;
-    color: #065f46;
-    border: none;
-    padding: 6px 12px;
+    background: rgba(61, 191, 120, 0.15);
+    color: var(--success, #3dbf78);
+    border: 1px solid rgba(61, 191, 120, 0.3);
+    padding: 6px 14px;
     border-radius: 6px;
-    font-weight: bold;
+    font-weight: 700;
+    font-size: 12px;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: all 0.2s ease;
+    white-space: nowrap;
 }
 
     .restore-btn:hover {
-        background: #a7f3d0;
+        background: var(--success, #3dbf78);
+        color: var(--bg-base, #0D110D);
     }
 
 .slide-up {
     animation: slideUp 0.3s ease-out;
 }
+
+/* ==========================================================================
+   MEDIA QUERIES & MOBILE BREAKPOINTS
+   ========================================================================== */
+
 @media (max-width: 1024px) {
     .dashboard-container {
         display: block;
@@ -149,7 +229,7 @@
         z-index: 1001;
         transition: left 0.3s ease;
         height: 100vh;
-        box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+        box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
     }
@@ -165,7 +245,7 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0,0,0,0.7);
+        background: rgba(0, 0, 0, 0.7);
         z-index: 1000;
         backdrop-filter: blur(4px);
     }
@@ -180,16 +260,16 @@
         align-items: center;
         gap: 16px;
         padding: 20px;
-        background: var(--bg-base);
-        border-bottom: 1px solid var(--border-sub);
+        background: var(--bg-base, #0D110D);
+        border-bottom: 1px solid var(--border-sub, rgba(255, 255, 255, 0.06));
         margin-bottom: 20px;
     }
 
     /* Modern Hamburger */
     .hamburger-btn {
-        background: var(--bg-surface);
-        border: 1px solid var(--border);
-        color: var(--gold);
+        background: var(--bg-surface, #141A14);
+        border: 1px solid var(--border, rgba(201, 168, 76, 0.18));
+        color: var(--gold, #C9A84C);
         width: 44px;
         height: 44px;
         border-radius: 10px;
@@ -203,9 +283,9 @@
     }
 
         .hamburger-btn:hover {
-            background: var(--gold);
-            color: var(--bg-base);
-            border-color: var(--gold);
+            background: var(--gold, #C9A84C);
+            color: var(--bg-base, #0D110D);
+            border-color: var(--gold, #C9A84C);
             transform: translateY(-2px);
         }
 
@@ -213,13 +293,14 @@
     .mobile-brand {
         font-size: 20px;
         font-weight: 800;
-        color: var(--cream);
+        color: var(--cream, #F2EDE4);
         letter-spacing: -0.5px;
     }
 }
 
 @media (min-width: 1025px) {
-    .mobile-header, .sidebar-overlay {
+    .mobile-header,
+    .sidebar-overlay {
         display: none !important;
     }
 }

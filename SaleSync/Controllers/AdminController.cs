@@ -601,7 +601,9 @@ namespace SaleSync.Controllers
                                 PurchasePrice = Convert.ToDecimal(r["cost_price"]),
                                 ItemCategory = r["category_name"]?.ToString() ?? "Raw Materials",
                                 RecipeUnit = r["recipe_unit"]?.ToString(),
-                                ConversionFactor = r["conversion_factor"] != DBNull.Value ? Convert.ToDouble(r["conversion_factor"]) : 1
+                                ConversionFactor = r["conversion_factor"] != DBNull.Value ? Convert.ToDouble(r["conversion_factor"]) : 1,
+                                DateAcquired = "",
+                                ExpirationDate = ""
                             });
                         }
                     }
