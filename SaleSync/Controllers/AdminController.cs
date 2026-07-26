@@ -20,12 +20,14 @@ namespace SaleSync.Controllers
     {
         private readonly IConfiguration _configuration;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly StoreSettingsService _storeSettingsService;
         private readonly string connectionString; // Remove the hardcoded string here!
 
-        public AdminController(IConfiguration configuration, IWebHostEnvironment webHostEnvironment)
+        public AdminController(IConfiguration configuration, IWebHostEnvironment webHostEnvironment, StoreSettingsService storeSettingsService)
         {
             _configuration = configuration;
             _webHostEnvironment = webHostEnvironment;
+            _storeSettingsService = storeSettingsService;
             connectionString = _configuration.GetConnectionString("DefaultConnection"); // Reads from appsettings
         }
 
@@ -56,6 +58,10 @@ namespace SaleSync.Controllers
 
         public IActionResult Dashboard()
         {
+            var storeSettings = _storeSettingsService.GetSettings();
+            var storeStatus = _storeSettingsService.GetStoreStatus(storeSettings);
+            ViewBag.StoreStatus = storeStatus;
+
             var model = new CashierDashboardViewModel { RecentSales = new List<SaleHistoryItem>() };
 
             using (SqlConnection conn = new SqlConnection(connectionString))
@@ -1677,10 +1683,157 @@ namespace SaleSync.Controllers
         [HttpGet]
         public IActionResult WebCustomization()
         {
-            // Initialize a completely new instance directly to prevent database errors for now
-            var settings = new WebCustomization();
-
+            var settings = _storeSettingsService.GetSettings();
             return View(settings);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateSettings(WebCustomization model, IFormFile? StoreLogo)
+        {
+            if (!ModelState.IsValid)
+            {
+                TempData["SettingsError"] = "Please check the form for missing or invalid values.";
+                return View("WebCustomization", model);
+            }
+
+            try
+            {
+                // Keep the existing logo unless a new one was uploaded.
+                var existing = _storeSettingsService.GetSettings();
+                model.LogoPath = existing.LogoPath;
+
+                if (StoreLogo != null && StoreLogo.Length > 0)
+                {
+                    const long maxLogoSizeBytes = 2 * 1024 * 1024; // 2 MB
+                    string[] allowedExtensions = { ".jpg", ".jpeg", ".png", ".webp", ".svg" };
+                    string extension = Path.GetExtension(StoreLogo.FileName).ToLowerInvariant();
+
+                    if (StoreLogo.Length > maxLogoSizeBytes)
+                    {
+                        TempData["SettingsError"] = "Logo image is too large. Please choose a file under 2 MB.";
+                        return RedirectToAction("WebCustomization");
+                    }
+
+                    if (string.IsNullOrEmpty(extension) || !allowedExtensions.Contains(extension))
+                    {
+                        TempData["SettingsError"] = "Unsupported logo file type. Please upload a JPG, PNG, WEBP, or SVG image.";
+                        return RedirectToAction("WebCustomization");
+                    }
+
+                    string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "branding");
+                    if (!Directory.Exists(uploadsFolder))
+                    {
+                        Directory.CreateDirectory(uploadsFolder);
+                    }
+
+                    string uniqueFileName = Guid.NewGuid().ToString() + extension;
+                    string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await StoreLogo.CopyToAsync(fileStream);
+                    }
+
+                    model.LogoPath = "/images/branding/" + uniqueFileName;
+                }
+
+                _storeSettingsService.SaveSettings(model);
+                TempData["SettingsSuccess"] = "Settings saved successfully.";
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"[UpdateSettings] Failed to save store settings: {ex}");
+                TempData["SettingsError"] = "Something went wrong while saving. Please try again.";
+            }
+
+            return RedirectToAction("WebCustomization");
+        }
+
+        // ==========================================
+        // GLOBAL SEARCH ENDPOINT
+        // ==========================================
+        [HttpGet]
+        public IActionResult GlobalSearch(string q)
+        {
+            if (string.IsNullOrWhiteSpace(q) || q.Length < 2)
+                return Json(new { products = new object[0], inventory = new object[0], transactions = new object[0] });
+
+            var products = new List<object>();
+            var inventory = new List<object>();
+            var transactions = new List<object>();
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+
+                // Search products (menu items + inventory) — match Products page query
+                string prodSql = @"SELECT TOP 10 p.product_id, p.product_name, p.selling_price, p.sku, p.is_ingredient
+                    FROM products p
+                    WHERE (p.is_archived = 0 OR p.is_archived IS NULL)
+                    AND (p.is_ingredient = 0 OR p.is_ingredient IS NULL)
+                    AND p.product_name LIKE @q
+                    ORDER BY p.product_name";
+                using (SqlCommand cmd = new SqlCommand(prodSql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@q", "%" + q + "%");
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                            products.Add(new {
+                                id = reader["product_id"],
+                                name = reader["product_name"].ToString(),
+                                price = reader["selling_price"] != DBNull.Value ? Convert.ToDecimal(reader["selling_price"]) : 0m,
+                                sku = reader["sku"]?.ToString(),
+                                url = "/Admin/Products"
+                            });
+                    }
+                }
+
+                // Search inventory (ingredient items)
+                string invSql = @"SELECT TOP 8 product_id, product_name, stock_quantity, cost_price, unit
+                    FROM products WHERE (is_archived = 0 OR is_archived IS NULL) AND is_ingredient = 1
+                    AND product_name LIKE @q ORDER BY product_name";
+                using (SqlCommand cmd = new SqlCommand(invSql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@q", "%" + q + "%");
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                            inventory.Add(new {
+                                id = reader["product_id"],
+                                name = reader["product_name"].ToString(),
+                                stock = reader["stock_quantity"],
+                                cost = Convert.ToDecimal(reader["cost_price"]),
+                                unit = reader["unit"]?.ToString(),
+                                url = "/Admin/Inventory"
+                            });
+                    }
+                }
+
+                // Search recent transactions
+                string transSql = @"SELECT TOP 8 s.sale_id, s.customer_name, s.total_amount, s.status, s.payment_method, s.sale_date
+                    FROM sales s
+                    WHERE s.customer_name LIKE @q OR CAST(s.sale_id AS VARCHAR) LIKE @q
+                    ORDER BY s.sale_date DESC";
+                using (SqlCommand cmd = new SqlCommand(transSql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@q", "%" + q + "%");
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                            transactions.Add(new {
+                                id = reader["sale_id"],
+                                name = (reader["customer_name"]?.ToString() ?? "Walk-in") + " (#" + reader["sale_id"] + ")",
+                                amount = Convert.ToDecimal(reader["total_amount"]),
+                                status = reader["status"]?.ToString(),
+                                method = reader["payment_method"]?.ToString(),
+                                url = "/Admin/DailyReport"
+                            });
+                    }
+                }
+            }
+
+            return Json(new { products, inventory, transactions });
         }
 
         public class AdminVoidRequest { public int SaleId { get; set; } public string Pass { get; set; } }
