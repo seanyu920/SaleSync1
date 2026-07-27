@@ -31,8 +31,9 @@
     <!-- SweetAlert2 Library -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <link rel="stylesheet" href="~/css/Inventory.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/AdminDashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/WebCustomization.css" asp-append-version="true" />
+    <link rel="icon" type="image/jpeg" href="~/images/CaferoLogo.jpg" asp-append-version="true" />
 </head>
 <body>
     <div class="dashboard-container" id="dashboardContainer">
@@ -102,6 +103,8 @@
                 </form>
             </div>
         </aside>
+
+        <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
 
         <div class="mobile-header">
             <button class="hamburger-btn" onclick="toggleSidebar()">

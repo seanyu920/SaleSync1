@@ -28,6 +28,7 @@
     <link rel="stylesheet" href="~/css/CashierMenu.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <link rel="icon" type="image/jpeg" href="~/images/CaferoLogo.jpg" asp-append-version="true" />
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
@@ -220,6 +221,12 @@
                         <input id="qty" value="1" readonly />
                         <button type="button" onclick="increaseQty()">+</button>
                     </div>
+
+                    <div class="notes-section">
+                        <label class="notes-label">Note (Optional)</label>
+                        <textarea id="itemNotes" class="notes-textarea" placeholder="e.g. extra shot, less ice, no sugar..." maxlength="120" rows="2"></textarea>
+                    </div>
+
                     <button type="button" class="add-btn-large" onclick="addToCart()">Add to Receipt</button>
                 </div>
             </div>
@@ -378,6 +385,7 @@
         document.getElementById('selectionModal').style.display = 'flex';
         document.getElementById('displayName').innerText = name;
         document.getElementById('qty').value = 1;
+        document.getElementById('itemNotes').value = "";
         const sizeSelector = document.getElementById('sizeSelector');
         if (sizedCategories.includes(currentCategory)) {
         sizeSelector.style.display = 'flex';
@@ -401,7 +409,8 @@
         let qty = parseInt(document.getElementById("qty").value);
         let dbKey = (sizedCategories.includes(currentCategory) && size !== "Regular") ? `${activeItemName} - ${size}` : activeItemName;
         let price = basePrices[dbKey] || basePrices[activeItemName] || 0;
-        cart.push({ name: activeItemName, dbKey: dbKey, size: size, qty: qty, price: price });
+        let notes = document.getElementById('itemNotes').value.trim();
+        cart.push({ name: activeItemName, dbKey: dbKey, size: size, qty: qty, price: price, notes: notes });
         localStorage.setItem('syncScaleCart', JSON.stringify(cart));
         Toastify({ text: `📦 ${qty}x ${activeItemName} added!`, duration: 1500, style: { background: "#C9A84C" } }).showToast();
         renderReceipt();
@@ -436,10 +445,12 @@
         receipt.innerHTML = cart.map((item, index) => {
         let sub = item.qty * item.price; total += sub;
         let isSelected = selectedReceiptIndices.includes(index);
+        const noteHtml = item.notes ? `<div style="font-size:11px; color: var(--gold); margin-top:2px;">📝 ${item.notes}</div>` : '';
         return `<div class="order-item-row ${isSelected ? 'selected-row' : ''}" onclick="selectReceiptItem(${index})" style="display: flex; align-items: center;">
         <div style="flex-grow: 1;">
         <div style="font-weight:700;">${item.name}</div>
         <div style="font-size:11px; color: rgba(242,237,228,0.4);">${item.size} • ₱${item.price.toFixed(2)}/ea</div>
+        ${noteHtml}
         </div>
         <div style="display:flex;align-items:center;border:1px solid rgba(255,255,255,0.08);border-radius:6px;background:rgba(255,255,255,0.04);margin-right:12px;" onclick="event.stopPropagation()">
         <button type="button" onclick="updateCartItemQty(${index},-1)" style="border:none;background:transparent;padding:4px 10px;cursor:pointer;color:#C9A84C;font-weight:bold;font-size:14px;">-</button>
@@ -497,7 +508,8 @@
         tbody.innerHTML = `<tr><th style="text-align:left;padding-bottom:5px;">Qty</th><th style="text-align:left;padding-bottom:5px;">Item</th><th style="text-align:right;padding-bottom:5px;">Total</th></tr>`;
         cart.forEach(item => {
         let sub = item.qty * item.price;
-        tbody.innerHTML += `<tr><td style="vertical-align:top;width:40px;">${item.qty}x</td><td style="padding-bottom:5px;">${item.name}<br><small style="font-size:10px;color:#555;">${item.size}</small></td><td style="text-align:right;vertical-align:top;">₱${sub.toFixed(2)}</td></tr>`;
+        const noteLine = item.notes ? `<br><small style="font-size:10px;color:#333;">Note: ${item.notes}</small>` : '';
+        tbody.innerHTML += `<tr><td style="vertical-align:top;width:40px;">${item.qty}x</td><td style="padding-bottom:5px;">${item.name}<br><small style="font-size:10px;color:#555;">${item.size}</small>${noteLine}</td><td style="text-align:right;vertical-align:top;">₱${sub.toFixed(2)}</td></tr>`;
         });
         let total = currentCartTotal;
         let vatableSales = total / 1.12;
@@ -515,14 +527,25 @@
         function cancelCheckout() { document.getElementById("receiptModal").style.display = "none"; }
 
         async function finalizeOrder(shouldPrint) {
-        const payload = cart.map(item => ({ productId: productIdMap[item.dbKey] || productIdMap[item.name] || 0, quantity: item.qty, price: item.price }));
+        const payload = cart.map(item => ({
+        productId: productIdMap[item.dbKey] || productIdMap[item.name] || 0,
+        quantity: item.qty,
+        price: item.price,
+        notes: item.notes || ""
+        }));
         const buttons = document.querySelectorAll('.receipt-modal-actions button');
         buttons.forEach(btn => { btn.disabled = true; btn.style.opacity = '0.5'; });
         try {
         const response = await fetch('/Cashier/Checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: payload, paymentMethod: finalPaymentMethod, amountPaid: pendingAmountPaid, orderType: currentOrderType, customerName: currentCustomerName })
+        body: JSON.stringify({
+        items: payload,
+        paymentMethod: finalPaymentMethod,
+        amountPaid: pendingAmountPaid,
+        orderType: currentOrderType,
+        customerName: currentCustomerName
+        })
         });
         if (response.ok) {
         if (shouldPrint) { window.print(); }
@@ -550,6 +573,7 @@
         if (sidebar) sidebar.classList.toggle('mobile-open');
         if (overlay) overlay.classList.toggle('mobile-open');
         }
+
     </script>
 </body>
 </html>

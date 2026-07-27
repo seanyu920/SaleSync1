@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="~/css/AdminDashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <!-- Added Chart.js CDN to fix potential chart rendering errors -->
+    <link rel="icon" type="image/jpeg" href="~/images/CaferoLogo.jpg" asp-append-version="true" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
@@ -28,6 +29,9 @@
             <p onclick="closeModal()" class="modal-cancel">Cancel</p>
         </div>
     </div>
+
+    <!-- MOBILE SIDEBAR OVERLAY -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
 
     <div class="dashboard-container">
 
@@ -473,13 +477,26 @@
         }
         });
         });
+
         function toggleSidebar() {
         const sidebar = document.querySelector('.sidebar');
         const overlay = document.querySelector('.sidebar-overlay');
 
-        sidebar.classList.toggle('mobile-open');
-        overlay.classList.toggle('mobile-open');
+        if (sidebar) sidebar.classList.toggle('mobile-open');
+        if (overlay) overlay.classList.toggle('mobile-open');
         }
+
+        // Close sidebar when clicking outside of it on mobile screens
+        document.addEventListener('click', function (event) {
+        const sidebar = document.querySelector('.sidebar');
+        const hamburgerBtn = document.querySelector('.hamburger-btn');
+
+        if (sidebar && sidebar.classList.contains('mobile-open')) {
+        if (!sidebar.contains(event.target) && hamburgerBtn && !hamburgerBtn.contains(event.target)) {
+        toggleSidebar();
+        }
+        }
+        });
     </script>
 </body>
 </html>
