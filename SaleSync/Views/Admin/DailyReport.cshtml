@@ -1,6 +1,10 @@
 ﻿@model SaleSync.Models.DailyReportViewModel
 @{
     Layout = null;
+    bool isManager = User.IsInRole("Manager");
+    string homeController = isManager ? "Manager" : "Admin";
+    string displayRole = isManager ? "Manager" : "Admin";
+    string currentAction = ViewContext.RouteData.Values["action"]?.ToString();
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -10,6 +14,9 @@
     <title>Daily Report - SyncScale</title>
     <link rel="stylesheet" href="~/css/AdminDashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/DailyReport.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="icon" type="image/jpeg" href="~/images/CaferoLogo.jpg" asp-append-version="true" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
     <div class="dashboard-container">
@@ -24,31 +31,31 @@
                 <div class="profile-section">
                     <div class="profile-circle">👤</div>
                     <div>
-                        <h2 class="admin-name">Admin</h2>
-                        <div class="admin-role">Administrator</div>
+                        <h2 class="admin-name">@(User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? User.Identity?.Name ?? "User")</h2>
+                        <div class="admin-role">@(User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "User")</div>
                     </div>
                 </div>
 
                 <nav class="sidebar-menu">
-                    <a href="/Admin/Dashboard" class="menu-btn">Dashboard</a>
-                    <a href="/Admin/QueueOrder" class="menu-btn">Queue</a>
+                    <a href="/@homeController/Dashboard" class="menu-btn @(currentAction == "Dashboard" ? "active" : "")">Dashboard</a>
+                    <a href="/Admin/QueueOrder" class="menu-btn @(currentAction == "QueueOrder" ? "active" : "")">Queue</a>
 
                     @if (User.IsInRole("Admin"))
                     {
-                        <a href="/Admin/ActivityLog" class="menu-btn">Activity Log</a>
+                        <a href="/Admin/ActivityLog" class="menu-btn @(currentAction == "ActivityLog" ? "active" : "")">Activity Log</a>
                     }
 
-                    <a href="/Admin/Analytics" class="menu-btn">Analytics</a>
-                    <a href="/Admin/Products" class="menu-btn">Products</a>
-                    <a href="/Admin/Inventory" class="menu-btn">Inventory</a>
+                    <a href="/Admin/Analytics" class="menu-btn @(currentAction == "Analytics" ? "active" : "")">Analytics</a>
+                    <a href="/Admin/Products" class="menu-btn @(currentAction == "Products" ? "active" : "")">Products</a>
+                    <a href="/Admin/Inventory" class="menu-btn @(currentAction == "Inventory" ? "active" : "")">Inventory</a>
 
-                    <a href="/Admin/ArchivedProducts" class="menu-btn">Archived</a>
+                    <a href="/Admin/ArchivedProducts" class="menu-btn @(currentAction == "ArchivedProducts" || currentAction == "Archive" ? "active" : "")">Archived</a>
 
                     @if (User.IsInRole("Admin"))
                     {
-                        <a href="/Admin/ManageAccounts" class="menu-btn">Accounts</a>
+                        <a href="/Admin/ManageAccounts" class="menu-btn @(currentAction == "ManageAccounts" ? "active" : "")">Accounts</a>
                     }
-                    <a href="/Admin/WebCustomization" class="menu-btn">Customization</a>
+                    <a href="/Admin/WebCustomization" class="menu-btn @(currentAction == "WebCustomization" ? "active" : "")">Customization</a>
                 </nav>
             </div>
 
@@ -61,7 +68,16 @@
             </div>
         </aside>
 
-        <main class="main-content">
+        <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+        <div class="mobile-header">
+            <button class="hamburger-btn" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="mobile-brand">Cafero</div>
+        </div>
+
+        <main class="main-content slide-up">
             <div class="page-header">
                 <h1 class="greeting-title">End of Day Report</h1>
                 <p class="greeting-subtitle">Sales and Profit analysis for @DateTime.Now.ToString("MMMM dd, yyyy")</p>
@@ -181,5 +197,60 @@
             </div>
 
         </main>
-    </div></body>
+
+    </div>
+
+    <script>
+        function confirmLogout() {
+        if (typeof Swal !== 'undefined') {
+        Swal.fire({
+        title: 'Are you sure?',
+        text: "You will be logged out of your session.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, log out',
+        cancelButtonText: 'Cancel'
+        }).then((result) => {
+        if (result.isConfirmed) {
+        document.getElementById('logoutForm').submit();
+        }
+        });
+        } else {
+        if (confirm("Are you sure you want to log out?")) {
+        document.getElementById('logoutForm').submit();
+        }
+        }
+        }
+
+        // Safe toggle logic for mobile sidebar
+        function toggleSidebar() {
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.querySelector('.sidebar-overlay');
+
+        if (sidebar) {
+        sidebar.classList.toggle('mobile-open');
+        }
+        if (overlay) {
+        overlay.classList.toggle('mobile-open');
+        }
+        }
+
+        // Close sidebar when clicking outside on mobile screen
+        document.addEventListener('click', function (event) {
+        const sidebar = document.querySelector('.sidebar');
+        const hamburger = document.querySelector('.hamburger-btn');
+
+        if (sidebar && hamburger) {
+        if (sidebar.classList.contains('mobile-open') &&
+        !sidebar.contains(event.target) &&
+        !hamburger.contains(event.target)) {
+
+        sidebar.classList.remove('mobile-open');
+        }
+        }
+        });
+    </script>
+</body>
 </html>

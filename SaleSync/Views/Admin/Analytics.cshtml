@@ -14,6 +14,7 @@
 
     <!-- FontAwesome Library for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="icon" type="image/jpeg" href="~/images/CaferoLogo.jpg" asp-append-version="true" />
 
     <!-- Required library for confirmLogout -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -82,6 +83,8 @@
                 </form>
             </div>
         </aside>
+
+        <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
 
         <div class="mobile-header">
             <button class="hamburger-btn" onclick="toggleSidebar()">

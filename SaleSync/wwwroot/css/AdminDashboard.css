@@ -1097,6 +1097,18 @@ body {
     .dashboard-container {
         display: block;
     }
+    .top-nav-controls {
+        justify-content: flex-end;
+        gap: 16px;
+    }
+
+    .user-dropdown {
+        order: 1;
+    }
+
+    .notification-bell {
+        order: 3;
+    }
 
     .sidebar {
         position: fixed;

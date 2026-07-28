@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link rel="stylesheet" href="~/css/AdminDashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/QueueOrder.css" asp-append-version="true" />
-
+    <link rel="icon" type="image/jpeg" href="~/images/CaferoLogo.jpg" asp-append-version="true" />
     <!-- SweetAlert2 Library for Elegant Dark-Themed Popups -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
@@ -99,6 +99,9 @@
                 </form>
             </div>
         </aside>
+
+        <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
         <div class="mobile-header">
             <button class="hamburger-btn" onclick="toggleSidebar()">
                 <i class="fas fa-bars"></i>
@@ -411,7 +414,13 @@
         ingList.innerHTML = '';
 
         if (data.items && data.items.length > 0) {
-        data.items.forEach(i => itemsList.innerHTML += `<li><i class="fas fa-shopping-basket" style="color:#888e8a; margin-right:8px;"></i> ${i}</li>`);
+        data.items.forEach(i => {
+        // Supports either plain strings (old format) or { name, notes } objects (new format)
+        const label = typeof i === 'string' ? i : i.name;
+        const note = (typeof i === 'object' && i.notes) ? i.notes : null;
+        const noteHtml = note ? `<div style="font-size:12px; color:#C9A84C; margin:2px 0 8px 24px;">📝 ${note}</div>` : '';
+        itemsList.innerHTML += `<li><i class="fas fa-shopping-basket" style="color:#888e8a; margin-right:8px;"></i> ${label}</li>${noteHtml}`;
+        });
         } else {
         itemsList.innerHTML = '<li>No menu items found for this record.</li>';
         }
@@ -519,14 +528,34 @@
         event.target.style.display = 'none';
         }
         }
+
+        // Safe toggle logic for mobile sidebar
         function toggleSidebar() {
         const sidebar = document.querySelector('.sidebar');
         const overlay = document.querySelector('.sidebar-overlay');
 
+        if (sidebar) {
         sidebar.classList.toggle('mobile-open');
+        }
+        if (overlay) {
         overlay.classList.toggle('mobile-open');
         }
+        }
 
+        // Close sidebar when clicking outside on mobile devices
+        document.addEventListener('click', function (event) {
+        const sidebar = document.querySelector('.sidebar');
+        const hamburger = document.querySelector('.hamburger-btn');
+
+        if (sidebar && hamburger) {
+        if (sidebar.classList.contains('mobile-open') &&
+        !sidebar.contains(event.target) &&
+        !hamburger.contains(event.target)) {
+
+        sidebar.classList.remove('mobile-open');
+        }
+        }
+        });
     </script>
 </body>
 </html>

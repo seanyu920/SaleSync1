@@ -2,7 +2,7 @@
    CAFÈRO POS — Dark Theme (Daily End of Day Report & Modals)
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght=300;400;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap');
 
 :root {
     --bg-base: #0D110D;
@@ -434,6 +434,7 @@ body {
 .table-responsive {
     width: 100%;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .recent-sales-table {
@@ -451,6 +452,7 @@ body {
         letter-spacing: 1.5px;
         padding: 14px 18px;
         border-bottom: 1.5px solid var(--border);
+        white-space: nowrap;
     }
 
     .recent-sales-table td {
@@ -459,6 +461,7 @@ body {
         color: var(--muted-2);
         border-bottom: 1px solid var(--border-sub);
         vertical-align: middle;
+        white-space: nowrap;
     }
 
     .recent-sales-table tbody tr {
@@ -506,6 +509,7 @@ body {
     font-size: 14px;
     font-style: italic;
     border-bottom: none !important;
+    white-space: normal !important;
 }
 
 /* --- BADGES --- */
@@ -545,5 +549,125 @@ body {
     to {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+
+/* ==========================================================================
+   MOBILE & RESPONSIVE OVERRIDES
+   ========================================================================== */
+@media (max-width: 1024px) {
+    .dashboard-container {
+        display: block;
+    }
+
+    .sidebar {
+        position: fixed;
+        left: -255px;
+        top: 0;
+        z-index: 1001;
+        transition: left 0.3s ease;
+        height: 100vh;
+        box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+        .sidebar.mobile-open {
+            left: 0;
+        }
+
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.7);
+        z-index: 1000;
+        backdrop-filter: blur(4px);
+    }
+
+        .sidebar-overlay.mobile-open {
+            display: block;
+        }
+
+    /* Mobile Header Panel */
+    .mobile-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 20px;
+        background: var(--bg-base);
+        border-bottom: 1px solid var(--border-sub);
+        margin-bottom: 20px;
+    }
+
+    /* Modern Hamburger */
+    .hamburger-btn {
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        color: var(--gold);
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 18px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    }
+
+        .hamburger-btn:hover {
+            background: var(--gold);
+            color: var(--bg-base);
+            border-color: var(--gold);
+            transform: translateY(-2px);
+        }
+
+    /* Brand Name */
+    .mobile-brand {
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--cream);
+        letter-spacing: -0.5px;
+    }
+
+    /* Layout stacking */
+    .main-content {
+        padding: 20px 16px;
+    }
+
+    .summary-dashboard {
+        grid-template-columns: 1fr;
+        gap: 14px;
+        margin-bottom: 24px;
+    }
+
+    .summary-card {
+        padding: 18px;
+        gap: 14px;
+    }
+
+    .greeting-title {
+        font-size: 21px;
+    }
+
+    .recent-sales-card {
+        padding: 18px;
+    }
+
+    .recent-sales-table th,
+    .recent-sales-table td {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+}
+
+@media (min-width: 1025px) {
+    .mobile-header, .sidebar-overlay {
+        display: none !important;
     }
 }
