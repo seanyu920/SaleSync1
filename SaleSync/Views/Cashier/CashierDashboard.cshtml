@@ -1,4 +1,4 @@
-﻿@model SaleSync.Models.CashierDashboardViewModel
+@model SaleSync.Models.CashierDashboardViewModel
 @{
     Layout = null;
     string homeController = User.IsInRole("Manager") ? "Manager" : "Cashier";
@@ -16,6 +16,9 @@
     <link rel="icon" type="image/jpeg" href="~/images/CaferoLogo.jpg" asp-append-version="true" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Real-Time Chat SignalR Client -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
 </head>
 <body>
 
@@ -82,7 +85,8 @@
             <div class="top-navbar">
                 <div class="search-wrapper">
                     <i class="fas fa-search"></i>
-                    <input type="text" class="search-input" placeholder="Search transactions, products, or inventory..." />
+                    <input type="text" class="search-input" placeholder="Search transactions, products, or inventory..." oninput="globalSearch(this.value)" autocomplete="off" />
+                    <div class="search-dropdown" id="searchDropdown"></div>
                 </div>
                 <div class="top-nav-controls">
                     <div class="datetime-display">
@@ -93,9 +97,9 @@
                         <i class="fas fa-bell"></i>
                         <span class="bell-badge"></span>
                     </div>
-                    <div class="user-dropdown">
-                        <span>Active Terminal: <strong>Station 1</strong></span>
-                        <i class="fas fa-angle-down"></i>
+                    <div class="nav-chat-icon" onclick="toggleChat()" id="chatTrigger">
+                        <i class="fas fa-comments"></i>
+                        <span class="chat-badge" id="chatBadge" style="display: none;"></span>
                     </div>
                 </div>
             </div>
@@ -105,12 +109,27 @@
                     <p class="header-label">Today's Net Sales</p>
                     <h1 class="header-sales-value">₱@Model.TodayTotalSales.ToString("N2")</h1>
                 </div>
-                <div class="system-status-container">
-                    <p class="status-label">System Status</p>
-                    <div class="status-indicator-flex">
-                        <span class="status-dot animate-pulse"></span>
-                        <span class="status-text">Online & Syncing</span>
+                <div class="header-status-group">
+                    <div class="system-status-container">
+                        <p class="status-label">System Status</p>
+                        <div class="status-indicator-flex">
+                            <span class="status-dot animate-pulse"></span>
+                            <span class="status-text">Online & Syncing</span>
+                        </div>
                     </div>
+                    @{
+                        var storeStatus = ViewBag.StoreStatus as SaleSync.Models.StoreStatus;
+                    }
+                    @if (storeStatus != null)
+                    {
+                        <div class="system-status-container store-status-container">
+                            <p class="status-label">Store Status</p>
+                            <div class="status-indicator-flex">
+                                <span class="status-dot @(storeStatus.IsOpen ? "store-open-dot" : "store-closed-dot")"></span>
+                                <span class="status-text @(storeStatus.IsOpen ? "store-open-text" : "store-closed-text")">@storeStatus.Label · @storeStatus.HoursLabel</span>
+                            </div>
+                        </div>
+                    }
                 </div>
             </div>
 
@@ -391,6 +410,26 @@
         </main>
     </div>
 
+    <!-- Chat Dropdown -->
+    <div class="chat-dropdown" id="chatDropdown">
+        <div class="chat-dropdown-header">
+            <span class="chat-status-dot"></span>
+            <span>Team Chat</span>
+        </div>
+        <div class="chat-dropdown-contact-bar">
+            <select id="chatContactSelect" onchange="switchChatContact(this.value)">
+                <option value="">Select a contact…</option>
+            </select>
+        </div>
+        <div class="chat-dropdown-body" id="chatMessages">
+            <div class="system-message">Select a contact to start chatting.</div>
+        </div>
+        <div class="chat-dropdown-footer">
+            <input type="text" id="chatInput" placeholder="Type a message..." onkeypress="handleChatKey(event)" />
+            <button class="chat-send-btn" onclick="sendChatMessage()">Send</button>
+        </div>
+    </div>
+
     <script>
         function confirmLogout() {
         Swal.fire({
@@ -496,6 +535,162 @@
         toggleSidebar();
         }
         }
+
+        function filterDashboard(query) { /* unused - replaced by globalSearch */ }
+
+        let searchTimeout;
+        function globalSearch(query) {
+            const dd = document.getElementById("searchDropdown");
+            if (!query || query.length < 2) { dd.style.display = "none"; dd.innerHTML = ""; return; }
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(async () => {
+                try {
+                    const res = await fetch("/Cashier/GlobalSearch?q=" + encodeURIComponent(query));
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    let html = "";
+                    if (data.products.length) {
+                        html += '<div class="search-group-label">Products</div>';
+                        data.products.forEach(p => {
+                            html += '<a class="search-result-item" href="' + p.url + '"><i class="fas fa-coffee"></i><span>' + p.name + '</span><span class="search-price">₱' + p.price.toFixed(2) + '</span></a>';
+                        });
+                    }
+                    if (data.inventory.length) {
+                        html += '<div class="search-group-label">Inventory</div>';
+                        data.inventory.forEach(i => {
+                            html += '<a class="search-result-item" href="' + i.url + '"><i class="fas fa-box"></i><span>' + i.name + '</span><span class="search-stock">' + i.stock + ' ' + i.unit + '</span></a>';
+                        });
+                    }
+                    if (data.transactions.length) {
+                        html += '<div class="search-group-label">Transactions</div>';
+                        data.transactions.forEach(t => {
+                            html += '<a class="search-result-item" href="' + t.url + '"><i class="fas fa-receipt"></i><span>' + t.name + '</span><span class="search-price">₱' + t.amount.toFixed(2) + '</span></a>';
+                        });
+                    }
+                    if (!html) html = '<div class="search-empty">No results found</div>';
+                    dd.innerHTML = html;
+                    dd.style.display = "block";
+                } catch(e) { console.error("Search error:", e); }
+            }, 300);
+        }
+
+        document.addEventListener("click", function(e) {
+            const dd = document.getElementById("searchDropdown");
+            const wrapper = document.querySelector(".search-wrapper");
+            if (dd && wrapper && !wrapper.contains(e.target)) {
+                dd.style.display = "none";
+            }
+        });
+
+        // ── Chat Dropdown Logic ──
+        let chatConn;
+        let currentChatWith = null;
+        const chatCurrentUser = "@(User.FindFirst("Username")?.Value ?? "")";
+
+        function toggleChat() {
+            const dd = document.getElementById("chatDropdown");
+            dd.classList.toggle("open");
+            if (dd.classList.contains("open")) {
+                document.getElementById("chatBadge").style.display = "none";
+                loadChatContacts();
+            }
+        }
+
+        document.addEventListener("click", function(e) {
+            const dd = document.getElementById("chatDropdown");
+            const trigger = document.getElementById("chatTrigger");
+            if (dd && !dd.contains(e.target) && !trigger.contains(e.target)) {
+                dd.classList.remove("open");
+            }
+        });
+
+        function handleChatKey(event) {
+            if (event.key === 'Enter') sendChatMessage();
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById("chatInput");
+            const msg = input.value.trim();
+            if (!msg || !currentChatWith) return;
+            chatConn.invoke("SendMessage", currentChatWith, msg)
+                .catch(err => console.error("Error sending message:", err));
+            input.value = "";
+        }
+
+        async function loadChatContacts() {
+            const select = document.getElementById("chatContactSelect");
+            if (select.dataset.loaded === "true") return;
+            try {
+                const res = await fetch('/Chat/GetContacts');
+                if (!res.ok) return;
+                const contacts = await res.json();
+                contacts.forEach(c => {
+                    const opt = document.createElement("option");
+                    opt.value = c.username;
+                    opt.textContent = c.username + " (" + c.role + ")";
+                    select.appendChild(opt);
+                });
+                select.dataset.loaded = "true";
+                if (contacts.length > 0 && !currentChatWith) {
+                    select.value = contacts[0].username;
+                    switchChatContact(contacts[0].username);
+                }
+            } catch (err) { console.error("Failed to load contacts:", err); }
+        }
+
+        async function switchChatContact(username) {
+            currentChatWith = username || null;
+            const area = document.getElementById("chatMessages");
+            area.innerHTML = '<div class="system-message">Select a contact to start chatting.</div>';
+            if (!currentChatWith) return;
+            try {
+                const res = await fetch('/Chat/GetChatHistory?chatWith=' + encodeURIComponent(currentChatWith));
+                if (!res.ok) return;
+                const history = await res.json();
+                if (history.length > 0) {
+                    const ph = area.querySelector('.system-message');
+                    if (ph) ph.remove();
+                }
+                history.forEach(m => renderChatMessage(m.sender, m.text, m.time));
+            } catch (err) { console.error("Failed to load chat history:", err); }
+        }
+
+        function renderChatMessage(sender, message, timeString) {
+            const area = document.getElementById("chatMessages");
+            const row = document.createElement("div");
+            if (sender === chatCurrentUser) {
+                row.className = "chat-msg-row staff";
+                row.innerHTML = '<div class="chat-bubble">' + escapeHTML(message) + '</div><span class="chat-meta">You · ' + escapeHTML(timeString) + '</span>';
+            } else {
+                row.className = "chat-msg-row other";
+                row.innerHTML = '<div class="chat-bubble">' + escapeHTML(message) + '</div><span class="chat-meta">' + escapeHTML(sender) + ' · ' + escapeHTML(timeString) + '</span>';
+            }
+            area.appendChild(row);
+            area.scrollTop = area.scrollHeight;
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, function(t) { return {'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[t] || t; });
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            chatConn = new signalR.HubConnectionBuilder().withUrl("/chatHub").build();
+            chatConn.start().then(function() { console.log("Cashier Chat Connected!"); }).catch(function(err) { console.error("SignalR Error:", err); });
+
+            chatConn.on("ReceiveMessage", function(sender, receiver, message, time) {
+                var belongs = currentChatWith && (sender === currentChatWith || receiver === currentChatWith);
+                if (belongs) {
+                    var ph = document.getElementById("chatMessages").querySelector('.system-message');
+                    if (ph) ph.remove();
+                    renderChatMessage(sender, message, time);
+                }
+                if (sender !== chatCurrentUser && !belongs) {
+                    var dd = document.getElementById("chatDropdown");
+                    if (!dd.classList.contains("open")) {
+                        document.getElementById("chatBadge").style.display = "block";
+                    }
+                }
+            });
         });
     </script>
 </body>

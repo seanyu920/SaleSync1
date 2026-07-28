@@ -1,4 +1,4 @@
-﻿@model List<SaleSync.Models.InventoryItems>
+@model List<SaleSync.Models.InventoryItems>
 @{
     Layout = null;
 
@@ -214,8 +214,8 @@
                                                 @Json.Serialize(item.Quantity.ToString()),
                                                 @Json.Serialize(item.Unit ?? ""),
                                                 @Json.Serialize(item.StockSupplier ?? ""),
-                                                @Json.Serialize(item.DateAcquired.ToString()),
-                                                @Json.Serialize(item.ExpirationDate.ToString()),
+                                                @Json.Serialize(item.DateAcquired?.ToString() ?? ""),
+                                                @Json.Serialize(item.ExpirationDate?.ToString() ?? ""),
                                                 @Json.Serialize(item.RecipeUnit ?? ""),
                                                 @Json.Serialize(item.ConversionFactor.ToString())
                                                 )" />
