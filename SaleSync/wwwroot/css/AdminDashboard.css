@@ -725,6 +725,98 @@ body {
 
 
 /* ==========================================================================
+   MOBILE TRANSACTION CARD VIEW & TOGGLE STYLES
+   ========================================================================== */
+.mobile-only {
+    display: none;
+}
+
+.desktop-only {
+    display: block;
+}
+
+.tx-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-sub);
+    border-radius: 10px;
+    padding: 14px;
+    transition: border-color 0.2s ease;
+}
+
+.tx-card-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tx-main-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.tx-customer {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--cream);
+}
+
+.tx-view-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--gold);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Outfit', sans-serif;
+    transition: all 0.2s ease;
+}
+
+    .tx-view-btn:hover {
+        background: var(--gold-glow);
+    }
+
+    .tx-view-btn i {
+        transition: transform 0.2s ease;
+    }
+
+.tx-card-details {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--border-sub);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+    .tx-card-details.hidden {
+        display: none;
+    }
+
+.tx-detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+}
+
+.tx-label {
+    color: var(--muted);
+    font-weight: 500;
+}
+
+.tx-value {
+    color: var(--cream);
+    font-weight: 600;
+}
+
+
+/* ==========================================================================
    ANALYTICAL METRICS & STATUS BADGES
    ========================================================================== */
 .badge {
@@ -1097,18 +1189,6 @@ body {
     .dashboard-container {
         display: block;
     }
-    .top-nav-controls {
-        justify-content: flex-end;
-        gap: 16px;
-    }
-
-    .user-dropdown {
-        order: 1;
-    }
-
-    .notification-bell {
-        order: 3;
-    }
 
     .sidebar {
         position: fixed;
@@ -1186,6 +1266,31 @@ body {
         padding: 20px 16px;
     }
 
+    /* TOP NAVBAR MOBILE RESTRUCTURE (Single-Row Layout Fix) */
+    .top-navbar {
+        flex-direction: row; /* Keep elements side-by-side on mobile */
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .search-wrapper {
+        flex: 1; /* Allow search input to dynamically fill remaining space */
+        width: auto; /* Override fixed width */
+        order: 1; /* Position search bar first on the left */
+        min-width: 0; /* Prevent overflow issues */
+    }
+
+    .top-nav-controls {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 12px;
+        width: auto; /* Wrap closely around icon controls */
+        order: 2; /* Position control icons to the right */
+        flex-shrink: 0; /* Keep icons from shrinking */
+    }
+
     .summary-dashboard {
         grid-template-columns: repeat(2, 1fr);
         gap: 12px;
@@ -1222,25 +1327,20 @@ body {
         justify-content: flex-start;
     }
 
-    .top-navbar {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 14px;
-        margin-bottom: 20px;
-    }
-
-    .search-wrapper {
-        width: 100%;
-    }
-
-    .top-nav-controls {
-        justify-content: space-between;
-        gap: 12px;
-    }
-
     .pos-card-header {
         flex-wrap: wrap;
         gap: 10px;
+    }
+
+    /* MOBILE CARDS SWITCH: Hide Table, Show Card List */
+    .desktop-only {
+        display: none !important;
+    }
+
+    .mobile-only {
+        display: flex !important;
+        flex-direction: column;
+        gap: 12px;
     }
 
     .admin-chat-drawer {
@@ -1254,6 +1354,37 @@ body {
         width: 52px;
         height: 52px;
         font-size: 18px;
+    }
+
+    /* Mobile Chat Dropdown Overrides */
+    .chat-dropdown {
+        position: fixed;
+        top: 70px !important;
+        right: 16px !important;
+        left: 16px !important;
+        bottom: auto !important;
+        width: auto !important;
+        height: min(500px, calc(100vh - 90px)) !important;
+        max-width: 400px;
+        margin: 0 auto;
+        border-radius: 12px !important;
+        border: 1px solid var(--border) !important;
+        box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6) !important;
+        z-index: 2000 !important;
+    }
+
+    .chat-dropdown-header {
+        padding: 16px;
+        font-size: 16px;
+    }
+
+    .chat-dropdown-body {
+        padding: 16px;
+    }
+
+    .chat-dropdown-footer {
+        padding: 12px 16px;
+        padding-bottom: max(12px, env(safe-area-inset-bottom));
     }
 }
 
@@ -1289,7 +1420,8 @@ body {
         display: none !important;
     }
 }
-/* ── Chat Dropdown (Top Nav) ── */
+
+/* ── Chat Dropdown (Top Nav - Desktop Default) ── */
 .nav-chat-icon {
     position: relative;
     cursor: pointer;

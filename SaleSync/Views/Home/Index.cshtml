@@ -6,7 +6,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Cafero | Coffee & Connection</title>
+    <title>Cafèro | Coffee & Connection</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
@@ -18,7 +18,7 @@
     <header class="top-bar">
         <div class="logo">
             <img src="/images/Untitled design.png" alt="Cafero Logo" class="logo-icon" />
-            <span>Cafero</span>
+            <span>Cafèro</span>
         </div>
 
         <button class="hamburger" id="hamburger" onclick="toggleNav()">
@@ -44,10 +44,10 @@
         <div class="hero-content">
             <span class="hero-badge">Est. 2026</span>
             <h1>Where Every<br>Sip Feels Like <em>Home</em></h1>
-            <p>Craft coffee, warm spaces, and a menu made for lingering. Cafero is your corner escape in Taytay.</p>
+            <p>Craft coffee, warm spaces, and a menu made for lingering. Cafèro is your corner escape in Taytay.</p>
             <div class="hero-actions">
                 <a href="/Home/Login" class="hero-btn">Order Now</a>
-                <a href="javascript:void(0)" onclick="openCategoryModal('coffee', 'Coffee')" class="hero-btn btn-outline">Explore Menu</a>
+                <a href="#menu" class="hero-btn btn-outline">Explore Menu</a>
             </div>
         </div>
         <div class="hero-image-col">
@@ -79,7 +79,7 @@
             <div class="feature-card" onclick="openCategoryModal('coffee', 'Coffee')">
                 <div class="card-inner">
                     <div class="card-front">
-                        <div class="card-icon"><img src="/images/Coffee.png" alt="Coffee" /></div>
+                        <div class="card-icon"><img src="~/images/Coffee.png" alt="Coffee" asp-append-version="true" /></div>
                         <h3>Coffee</h3>
                         <p>Artisan blends brewed to perfection by our expert baristas.</p>
                         <span class="card-tap-hint">Tap to see menu</span>
@@ -90,7 +90,7 @@
             <div class="feature-card" onclick="openCategoryModal('milktea', 'Milktea')">
                 <div class="card-inner">
                     <div class="card-front">
-                        <div class="card-icon"><img src="/images/MilkTea.png" alt="Milk Tea" /></div>
+                        <div class="card-icon"><img src="/images/MilkTea.png" alt="Milk Tea" asp-append-version="true" /></div>
                         <h3>Milk Tea</h3>
                         <p>Perfectly balanced sweetness with premium tea leaves.</p>
                         <span class="card-tap-hint">Tap to see menu</span>
@@ -101,7 +101,7 @@
             <div class="feature-card" onclick="openCategoryModal('fruittea', 'Fruit Tea')">
                 <div class="card-inner">
                     <div class="card-front">
-                        <div class="card-icon"><img src="/images/FruitTea.png" alt="Fruit Tea" /></div>
+                        <div class="card-icon"><img src="/images/FruitTea.png" alt="Fruit Tea" asp-append-version="true" /></div>
                         <h3>Fruit Tea</h3>
                         <p>Refreshing infusions of real fruit and natural botanicals.</p>
                         <span class="card-tap-hint">Tap to see menu</span>
@@ -112,7 +112,7 @@
             <div class="feature-card" onclick="openCategoryModal('rice', 'Rice Meals')">
                 <div class="card-inner">
                     <div class="card-front">
-                        <div class="card-icon"><img src="/images/Silog.png" alt="Rice Meals" /></div>
+                        <div class="card-icon"><img src="/images/Silog.png" alt="Rice Meals" asp-append-version="true" /></div>
                         <h3>Rice Meals</h3>
                         <p>Hearty, savory meals that provide comfort in every bite.</p>
                         <span class="card-tap-hint">Tap to see menu</span>
@@ -123,7 +123,7 @@
             <div class="feature-card" onclick="openCategoryModal('snacks', 'Snacks & Pasta')">
                 <div class="card-inner">
                     <div class="card-front">
-                        <div class="card-icon"><img src="/images/Pasta.jpg" alt="Pasta & Snacks" /></div>
+                        <div class="card-icon"><img src="/images/Pasta.png" alt="Pasta & Snacks" asp-append-version="true" /></div>
                         <h3>Pasta & Snacks</h3>
                         <p>Classic favorites reimagined for your mid-day escape.</p>
                         <span class="card-tap-hint">Tap to see menu</span>
@@ -134,7 +134,7 @@
             <div class="feature-card" onclick="openCategoryModal('pastry', 'Bread & Pastry')">
                 <div class="card-inner">
                     <div class="card-front">
-                        <div class="card-icon"><img src="/images/Pastry.jpg" alt="Bread & Pastries" /></div>
+                        <div class="card-icon"><img src="/images/Bread.png" alt="Bread & Pastries" /></div>
                         <h3>Bread & Pastries</h3>
                         <p>Baked fresh daily with high-quality, local ingredients.</p>
                         <span class="card-tap-hint">Tap to see menu</span>
@@ -144,29 +144,53 @@
         </div>
     </section>
 
-    <section class="contact-section" id="contact">
+    <section id="contact" class="contact-section">
+        <!-- Subtle ambient background glow -->
+        <div class="contact-glow-bg"></div>
+
         <div class="contact-container">
+            <!-- Left Column: Info -->
             <div class="contact-info">
                 <span class="section-eyebrow">Find Us</span>
-                <h2>Visit Our<br><span>Escape</span></h2>
+                <h2>Visit Our <span>Escape</span></h2>
                 <p class="contact-sub">Drop by for a cup, stay for the connection.</p>
+
                 <div class="contact-card-list">
-                    <div class="contact-item">
-                        <div class="contact-icon">📍</div>
+                    <!-- Location Card (Non-clickable, no hover effects) -->
+                    <div class="contact-item" style="pointer-events: none; cursor: default;">
+                        <div class="contact-icon">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 10c0 6-8 12-8 12s-8-6-8-10a8 8 0 0 1 16 0Z" />
+                                <circle cx="12" cy="10" r="3" />
+                            </svg>
+                        </div>
                         <div class="contact-details">
                             <strong>Location</strong>
-                            <p>B.A Cruz Street near Brgy Hall,<br>Sta.Ana, Taytay, 1920</p>
+                            <p>B.A Cruz Street near Brgy Hall,<br>Sta. Ana, Taytay, 1920</p>
                         </div>
                     </div>
-                    <div class="contact-item">
-                        <div class="contact-icon">✉️</div>
+
+                    <!-- Email Card (Non-clickable, no hover effects) -->
+                    <div class="contact-item" style="pointer-events: none; cursor: default;">
+                        <div class="contact-icon">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect width="20" height="16" x="2" y="4" rx="2" />
+                                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                            </svg>
+                        </div>
                         <div class="contact-details">
                             <strong>Email</strong>
                             <p>Cafero@gmail.com</p>
                         </div>
                     </div>
-                    <div class="contact-item">
-                        <div class="contact-icon">📞</div>
+
+                    <!-- Phone Card (Non-clickable, no hover effects) -->
+                    <div class="contact-item" style="pointer-events: none; cursor: default;">
+                        <div class="contact-icon">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                            </svg>
+                        </div>
                         <div class="contact-details">
                             <strong>Phone</strong>
                             <p>+63 912 345 6789</p>
@@ -175,10 +199,12 @@
                 </div>
             </div>
 
+            <!-- Right Column: Styled Map -->
             <div class="contact-map-side">
-                <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3861.0!2d121.132!3d14.555!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zQi5BIENydXogU3QsIFRheXRheQ!5e0!3m2!1sen!2sph!4v1"
-                    allowfullscreen="" loading="lazy">
+                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3861.642531649257!2d121.1311029!3d14.5623004!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3397c7e3f88f8d55%3A0xb6ca2ffb01230d7b!2sB.%20A.%20Cruz%2C%20Taytay%2C%201920%20Rizal!5e0!3m2!1sen!2sph!4v1700000000000!5m2!1sen!2sph"
+                        allowfullscreen=""
+                        loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade">
                 </iframe>
                 <div class="map-overlay-badge">
                     <span>Our Location</span>
@@ -188,9 +214,10 @@
         </div>
     </section>
 
+
     <footer class="footer">
         <div class="footer-content">
-            <p>© 2026 Cafero. Crafted for connection.</p>
+            <p>© 2026 Cafèro. Crafted for connection.</p>
             <p class="salesync-badge">Powered by <strong>SaleSync</strong></p>
         </div>
     </footer>
