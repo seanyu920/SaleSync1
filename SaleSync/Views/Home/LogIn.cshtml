@@ -19,7 +19,7 @@
         <div class="login-left">
             <div class="brand-content">
                 <div class="brand-lockup">
-                    <h1 class="login-logo">Cafero</h1>
+                    <h1 class="login-logo">Cafèro</h1>
                     <div class="software-tag">Powered by <strong>SaleSync</strong></div>
                 </div>
                 <p>Welcome! Whether you're here to sip, connect, or power our cafe, you’re in the right place. Select your role to continue.</p>
@@ -29,7 +29,12 @@
         <div class="login-right">
             <div class="login-card">
                 <div class="login-header">
-                    <span class="top-user-icon">👤</span>
+                    <div class="top-user-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </div>
                     <h2>Sign In</h2>
                     <p>Enter your credentials to continue.</p>
                 </div>
@@ -38,7 +43,12 @@
                     <div class="input-group">
                         <label for="username">Username</label>
                         <div class="input-wrapper">
-                            <span class="input-icon">👤</span>
+                            <span class="input-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                            </span>
                             <input type="text" id="username" name="username" placeholder="Enter username" required />
                         </div>
                     </div>
@@ -46,7 +56,12 @@
                     <div class="input-group">
                         <label for="password">Password</label>
                         <div class="input-wrapper">
-                            <span class="input-icon">🔒</span>
+                            <span class="input-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                </svg>
+                            </span>
                             <input type="password" id="password" name="password" placeholder="••••••••" required />
 
                             <!-- Standard SVG Modern Icon Toggle -->
@@ -82,67 +97,67 @@
     </div>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-        // Configure the modern "Toast" style
-        const modernToast = Swal.mixin({
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 4000,
-        timerProgressBar: true,
-        background: '#fdfaf6',
-        color: '#4a2511',
-        iconColor: '#f46a05',
-        customClass: {
-        popup: 'modern-toast-popup'
-        },
-        didOpen: (toast) => {
-        toast.addEventListener('mouseenter', Swal.stopTimer)
-        toast.addEventListener('mouseleave', Swal.resumeTimer)
-        }
-        });
-
-        // Catch Login Errors
-        @if (ViewBag.Message != null)
-        {
-            <text>
-                modernToast.fire({
-                icon: 'error',
-                title: '@Html.Raw(ViewBag.Message)'
+            document.addEventListener("DOMContentLoaded", function() {
+                // Configure the modern "Toast" style
+                const modernToast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 4000,
+                    timerProgressBar: true,
+                    background: '#fdfaf6',
+                    color: '#4a2511',
+                    iconColor: '#f46a05',
+                    customClass: {
+                        popup: 'modern-toast-popup'
+                    },
+                    didOpen: (toast) => {
+                        toast.addEventListener('mouseenter', Swal.stopTimer)
+                        toast.addEventListener('mouseleave', Swal.resumeTimer)
+                    }
                 });
-            </text>
-        }
 
-        // Catch Registration Success Redirect
-        @if (TempData["SuccessMessage"] != null)
-        {
-            <text>
-                modernToast.fire({
-                icon: 'success',
-                title: '@Html.Raw(TempData["SuccessMessage"])'
+                // Catch Login Errors
+                @if (ViewBag.Message != null)
+                    {
+                        <text>
+                                modernToast.fire({
+                                    icon: 'error',
+                                title: '@Html.Raw(ViewBag.Message)'
+                                        });
+                        </text>
+                }
+
+                    // Catch Registration Success Redirect
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <text>
+                                modernToast.fire({
+                                    icon: 'success',
+                                title: '@Html.Raw(TempData["SuccessMessage"])'
+                                        });
+                        </text>
+                }
+
+                        // --- Modern SVG Password Visibility Toggle ---
+                        const togglePasswordBtn = document.getElementById('togglePassword');
+                const passwordInput = document.getElementById('password');
+                const eyeOpenIcon = togglePasswordBtn.querySelector('.eye-open');
+                const eyeClosedIcon = togglePasswordBtn.querySelector('.eye-closed');
+
+                togglePasswordBtn.addEventListener('click', function() {
+                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordInput.setAttribute('type', type);
+
+                    if (type === 'password') {
+                        eyeOpenIcon.style.display = 'block';
+                        eyeClosedIcon.style.display = 'none';
+                    } else {
+                        eyeOpenIcon.style.display = 'none';
+                        eyeClosedIcon.style.display = 'block';
+                    }
                 });
-            </text>
-        }
-
-        // --- Modern SVG Password Visibility Toggle ---
-        const togglePasswordBtn = document.getElementById('togglePassword');
-        const passwordInput = document.getElementById('password');
-        const eyeOpenIcon = togglePasswordBtn.querySelector('.eye-open');
-        const eyeClosedIcon = togglePasswordBtn.querySelector('.eye-closed');
-
-        togglePasswordBtn.addEventListener('click', function () {
-        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-        passwordInput.setAttribute('type', type);
-
-        if (type === 'password') {
-        eyeOpenIcon.style.display = 'block';
-        eyeClosedIcon.style.display = 'none';
-        } else {
-        eyeOpenIcon.style.display = 'none';
-        eyeClosedIcon.style.display = 'block';
-        }
-        });
-        });
+            });
     </script>
 </body>
 </html>

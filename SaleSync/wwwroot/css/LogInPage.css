@@ -3,19 +3,21 @@
    ========================================================================== */
 :root {
     /* Lifted up from deep pitch black to a premium, warm dark moss slate */
-    --bg-main: #111613;
+    --bg-main: #0d120f;
     /* Elevated surface tone so cards and layout containers clearly pop */
-    --bg-card: #1d2621;
+    --bg-card: #18221c;
     /* Higher illumination shift on active hover states */
-    --bg-card-hover: #26332c;
+    --bg-card-hover: #212e26;
     /* Clean outline boundaries to prevent dark layout sections from bleeding */
-    --border-color: #2b3931;
+    --border-color: rgba(223, 183, 86, 0.18);
+    --border-subtle: rgba(255, 255, 255, 0.08);
     /* Typography Contrasts */
     --text-pure: #ffffff;
-    --text-muted: #a7b7af; /* Brightened mid-tone gray-sage for premium readability */
+    --text-muted: #a0b2a7; /* Brightened mid-tone gray-sage for premium readability */
     /* Cafèro Theme Branding Accents */
     --accent-gold: #dfb756;
     --accent-gold-hover: #eed074;
+    --gold-glow: rgba(223, 183, 86, 0.15);
 }
 
 /* ==========================================================================
@@ -40,15 +42,15 @@ body {
 
 /* Navbar & Dropdowns */
 .navbar-custom {
-    background-color: rgba(17, 22, 19, 0.95);
+    background-color: rgba(13, 18, 15, 0.95);
     backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-subtle);
 }
 
 .nav-dropdown-menu {
-    background-color: #1a231f;
+    background-color: #17211b;
     border: 1px solid var(--border-color);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
 }
 
 .nav-dropdown-item:hover {
@@ -59,19 +61,19 @@ body {
 /* Menu Category Selection Grid */
 .category-card {
     background-color: var(--bg-card);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--border-subtle);
     border-radius: 16px;
     padding: 35px 25px;
     text-align: center;
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
     .category-card:hover {
         background-color: var(--bg-card-hover);
         border-color: var(--accent-gold);
         transform: translateY(-4px);
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45), 0 0 20px var(--gold-glow);
     }
 
     .category-card p {
@@ -88,14 +90,14 @@ body {
 
 /* Product Menu Popups / Item Cards */
 .modal-content-wrapper {
-    background-color: #171f1b;
+    background-color: #141c17;
     border: 1px solid var(--border-color);
-    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.7);
 }
 
 .menu-item-item-card {
     background-color: var(--bg-card);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--border-subtle);
     border-radius: 12px;
 }
 
@@ -104,7 +106,7 @@ body {
     display: flex;
     align-items: center;
     background-color: var(--bg-card);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--border-subtle);
     border-radius: 14px;
     padding: 20px;
     margin-bottom: 15px;
@@ -113,22 +115,25 @@ body {
 
     .contact-info-card:hover {
         background-color: var(--bg-card-hover);
+        border-color: var(--border-color);
     }
 
 .contact-icon-box {
-    background-color: #27342d;
+    background-color: rgba(223, 183, 86, 0.1);
     border: 1px solid var(--border-color);
     border-radius: 10px;
     padding: 12px;
     margin-right: 20px;
+    color: var(--accent-gold);
 }
 
 .contact-info-card h4 {
     color: var(--accent-gold);
     font-size: 12px;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
     margin-bottom: 4px;
+    font-weight: 800;
 }
 
 .contact-info-card p {
@@ -136,21 +141,50 @@ body {
     font-size: 15px;
 }
 
+/* SVG Icon Styling */
+.contact-icon svg {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* Neutralized Contact Item */
+.contact-item {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 12px 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    cursor: default;
+}
+
+    .contact-item:hover {
+        border-color: transparent;
+        background: transparent;
+        box-shadow: none;
+    }
+
 /* ==========================================================================
-   4. FULL-SCREEN BACKGROUND LOGIN LAYOUT (Separated Side-by-Side Spaces)
+   4. FULL-SCREEN BACKGROUND LOGIN LAYOUT (Enhanced Vignette & Depth)
    ========================================================================== */
 .login-split-container {
     position: relative;
     display: flex;
     flex-direction: row;
     align-items: center;
-    justify-content: space-between; /* Pushes brand text and login card apart dynamically */
+    justify-content: space-between;
     min-height: 100vh;
     width: 100%;
-    max-width: 1200px; /* Standard container constraint to keep elements unified */
+    max-width: 1200px;
     margin: 0 auto;
     padding: 40px;
-    gap: 80px; /* Enforces a deliberate gap between text and form */
+    gap: 80px;
 }
 
     /* Base layer: full window background image */
@@ -162,11 +196,12 @@ body {
         width: 100%;
         height: 100%;
         background: url('/images/HomePage2.jpg') center/cover no-repeat;
-        filter: brightness(1.15) contrast(1.1) saturate(1.05);
+        filter: brightness(0.85) contrast(1.05) saturate(1.1);
         z-index: -2;
+        transform: scale(1.02);
     }
 
-    /* Tint layer: dark vignetted overlay to maintain text contrast */
+    /* Tint layer: dual radial gradient for vignette & golden warm accent */
     .login-split-container::after {
         content: '';
         position: fixed;
@@ -174,34 +209,35 @@ body {
         left: 0;
         width: 100%;
         height: 100%;
-        background: radial-gradient(circle, rgba(17, 22, 19, 0.4) 0%, rgba(11, 17, 14, 0.85) 100%);
+        background: radial-gradient(circle at 78% 50%, rgba(223, 183, 86, 0.07) 0%, transparent 45%), radial-gradient(ellipse at center, rgba(13, 18, 15, 0.5) 0%, rgba(7, 10, 8, 0.92) 100%);
         z-index: -1;
     }
 
-/* Brand content container pushed comfortably to the left side */
+/* Brand content container on left side */
 .brand-content {
     flex: 1;
-    text-align: left; /* Left aligned matches layout side placement */
-    max-width: 460px;
+    text-align: left;
+    max-width: 480px;
 }
 
 .login-logo {
     font-family: 'Playfair Display', serif;
-    font-size: 56px;
+    font-size: 64px;
     font-weight: 800;
-    margin-bottom: 6px;
-    letter-spacing: -1px;
+    margin-bottom: 4px;
+    letter-spacing: -1.5px;
     color: var(--text-pure);
-    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.9);
 }
 
 .software-tag {
     font-size: 12px;
-    letter-spacing: 2px;
-    color: var(--text-pure);
+    font-weight: 700;
+    letter-spacing: 2.5px;
+    color: rgba(255, 255, 255, 0.7);
     text-transform: uppercase;
     margin-bottom: 24px;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
 }
 
     .software-tag strong {
@@ -210,99 +246,123 @@ body {
 
 .brand-content p {
     font-size: 16px;
-    line-height: 1.6;
-    color: #f0f4f2;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+    line-height: 1.7;
+    color: #e2ece6;
+    font-weight: 300;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
 }
 
-/* Right side content container wrapper */
+/* Right side login card wrapper */
 .login-right {
     flex: 1;
     display: flex;
-    justify-content: flex-end; /* Snaps card closely to the right border boundaries */
-    max-width: 450px;
+    justify-content: flex-end;
+    max-width: 440px;
     z-index: 2;
 }
 
-/* Entire login card styled with a floating glass theme over your picture */
+/* Entire login card with golden highlight border & deep glassmorphism */
 .login-card {
     width: 100%;
-    background-color: rgba(29, 38, 33, 0.88); /* Semi-transparent frosted glass dark card */
-    backdrop-filter: blur(12px); /* Beautiful blur depth effect over image */
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--border-color);
+    background: rgba(18, 25, 21, 0.82);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border-subtle);
+    border-top: 2px solid var(--accent-gold);
     border-radius: 20px;
-    padding: 40px 35px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+    padding: 42px 36px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75), 0 0 30px rgba(223, 183, 86, 0.08);
 }
 
 .login-header {
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 32px;
 }
 
+/* Golden glowing profile avatar circle */
 .top-user-icon {
-    font-size: 44px;
-    display: block;
-    margin-bottom: 12px;
-    color: var(--accent-gold);
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 16px;
+    background: rgba(223, 183, 86, 0.1);
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 20px var(--gold-glow);
 }
+
+    .top-user-icon svg {
+        width: 28px;
+        height: 28px;
+        stroke: var(--accent-gold);
+    }
 
 .login-header h2 {
     font-size: 28px;
     font-weight: 800;
     color: var(--accent-gold);
     margin-bottom: 6px;
+    letter-spacing: -0.5px;
 }
 
 .login-header p {
     color: var(--text-muted);
     font-size: 14px;
+    font-weight: 400;
 }
 
-/* Form Fields & Enclosures */
+/* Form Fields & Input Wrappers */
 form {
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 20px;
 }
 
 .input-group label {
     display: block;
     font-size: 11px;
     font-weight: 800;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
     color: var(--accent-gold);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
 }
 
 .input-wrapper {
-    position: relative; /* Modified: Configured for absolute icon positioning tracking */
+    position: relative;
     display: flex;
     align-items: center;
-    background-color: rgba(17, 22, 19, 0.7); /* Deep dark background inside fields */
-    border: 1px solid var(--border-color);
+    background-color: rgba(10, 14, 12, 0.65);
+    border: 1px solid var(--border-subtle);
     border-radius: 12px;
-    padding: 0 15px;
+    padding: 0 16px;
     transition: all 0.3s ease;
 }
 
     .input-wrapper:focus-within {
         border-color: var(--accent-gold);
-        box-shadow: 0 0 12px rgba(223, 183, 86, 0.2);
-        background-color: var(--bg-main);
+        box-shadow: 0 0 16px rgba(223, 183, 86, 0.25);
+        background-color: rgba(10, 14, 12, 0.85);
     }
 
 .input-icon {
-    font-size: 15px;
-    color: var(--accent-gold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     margin-right: 12px;
 }
 
+    .input-icon svg {
+        width: 18px;
+        height: 18px;
+        stroke: var(--accent-gold);
+    }
+
 .input-wrapper input {
     width: 100%;
-    padding: 14px 35px 14px 0; /* Modified: Safe zone padding right prevents text from clipping under the eye */
+    padding: 14px 38px 14px 0;
     border: none;
     background: transparent;
     font-size: 15px;
@@ -311,13 +371,13 @@ form {
 }
 
     .input-wrapper input::placeholder {
-        color: #5c6f64;
+        color: #55685d;
     }
 
 /* Password Toggle Controls */
 .password-toggle-btn {
     position: absolute;
-    right: 15px;
+    right: 16px;
     background: none;
     border: none;
     padding: 0;
@@ -325,44 +385,47 @@ form {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--text-muted); /* Leverages design token palettes */
+    color: var(--text-muted);
     transition: color 0.2s ease;
 }
 
     .password-toggle-btn:hover {
-        color: var(--accent-gold); /* Illumination shift matching global actions */
+        color: var(--accent-gold);
     }
 
 .eye-icon {
     width: 20px;
     height: 20px;
     display: block;
+    stroke: currentColor;
 }
 
-/* Form Submission Actions */
+/* Form Submission Actions & Login Button */
 .form-actions {
     text-align: center;
-    margin-top: 5px;
+    margin-top: 6px;
 }
 
 .btn-login {
     width: 100%;
     padding: 15px;
-    background-color: var(--accent-gold);
-    color: #111613; /* Deep text inside button for perfect accessibility standards */
+    background: linear-gradient(135deg, var(--accent-gold-hover) 0%, var(--accent-gold) 100%);
+    color: #0d120f;
     border: none;
     border-radius: 12px;
     font-size: 16px;
     font-weight: 800;
+    letter-spacing: 0.3px;
     cursor: pointer;
-    box-shadow: 0 4px 20px rgba(223, 183, 86, 0.25);
-    transition: background-color 0.3s, transform 0.2s;
+    box-shadow: 0 6px 20px rgba(223, 183, 86, 0.3);
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
     margin-bottom: 18px;
 }
 
     .btn-login:hover {
-        background-color: var(--accent-gold-hover);
-        transform: translateY(-1px);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 28px rgba(223, 183, 86, 0.45);
+        filter: brightness(1.05);
     }
 
     .btn-login:active {
@@ -383,9 +446,9 @@ form {
 
 /* Portal Account Routing Anchor */
 .register-prompt {
-    margin-top: 30px;
+    margin-top: 24px;
     padding-top: 20px;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid var(--border-subtle);
     text-align: center;
 }
 
@@ -416,7 +479,7 @@ form {
         flex-direction: column;
         justify-content: center;
         gap: 40px;
-        padding: 30px 24px;
+        padding: 40px 24px;
     }
 
     .brand-content {
@@ -432,26 +495,25 @@ form {
 
 @media (max-width: 480px) {
     .login-card {
-        padding: 30px 20px;
+        padding: 32px 22px;
     }
 
     .login-logo {
-        font-size: 42px;
+        font-size: 46px;
     }
 }
 
 .slide-up {
     animation: slideUp 0.3s ease-out;
 }
-/* Change the autofill background to match your --bg-main theme color */
+
+/* Autofill Text and Background Fix */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
-    /* Use your --bg-main color (#111613) to eliminate the grey box */
-    -webkit-box-shadow: 0 0 0 30px #111613 inset !important;
-    /* Set the text color to white */
+    -webkit-box-shadow: 0 0 0 1000px #0a0e0c inset !important;
     -webkit-text-fill-color: #ffffff !important;
-    /* Smooth transition */
-    transition: background-color 5000s ease-in-out 0s;
+    caret-color: #ffffff !important;
+    transition: background-color 50000s ease-in-out 0s !important;
 }
