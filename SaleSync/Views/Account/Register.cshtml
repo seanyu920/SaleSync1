@@ -19,17 +19,16 @@
         <div class="register-left">
             <div class="brand-content">
                 <div class="brand-lockup">
-                    <h1 class="register-logo">Cafero</h1>
+                    <h1 class="register-logo">Cafèro</h1>
                     <div class="software-tag">POWERED BY <strong>SALESYNC</strong></div>
                 </div>
-                <p>Join the Cafero family! Create an account to order ahead, customize your drinks, and skip the line.</p>
+                <p>Join the Cafèro family! Create an account to order ahead, customize your drinks, and skip the line.</p>
             </div>
         </div>
 
         <div class="register-right">
             <div class="register-card">
                 <div class="register-header">
-                    <span class="top-user-icon">📝</span>
                     <h2>Create Account</h2>
                     <p>Fill in your details to get started.</p>
                 </div>
@@ -39,7 +38,12 @@
                     <div class="input-group">
                         <label for="fullName">FULL NAME</label>
                         <div class="input-wrapper">
-                            <span class="input-icon">👤</span>
+                            <span class="input-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                            </span>
                             <input type="text" id="fullName" name="fullName" placeholder="e.g. Juan Dela Cruz"
                                    value="@(Context.Request.HasFormContentType ? Context.Request.Form["fullName"].ToString() : "")" required />
                         </div>
@@ -48,7 +52,12 @@
                     <div class="input-group">
                         <label for="username">USERNAME</label>
                         <div class="input-wrapper">
-                            <span class="input-icon">&#64;</span>
+                            <span class="input-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="4"></circle>
+                                    <path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8"></path>
+                                </svg>
+                            </span>
                             <input type="text" id="username" name="username" placeholder="Choose a username"
                                    value="@(Context.Request.HasFormContentType ? Context.Request.Form["username"].ToString() : "")" required />
                         </div>
@@ -57,7 +66,12 @@
                     <div class="input-group">
                         <label for="email">EMAIL ADDRESS</label>
                         <div class="input-wrapper">
-                            <span class="input-icon">✉️</span>
+                            <span class="input-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                    <polyline points="22,6 12,13 2,6"></polyline>
+                                </svg>
+                            </span>
                             <input type="email" id="email" name="email" placeholder="e.g. juan@example.com"
                                    value="@(Context.Request.HasFormContentType ? Context.Request.Form["email"].ToString() : "")" required />
                         </div>
@@ -66,7 +80,12 @@
                     <div class="input-group">
                         <label for="password">PASSWORD</label>
                         <div class="input-wrapper">
-                            <span class="input-icon">🔒</span>
+                            <span class="input-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                </svg>
+                            </span>
                             <input type="password" id="password" name="password" placeholder="Create a password" required />
 
                             <!-- Toggle Button for Main Password -->
@@ -86,7 +105,13 @@
                     <div class="input-group">
                         <label for="confirmPassword">CONFIRM PASSWORD</label>
                         <div class="input-wrapper">
-                            <span class="input-icon">🔐</span>
+                            <span class="input-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                    <polyline points="11 15 13 17 17 13"></polyline>
+                                </svg>
+                            </span>
                             <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Repeat password" required />
 
                             <!-- Toggle Button for Confirm Password -->
@@ -119,76 +144,76 @@
     </div>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-        // Configure the modern "Toast" style
-        const modernToast = Swal.mixin({
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 4000,
-        timerProgressBar: true,
-        background: '#fdfaf6',
-        color: '#4a2511',
-        iconColor: '#f46a05',
-        customClass: {
-        popup: 'modern-toast-popup'
-        },
-        didOpen: (toast) => {
-        toast.addEventListener('mouseenter', Swal.stopTimer)
-        toast.addEventListener('mouseleave', Swal.resumeTimer)
-        }
-        });
-
-        // Trigger Error Toast if ViewBag.Message exists
-        @if (ViewBag.Message != null)
-        {
-            <text>
-                modernToast.fire({
-                icon: 'error',
-                title: '@Html.Raw(ViewBag.Message)'
+            document.addEventListener("DOMContentLoaded", function() {
+                // Configure the modern "Toast" style
+                const modernToast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 4000,
+                    timerProgressBar: true,
+                    background: '#fdfaf6',
+                    color: '#4a2511',
+                    iconColor: '#f46a05',
+                    customClass: {
+                        popup: 'modern-toast-popup'
+                    },
+                    didOpen: (toast) => {
+                        toast.addEventListener('mouseenter', Swal.stopTimer)
+                        toast.addEventListener('mouseleave', Swal.resumeTimer)
+                    }
                 });
-            </text>
-        }
 
-        // Trigger Success Toast if TempData exists
-        @if (TempData["SuccessMessage"] != null)
-        {
-            <text>
-                modernToast.fire({
-                icon: 'success',
-                title: '@Html.Raw(TempData["SuccessMessage"])'
-                });
-            </text>
-        }
+                // Trigger Error Toast if ViewBag.Message exists
+                @if (ViewBag.Message != null)
+                    {
+                        <text>
+                                modernToast.fire({
+                                    icon: 'error',
+                                title: '@Html.Raw(ViewBag.Message)'
+                                        });
+                        </text>
+                }
 
-        // --- Reusable Password Toggle Handler ---
-        function setupPasswordToggle(buttonId, inputId) {
-        const toggleBtn = document.getElementById(buttonId);
-        const passwordInput = document.getElementById(inputId);
+                    // Trigger Success Toast if TempData exists
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <text>
+                                modernToast.fire({
+                                    icon: 'success',
+                                title: '@Html.Raw(TempData["SuccessMessage"])'
+                                        });
+                        </text>
+                }
 
-        if (!toggleBtn || !passwordInput) return;
+                    // --- Reusable Password Toggle Handler ---
+                    function setupPasswordToggle(buttonId, inputId) {
+                        const toggleBtn = document.getElementById(buttonId);
+                        const passwordInput = document.getElementById(inputId);
 
-        const eyeOpenIcon = toggleBtn.querySelector('.eye-open');
-        const eyeClosedIcon = toggleBtn.querySelector('.eye-closed');
+                        if (!toggleBtn || !passwordInput) return;
 
-        toggleBtn.addEventListener('click', function () {
-        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-        passwordInput.setAttribute('type', type);
+                        const eyeOpenIcon = toggleBtn.querySelector('.eye-open');
+                        const eyeClosedIcon = toggleBtn.querySelector('.eye-closed');
 
-        if (type === 'password') {
-        eyeOpenIcon.style.display = 'block';
-        eyeClosedIcon.style.display = 'none';
-        } else {
-        eyeOpenIcon.style.display = 'none';
-        eyeClosedIcon.style.display = 'block';
-        }
-        });
-        }
+                        toggleBtn.addEventListener('click', function() {
+                            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                            passwordInput.setAttribute('type', type);
 
-        // Initialize both input components
-        setupPasswordToggle('togglePassword', 'password');
-        setupPasswordToggle('toggleConfirmPassword', 'confirmPassword');
-        });
+                            if (type === 'password') {
+                                eyeOpenIcon.style.display = 'block';
+                                eyeClosedIcon.style.display = 'none';
+                            } else {
+                                eyeOpenIcon.style.display = 'none';
+                                eyeClosedIcon.style.display = 'block';
+                            }
+                        });
+                    }
+
+                // Initialize both input components
+                setupPasswordToggle('togglePassword', 'password');
+                setupPasswordToggle('toggleConfirmPassword', 'confirmPassword');
+            });
     </script>
 </body>
 </html>

@@ -24,7 +24,7 @@
         <aside class="sidebar">
             <div>
                 <div class="logo-section">
-                    <div class="logo-title">Cafero</div>
+                    <div class="logo-title">Cafèro</div>
                     <div class="logo-subtitle">Coffee & Pastries</div>
                 </div>
 
@@ -72,7 +72,7 @@
             <button class="hamburger-btn" onclick="toggleSidebar()">
                 <i class="fas fa-bars"></i>
             </button>
-            <div class="mobile-brand">Cafero</div>
+            <div class="mobile-brand">Cafèro</div>
         </div>
 
         <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
@@ -184,7 +184,9 @@
                         <div class="pos-card-title"><i class="fas fa-history"></i> Recent Transactions</div>
                         <a href="/Admin/DailyReport" class="view-all-link">View All &rarr;</a>
                     </div>
-                    <div class="table-responsive">
+
+                    <!-- DESKTOP VIEW: Table Structure -->
+                    <div class="table-responsive desktop-only">
                         <table class="pos-table">
                             <thead>
                                 <tr>
@@ -254,17 +256,163 @@
                             </tbody>
                         </table>
                     </div>
-                </div>
-            </div>
 
-            <div class="pos-grid-container">
+                    <!-- MOBILE VIEW: Expandable Mobile Cards -->
+                    <div class="mobile-tx-list mobile-only">
+                        @if (Model.RecentSales != null && Model.RecentSales.Any())
+                        {
+                            @foreach (var sale in Model.RecentSales.Take(5))
+                            {
+                                <div class="tx-card">
+                                    <div class="tx-card-summary">
+                                        <div class="tx-main-info">
+                                            <span class="sale-id">#@sale.SaleId</span>
+                                            <span class="tx-customer">@(sale.CustomerName ?? "Walk-in")</span>
+                                        </div>
+                                        <button type="button" class="tx-view-btn" onclick="toggleTxDetails(this)">
+                                            View <i class="fas fa-chevron-down"></i>
+                                        </button>
+                                    </div>
+                                    <div class="tx-card-details hidden">
+                                        <div class="tx-detail-row">
+                                            <span class="tx-label">Total:</span>
+                                            <span class="tx-value">₱@sale.TotalAmount.ToString("N2")</span>
+                                        </div>
+                                        <div class="tx-detail-row">
+                                            <span class="tx-label">Method:</span>
+                                            <span class="tx-value">@(sale.PaymentMethod ?? "Cash")</span>
+                                        </div>
+                                        <div class="tx-detail-row">
+                                            <span class="tx-label">Status:</span>
+                                            <span class="tx-value">
+                                                @if (sale.Status == "Completed")
+                                                {
+                                                    <span class="badge badge-success">Completed</span>
+                                                }
+                                                else if (sale.Status == "Cancelled" || sale.Status == "Voided")
+                                                {
+                                                    <span class="badge badge-danger">Cancelled</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge badge-warning">Pending</span>
+                                                }
+                                            </span>
+                                        </div>
+                                        <div class="tx-detail-row">
+                                            <span class="tx-label">Time:</span>
+                                            <span class="tx-value text-muted">@sale.SaleDate.ToString("hh:mm tt")</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <!-- Mobile Fallback Card 1 -->
+                            <div class="tx-card">
+                                <div class="tx-card-summary">
+                                    <div class="tx-main-info">
+                                        <span class="sale-id">#8036</span>
+                                        <span class="tx-customer">Walk-in</span>
+                                    </div>
+                                    <button type="button" class="tx-view-btn" onclick="toggleTxDetails(this)">
+                                        View <i class="fas fa-chevron-down"></i>
+                                    </button>
+                                </div>
+                                <div class="tx-card-details hidden">
+                                    <div class="tx-detail-row">
+                                        <span class="tx-label">Total:</span>
+                                        <span class="tx-value">₱79.00</span>
+                                    </div>
+                                    <div class="tx-detail-row">
+                                        <span class="tx-label">Method:</span>
+                                        <span class="tx-value">Cash</span>
+                                    </div>
+                                    <div class="tx-detail-row">
+                                        <span class="tx-label">Status:</span>
+                                        <span class="tx-value"><span class="badge badge-warning">Pending</span></span>
+                                    </div>
+                                    <div class="tx-detail-row">
+                                        <span class="tx-label">Time:</span>
+                                        <span class="tx-value text-muted">07:34 PM</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Mobile Fallback Card 2 -->
+                            <div class="tx-card">
+                                <div class="tx-card-summary">
+                                    <div class="tx-main-info">
+                                        <span class="sale-id">#8035</span>
+                                        <span class="tx-customer">Walk-in</span>
+                                    </div>
+                                    <button type="button" class="tx-view-btn" onclick="toggleTxDetails(this)">
+                                        View <i class="fas fa-chevron-down"></i>
+                                    </button>
+                                </div>
+                                <div class="tx-card-details hidden">
+                                    <div class="tx-detail-row">
+                                        <span class="tx-label">Total:</span>
+                                        <span class="tx-value">₱158.00</span>
+                                    </div>
+                                    <div class="tx-detail-row">
+                                        <span class="tx-label">Method:</span>
+                                        <span class="tx-value">GCash</span>
+                                    </div>
+                                    <div class="tx-detail-row">
+                                        <span class="tx-label">Status:</span>
+                                        <span class="tx-value"><span class="badge badge-success">Completed</span></span>
+                                    </div>
+                                    <div class="tx-detail-row">
+                                        <span class="tx-label">Time:</span>
+                                        <span class="tx-value text-muted">07:12 PM</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Mobile Fallback Card 3 -->
+                            <div class="tx-card">
+                                <div class="tx-card-summary">
+                                    <div class="tx-main-info">
+                                        <span class="sale-id">#7036</span>
+                                        <span class="tx-customer">Juan Dela Cruz</span>
+                                    </div>
+                                    <button type="button" class="tx-view-btn" onclick="toggleTxDetails(this)">
+                                        View <i class="fas fa-chevron-down"></i>
+                                    </button>
+                                </div>
+                                <div class="tx-card-details hidden">
+                                    <div class="tx-detail-row">
+                                        <span class="tx-label">Total:</span>
+                                        <span class="tx-value">₱89.00</span>
+                                    </div>
+                                    <div class="tx-detail-row">
+                                        <span class="tx-label">Method:</span>
+                                        <span class="tx-value">Card</span>
+                                    </div>
+                                    <div class="tx-detail-row">
+                                        <span class="tx-label">Status:</span>
+                                        <span class="tx-value"><span class="badge badge-success">Completed</span></span>
+                                    </div>
+                                    <div class="tx-detail-row">
+                                        <span class="tx-label">Time:</span>
+                                        <span class="tx-value text-muted">03:46 PM</span>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
                 <div class="pos-card-wrapper">
                     <div class="pos-card-header">
                         <div class="pos-card-title"><i class="fas fa-crown"></i> Best Selling Products</div>
                         <span class="volume-label">By Volume</span>
                     </div>
-                    <!-- Scrollable Wrapper Added Below -->
-                    <div class="table-responsive">
+
+                    <!-- DESKTOP VIEW: Table with Dual-Axis Scrolling -->
+                    <div class="table-responsive desktop-only">
                         <table class="pos-table">
                             <thead>
                                 <tr>
@@ -317,50 +465,241 @@
                             </tbody>
                         </table>
                     </div>
+
+                    <!-- MOBILE VIEW: Expandable Card List -->
+                    <div class="mobile-only">
+                        <!-- Product 1 -->
+                        <div class="tx-card">
+                            <div class="tx-card-summary">
+                                <div class="tx-main-info">
+                                    <span class="tx-customer">Spanish Latte (Iced)</span>
+                                </div>
+                                <button type="button" class="tx-view-btn" onclick="toggleCardDetails(this)">
+                                    <span>Details</span>
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </div>
+                            <div class="tx-card-details hidden">
+                                <div class="tx-detail-row">
+                                    <span class="tx-label">Units Sold:</span>
+                                    <span class="tx-value">142 units</span>
+                                </div>
+                                <div class="progress-container mb-2"><div class="progress-bar" style="width: 92%;"></div></div>
+                                <div class="tx-detail-row">
+                                    <span class="tx-label">Revenue Generated:</span>
+                                    <span class="tx-value revenue-val">₱22,720.00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Product 2 -->
+                        <div class="tx-card">
+                            <div class="tx-card-summary">
+                                <div class="tx-main-info">
+                                    <span class="tx-customer">Café Americana (Hot)</span>
+                                </div>
+                                <button type="button" class="tx-view-btn" onclick="toggleCardDetails(this)">
+                                    <span>Details</span>
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </div>
+                            <div class="tx-card-details hidden">
+                                <div class="tx-detail-row">
+                                    <span class="tx-label">Units Sold:</span>
+                                    <span class="tx-value">98 units</span>
+                                </div>
+                                <div class="progress-container mb-2"><div class="progress-bar" style="width: 68%;"></div></div>
+                                <div class="tx-detail-row">
+                                    <span class="tx-label">Revenue Generated:</span>
+                                    <span class="tx-value revenue-val">₱10,780.00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Product 3 -->
+                        <div class="tx-card">
+                            <div class="tx-card-summary">
+                                <div class="tx-main-info">
+                                    <span class="tx-customer">Cream Cheese Ensaymada</span>
+                                </div>
+                                <button type="button" class="tx-view-btn" onclick="toggleCardDetails(this)">
+                                    <span>Details</span>
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </div>
+                            <div class="tx-card-details hidden">
+                                <div class="tx-detail-row">
+                                    <span class="tx-label">Units Sold:</span>
+                                    <span class="tx-value">75 units</span>
+                                </div>
+                                <div class="progress-container mb-2"><div class="progress-bar" style="width: 51%;"></div></div>
+                                <div class="tx-detail-row">
+                                    <span class="tx-label">Revenue Generated:</span>
+                                    <span class="tx-value revenue-val">₱6,375.00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Product 4 -->
+                        <div class="tx-card">
+                            <div class="tx-card-summary">
+                                <div class="tx-main-info">
+                                    <span class="tx-customer">Caramel Macchiato</span>
+                                </div>
+                                <button type="button" class="tx-view-btn" onclick="toggleCardDetails(this)">
+                                    <span>Details</span>
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </div>
+                            <div class="tx-card-details hidden">
+                                <div class="tx-detail-row">
+                                    <span class="tx-label">Units Sold:</span>
+                                    <span class="tx-value">64 units</span>
+                                </div>
+                                <div class="progress-container mb-2"><div class="progress-bar" style="width: 43%;"></div></div>
+                                <div class="tx-detail-row">
+                                    <span class="tx-label">Revenue Generated:</span>
+                                    <span class="tx-value revenue-val">₱10,880.00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="pos-card-wrapper">
-                    <div class="pos-card-header">
-                        <div class="pos-card-title"><i class="fas fa-boxes"></i> Low Stock Details</div>
-                        <a href="/Admin/Inventory" class="manage-link">Manage</a>
-                    </div>
-                    <!-- Scrollable Wrapper Added Below -->
-                    <div class="table-responsive">
-                        <table class="pos-table">
-                            <thead>
-                                <tr>
-                                    <th>Item Stock</th>
-                                    <th>Current Qty</th>
-                                    <th>Status</th>
-                                    <th class="text-right">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Espresso Coffee Beans</td>
-                                    <td>2.5 kg</td>
-                                    <td><span class="badge badge-danger">Critical</span></td>
-                                    <td class="text-right"><button class="btn-restock" onclick="location.href='/Admin/Inventory'">Restock</button></td>
-                                </tr>
-                                <tr>
-                                    <td>Whole Milk (1L Cartons)</td>
-                                    <td>12 units</td>
-                                    <td><span class="badge badge-warning">Low</span></td>
-                                    <td class="text-right"><button class="btn-restock" onclick="location.href='/Admin/Inventory'">Restock</button></td>
-                                </tr>
-                                <tr>
-                                    <td>Caramel Syrup Base</td>
-                                    <td>1.2 L</td>
-                                    <td><span class="badge badge-warning">Low</span></td>
-                                    <td class="text-right"><button class="btn-restock" onclick="location.href='/Admin/Inventory'">Restock</button></td>
-                                </tr>
-                            </tbody>
-                        </table>
+    <div class="pos-card-header">
+        <div class="pos-card-title"><i class="fas fa-boxes"></i> Low Stock Details</div>
+        <a href="/Admin/Inventory" class="manage-link">Manage</a>
+    </div>
+
+    <!-- DESKTOP VIEW: Table with Dual-Axis Scrolling -->
+    <div class="table-responsive desktop-only">
+        <table class="pos-table">
+            <thead>
+                <tr>
+                    <th>Item Stock</th>
+                    <th>Current Qty</th>
+                    <th>Status</th>
+                    <th class="text-right">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Espresso Coffee Beans</td>
+                    <td>2.5 kg</td>
+                    <td><span class="badge badge-danger">Critical</span></td>
+                    <td class="text-right">
+                        <button type="button" class="btn-restock" onclick="location.href='/Admin/Inventory'">Restock</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Whole Milk (1L Cartons)</td>
+                    <td>12 units</td>
+                    <td><span class="badge badge-warning">Low</span></td>
+                    <td class="text-right">
+                        <button type="button" class="btn-restock" onclick="location.href='/Admin/Inventory'">Restock</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Caramel Syrup Base</td>
+                    <td>1.2 L</td>
+                    <td><span class="badge badge-warning">Low</span></td>
+                    <td class="text-right">
+                        <button type="button" class="btn-restock" onclick="location.href='/Admin/Inventory'">Restock</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- MOBILE VIEW: Expandable Card List -->
+    <div class="mobile-only">
+        <!-- Item 1 -->
+        <div class="tx-card">
+            <div class="tx-card-summary">
+                <div class="tx-main-info">
+                    <span class="tx-customer">Espresso Coffee Beans</span>
+                </div>
+                <button type="button" class="tx-view-btn" onclick="toggleCardDetails(this)">
+                    <span>Details</span>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
+            <div class="tx-card-details hidden">
+                <div class="tx-detail-row">
+                    <span class="tx-label">Current Qty:</span>
+                    <span class="tx-value">2.5 kg</span>
+                </div>
+                <div class="tx-detail-row">
+                    <span class="tx-label">Status:</span>
+                    <span class="badge badge-danger">Critical</span>
+                </div>
+                <div class="tx-detail-row" style="margin-top: 6px;">
+                    <span class="tx-label">Action:</span>
+                    <button type="button" class="btn-restock" onclick="location.href='/Admin/Inventory'">Restock</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Item 2 -->
+        <div class="tx-card">
+            <div class="tx-card-summary">
+                <div class="tx-main-info">
+                    <span class="tx-customer">Whole Milk (1L Cartons)</span>
+                </div>
+                <button type="button" class="tx-view-btn" onclick="toggleCardDetails(this)">
+                    <span>Details</span>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
+            <div class="tx-card-details hidden">
+                <div class="tx-detail-row">
+                    <span class="tx-label">Current Qty:</span>
+                    <span class="tx-value">12 units</span>
+                </div>
+                <div class="tx-detail-row">
+                    <span class="tx-label">Status:</span>
+                    <span class="badge badge-warning">Low</span>
+                </div>
+                <div class="tx-detail-row" style="margin-top: 6px;">
+                    <span class="tx-label">Action:</span>
+                    <button type="button" class="btn-restock" onclick="location.href='/Admin/Inventory'">Restock</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Item 3 -->
+        <div class="tx-card">
+            <div class="tx-card-summary">
+                <div class="tx-main-info">
+                    <span class="tx-customer">Caramel Syrup Base</span>
+                </div>
+                <button type="button" class="tx-view-btn" onclick="toggleCardDetails(this)">
+                    <span>Details</span>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
+            <div class="tx-card-details hidden">
+                <div class="tx-detail-row">
+                    <span class="tx-label">Current Qty:</span>
+                    <span class="tx-value">1.2 L</span>
+                </div>
+                <div class="tx-detail-row">
+                    <span class="tx-label">Status:</span>
+                    <span class="badge badge-warning">Low</span>
+                </div>
+                                <div class="tx-detail-row" style="margin-top: 6px;">
+                                    <span class="tx-label">Action:</span>
+                                    <button type="button" class="btn-restock" onclick="location.href='/Admin/Inventory'">Restock</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <div class="bottom-three-column-grid">
+                
                 <div class="pos-card-wrapper">
                     <div class="pos-card-header">
                         <div class="pos-card-title"><i class="fas fa-bolt"></i> Quick Manager Actions</div>
@@ -694,6 +1033,33 @@
                 dd.style.display = "none";
             }
         });
+                function toggleTxDetails(btn) {
+                    const card = btn.closest('.tx-card');
+                    const details = card.querySelector('.tx-card-details');
+                    const icon = btn.querySelector('i');
+
+                    details.classList.toggle('hidden');
+
+                    if (details.classList.contains('hidden')) {
+                        btn.childNodes[0].nodeValue = "View ";
+                        icon.style.transform = "rotate(0deg)";
+                    } else {
+                        btn.childNodes[0].nodeValue = "Hide ";
+                        icon.style.transform = "rotate(180deg)";
+                    }
+                }
+            function toggleCardDetails(button) {
+                const card = button.closest('.tx-card');
+                const details = card.querySelector('.tx-card-details');
+                const icon = button.querySelector('i');
+
+                details.classList.toggle('hidden');
+                if (details.classList.contains('hidden')) {
+                    icon.style.transform = 'rotate(0deg)';
+                } else {
+                    icon.style.transform = 'rotate(180deg)';
+                }
+            }
     </script>
 </body>
 </html>
