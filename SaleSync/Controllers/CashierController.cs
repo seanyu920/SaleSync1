@@ -233,6 +233,12 @@ namespace SaleSync.Controllers
         }
 
         // --- STATUS UPDATES & VOIDING ---
+        // ⭐ Mirrors AdminController/ManagerController: deduction only fires the
+        // moment an order flips to 'Completed' (Checkout() intentionally leaves
+        // stock untouched - see the comments in Checkout() above). Previously
+        // this endpoint only flipped the status column, so orders a Cashier
+        // completed directly never deducted inventory even though the exact
+        // same action taken from the Admin/Manager dashboards did.
         [HttpPost]
         public IActionResult UpdateSaleStatus([FromBody] StatusUpdateModel request)
         {
@@ -259,13 +265,90 @@ namespace SaleSync.Controllers
                             cmd.Parameters.AddWithValue("@id", request.SaleId);
                             cmd.ExecuteNonQuery();
                         }
+
+                        if (request.Status == "Completed" && currentStatus != "Completed")
+                        {
+                            string getItemsSql = "SELECT product_id, quantity FROM sale_items WHERE sale_id = @id";
+                            var itemsList = new List<(int pId, int qty)>();
+
+                            using (SqlCommand getCmd = new SqlCommand(getItemsSql, conn, transaction))
+                            {
+                                getCmd.Parameters.AddWithValue("@id", request.SaleId);
+                                using (SqlDataReader r = getCmd.ExecuteReader())
+                                {
+                                    while (r.Read()) itemsList.Add((Convert.ToInt32(r["product_id"]), Convert.ToInt32(r["quantity"])));
+                                }
+                            }
+
+                            foreach (var item in itemsList)
+                            {
+                                DeductIngredients(conn, transaction, item.pId, item.qty);
+                            }
+                        }
+
                         transaction.Commit();
                     }
-                    catch { transaction.Rollback(); throw; }
+                    catch (Exception ex)
+                    {
+                        transaction.Rollback();
+                        return BadRequest(new { message = ex.Message });
+                    }
                 }
             }
             return Ok();
         }
+
+        // ⭐ Mirrors AdminController.DeductIngredients (decimal math + conversion_factor
+        // aware) rather than ManagerController's older double-based version, since the
+        // Admin copy is the one that accounts for recipe units stored in a different
+        // unit than the ingredient's inventory unit (e.g. recipe in ml, inventory in gallons).
+        private void DeductIngredients(SqlConnection conn, SqlTransaction transaction, int productId, int qty)
+        {
+            string recipeQuery = @"
+                SELECT pi.ingredient_id, pi.quantity_required, ISNULL(p.conversion_factor, 1) as conversion_factor
+                FROM product_ingredients pi
+                JOIN products p ON pi.ingredient_id = p.product_id
+                WHERE pi.product_id = @product_id";
+
+            using SqlCommand cmd = new SqlCommand(recipeQuery, conn, transaction);
+            cmd.Parameters.AddWithValue("@product_id", productId);
+
+            var ingredients = new List<(int id, decimal qtyReq, decimal conv)>();
+
+            using (SqlDataReader reader = cmd.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    ingredients.Add((
+                        Convert.ToInt32(reader["ingredient_id"]),
+                        Convert.ToDecimal(reader["quantity_required"]),
+                        Convert.ToDecimal(reader["conversion_factor"])
+                    ));
+                }
+            }
+
+            foreach (var ing in ingredients)
+            {
+                decimal totalDeduct = (ing.qtyReq * qty) / ing.conv;
+
+                string updateQuery = @"
+                    UPDATE products
+                    SET    stock_quantity = stock_quantity - @deduct
+                    WHERE  product_id     = @ingredient_id
+                      AND  stock_quantity >= @deduct";
+
+                using SqlCommand updateCmd = new SqlCommand(updateQuery, conn, transaction);
+                updateCmd.Parameters.AddWithValue("@deduct", totalDeduct);
+                updateCmd.Parameters.AddWithValue("@ingredient_id", ing.id);
+
+                int rows = updateCmd.ExecuteNonQuery();
+                if (rows == 0)
+                {
+                    throw new Exception($"Stock Shortage: Ingredient ID {ing.id} has insufficient stock to fulfill this order (Required deduction: {totalDeduct}).");
+                }
+            }
+        }
+
         // Inside CashierController.cs and ManagerController.cs
         public IActionResult WebCustomization()
         {

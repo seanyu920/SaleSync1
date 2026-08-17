@@ -11,21 +11,18 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" href="images/CaferoLogo.jpg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link rel="stylesheet" href="~/css/HomePage.css" asp-append-version="true" />
 </head>
 <body>
 
     <header class="top-bar">
-        <div class="logo">
-            <img src="/images/Untitled design.png" alt="Cafero Logo" class="logo-icon" />
-            <span>Cafèro</span>
+        <div class="top-bar-left">
+            <a href="#home" class="logo">
+                <img src="/images/Untitled design.png" alt="Cafero Logo" class="logo-icon" />
+                <span>Cafèro</span>
+            </a>
         </div>
-
-        <button class="hamburger" id="hamburger" onclick="toggleNav()">
-            <span class="bar"></span>
-            <span class="bar"></span>
-            <span class="bar"></span>
-        </button>
 
         <div class="nav-container" id="navContainer">
             <nav class="nav-menu">
@@ -34,9 +31,17 @@
                 <a href="#menu" onclick="closeNav()">Menu</a>
                 <a href="#contact" onclick="closeNav()">Contact</a>
             </nav>
-            <div class="nav-login">
-                <a asp-controller="Home" asp-action="Login" class="login-btn">Log In</a>
-            </div>
+        </div>
+
+        <div class="top-bar-right">
+            <a asp-controller="Home" asp-action="Login" class="login-btn">
+                <i class="fas fa-user"></i> Log In
+            </a>
+            <button class="hamburger" id="hamburger" onclick="toggleNav()">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </button>
         </div>
     </header>
 
@@ -49,9 +54,96 @@
                 <a href="/Home/Login" class="hero-btn">Order Now</a>
                 <a href="#menu" class="hero-btn btn-outline">Explore Menu</a>
             </div>
+            <div class="hero-stats">
+
+</div>
         </div>
-        <div class="hero-image-col">
-            <img src="/images/HomePage2.jpg" alt="Cafero interior" />
+
+        <div class="hero-specialty-container">
+            <span class="specialty-label"><i class="fas fa-star"></i> Our Specialties</span>
+
+            <div class="specialty-grid">
+                <div class="specialty-column">
+                    <div class="specialty-card">
+                        <img class="specialty-img" src="/images/spanish-latte.jpg" alt="Spanish Latte" />
+                        <div class="specialty-info">
+                            <h4>Spanish Latte</h4>
+                            <p>Sweetened, creamy traditional espresso favorite.</p>
+                            <a href="#menu" class="specialty-link">Find Out More <i class="fas fa-arrow-right"></i></a>
+                        </div>
+                    </div>
+                    <div class="specialty-card">
+                        <img class="specialty-img" src="/images/okinawa.jpg" alt="Okinawa Milktea" />
+                        <div class="specialty-info">
+                            <h4>Okinawa</h4>
+                            <p>Rich, roasted brown sugar milk tea perfection.</p>
+                            <a href="#menu" class="specialty-link">Find Out More <i class="fas fa-arrow-right"></i></a>
+                        </div>
+                    </div>
+                    <div class="specialty-card">
+                        <img class="specialty-img" src="/images/croissant.jpg" alt="Croissant" />
+                        <div class="specialty-info">
+                            <h4>Croissant</h4>
+                            <p>Flaky, light buttery pastry baked fresh daily.</p>
+                            <a href="#menu" class="specialty-link">Find Out More <i class="fas fa-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="specialty-column">
+                    <div class="specialty-card">
+                        <img class="specialty-img" src="/images/hot-latte.jpg" alt="Hot Latte" />
+                        <div class="specialty-info">
+                            <h4>Hot Latte</h4>
+                            <p>Classic smooth espresso balanced with steamed milk.</p>
+                            <a href="#menu" class="specialty-link">Find Out More <i class="fas fa-arrow-right"></i></a>
+                        </div>
+                    </div>
+                    <div class="specialty-card">
+                        <img class="specialty-img" src="/images/mango.jpg" alt="Mango Fruit Tea" />
+                        <div class="specialty-info">
+                            <h4>Mango</h4>
+                            <p>Luscious, bright tropical mango fruit tea.</p>
+                            <a href="#menu" class="specialty-link">Find Out More <i class="fas fa-arrow-right"></i></a>
+                        </div>
+                    </div>
+                    <div class="specialty-card">
+                        <img class="specialty-img" src="/images/tapsilog.jpg" alt="Hot Silog" />
+                        <div class="specialty-info">
+                            <h4>Hot Silog</h4>
+                            <p>Savory cured beef tapa with garlic rice and egg.</p>
+                            <a href="#menu" class="specialty-link">Find Out More <i class="fas fa-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="specialty-column">
+                    <div class="specialty-card">
+                        <img class="specialty-img" src="/images/ensaymada.jpg" alt="Cheese Ensaymada" />
+                        <div class="specialty-info">
+                            <h4>Cheese Ensaymada</h4>
+                            <p>Sweet brioche roll grated heavily with cheese.</p>
+                            <a href="#menu" class="specialty-link">Find Out More <i class="fas fa-arrow-right"></i></a>
+                        </div>
+                    </div>
+                    <div class="specialty-card">
+                        <img class="specialty-img" src="/images/wintermelon.jpg" alt="Wintermelon Milktea" />
+                        <div class="specialty-info">
+                            <h4>Wintermelon</h4>
+                            <p>Classic, cool, and refreshing brown sugar taste.</p>
+                            <a href="#menu" class="specialty-link">Find Out More <i class="fas fa-arrow-right"></i></a>
+                        </div>
+                    </div>
+                    <div class="specialty-card">
+                        <img class="specialty-img" src="/images/carbonara.jpg" alt="Carbonara" />
+                        <div class="specialty-info">
+                            <h4>Carbonara</h4>
+                            <p>Creamy rich white sauce pasta with savory bacon.</p>
+                            <a href="#menu" class="specialty-link">Find Out More <i class="fas fa-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
 
@@ -60,10 +152,38 @@
             <span class="section-eyebrow">Our Story</span>
             <h2>Welcome to<br><span>Cafèro</span></h2>
             <p class="about-story-text">
-                Established in December 2025, <strong>Cafèro</strong> is Taytay, Rizal’s newest coffee sanctuary. 
-                We believe that exceptional, passion-crafted coffee shouldn't come with a premium price tag. 
+                Established in December 2025, <strong>Cafèro</strong> is Taytay, Rizal’s newest coffee sanctuary.
+                We believe that exceptional, passion-crafted coffee shouldn't come with a premium price tag.
                 That’s why we’re dedicated to bringing you rich flavors, cozy vibes, and daily brews that are beautifully budget-friendly.
             </p>
+
+            <div class="story-highlights">
+                <div class="highlight-item">
+                    <span class="highlight-number">30+</span>
+                    <span class="highlight-label">Menu Items</span>
+                </div>
+
+                <div class="highlight-divider"></div>
+
+                <div class="highlight-item">
+                    <span class="highlight-number">₱85</span>
+                    <span class="highlight-label">Lowest Price</span>
+                </div>
+
+                <div class="highlight-divider"></div>
+
+                <div class="highlight-item">
+                    <span class="highlight-number">2025</span>
+                    <span class="highlight-label">Est. Year</span>
+                </div>
+
+                <div class="highlight-divider"></div>
+
+                <div class="highlight-item">
+                    <span class="highlight-number">Taytay</span>
+                    <span class="highlight-label">Location</span>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -145,18 +265,15 @@
     </section>
 
     <section id="contact" class="contact-section">
-        <!-- Subtle ambient background glow -->
         <div class="contact-glow-bg"></div>
 
         <div class="contact-container">
-            <!-- Left Column: Info -->
             <div class="contact-info">
                 <span class="section-eyebrow">Find Us</span>
                 <h2>Visit Our <span>Escape</span></h2>
                 <p class="contact-sub">Drop by for a cup, stay for the connection.</p>
 
                 <div class="contact-card-list">
-                    <!-- Location Card (Non-clickable, no hover effects) -->
                     <div class="contact-item" style="pointer-events: none; cursor: default;">
                         <div class="contact-icon">
                             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -170,7 +287,6 @@
                         </div>
                     </div>
 
-                    <!-- Email Card (Non-clickable, no hover effects) -->
                     <div class="contact-item" style="pointer-events: none; cursor: default;">
                         <div class="contact-icon">
                             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -184,7 +300,6 @@
                         </div>
                     </div>
 
-                    <!-- Phone Card (Non-clickable, no hover effects) -->
                     <div class="contact-item" style="pointer-events: none; cursor: default;">
                         <div class="contact-icon">
                             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -199,7 +314,6 @@
                 </div>
             </div>
 
-            <!-- Right Column: Styled Map -->
             <div class="contact-map-side">
                 <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3861.642531649257!2d121.1311029!3d14.5623004!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3397c7e3f88f8d55%3A0xb6ca2ffb01230d7b!2sB.%20A.%20Cruz%2C%20Taytay%2C%201920%20Rizal!5e0!3m2!1sen!2sph!4v1700000000000!5m2!1sen!2sph"
                         allowfullscreen=""
@@ -381,7 +495,7 @@
                             <a href="/Home/Login" class="btn-add-order">Order Now</a>
                         </div>
                     </div>
-                    <div class="product-card" data-category="fruittea"> <!-- FIXED MANGO CATEGORY HERE -->
+                    <div class="product-card" data-category="fruittea">
                         <img src="/images/mango.jpg" class="product-image" />
                         <div class="product-info">
                             <div class="info-top"><h3>Mango</h3><span class="price">₱85</span></div>
@@ -570,36 +684,36 @@
     </div>
 
     <script>
-        function toggleNav() {
-            const nav = document.getElementById('navContainer');
-            const hamburger = document.getElementById('hamburger');
-            nav.classList.toggle('active');
-            hamburger.classList.toggle('active');
-        }
-
-        function closeNav() {
-            if (window.innerWidth <= 768) {
-                document.getElementById('navContainer').classList.remove('active');
-                document.getElementById('hamburger').classList.remove('active');
+            function toggleNav() {
+                const nav = document.getElementById('navContainer');
+                const hamburger = document.getElementById('hamburger');
+                nav.classList.toggle('active');
+                hamburger.classList.toggle('active');
             }
-        }
 
-        window.onclick = function(event) {
-            const modal = document.getElementById('categoryModal');
-            if (event.target == modal) closeCategoryModal();
-        }
+            function closeNav() {
+                if (window.innerWidth <= 768) {
+                    document.getElementById('navContainer').classList.remove('active');
+                    document.getElementById('hamburger').classList.remove('active');
+                }
+            }
 
-        function openCategoryModal(category, title) {
-            document.getElementById('categoryModalTitle').innerText = title;
-            document.querySelectorAll('#categoryModalGrid .product-card').forEach(card => {
-                card.style.display = card.getAttribute('data-category') === category ? 'flex' : 'none';
-            });
-            document.getElementById('categoryModal').style.display = 'flex';
-        }
+            window.onclick = function(event) {
+                const modal = document.getElementById('categoryModal');
+                if (event.target == modal) closeCategoryModal();
+            }
 
-        function closeCategoryModal() {
-            document.getElementById('categoryModal').style.display = 'none';
-        }
+            function openCategoryModal(category, title) {
+                document.getElementById('categoryModalTitle').innerText = title;
+                document.querySelectorAll('#categoryModalGrid .product-card').forEach(card => {
+                    card.style.display = card.getAttribute('data-category') === category ? 'flex' : 'none';
+                });
+                document.getElementById('categoryModal').style.display = 'flex';
+            }
+
+            function closeCategoryModal() {
+                document.getElementById('categoryModal').style.display = 'none';
+            }
     </script>
 </body>
 </html>
