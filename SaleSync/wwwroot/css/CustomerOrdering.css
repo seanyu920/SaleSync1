@@ -1,26 +1,59 @@
 ﻿/* ==========================================================================
-   CAFÈRO CUSTOMER ORDERING — Dark Theme
+   CAFÈRO CUSTOMER ORDERING — LEFT SIDEBAR + MOBILE HAMBURGER
+   --------------------------------------------------------------------------
+   Desktop:
+   - Permanent left sidebar
+   - Spacious product area
+   - Dark green + gold Cafèro theme
+
+   Mobile:
+   - Sidebar remains on the LEFT
+   - Sidebar becomes an off-canvas menu
+   - Gold hamburger button opens the sidebar
+   - Dark overlay appears behind sidebar
+   - Responsive product cards
+   - Cafèro-themed chat widget
+
+   IMPORTANT:
+   Existing Razor / HTML / JavaScript functionality is preserved.
    ========================================================================== */
+
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap');
+
+
+/* ==========================================================================
+   1. DESIGN TOKENS
+   ========================================================================== */
 
 :root {
     --bg-base: #0D110D;
     --bg-surface: #141A14;
+    --bg-surface-2: #101610;
     --bg-card: #1C241C;
     --bg-card-2: #212B21;
+    --bg-card-hover: #252F25;
     --gold: #C9A84C;
     --gold-light: #DDB95E;
+    --gold-bright: #E8C96B;
     --gold-glow: rgba(201,168,76,0.15);
     --cream: #F2EDE4;
-    --muted: rgba(242,237,228,0.5);
+    --muted: rgba(242,237,228,0.52);
     --muted-2: rgba(242,237,228,0.75);
     --border: rgba(201,168,76,0.18);
-    --border-sub: rgba(255,255,255,0.06);
+    --border-strong: rgba(201,168,76,0.32);
+    --border-sub: rgba(255,255,255,0.065);
     --success: #3dbf78;
     --danger: #e05555;
     --warning: #d69e2e;
     --info: #3182ce;
+    --sidebar-width: 245px;
+    --content-max: 1700px;
 }
+
+
+/* ==========================================================================
+   2. GLOBAL RESET
+   ========================================================================== */
 
 * {
     margin: 0;
@@ -28,30 +61,51 @@
     box-sizing: border-box;
 }
 
+html {
+    scroll-behavior: smooth;
+}
+
 body {
-    font-family: 'Outfit','Segoe UI',sans-serif;
+    min-width: 320px;
+    min-height: 100vh;
+    font-family: 'Outfit', 'Segoe UI', sans-serif;
     background: var(--bg-base);
     color: var(--cream);
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
 }
+
+
+/* ==========================================================================
+   3. MAIN PAGE
+   ========================================================================== */
 
 .dashboard-container {
     display: flex;
     min-height: 100vh;
+    width: 100%;
+    background: var(--bg-base);
 }
 
-/* ── ANNOUNCEMENT BANNER ─────────────────────────────────────────── */
+
+/* ==========================================================================
+   4. ANNOUNCEMENT BANNER
+   ========================================================================== */
+
 .announcement-banner {
-    background: linear-gradient(135deg, #1a3a1a, #2d6a2d);
-    border-bottom: 1px solid var(--border);
+    width: 100%;
+    background: linear-gradient(135deg, #173918, #265e27);
+    border-bottom: 1px solid rgba(201,168,76,0.12);
     color: var(--cream);
-    padding: 12px 24px;
-    font-size: 14px;
-    font-weight: 600;
+    padding: 11px 24px;
+    font-size: 13px;
+    font-weight: 700;
     display: flex;
     align-items: center;
     gap: 10px;
     position: relative;
+    z-index: 100;
     animation: slideDown 0.4s ease;
 }
 
@@ -71,90 +125,142 @@ body {
     margin-left: auto;
     background: none;
     border: none;
-    color: var(--muted);
+    color: rgba(242,237,228,0.62);
     cursor: pointer;
-    font-size: 16px;
-    transition: color 0.2s;
+    font-size: 17px;
+    transition: color 0.2s ease;
 }
 
     .close-announcement:hover {
         color: var(--cream);
     }
 
-/* ── SIDEBAR ─────────────────────────────────────────────────────── */
+
+/* ==========================================================================
+   5. LEFT SIDEBAR
+   ========================================================================== */
+
 .sidebar {
-    width: 240px;
-    background: var(--bg-surface);
-    padding: 28px 18px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
     position: sticky;
     top: 0;
+    left: 0;
+    z-index: 2000;
+    width: var(--sidebar-width);
+    min-width: var(--sidebar-width);
     height: 100vh;
+    padding: 25px 16px 18px;
+    background: var(--bg-surface);
     border-right: 1px solid var(--border-sub);
-    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
     overflow-y: auto;
+    overflow-x: hidden;
+    box-shadow: 8px 0 24px rgba(0,0,0,0.16);
+    transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
 }
+
+    .sidebar::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .sidebar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+        background: rgba(201,168,76,0.20);
+        border-radius: 999px;
+    }
+
+
+/* ==========================================================================
+   6. SIDEBAR TOP
+   ========================================================================== */
 
 .sidebar-top {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 18px;
+    width: 100%;
 }
 
-.brand-name {
-    font-size: 22px;
-    font-weight: 900;
-    color: var(--cream);
-    letter-spacing: -0.5px;
+
+/* ==========================================================================
+   7. BRAND
+   ========================================================================== */
+
+.logo-section {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
 }
 
 .brand-logo {
-    width: 40px;
-    height: 40px;
+    width: 42px;
+    height: 42px;
+    margin: 0;
     object-fit: cover;
     border-radius: 10px;
-    margin-bottom: 8px;
+    flex-shrink: 0;
+}
+
+.brand-name {
+    color: var(--cream);
+    font-size: 21px;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .brand-sub {
-    font-size: 11px;
+    margin-top: 3px;
     color: var(--gold);
-    font-weight: 700;
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
     text-transform: uppercase;
-    letter-spacing: 2px;
-    margin-top: 2px;
+    white-space: nowrap;
 }
 
-/* Store status */
+
+/* ==========================================================================
+   8. STORE STATUS
+   ========================================================================== */
+
 .store-status-banner {
+    width: 100%;
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 14px;
+    padding: 12px 12px;
     border-radius: 10px;
-    background: rgba(224,85,85,0.1);
-    border: 1px solid rgba(224,85,85,0.2);
-    font-size: 12px;
-    font-weight: 700;
+    background: rgba(224,85,85,0.085);
+    border: 1px solid rgba(224,85,85,0.22);
     color: var(--danger);
-    transition: all 0.3s;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.3;
+    transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
     .store-status-banner.open {
-        background: rgba(61,191,120,0.1);
-        border-color: rgba(61,191,120,0.2);
+        background: rgba(61,191,120,0.09);
+        border-color: rgba(61,191,120,0.22);
         color: var(--success);
     }
 
 .store-dot {
     width: 8px;
     height: 8px;
+    flex: 0 0 8px;
     border-radius: 50%;
     background: var(--danger);
     animation: pulse 2s infinite;
-    flex-shrink: 0;
 }
 
 .store-status-banner.open .store-dot {
@@ -163,7 +269,7 @@ body {
 
 @keyframes pulse {
     0% {
-        box-shadow: 0 0 0 0 rgba(61,191,120,0.5);
+        box-shadow: 0 0 0 0 rgba(61,191,120,0.45);
     }
 
     70% {
@@ -175,141 +281,204 @@ body {
     }
 }
 
-/* Tabs */
+
+/* ==========================================================================
+   9. ORDER / MY ORDERS TABS
+   ========================================================================== */
+
 .sidebar-tabs {
-    display: flex;
-    gap: 6px;
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
 }
 
 .tab-btn {
-    flex: 1;
-    padding: 9px 6px;
+    width: 100%;
+    min-height: 42px;
+    padding: 9px 7px;
     background: var(--bg-card);
     border: 1px solid var(--border-sub);
-    border-radius: 8px;
+    border-radius: 9px;
     color: var(--muted);
     font-family: 'Outfit', sans-serif;
-    font-size: 12px;
-    font-weight: 700;
+    font-size: 13px;
+    font-weight: 800;
     cursor: pointer;
-    transition: all 0.2s;
     text-align: center;
+    white-space: nowrap;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
     .tab-btn.active {
         background: var(--gold);
         color: var(--bg-base);
         border-color: var(--gold);
+        box-shadow: 0 6px 16px rgba(201,168,76,0.15);
     }
 
     .tab-btn:not(.active):hover {
         color: var(--cream);
-        background: var(--border-sub);
+        background: var(--bg-card-hover);
+        border-color: var(--border);
     }
 
-/* Section label */
-.sidebar-section-label {
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    color: var(--muted);
-    margin-bottom: 6px;
+
+/* ==========================================================================
+   10. CATEGORY AREA
+   ========================================================================== */
+
+#catNav {
+    width: 100%;
+    margin-top: 3px;
 }
 
-/* Menu buttons */
+    #catNav .sidebar-section-label {
+        display: block;
+    }
+
+.sidebar-section-label {
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1.8px;
+    color: var(--muted);
+    margin-bottom: 9px;
+}
+
+
+/* ==========================================================================
+   11. CATEGORY MENU
+   ========================================================================== */
+
 .sidebar-menu {
     display: flex;
     flex-direction: column;
+    width: 100%;
     gap: 3px;
 }
 
 .menu-btn {
+    width: 100%;
+    min-height: 42px;
+    padding: 9px 11px;
     display: flex;
     align-items: center;
+    justify-content: flex-start;
     gap: 8px;
-    width: 100%;
-    padding: 9px 12px;
     background: transparent;
-    border: none;
-    border-radius: 8px;
+    border: 1px solid transparent;
+    border-radius: 9px;
     color: var(--muted);
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
     font-family: 'Outfit', sans-serif;
-    transition: all 0.2s;
-    text-align: left;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
     text-decoration: none;
+    white-space: nowrap;
+    text-align: left;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
     .menu-btn:hover {
         color: var(--cream);
-        background: var(--border-sub);
+        background: rgba(255,255,255,0.035);
+        border-color: rgba(255,255,255,0.04);
     }
 
     .menu-btn.active {
         background: var(--gold);
         color: var(--bg-base);
-        font-weight: 800;
+        border-color: var(--gold);
+        font-weight: 900;
+        box-shadow: 0 6px 16px rgba(201,168,76,0.12);
     }
 
     .menu-btn.fav-btn.active {
-        background: rgba(220,60,60,0.15);
+        background: rgba(220,60,60,0.12);
         color: #e05555;
-        border: 1px solid rgba(220,60,60,0.2);
+        border-color: rgba(220,60,60,0.22);
+        box-shadow: none;
     }
 
-/* Loyalty */
+
+/* ==========================================================================
+   12. LOYALTY BOX
+   ========================================================================== */
+
 .loyalty-box {
-    padding: 14px;
+    width: 100%;
+    padding: 13px;
     background: var(--bg-card);
     border: 1px solid var(--border-sub);
     border-radius: 12px;
+    box-shadow: 0 5px 18px rgba(0,0,0,0.10);
 }
 
 .loyalty-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--muted-2);
+    justify-content: space-between;
+    gap: 6px;
     margin-bottom: 8px;
+    color: var(--muted-2);
+    font-size: 12px;
+    font-weight: 800;
 }
 
     .loyalty-header strong {
-        color: var(--gold);
+        color: var(--gold-light);
     }
 
 .loyalty-bar-bg {
+    width: 100%;
     height: 6px;
-    background: var(--border-sub);
-    border-radius: 99px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 999px;
     overflow: hidden;
     margin-bottom: 6px;
 }
 
 .loyalty-bar-fill {
     height: 100%;
-    background: var(--gold);
-    border-radius: 99px;
+    background: linear-gradient(90deg, var(--gold), var(--gold-light));
+    border-radius: 999px;
     transition: width 0.6s ease;
 }
 
 .loyalty-hint {
-    font-size: 11px;
     color: var(--muted);
+    font-size: 10px;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-/* Logout */
+
+/* ==========================================================================
+   13. SIDEBAR BOTTOM
+   ========================================================================== */
+
 .logout-section {
-    padding-top: 16px;
+    margin-top: auto;
+    padding-top: 14px;
     border-top: 1px solid var(--border-sub);
 }
 
 .logout-btn {
+    width: 100%;
+    padding: 10px 11px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
     color: var(--muted);
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
 }
 
     .logout-btn:hover {
@@ -317,62 +486,93 @@ body {
         background: rgba(224,85,85,0.07);
     }
 
-/* ── MAIN CONTENT ─────────────────────────────────────────────────── */
+
+/* ==========================================================================
+   14. MAIN CONTENT
+   ========================================================================== */
+
 .main-content {
     flex: 1;
-    overflow-y: auto;
+    min-width: 0;
+    min-height: 100vh;
     background: var(--bg-base);
     display: flex;
     flex-direction: column;
+    overflow-x: hidden;
 }
 
     .main-content > #tabMenu,
     .main-content > #tabOrders {
-        padding: 28px 36px;
+        width: 100%;
+        max-width: var(--content-max);
+        margin: 0 auto;
+        padding: 30px 34px 50px;
         flex: 1;
     }
 
+
+/* ==========================================================================
+   15. POS HEADER
+   ========================================================================== */
+
 .pos-header {
     display: flex;
+    align-items: flex-end;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 28px;
+    gap: 24px;
+    margin-bottom: 30px;
     padding-bottom: 22px;
     border-bottom: 1px solid var(--border-sub);
 }
 
     .pos-header h1 {
-        font-size: 24px;
-        font-weight: 900;
-        color: var(--cream);
-        letter-spacing: -0.5px;
         margin-bottom: 4px;
+        color: var(--cream);
+        font-size: 27px;
+        font-weight: 900;
+        line-height: 1.1;
+        letter-spacing: -0.7px;
     }
 
     .pos-header p {
         color: var(--muted);
-        font-size: 13.5px;
+        font-size: 13px;
+        line-height: 1.45;
     }
+
+
+/* ==========================================================================
+   16. HEADER ACTIONS
+   ========================================================================== */
 
 .header-actions {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
+    flex-shrink: 0;
 }
 
+
+/* ==========================================================================
+   17. SEARCH
+   ========================================================================== */
+
 .search-container {
+    width: 285px;
+    height: 44px;
     display: flex;
     align-items: center;
     background: var(--bg-card);
     border: 1px solid var(--border-sub);
     border-radius: 10px;
-    padding: 0 14px;
-    width: 260px;
-    transition: all 0.2s;
+    padding: 0 13px;
+    transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
 }
 
     .search-container:focus-within {
-        border-color: var(--gold);
+        border-color: var(--border-strong);
+        background: var(--bg-card-2);
+        box-shadow: 0 0 0 3px rgba(201,168,76,0.045);
     }
 
 .search-icon {
@@ -382,15 +582,15 @@ body {
 }
 
 #menuSearch {
+    width: 100%;
     border: none;
+    outline: none;
     background: transparent;
     padding: 11px 0;
-    width: 100%;
-    outline: none;
-    font-family: 'Outfit',sans-serif;
-    font-weight: 600;
     color: var(--cream);
-    font-size: 13.5px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
 }
 
     #menuSearch::placeholder {
@@ -398,49 +598,60 @@ body {
         font-weight: 400;
     }
 
+
+/* ==========================================================================
+   18. CART BUTTON
+   ========================================================================== */
+
 .cart-icon-btn {
     position: relative;
-    background: var(--gold);
-    color: var(--bg-base);
     width: 44px;
     height: 44px;
+    border: none;
     border-radius: 10px;
+    background: var(--gold);
+    color: var(--bg-base);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 18px;
     cursor: pointer;
-    border: none;
-    transition: all 0.2s;
     flex-shrink: 0;
+    box-shadow: 0 7px 18px rgba(201,168,76,0.14);
+    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
     .cart-icon-btn:hover {
         background: var(--gold-light);
         transform: translateY(-1px);
+        box-shadow: 0 10px 22px rgba(201,168,76,0.20);
     }
 
 .cart-badge {
     position: absolute;
-    top: -6px;
-    right: -6px;
-    background: var(--danger);
-    color: #fff;
-    border-radius: 50%;
+    top: -5px;
+    right: -5px;
     width: 18px;
     height: 18px;
+    border-radius: 50%;
+    background: var(--danger);
+    color: #fff;
+    border: 2px solid var(--bg-base);
     font-size: 10px;
     font-weight: 800;
-    border: 2px solid var(--bg-base);
     align-items: center;
     justify-content: center;
 }
 
-/* ── PRODUCT GRID ─────────────────────────────────────────────────── */
+
+/* ==========================================================================
+   19. PRODUCT GRID
+   ========================================================================== */
+
 .product-container {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 18px;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 20px;
     padding-bottom: 40px;
     animation: fadeIn 0.3s ease;
 }
@@ -448,44 +659,55 @@ body {
 @keyframes fadeIn {
     from {
         opacity: 0;
-        transform: translateY(8px)
+        transform: translateY(8px);
     }
 
     to {
         opacity: 1;
-        transform: translateY(0)
+        transform: translateY(0);
     }
 }
 
+
+/* ==========================================================================
+   20. PRODUCT CARD
+   ========================================================================== */
+
 .product-card {
+    position: relative;
+    min-width: 0;
     background: var(--bg-card);
     border: 1px solid var(--border-sub);
-    border-radius: 14px;
+    border-radius: 15px;
     overflow: visible;
     display: flex;
     flex-direction: column;
-    transition: all 0.25s ease;
-    position: relative;
+    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
     animation: fadeIn 0.3s ease;
 }
 
     .product-card:hover {
         transform: translateY(-4px);
-        border-color: var(--border);
-        box-shadow: 0 12px 36px rgba(0,0,0,0.35);
+        background: var(--bg-card-hover);
+        border-color: var(--border-strong);
+        box-shadow: 0 16px 34px rgba(0,0,0,0.30), 0 0 20px rgba(201,168,76,0.035);
     }
 
-/* Best seller / New badges */
+
+/* ==========================================================================
+   21. ITEM BADGES
+   ========================================================================== */
+
 .item-badge {
     position: absolute;
-    top: -10px;
+    top: -9px;
     left: 12px;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 10px;
-    font-weight: 800;
-    z-index: 2;
-    letter-spacing: 0.3px;
+    padding: 4px 9px;
+    border-radius: 999px;
+    font-size: 9px;
+    font-weight: 900;
+    z-index: 5;
+    letter-spacing: 0.2px;
 }
 
 .badge-best {
@@ -494,52 +716,90 @@ body {
 }
 
 .badge-new {
-    background: rgba(61,191,120,0.2);
+    background: rgba(61,191,120,0.18);
     color: var(--success);
-    border: 1px solid rgba(61,191,120,0.3);
+    border: 1px solid rgba(61,191,120,0.28);
 }
 
-/* Favorite heart */
+
+/* ==========================================================================
+   22. FAVORITE HEART
+   ========================================================================== */
+
 .fav-heart {
     position: absolute;
     top: 10px;
     right: 10px;
-    background: none;
-    border: none;
-    font-size: 18px;
-    cursor: pointer;
-    z-index: 2;
-    transition: transform 0.2s;
-    line-height: 1;
-    padding: 4px;
-}
-
-    .fav-heart:hover {
-        transform: scale(1.3);
-    }
-
-    .fav-heart.fav-active {
-        transform: scale(1.1);
-    }
-
-/* Product image placeholder */
-.product-img-placeholder {
-    width: 100%;
-    height: 130px;
-    background: var(--bg-card-2);
+    width: 30px;
+    height: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 14px 14px 0 0;
+    background: rgba(10,15,11,0.35);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 50%;
+    font-size: 16px;
+    cursor: pointer;
+    z-index: 5;
+    line-height: 1;
+    padding: 0;
+    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+    .fav-heart:hover {
+        transform: scale(1.12);
+        background: rgba(201,168,76,0.08);
+        border-color: rgba(201,168,76,0.24);
+    }
+
+    .fav-heart.fav-active {
+        transform: scale(1.05);
+    }
+
+
+/* ==========================================================================
+   23. PRODUCT IMAGE
+   ========================================================================== */
+
+.product-img-placeholder {
+    width: 100%;
+    height: 150px;
+    background: radial-gradient(circle at 50% 48%, rgba(255,255,255,0.018), transparent 46%), var(--bg-card-2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 15px 15px 0 0;
     overflow: hidden;
 }
 
 .product-img-emoji {
-    font-size: 48px;
+    font-size: 50px;
+    transition: transform 0.25s ease, filter 0.25s ease;
 }
 
+.product-card:hover .product-img-emoji {
+    transform: scale(1.06);
+}
+
+.product-uploaded-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+    transition: transform 0.35s ease, filter 0.35s ease;
+}
+
+.product-card:hover .product-uploaded-img {
+    transform: scale(1.025);
+}
+
+
+/* ==========================================================================
+   24. PRODUCT INFO
+   ========================================================================== */
+
 .product-info {
-    padding: 14px 16px;
+    padding: 15px 16px 15px;
     display: flex;
     flex-direction: column;
     flex-grow: 1;
@@ -548,60 +808,73 @@ body {
 .info-top {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: baseline;
+    gap: 10px;
     margin-bottom: 6px;
 }
 
     .info-top h3 {
-        font-size: 14px;
-        font-weight: 700;
+        min-width: 0;
         color: var(--cream);
-        line-height: 1.3;
+        font-size: 15px;
+        font-weight: 800;
+        line-height: 1.35;
     }
 
 .price {
-    color: var(--gold);
-    font-weight: 800;
-    font-size: 14px;
+    flex-shrink: 0;
+    color: var(--gold-light);
+    font-size: 15px;
+    font-weight: 900;
     white-space: nowrap;
-    margin-left: 8px;
 }
 
 .description {
     color: var(--muted);
-    font-size: 12.5px;
+    font-size: 12px;
+    line-height: 1.55;
     margin-bottom: 14px;
     flex-grow: 1;
-    line-height: 1.5;
 }
+
+
+/* ==========================================================================
+   25. ADD ORDER BUTTON
+   ========================================================================== */
 
 .btn-add-order {
     width: 100%;
+    min-height: 42px;
+    padding: 9px 12px;
+    border: none;
+    border-radius: 9px;
     background: var(--gold);
     color: var(--bg-base);
-    border: none;
-    padding: 10px;
-    border-radius: 8px;
-    font-weight: 800;
-    font-size: 13px;
-    cursor: pointer;
-    transition: all 0.2s;
     font-family: 'Outfit', sans-serif;
+    font-size: 12px;
+    font-weight: 900;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
     .btn-add-order:hover {
         background: var(--gold-light);
         transform: translateY(-1px);
+        box-shadow: 0 7px 17px rgba(201,168,76,0.14);
     }
 
 .no-items-fallback {
-    grid-column: 1/-1;
+    grid-column: 1 / -1;
     text-align: center;
-    padding: 60px;
+    padding: 70px 20px;
     color: var(--muted);
 }
 
-/* ── SIZE + NOTES MODAL ──────────────────────────────────────────── */
+
+/* ==========================================================================
+   26. SIZE + NOTES MODAL
+   ========================================================================== */
+
 .modal-overlay {
     position: fixed;
     inset: 0;
@@ -611,15 +884,16 @@ body {
     justify-content: center;
     z-index: 4000;
     backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
 }
 
 .modal-card {
-    background: var(--bg-card);
     width: 90%;
     max-width: 420px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
     border-radius: 18px;
     padding: 28px;
-    border: 1px solid var(--border);
     box-shadow: 0 24px 60px rgba(0,0,0,0.5);
     animation: slideUp 0.3s ease-out;
     display: flex;
@@ -630,12 +904,12 @@ body {
 @keyframes slideUp {
     from {
         transform: translateY(20px);
-        opacity: 0
+        opacity: 0;
     }
 
     to {
         transform: translateY(0);
-        opacity: 1
+        opacity: 1;
     }
 }
 
@@ -646,25 +920,25 @@ body {
 }
 
     .modal-header h2 {
+        color: var(--cream);
         font-size: 18px;
         font-weight: 800;
-        color: var(--cream);
         letter-spacing: -0.3px;
     }
 
 .close-modal {
-    background: none;
-    border: none;
-    font-size: 18px;
-    color: var(--muted);
-    cursor: pointer;
     width: 32px;
     height: 32px;
-    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: color 0.2s ease, background 0.2s ease;
 }
 
     .close-modal:hover {
@@ -673,9 +947,9 @@ body {
     }
 
 .modal-label {
+    color: var(--muted);
     font-size: 11px;
     font-weight: 700;
-    color: var(--muted);
     text-transform: uppercase;
     letter-spacing: 1.5px;
 }
@@ -703,7 +977,7 @@ body {
     padding: 14px;
     text-align: center;
     background: var(--bg-card-2);
-    transition: all 0.2s;
+    transition: border-color 0.2s ease, background 0.2s ease;
     cursor: pointer;
 }
 
@@ -714,9 +988,9 @@ body {
 
 .size-label {
     display: block;
-    font-weight: 700;
     color: var(--muted-2);
     font-size: 14px;
+    font-weight: 700;
     margin-bottom: 4px;
 }
 
@@ -725,8 +999,8 @@ body {
 }
 
 .size-price-mod {
-    font-size: 13px;
     color: var(--muted);
+    font-size: 13px;
     font-weight: 600;
 }
 
@@ -746,14 +1020,14 @@ body {
     border-radius: 8px;
     border: 1px solid var(--border-sub);
     background: var(--bg-surface);
+    color: var(--gold);
     font-size: 18px;
     font-weight: 800;
-    color: var(--gold);
     cursor: pointer;
-    transition: all 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
     .qty-btn:hover {
@@ -767,14 +1041,15 @@ body {
     text-align: center;
     border: none;
     background: none;
+    color: var(--cream);
+    font-family: 'Outfit', sans-serif;
     font-size: 20px;
     font-weight: 900;
-    color: var(--cream);
-    font-family: 'Outfit',sans-serif;
 }
 
 .notes-textarea {
     width: 100%;
+    height: 72px;
     padding: 11px 14px;
     border-radius: 10px;
     border: 1px solid var(--border-sub);
@@ -783,10 +1058,9 @@ body {
     font-size: 13.5px;
     font-weight: 600;
     outline: none;
-    font-family: 'Outfit',sans-serif;
+    font-family: 'Outfit', sans-serif;
     resize: none;
-    height: 72px;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s ease, background 0.2s ease;
 }
 
     .notes-textarea:focus {
@@ -806,19 +1080,24 @@ body {
     color: var(--bg-base);
     border: none;
     border-radius: 10px;
-    font-weight: 800;
-    font-size: 15px;
+    font-weight: 900;
+    font-size: 14px;
     cursor: pointer;
-    font-family: 'Outfit',sans-serif;
-    transition: all 0.2s;
+    font-family: 'Outfit', sans-serif;
+    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
     .btn-confirm-add:hover {
         background: var(--gold-light);
         transform: translateY(-1px);
+        box-shadow: 0 7px 18px rgba(201,168,76,0.14);
     }
 
-/* ── CART SIDEBAR ────────────────────────────────────────────────── */
+
+/* ==========================================================================
+   27. CART SIDEBAR
+   ========================================================================== */
+
 .cart-sidebar {
     position: fixed;
     top: 0;
@@ -845,6 +1124,7 @@ body {
     z-index: 2999;
     display: none;
     backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
 }
 
     .cart-overlay.open {
@@ -860,24 +1140,24 @@ body {
 }
 
     .cart-header h2 {
+        color: var(--cream);
         font-size: 18px;
         font-weight: 800;
-        color: var(--cream);
     }
 
 .close-cart-btn {
-    background: none;
-    border: none;
-    font-size: 18px;
-    cursor: pointer;
-    color: var(--muted);
     width: 32px;
     height: 32px;
-    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 18px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: color 0.2s ease, background 0.2s ease;
 }
 
     .close-cart-btn:hover {
@@ -923,15 +1203,15 @@ body {
 }
 
     .cart-item-info h4 {
+        color: var(--cream);
         font-size: 13.5px;
         font-weight: 700;
-        color: var(--cream);
         margin-bottom: 3px;
     }
 
     .cart-item-info p {
-        font-size: 12px;
         color: var(--muted);
+        font-size: 12px;
         line-height: 1.4;
     }
 
@@ -955,13 +1235,13 @@ body {
     border: 1px solid var(--border-sub);
     background: var(--bg-card-2);
     color: var(--gold);
+    font-size: 14px;
     font-weight: 800;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
-    transition: all 0.2s;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
     .cart-qty-btn:hover {
@@ -971,20 +1251,20 @@ body {
     }
 
 .cart-qty-val {
-    font-weight: 700;
     width: 18px;
     text-align: center;
     color: var(--cream);
     font-size: 13px;
+    font-weight: 700;
 }
 
 .cart-subtotal-val {
-    font-weight: 800;
+    min-width: 56px;
     color: var(--gold);
     font-size: 13.5px;
-    flex-shrink: 0;
-    min-width: 56px;
+    font-weight: 800;
     text-align: right;
+    flex-shrink: 0;
 }
 
 .cart-footer {
@@ -1000,9 +1280,9 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    color: var(--cream);
     font-size: 17px;
     font-weight: 900;
-    color: var(--cream);
 }
 
     .cart-total-row span:last-child {
@@ -1010,8 +1290,8 @@ body {
     }
 
 .min-order-note {
-    font-size: 12px;
     color: var(--warning);
+    font-size: 12px;
     font-weight: 600;
 }
 
@@ -1025,10 +1305,10 @@ body {
     font-size: 13.5px;
     font-weight: 600;
     outline: none;
-    font-family: 'Outfit',sans-serif;
+    font-family: 'Outfit', sans-serif;
     cursor: pointer;
-    transition: border-color 0.2s;
     appearance: none;
+    transition: border-color 0.2s ease;
 }
 
     .cart-select:focus {
@@ -1050,9 +1330,9 @@ body {
     font-size: 13.5px;
     font-weight: 600;
     outline: none;
-    font-family: 'Outfit',sans-serif;
+    font-family: 'Outfit', sans-serif;
     resize: none;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s ease;
 }
 
     .cart-textarea:focus {
@@ -1072,10 +1352,10 @@ body {
     padding: 14px;
     border-radius: 10px;
     font-size: 15px;
-    font-weight: 800;
+    font-weight: 900;
     cursor: pointer;
-    font-family: 'Outfit',sans-serif;
-    transition: all 0.2s;
+    font-family: 'Outfit', sans-serif;
+    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
     .btn-checkout:hover {
@@ -1090,7 +1370,11 @@ body {
         transform: none;
     }
 
-/* ── MY ORDERS PAGE ──────────────────────────────────────────────── */
+
+/* ==========================================================================
+   28. MY ORDERS
+   ========================================================================== */
+
 .refresh-btn {
     background: var(--bg-card);
     color: var(--gold);
@@ -1100,12 +1384,13 @@ body {
     font-weight: 700;
     font-size: 13px;
     cursor: pointer;
-    font-family: 'Outfit',sans-serif;
-    transition: all 0.2s;
+    font-family: 'Outfit', sans-serif;
+    transition: background 0.2s ease, border-color 0.2s ease;
 }
 
     .refresh-btn:hover {
         background: var(--gold-glow);
+        border-color: var(--border-strong);
     }
 
 .orders-section {
@@ -1113,9 +1398,9 @@ body {
 }
 
 .section-title {
+    color: var(--cream);
     font-size: 17px;
     font-weight: 800;
-    color: var(--cream);
     margin-bottom: 16px;
     letter-spacing: -0.3px;
 }
@@ -1127,7 +1412,11 @@ body {
     padding: 24px 0;
 }
 
-/* Track card */
+
+/* ==========================================================================
+   29. TRACK CARDS
+   ========================================================================== */
+
 .track-card {
     background: var(--bg-card);
     border: 1px solid var(--border-sub);
@@ -1135,7 +1424,7 @@ body {
     padding: 22px;
     margin-bottom: 14px;
     animation: fadeIn 0.3s ease;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s ease;
 }
 
     .track-card:hover {
@@ -1150,19 +1439,19 @@ body {
 }
 
 .track-id {
+    color: var(--cream);
     font-size: 15px;
     font-weight: 800;
-    color: var(--cream);
 }
 
 .track-badge {
+    display: inline-block;
     padding: 4px 12px;
     border-radius: 20px;
     font-size: 10px;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.8px;
-    display: inline-block;
 }
 
 .badge-pending {
@@ -1177,12 +1466,7 @@ body {
     border: 1px solid rgba(49,130,206,0.2);
 }
 
-.badge-ready {
-    background: rgba(61,191,120,0.12);
-    color: var(--success);
-    border: 1px solid rgba(61,191,120,0.25);
-}
-
+.badge-ready,
 .badge-delivered {
     background: rgba(61,191,120,0.12);
     color: var(--success);
@@ -1202,28 +1486,26 @@ body {
 }
 
 .track-price {
-    font-weight: 800;
     color: var(--gold);
+    font-weight: 800;
 }
 
 .track-time {
-    font-size: 12px;
     color: var(--muted);
+    font-size: 12px;
 }
 
-/* ETA bar */
 .eta-bar {
-    font-size: 12px;
-    font-weight: 700;
     color: var(--muted-2);
     background: var(--bg-card-2);
     border-radius: 6px;
     padding: 7px 12px;
     margin-bottom: 16px;
     border-left: 3px solid var(--gold);
+    font-size: 12px;
+    font-weight: 700;
 }
 
-/* Step tracker */
 .track-steps {
     display: flex;
     align-items: center;
@@ -1236,8 +1518,8 @@ body {
     flex-direction: column;
     align-items: center;
     gap: 6px;
-    font-size: 11px;
     color: var(--muted);
+    font-size: 11px;
     font-weight: 600;
     flex-shrink: 0;
 }
@@ -1255,10 +1537,10 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    color: var(--muted);
     font-size: 11px;
     font-weight: 800;
-    color: var(--muted);
-    transition: all 0.3s;
+    transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
 .track-step.done .step-dot {
@@ -1271,10 +1553,8 @@ body {
     flex: 1;
     height: 2px;
     background: var(--border-sub);
-    margin: 0 6px;
-    align-self: center;
-    margin-bottom: 18px;
-    transition: background 0.3s;
+    margin: 0 6px 18px;
+    transition: background 0.3s ease;
 }
 
     .track-line.done {
@@ -1288,16 +1568,20 @@ body {
 }
 
 .track-item-tag {
-    font-size: 11px;
     padding: 4px 10px;
     background: var(--bg-card-2);
     border: 1px solid var(--border-sub);
     border-radius: 20px;
     color: var(--muted-2);
+    font-size: 11px;
     font-weight: 600;
 }
 
-/* History */
+
+/* ==========================================================================
+   30. HISTORY
+   ========================================================================== */
+
 .history-row {
     display: flex;
     justify-content: space-between;
@@ -1307,7 +1591,7 @@ body {
     border: 1px solid var(--border-sub);
     border-radius: 12px;
     margin-bottom: 10px;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s ease;
     animation: fadeIn 0.3s ease;
 }
 
@@ -1316,22 +1600,22 @@ body {
     }
 
 .history-id {
-    font-weight: 800;
     color: var(--cream);
-    margin-bottom: 4px;
     font-size: 14px;
+    font-weight: 800;
+    margin-bottom: 4px;
 }
 
 .history-items {
-    font-size: 12.5px;
     color: var(--muted);
-    margin-bottom: 4px;
+    font-size: 12.5px;
     line-height: 1.5;
+    margin-bottom: 4px;
 }
 
 .history-time {
-    font-size: 11px;
     color: var(--muted);
+    font-size: 11px;
 }
 
 .history-right {
@@ -1342,9 +1626,9 @@ body {
 }
 
 .history-total {
-    font-weight: 800;
     color: var(--gold);
     font-size: 15px;
+    font-weight: 800;
 }
 
 .reorder-btn {
@@ -1356,8 +1640,8 @@ body {
     font-size: 12px;
     font-weight: 800;
     cursor: pointer;
-    font-family: 'Outfit',sans-serif;
-    transition: all 0.2s;
+    font-family: 'Outfit', sans-serif;
+    transition: background 0.2s ease, color 0.2s ease;
 }
 
     .reorder-btn:hover {
@@ -1365,11 +1649,15 @@ body {
         color: var(--bg-base);
     }
 
-/* ── SWEETALERT2 ─────────────────────────────────────────────────── */
+
+/* ==========================================================================
+   31. SWEETALERT2
+   ========================================================================== */
+
 .swal2-popup {
     background: var(--bg-card) !important;
     border-radius: 16px !important;
-    font-family: 'Outfit',sans-serif !important;
+    font-family: 'Outfit', sans-serif !important;
     padding: 2.5rem 2rem !important;
     border: 1px solid var(--border) !important;
     box-shadow: 0 20px 60px rgba(0,0,0,0.5) !important;
@@ -1398,7 +1686,7 @@ body {
     border-radius: 8px !important;
     padding: 11px 28px !important;
     font-weight: 800 !important;
-    font-family: 'Outfit',sans-serif !important;
+    font-family: 'Outfit', sans-serif !important;
 }
 
 .swal2-cancel {
@@ -1408,7 +1696,7 @@ body {
     padding: 11px 24px !important;
     font-weight: 700 !important;
     border: 1px solid var(--border-sub) !important;
-    font-family: 'Outfit',sans-serif !important;
+    font-family: 'Outfit', sans-serif !important;
 }
 
 .swal2-icon.swal2-success {
@@ -1429,45 +1717,40 @@ body {
 .swal2-icon {
     background: transparent !important;
 }
-.slide-up {
-    animation: slideUp 0.3s ease-out;
-}
-.product-uploaded-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: inherit;
-}
 
-/* ── FLOATING CHAT WIDGET STYLES ── */
+
+/* ==========================================================================
+   32. CHAT WIDGET — CAFÈRO THEME
+   ========================================================================== */
+
 .chat-widget {
     position: fixed;
-    bottom: 25px;
     right: 25px;
+    bottom: 25px;
     z-index: 1100;
     font-family: 'Outfit', sans-serif;
 }
 
 .chat-fab {
-    width: 60px;
-    height: 60px;
+    width: 58px;
+    height: 58px;
     border-radius: 50%;
-    background: #8B5A2B; /* Cozy Coffee Accent */
-    color: white;
-    border: none;
-    font-size: 26px;
+    background: var(--gold) !important;
+    color: var(--bg-base) !important;
+    border: 1px solid rgba(201,168,76,0.35);
+    font-size: 25px;
     cursor: pointer;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+    box-shadow: 0 8px 22px rgba(0,0,0,0.35), 0 0 18px rgba(201,168,76,0.10);
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.3s ease, background-color 0.3s ease;
-    position: relative;
+    transition: transform 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
 }
 
     .chat-fab:hover {
-        transform: scale(1.08);
-        background: #70441E;
+        background: var(--gold-light) !important;
+        transform: scale(1.06);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.40), 0 0 22px rgba(201,168,76,0.16);
     }
 
 .chat-badge-dot {
@@ -1476,28 +1759,29 @@ body {
     right: 2px;
     width: 12px;
     height: 12px;
-    background: #ff4757;
+    background: var(--danger) !important;
     border-radius: 50%;
-    border: 2px solid white;
+    border: 2px solid var(--bg-surface) !important;
     display: block;
 }
 
 .chat-window {
     position: absolute;
-    bottom: 75px;
     right: 0;
+    bottom: 74px;
     width: 350px;
     height: 460px;
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    background: var(--bg-surface) !important;
+    border: 1px solid var(--border-sub) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 20px 55px rgba(0,0,0,0.45), 0 0 25px rgba(0,0,0,0.15) !important;
     display: flex;
     flex-direction: column;
     overflow: hidden;
     transform: scale(0.8) translateY(30px);
     opacity: 0;
     pointer-events: none;
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s ease;
 }
 
     .chat-window.open {
@@ -1507,12 +1791,13 @@ body {
     }
 
 .chat-header {
-    background: #8B5A2B;
-    color: white;
-    padding: 15px;
+    background: var(--bg-card) !important;
+    color: var(--cream) !important;
+    padding: 15px 16px !important;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    border-bottom: 1px solid var(--border-sub) !important;
 }
 
 .chat-header-info {
@@ -1522,9 +1807,11 @@ body {
 }
 
 .chat-avatar {
-    width: 35px;
-    height: 35px;
-    background: rgba(255,255,255,0.2);
+    width: 36px;
+    height: 36px;
+    background: var(--gold-glow) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--gold-light);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -1534,13 +1821,15 @@ body {
 
 .chat-title {
     margin: 0;
+    color: var(--cream) !important;
     font-size: 15px;
-    font-weight: 700;
+    font-weight: 800;
 }
 
 .chat-status {
-    font-size: 11px;
-    opacity: 0.9;
+    color: var(--muted-2) !important;
+    font-size: 10px;
+    opacity: 1;
     display: flex;
     align-items: center;
     gap: 4px;
@@ -1551,33 +1840,50 @@ body {
         display: inline-block;
         width: 6px;
         height: 6px;
-        background: #2ed573;
+        background: var(--success) !important;
         border-radius: 50%;
+        box-shadow: 0 0 8px rgba(61,191,120,0.35);
     }
 
 .close-chat-widget {
-    background: none;
+    background: transparent !important;
     border: none;
-    color: white;
-    font-size: 18px;
+    color: var(--muted) !important;
+    font-size: 20px;
     cursor: pointer;
-    opacity: 0.8;
-    transition: opacity 0.2s;
+    opacity: 1;
+    transition: color 0.2s ease, background 0.2s ease;
 }
 
     .close-chat-widget:hover {
-        opacity: 1;
+        color: var(--cream) !important;
+        background: rgba(255,255,255,0.05) !important;
+        border-radius: 8px;
     }
 
 .chat-body {
     flex: 1;
-    padding: 15px;
+    padding: 16px !important;
     overflow-y: auto;
-    background: #fdfaf7; /* Creamy tone background */
+    background: var(--bg-base) !important;
+    color: var(--cream);
     display: flex;
     flex-direction: column;
     gap: 12px;
 }
+
+    .chat-body::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .chat-body::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .chat-body::-webkit-scrollbar-thumb {
+        background: rgba(201,168,76,0.20);
+        border-radius: 999px;
+    }
 
 .chat-msg {
     max-width: 80%;
@@ -1602,21 +1908,23 @@ body {
 }
 
 .chat-msg.bot .msg-bubble {
-    background: white;
-    color: #333;
-    border-bottom-left-radius: 2px;
-    border: 1px solid #e9ecef;
+    background: var(--bg-card) !important;
+    color: var(--muted-2) !important;
+    border-bottom-left-radius: 4px;
+    border: 1px solid var(--border-sub) !important;
 }
 
 .chat-msg.user .msg-bubble {
-    background: #8B5A2B;
-    color: white;
-    border-bottom-right-radius: 2px;
+    background: var(--gold) !important;
+    color: var(--bg-base) !important;
+    border-bottom-right-radius: 4px;
+    border: 1px solid var(--gold) !important;
+    font-weight: 600;
 }
 
 .msg-time {
     font-size: 10px;
-    color: #999;
+    color: var(--muted) !important;
     margin: 0 4px;
 }
 
@@ -1625,50 +1933,1031 @@ body {
 }
 
 .chat-footer {
-    padding: 12px;
-    border-top: 1px solid #eee;
+    padding: 12px !important;
+    border-top: 1px solid var(--border-sub) !important;
     display: flex;
     gap: 8px;
-    background: white;
+    background: var(--bg-surface) !important;
 }
 
 #chatInput {
     flex: 1;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-sub) !important;
     border-radius: 20px;
-    padding: 8px 16px;
+    padding: 9px 15px;
     font-size: 13px;
+    font-family: 'Outfit', sans-serif;
     outline: none;
-    transition: border-color 0.2s;
+    background: var(--bg-card) !important;
+    color: var(--cream) !important;
+    transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
 }
 
+    #chatInput::placeholder {
+        color: var(--muted) !important;
+    }
+
     #chatInput:focus {
-        border-color: #8B5A2B;
+        border-color: var(--border-strong) !important;
+        background: var(--bg-card-2) !important;
+        box-shadow: 0 0 0 3px rgba(201,168,76,0.05);
+        outline: none;
     }
 
 .chat-send-btn {
-    width: 36px;
-    height: 36px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
-    background: #8B5A2B;
-    color: white;
+    background: var(--gold) !important;
+    color: var(--bg-base) !important;
     border: none;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 14px;
-    transition: background 0.2s;
+    box-shadow: 0 5px 14px rgba(201,168,76,0.12);
+    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
     .chat-send-btn:hover {
-        background: #70441E;
+        background: var(--gold-light) !important;
+        transform: translateY(-1px);
+        box-shadow: 0 7px 18px rgba(201,168,76,0.18);
     }
 
-@media (max-width: 480px) {
+
+/* ==========================================================================
+   33. ANIMATION
+   ========================================================================== */
+
+.slide-up {
+    animation: slideUp 0.3s ease-out;
+}
+
+
+/* ==========================================================================
+   34. LARGE DESKTOP
+   ========================================================================== */
+
+@media (min-width: 1600px) {
+
+    :root {
+        --sidebar-width: 260px;
+    }
+
+    .sidebar {
+        padding: 28px 18px 20px;
+    }
+
+    .brand-name {
+        font-size: 22px;
+    }
+
+    .brand-logo {
+        width: 44px;
+        height: 44px;
+    }
+
+    .menu-btn {
+        min-height: 42px;
+        padding: 9px 12px;
+        font-size: 13px;
+    }
+
+    .product-container {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 22px;
+    }
+
+    .main-content > #tabMenu,
+    .main-content > #tabOrders {
+        padding-left: 40px;
+        padding-right: 40px;
+    }
+}
+
+
+/* ==========================================================================
+   35. SMALL LAPTOP
+   ========================================================================== */
+
+@media (max-width: 1250px) {
+
+    :root {
+        --sidebar-width: 220px;
+    }
+
+    .sidebar {
+        padding: 22px 13px 16px;
+    }
+
+    .brand-name {
+        font-size: 19px;
+    }
+
+    .brand-logo {
+        width: 38px;
+        height: 38px;
+    }
+
+    .store-status-banner {
+        font-size: 12px;
+    }
+
+    .tab-btn {
+        font-size: 12px;
+    }
+
+    .menu-btn {
+        min-height: 40px;
+        padding: 8px 9px;
+        font-size: 12px;
+    }
+
+    .loyalty-box {
+        padding: 11px;
+    }
+
+    .loyalty-header {
+        font-size: 11px;
+    }
+
+    .loyalty-hint {
+        font-size: 9px;
+    }
+
+    .logout-btn {
+        font-size: 12px;
+    }
+
+    .main-content > #tabMenu,
+    .main-content > #tabOrders {
+        padding-left: 25px;
+        padding-right: 25px;
+    }
+
+    .product-container {
+        grid-template-columns: repeat(auto-fill, minmax(215px, 1fr));
+        gap: 18px;
+    }
+}
+
+
+/* ==========================================================================
+   36. TABLET LANDSCAPE
+   ========================================================================== */
+
+@media (max-width: 1000px) {
+
+    :root {
+        --sidebar-width: 205px;
+    }
+
+    .sidebar {
+        padding: 20px 11px 15px;
+    }
+
+    .brand-name {
+        font-size: 18px;
+    }
+
+    .brand-sub {
+        font-size: 7px;
+    }
+
+    .store-status-banner {
+        font-size: 11px;
+        padding-left: 9px;
+        padding-right: 9px;
+    }
+
+    .tab-btn {
+        font-size: 11px;
+        padding-left: 5px;
+        padding-right: 5px;
+    }
+
+    .menu-btn {
+        font-size: 11px;
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+
+    .loyalty-header {
+        font-size: 10.5px;
+    }
+
+    .loyalty-hint {
+        font-size: 8.5px;
+    }
+
+    .logout-btn {
+        font-size: 11px;
+    }
+
+    .main-content > #tabMenu,
+    .main-content > #tabOrders {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    .pos-header h1 {
+        font-size: 24px;
+    }
+
+    .search-container {
+        width: 240px;
+    }
+
+    .product-container {
+        grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
+        gap: 16px;
+    }
+}
+
+
+/* ==========================================================================
+   37. MOBILE — FIXED HAMBURGER + LEFT OFF-CANVAS SIDEBAR
+   ========================================================================== */
+
+/* Hidden on desktop */
+.mobile-header {
+    display: none;
+}
+
+.sidebar-overlay {
+    display: none;
+}
+
+
+/* ==========================================================================
+   MOBILE
+   ========================================================================== */
+
+@media (max-width: 760px) {
+
+    .dashboard-container {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        min-height: 100vh;
+    }
+
+
+    /* ----------------------------------------------------------------------
+       MOBILE HEADER
+       ---------------------------------------------------------------------- */
+
+    .mobile-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 56px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0 12px;
+        background: var(--bg-surface);
+        border-bottom: 1px solid var(--border-sub);
+        z-index: 6000;
+    }
+
+    .mobile-brand {
+        color: var(--cream);
+        font-size: 18px;
+        font-weight: 900;
+        letter-spacing: -0.3px;
+    }
+
+
+    .hamburger-btn {
+        width: 42px;
+        height: 42px;
+        flex: 0 0 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--gold);
+        color: var(--bg-base);
+        border: 1px solid var(--gold);
+        border-radius: 9px;
+        cursor: pointer;
+        position: relative;
+        z-index: 7000;
+        box-shadow: 0 5px 16px rgba(0, 0, 0, 0.28);
+        transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+        .hamburger-btn:hover {
+            background: var(--gold-light);
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+        }
+
+        .hamburger-btn:active {
+            transform: scale(0.96);
+        }
+
+        .hamburger-btn i {
+            display: block;
+            width: 20px;
+            height: 16px;
+            position: relative;
+            font-size: 0;
+        }
+
+            /* Top, middle, bottom lines */
+            .hamburger-btn i::before,
+            .hamburger-btn i::after {
+                content: "";
+                position: absolute;
+                left: 0;
+                width: 20px;
+                height: 2px;
+                background: var(--bg-base);
+                border-radius: 999px;
+            }
+
+            .hamburger-btn i::before {
+                top: 0;
+                box-shadow: 0 7px 0 var(--bg-base);
+            }
+
+            .hamburger-btn i::after {
+                top: 14px;
+            }
+
+
+    /* ----------------------------------------------------------------------
+       LEFT MOBILE SIDEBAR
+       ---------------------------------------------------------------------- */
+
+    .sidebar {
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        width: 280px;
+        min-width: 280px;
+        height: 100vh;
+        padding: 20px 15px 18px;
+        z-index: 6500;
+        display: flex !important;
+        flex-direction: column;
+        background: var(--bg-surface);
+        border-right: 1px solid var(--border);
+        box-shadow: 10px 0 35px rgba(0,0,0,0.45);
+        overflow-y: auto;
+        overflow-x: hidden;
+        transform: translateX(-105%);
+        transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+
+        .sidebar.mobile-open {
+            transform: translateX(0);
+        }
+
+
+    /* ----------------------------------------------------------------------
+       SIDEBAR OVERLAY
+       ---------------------------------------------------------------------- */
+
+    .sidebar-overlay {
+        position: fixed;
+        inset: 0;
+        display: block;
+        background: rgba(0,0,0,0.58);
+        z-index: 6400;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+
+        .sidebar-overlay.mobile-open {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+
+    /* ----------------------------------------------------------------------
+       SIDEBAR TOP
+       ---------------------------------------------------------------------- */
+
+    .sidebar-top {
+        display: flex !important;
+        flex-direction: column;
+        gap: 15px;
+        width: 100%;
+    }
+
+
+    /* ----------------------------------------------------------------------
+       BRAND
+       ---------------------------------------------------------------------- */
+
+    .logo-section {
+        width: 100%;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+    }
+
+    .brand-logo {
+        width: 36px;
+        height: 36px;
+        border-radius: 9px;
+    }
+
+    .brand-name {
+        font-size: 20px;
+        line-height: 1;
+    }
+
+    .brand-sub {
+        margin-top: 2px;
+        font-size: 8px;
+        letter-spacing: 0.9px;
+    }
+
+
+    /* ----------------------------------------------------------------------
+       STORE STATUS
+       ---------------------------------------------------------------------- */
+
+    .store-status-banner {
+        width: 100%;
+        height: auto;
+        min-height: 40px;
+        padding: 9px 10px;
+        border-radius: 9px;
+        font-size: 12px;
+        gap: 7px;
+    }
+
+    .store-dot {
+        width: 7px;
+        height: 7px;
+        flex: 0 0 7px;
+    }
+
+
+    /* ----------------------------------------------------------------------
+       ORDER TABS
+       ---------------------------------------------------------------------- */
+
+    .sidebar-tabs {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 7px;
+    }
+
+    .tab-btn {
+        width: 100%;
+        min-height: 44px;
+        height: 44px;
+        padding: 0 8px;
+        border-radius: 9px;
+        font-size: 13px;
+        font-weight: 800;
+    }
+
+
+    /* ----------------------------------------------------------------------
+       CATEGORY NAVIGATION
+       ---------------------------------------------------------------------- */
+
+    #catNav {
+        width: 100%;
+        margin-top: 2px;
+        padding-top: 2px;
+        overflow: visible;
+        border-top: 1px solid var(--border-sub);
+    }
+
+        #catNav .sidebar-section-label {
+            display: block;
+            margin-top: 10px;
+            margin-bottom: 8px;
+            font-size: 12px;
+            letter-spacing: 1.6px;
+        }
+
+    .sidebar-menu {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        gap: 4px;
+        overflow: visible;
+    }
+
+    .menu-btn {
+        width: 100%;
+        min-width: 0;
+        min-height: 44px;
+        height: 44px;
+        padding: 9px 12px;
+        justify-content: flex-start;
+        text-align: left;
+        font-size: 13px;
+        font-weight: 700;
+        border-radius: 9px;
+    }
+
+        .menu-btn.active {
+            box-shadow: 0 6px 16px rgba(201,168,76,0.14);
+            font-size: 13px;
+            font-weight: 900;
+        }
+
+
+    /* ----------------------------------------------------------------------
+       LOYALTY
+       ---------------------------------------------------------------------- */
+
+    .loyalty-box {
+        width: 100%;
+        padding: 12px;
+        margin-top: 10px;
+        border-radius: 10px;
+    }
+
+    .loyalty-header {
+        font-size: 12px;
+        margin-bottom: 6px;
+    }
+
+        .loyalty-header strong {
+            font-size: 12px;
+        }
+
+    .loyalty-bar-bg {
+        height: 5px;
+        margin-bottom: 5px;
+    }
+
+    .loyalty-hint {
+        font-size: 9px;
+        line-height: 1.3;
+    }
+
+
+    /* ----------------------------------------------------------------------
+       LOGOUT
+       ---------------------------------------------------------------------- */
+
+    .logout-section {
+        margin-top: auto;
+        width: 100%;
+        padding-top: 12px;
+        border-top: 1px solid var(--border-sub);
+    }
+
+    .logout-btn {
+        width: 100%;
+        min-height: 42px;
+        padding: 9px 12px;
+        font-size: 12px;
+        font-weight: 700;
+        text-align: left;
+    }
+
+
+    /* ----------------------------------------------------------------------
+       MAIN CONTENT
+       ---------------------------------------------------------------------- */
+
+    .main-content {
+        width: 100%;
+        min-width: 0;
+        min-height: 100vh;
+        margin: 0;
+        overflow-x: hidden;
+    }
+
+        .main-content > #tabMenu,
+        .main-content > #tabOrders {
+            width: 100%;
+            max-width: none;
+            padding: 70px 12px 30px;
+        }
+
+
+    /* ----------------------------------------------------------------------
+       POS HEADER
+       ---------------------------------------------------------------------- */
+
+    .pos-header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 13px;
+        margin-bottom: 21px;
+        padding-bottom: 16px;
+    }
+
+        .pos-header h1 {
+            font-size: 22px;
+            line-height: 1.1;
+        }
+
+        .pos-header p {
+            font-size: 11.5px;
+            line-height: 1.4;
+        }
+
+
+    /* ----------------------------------------------------------------------
+       HEADER ACTIONS
+       ---------------------------------------------------------------------- */
+
+    .header-actions {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .search-container {
+        width: 100%;
+        height: 40px;
+        flex: 1;
+    }
+
+    #menuSearch {
+        font-size: 12px;
+        padding: 9px 0;
+    }
+
+    .cart-icon-btn {
+        width: 40px;
+        height: 40px;
+        flex: 0 0 40px;
+    }
+
+
+    /* ----------------------------------------------------------------------
+       PRODUCTS
+       ---------------------------------------------------------------------- */
+
+    .product-container {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0,1fr));
+        gap: 12px;
+    }
+
+    .product-img-placeholder {
+        height: 120px;
+    }
+
+    .product-img-emoji {
+        font-size: 42px;
+    }
+
+    .product-info {
+        padding: 11px;
+    }
+
+    .info-top {
+        gap: 5px;
+    }
+
+        .info-top h3 {
+            font-size: 11.5px;
+            line-height: 1.3;
+        }
+
+    .price {
+        font-size: 11.5px;
+    }
+
+    .description {
+        font-size: 10px;
+        line-height: 1.45;
+        margin-bottom: 9px;
+    }
+
+    .btn-add-order {
+        min-height: 37px;
+        padding: 7px;
+        font-size: 10px;
+    }
+
+    .fav-heart {
+        width: 26px;
+        height: 26px;
+        top: 8px;
+        right: 8px;
+        font-size: 13px;
+    }
+
+    .item-badge {
+        top: -8px;
+        left: 8px;
+        font-size: 7.5px;
+        padding: 3px 6px;
+    }
+
+
+    /* ----------------------------------------------------------------------
+       CART
+       ---------------------------------------------------------------------- */
+
+    .cart-sidebar {
+        width: min(400px,94vw);
+    }
+
+
+    /* ----------------------------------------------------------------------
+       CHAT
+       ---------------------------------------------------------------------- */
+
+    .chat-widget {
+        right: 12px;
+        bottom: 12px;
+        z-index: 4000;
+    }
+
+    .chat-fab {
+        width: 54px;
+        height: 54px;
+        background: var(--gold) !important;
+        color: var(--bg-base) !important;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+    }
+
     .chat-window {
-        width: calc(100vw - 40px);
-        height: calc(100vh - 120px);
-        bottom: 70px;
+        width: calc(100vw - 18px);
+        height: calc(100vh - 86px);
+        right: -1px;
+        bottom: 65px;
+        background: var(--bg-surface) !important;
+        border: 1px solid var(--border-sub) !important;
+        border-radius: 15px !important;
+    }
+}
+
+
+/* ==========================================================================
+   38. SMALL PHONE
+   ========================================================================== */
+
+@media (max-width: 480px) {
+
+    .mobile-header {
+        height: 54px;
+        padding: 0 10px;
+    }
+
+    .hamburger-btn {
+        width: 40px;
+        height: 40px;
+        flex-basis: 40px;
+    }
+
+    .mobile-brand {
+        font-size: 17px;
+    }
+
+    .sidebar {
+        width: 270px;
+        min-width: 270px;
+        padding: 18px 13px 16px;
+    }
+
+    .main-content > #tabMenu,
+    .main-content > #tabOrders {
+        padding: 66px 9px 27px;
+    }
+
+    .brand-name {
+        font-size: 19px;
+    }
+
+    .brand-logo {
+        width: 34px;
+        height: 34px;
+    }
+
+    .store-status-banner {
+        font-size: 11px;
+        min-height: 40px;
+    }
+
+    .tab-btn {
+        font-size: 12px;
+        min-height: 43px;
+        height: 43px;
+    }
+
+    .sidebar-section-label {
+        font-size: 11px;
+    }
+
+    .menu-btn {
+        min-height: 43px;
+        height: 43px;
+        font-size: 12px;
+    }
+
+    .loyalty-header {
+        font-size: 11px;
+    }
+
+        .loyalty-header strong {
+            font-size: 11px;
+        }
+
+    .loyalty-hint {
+        font-size: 8px;
+    }
+
+    .logout-btn {
+        font-size: 11px;
+        min-height: 42px;
+    }
+
+    .announcement-banner {
+        min-height: 44px;
+        padding: 7px 9px;
+        font-size: 8.6px;
+        line-height: 1.2;
+    }
+
+    .pos-header h1 {
+        font-size: 20px;
+    }
+
+    .pos-header p {
+        font-size: 11px;
+    }
+
+    .search-container {
+        height: 39px;
+    }
+
+    .cart-icon-btn {
+        width: 39px;
+        height: 39px;
+        flex-basis: 39px;
+    }
+
+    .product-container {
+        grid-template-columns: 1fr;
+        gap: 13px;
+    }
+
+    .product-card {
+        width: 100%;
+    }
+
+    .product-img-placeholder {
+        height: 165px;
+    }
+
+    .product-img-emoji {
+        font-size: 48px;
+    }
+
+    .product-info {
+        padding: 13px;
+    }
+
+    .info-top h3 {
+        font-size: 14px;
+    }
+
+    .price {
+        font-size: 14px;
+    }
+
+    .description {
+        font-size: 11.5px;
+        line-height: 1.5;
+    }
+
+    .btn-add-order {
+        min-height: 42px;
+        font-size: 12px;
+    }
+
+    .chat-widget {
+        right: 11px;
+        bottom: 11px;
+    }
+
+    .chat-fab {
+        width: 52px;
+        height: 52px;
+    }
+
+    .chat-window {
+        width: calc(100vw - 14px);
+        height: calc(100vh - 80px);
+        right: -1px;
+        bottom: 62px;
+    }
+}
+
+
+/* ==========================================================================
+   39. VERY SMALL PHONE
+   ========================================================================== */
+
+@media (max-width: 360px) {
+
+    .mobile-header {
+        height: 52px;
+    }
+
+    .hamburger-btn {
+        width: 38px;
+        height: 38px;
+        flex-basis: 38px;
+    }
+
+    .mobile-brand {
+        font-size: 16px;
+    }
+
+    .sidebar {
+        width: 255px;
+        min-width: 255px;
+        padding-left: 11px;
+        padding-right: 11px;
+    }
+
+    .main-content > #tabMenu,
+    .main-content > #tabOrders {
+        padding-top: 63px;
+    }
+
+    .brand-name {
+        font-size: 18px;
+    }
+
+    .brand-sub {
+        font-size: 6px;
+    }
+
+    .store-status-banner {
+        font-size: 10px;
+    }
+
+    .tab-btn {
+        font-size: 11px;
+    }
+
+    .sidebar-section-label {
+        font-size: 10px;
+    }
+
+    .menu-btn {
+        min-height: 42px;
+        height: 42px;
+        font-size: 11px;
+    }
+
+    .loyalty-header {
+        font-size: 10px;
+    }
+
+        .loyalty-header strong {
+            font-size: 10px;
+        }
+
+    .loyalty-hint {
+        font-size: 7.5px;
+    }
+
+    .logout-btn {
+        font-size: 10px;
+    }
+
+    .announcement-banner {
+        font-size: 8px;
+        padding-left: 7px;
+        padding-right: 7px;
+    }
+}
+
+
+/* ==========================================================================
+   40. REDUCED MOTION
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
     }
 }

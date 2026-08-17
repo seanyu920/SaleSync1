@@ -4,7 +4,9 @@
     string homeController = User.IsInRole("Manager") ? "Manager" : "Cashier";
     string displayRole = User.IsInRole("Manager") ? "Manager" : "Cashier";
 }
+
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -19,9 +21,11 @@
 
     <!-- Real-Time Chat SignalR Client -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+
 </head>
 <body>
 
+    
     <!-- VOID MODAL -->
     <div id="voidModal" class="modal-overlay">
         <div class="auth-modal">
@@ -58,9 +62,7 @@
                     <a href="/@homeController/Dashboard" class="menu-btn active">
                         Dashboard
                     </a>
-                    <a href="/Cashier/CashierMenu" class="menu-btn"> POS</a>
-                    <!-- Added Customization Navigation -->
-                    <a href="/Cashier/WebCustomization" class="menu-btn"> Customization</a>
+                    <a href="/Cashier/CashierMenu" class="menu-btn"> POS</a>       
                 </nav>
             </div>
 
@@ -72,8 +74,9 @@
                 </form>
             </div>
         </aside>
+
         <div class="mobile-header">
-            <button class="hamburger-btn" onclick="toggleSidebar()">
+            <button type="button" class="hamburger-btn" onclick="toggleSidebar();">
                 <i class="fas fa-bars"></i>
             </button>
             <div class="mobile-brand">Cafero</div>
@@ -155,14 +158,6 @@
                     <div>
                         <div class="card-label">Completed Sales</div>
                         <div class="card-value">@Model.TodayTransactionCount</div>
-                    </div>
-                </div>
-
-                <div class="summary-card">
-                    <div class="card-icon-box icon-red"><i class="fas fa-exclamation-triangle"></i></div>
-                    <div>
-                        <div class="card-label">Low Stock Alerts</div>
-                        <div class="card-value">1</div>
                     </div>
                 </div>
             </div>
@@ -319,57 +314,9 @@
                         </tbody>
                     </table>
                 </div>
-
-                <div class="pos-card-wrapper">
-                    <div class="pos-card-header">
-                        <div class="pos-card-title"><i class="fas fa-boxes"></i> Low Stock Details</div>
-                        <a href="/Admin/Inventory" class="manage-link">Manage</a>
-                    </div>
-                    <table class="pos-table">
-                        <thead>
-                            <tr>
-                                <th>Item Stock</th>
-                                <th>Current Qty</th>
-                                <th>Status</th>
-                                <th class="text-right">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Espresso Coffee Beans</td>
-                                <td>2.5 kg</td>
-                                <td><span class="badge badge-danger">Critical</span></td>
-                                <td class="text-right"><button class="btn-restock" onclick="location.href='/Admin/Inventory'">Restock</button></td>
-                            </tr>
-                            <tr>
-                                <td>Whole Milk (1L Cartons)</td>
-                                <td>12 units</td>
-                                <td><span class="badge badge-warning">Low</span></td>
-                                <td class="text-right"><button class="btn-restock" onclick="location.href='/Admin/Inventory'">Restock</button></td>
-                            </tr>
-                            <tr>
-                                <td>Caramel Syrup Base</td>
-                                <td>1.2 L</td>
-                                <td><span class="badge badge-warning">Low</span></td>
-                                <td class="text-right"><button class="btn-restock" onclick="location.href='/Admin/Inventory'">Restock</button></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
             </div>
 
             <div class="bottom-three-column-grid">
-                <div class="pos-card-wrapper">
-                    <div class="pos-card-header">
-                        <div class="pos-card-title"><i class="fas fa-bolt"></i> Quick Manager Actions</div>
-                    </div>
-                    <div class="action-button-grid">
-                        <button class="action-btn" onclick="location.href='/@homeController/Queue'"><i class="fas fa-shopping-cart"></i>New Order</button>
-                        <button class="action-btn" onclick="location.href='/Admin/Products'"><i class="fas fa-plus-circle"></i>Add Product</button>
-                        <button class="action-btn" onclick="location.href='/Admin/Inventory'"><i class="fas fa-dolly"></i>Add Inventory</button>
-                        <button class="action-btn" onclick="location.href='/Admin/Analytics'"><i class="fas fa-file-invoice-dollar"></i>Sales Report</button>
-                    </div>
-                </div>
 
                 <div class="pos-card-wrapper">
                     <div class="pos-card-header">
@@ -431,267 +378,431 @@
     </div>
 
     <script>
-        function confirmLogout() {
-        Swal.fire({
-        title: 'Are you sure?',
-        text: "You will be logged out of your session.",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Yes, log out',
-        cancelButtonText: 'Cancel'
-        }).then((result) => {
-        if (result.isConfirmed) {
-        document.getElementById('logoutForm').submit();
-        }
-        });
-        }
-
-        document.addEventListener("DOMContentLoaded", function () {
-        function updateClock() {
-        const now = new Date();
-        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        document.getElementById('currentDate').innerText = now.toLocaleDateString('en-US', options);
-
-        let hours = now.getHours();
-        let minutes = now.getMinutes();
-        const ampm = hours >= 12 ? 'PM' : 'AM';
-        hours = hours % 12;
-        hours = hours ? hours : 12;
-        minutes = minutes < 10 ? '0' + minutes : minutes;
-        document.getElementById('currentTime').innerText = hours + ':' + minutes + ' ' + ampm;
-        }
-        setInterval(updateClock, 1000);
-        updateClock();
-
-        const rawTodaySales = parseFloat("@Model.TodayTotalSales") || 8500;
-
-        const ctxWeekly = document.getElementById('weeklySalesChart').getContext('2d');
-        new Chart(ctxWeekly, {
-        type: 'line',
-        data: {
-        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-        datasets: [{
-        label: 'Sales (₱)',
-        data: [
-        rawTodaySales * 0.85,
-        rawTodaySales * 0.95,
-        rawTodaySales * 1.1,
-        rawTodaySales,
-        rawTodaySales * 1.25,
-        rawTodaySales * 1.4,
-        rawTodaySales * 1.3
-        ],
-        borderColor: '#D4AF37',
-        backgroundColor: 'rgba(212, 175, 55, 0.05)',
-        borderWidth: 3,
-        fill: true,
-        tension: 0.35
-        }]
-        },
-        options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } }
-        }
-        });
-
-        const ctxPayment = document.getElementById('paymentMethodsChart').getContext('2d');
-        new Chart(ctxPayment, {
-        type: 'doughnut',
-        data: {
-        labels: ['Cash', 'GCash', 'Card'],
-        datasets: [{
-        data: [55, 30, 15],
-        backgroundColor: ['#D4AF37', '#2ECC71', '#F39C12'],
-        borderWidth: 0
-        }]
-        },
-        options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { position: 'right' } },
-        cutout: '72%'
-        }
-        });
-        });
-
-        function toggleSidebar() {
-        const sidebar = document.querySelector('.sidebar');
-        const overlay = document.querySelector('.sidebar-overlay');
-
-        if (sidebar) sidebar.classList.toggle('mobile-open');
-        if (overlay) overlay.classList.toggle('mobile-open');
-        }
-
-        // Close sidebar when clicking outside of it on mobile screens
-        document.addEventListener('click', function (event) {
-        const sidebar = document.querySelector('.sidebar');
-        const hamburgerBtn = document.querySelector('.hamburger-btn');
-
-        if (sidebar && sidebar.classList.contains('mobile-open')) {
-        if (!sidebar.contains(event.target) && hamburgerBtn && !hamburgerBtn.contains(event.target)) {
-        toggleSidebar();
-        }
-        }
-
-        function filterDashboard(query) { /* unused - replaced by globalSearch */ }
-
-        let searchTimeout;
-        function globalSearch(query) {
-            const dd = document.getElementById("searchDropdown");
-            if (!query || query.length < 2) { dd.style.display = "none"; dd.innerHTML = ""; return; }
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(async () => {
-                try {
-                    const res = await fetch("/Cashier/GlobalSearch?q=" + encodeURIComponent(query));
-                    if (!res.ok) return;
-                    const data = await res.json();
-                    let html = "";
-                    if (data.products.length) {
-                        html += '<div class="search-group-label">Products</div>';
-                        data.products.forEach(p => {
-                            html += '<a class="search-result-item" href="' + p.url + '"><i class="fas fa-coffee"></i><span>' + p.name + '</span><span class="search-price">₱' + p.price.toFixed(2) + '</span></a>';
-                        });
+            function confirmLogout() {
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You will be logged out of your session.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, log out',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        document.getElementById('logoutForm').submit();
                     }
-                    if (data.inventory.length) {
-                        html += '<div class="search-group-label">Inventory</div>';
-                        data.inventory.forEach(i => {
-                            html += '<a class="search-result-item" href="' + i.url + '"><i class="fas fa-box"></i><span>' + i.name + '</span><span class="search-stock">' + i.stock + ' ' + i.unit + '</span></a>';
-                        });
-                    }
-                    if (data.transactions.length) {
-                        html += '<div class="search-group-label">Transactions</div>';
-                        data.transactions.forEach(t => {
-                            html += '<a class="search-result-item" href="' + t.url + '"><i class="fas fa-receipt"></i><span>' + t.name + '</span><span class="search-price">₱' + t.amount.toFixed(2) + '</span></a>';
-                        });
-                    }
-                    if (!html) html = '<div class="search-empty">No results found</div>';
-                    dd.innerHTML = html;
-                    dd.style.display = "block";
-                } catch(e) { console.error("Search error:", e); }
-            }, 300);
-        }
-
-        document.addEventListener("click", function(e) {
-            const dd = document.getElementById("searchDropdown");
-            const wrapper = document.querySelector(".search-wrapper");
-            if (dd && wrapper && !wrapper.contains(e.target)) {
-                dd.style.display = "none";
-            }
-        });
-
-        // ── Chat Dropdown Logic ──
-        let chatConn;
-        let currentChatWith = null;
-        const chatCurrentUser = "@(User.FindFirst("Username")?.Value ?? "")";
-
-        function toggleChat() {
-            const dd = document.getElementById("chatDropdown");
-            dd.classList.toggle("open");
-            if (dd.classList.contains("open")) {
-                document.getElementById("chatBadge").style.display = "none";
-                loadChatContacts();
-            }
-        }
-
-        document.addEventListener("click", function(e) {
-            const dd = document.getElementById("chatDropdown");
-            const trigger = document.getElementById("chatTrigger");
-            if (dd && !dd.contains(e.target) && !trigger.contains(e.target)) {
-                dd.classList.remove("open");
-            }
-        });
-
-        function handleChatKey(event) {
-            if (event.key === 'Enter') sendChatMessage();
-        }
-
-        function sendChatMessage() {
-            const input = document.getElementById("chatInput");
-            const msg = input.value.trim();
-            if (!msg || !currentChatWith) return;
-            chatConn.invoke("SendMessage", currentChatWith, msg)
-                .catch(err => console.error("Error sending message:", err));
-            input.value = "";
-        }
-
-        async function loadChatContacts() {
-            const select = document.getElementById("chatContactSelect");
-            if (select.dataset.loaded === "true") return;
-            try {
-                const res = await fetch('/Chat/GetContacts');
-                if (!res.ok) return;
-                const contacts = await res.json();
-                contacts.forEach(c => {
-                    const opt = document.createElement("option");
-                    opt.value = c.username;
-                    opt.textContent = c.username + " (" + c.role + ")";
-                    select.appendChild(opt);
                 });
-                select.dataset.loaded = "true";
-                if (contacts.length > 0 && !currentChatWith) {
-                    select.value = contacts[0].username;
-                    switchChatContact(contacts[0].username);
-                }
-            } catch (err) { console.error("Failed to load contacts:", err); }
-        }
-
-        async function switchChatContact(username) {
-            currentChatWith = username || null;
-            const area = document.getElementById("chatMessages");
-            area.innerHTML = '<div class="system-message">Select a contact to start chatting.</div>';
-            if (!currentChatWith) return;
-            try {
-                const res = await fetch('/Chat/GetChatHistory?chatWith=' + encodeURIComponent(currentChatWith));
-                if (!res.ok) return;
-                const history = await res.json();
-                if (history.length > 0) {
-                    const ph = area.querySelector('.system-message');
-                    if (ph) ph.remove();
-                }
-                history.forEach(m => renderChatMessage(m.sender, m.text, m.time));
-            } catch (err) { console.error("Failed to load chat history:", err); }
-        }
-
-        function renderChatMessage(sender, message, timeString) {
-            const area = document.getElementById("chatMessages");
-            const row = document.createElement("div");
-            if (sender === chatCurrentUser) {
-                row.className = "chat-msg-row staff";
-                row.innerHTML = '<div class="chat-bubble">' + escapeHTML(message) + '</div><span class="chat-meta">You · ' + escapeHTML(timeString) + '</span>';
-            } else {
-                row.className = "chat-msg-row other";
-                row.innerHTML = '<div class="chat-bubble">' + escapeHTML(message) + '</div><span class="chat-meta">' + escapeHTML(sender) + ' · ' + escapeHTML(timeString) + '</span>';
             }
-            area.appendChild(row);
-            area.scrollTop = area.scrollHeight;
-        }
 
-        function escapeHTML(str) {
-            return str.replace(/[&<>'"]/g, function(t) { return {'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[t] || t; });
-        }
+            document.addEventListener("DOMContentLoaded", function() {
+                function updateClock() {
+                    const now = new Date();
+                    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
 
-        document.addEventListener("DOMContentLoaded", function() {
-            chatConn = new signalR.HubConnectionBuilder().withUrl("/chatHub").build();
-            chatConn.start().then(function() { console.log("Cashier Chat Connected!"); }).catch(function(err) { console.error("SignalR Error:", err); });
+                    document.getElementById('currentDate').innerText =
+                        now.toLocaleDateString('en-US', options);
 
-            chatConn.on("ReceiveMessage", function(sender, receiver, message, time) {
-                var belongs = currentChatWith && (sender === currentChatWith || receiver === currentChatWith);
-                if (belongs) {
-                    var ph = document.getElementById("chatMessages").querySelector('.system-message');
-                    if (ph) ph.remove();
-                    renderChatMessage(sender, message, time);
+                    let hours = now.getHours();
+                    let minutes = now.getMinutes();
+                    const ampm = hours >= 12 ? 'PM' : 'AM';
+
+                    hours = hours % 12;
+                    hours = hours ? hours : 12;
+                    minutes = minutes < 10 ? '0' + minutes : minutes;
+
+                    document.getElementById('currentTime').innerText =
+                        hours + ':' + minutes + ' ' + ampm;
                 }
-                if (sender !== chatCurrentUser && !belongs) {
-                    var dd = document.getElementById("chatDropdown");
-                    if (!dd.classList.contains("open")) {
-                        document.getElementById("chatBadge").style.display = "block";
+
+                setInterval(updateClock, 1000);
+                updateClock();
+
+                const rawTodaySales = parseFloat("@Model.TodayTotalSales") || 8500;
+
+                const ctxWeekly = document.getElementById('weeklySalesChart').getContext('2d');
+
+                new Chart(ctxWeekly, {
+                    type: 'line',
+                    data: {
+                        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                        datasets: [{
+                            label: 'Sales (₱)',
+                            data: [
+                                rawTodaySales * 0.85,
+                                rawTodaySales * 0.95,
+                                rawTodaySales * 1.1,
+                                rawTodaySales,
+                                rawTodaySales * 1.25,
+                                rawTodaySales * 1.4,
+                                rawTodaySales * 1.3
+                            ],
+                            borderColor: '#D4AF37',
+                            backgroundColor: 'rgba(212, 175, 55, 0.05)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.35
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+
+                const ctxPayment = document.getElementById('paymentMethodsChart').getContext('2d');
+
+                new Chart(ctxPayment, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Cash', 'GCash', 'Card'],
+                        datasets: [{
+                            data: [55, 30, 15],
+                            backgroundColor: ['#D4AF37', '#2ECC71', '#F39C12'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right'
+                            }
+                        },
+                        cutout: '72%'
+                    }
+                });
+            });
+
+            function toggleSidebar() {
+                const sidebar = document.querySelector('.sidebar');
+                const overlay = document.querySelector('.sidebar-overlay');
+
+                if (sidebar) {
+                    sidebar.classList.toggle('mobile-open');
+                }
+
+                if (overlay) {
+                    overlay.classList.toggle('mobile-open');
+                }
+            }
+
+            // Close sidebar when clicking outside of it on mobile screens
+            document.addEventListener('click', function(event) {
+                const sidebar = document.querySelector('.sidebar');
+                const hamburgerBtn = document.querySelector('.hamburger-btn');
+                const overlay = document.querySelector('.sidebar-overlay');
+
+                if (!sidebar) return;
+
+                // Do not immediately close the sidebar when clicking the hamburger.
+                if (hamburgerBtn && hamburgerBtn.contains(event.target)) {
+                    return;
+                }
+
+                // Clicking the overlay should close the sidebar.
+                if (overlay && overlay.classList.contains('mobile-open') && event.target === overlay) {
+                    sidebar.classList.remove('mobile-open');
+                    overlay.classList.remove('mobile-open');
+                    return;
+                }
+
+                // Close sidebar when clicking outside of it.
+                if (sidebar.classList.contains('mobile-open')) {
+                    if (!sidebar.contains(event.target)) {
+                        sidebar.classList.remove('mobile-open');
+
+                        if (overlay) {
+                            overlay.classList.remove('mobile-open');
+                        }
                     }
                 }
             });
-        });
+
+            function filterDashboard(query) {
+                /* unused - replaced by globalSearch */
+            }
+
+            let searchTimeout;
+
+            function globalSearch(query) {
+                const dd = document.getElementById("searchDropdown");
+
+                if (!query || query.length < 2) {
+                    dd.style.display = "none";
+                    dd.innerHTML = "";
+                    return;
+                }
+
+                clearTimeout(searchTimeout);
+
+                searchTimeout = setTimeout(async () => {
+                    try {
+                        const res = await fetch("/Cashier/GlobalSearch?q=" + encodeURIComponent(query));
+
+                        if (!res.ok) return;
+
+                        const data = await res.json();
+                        let html = "";
+
+                        if (data.products.length) {
+                            html += '<div class="search-group-label">Products</div>';
+
+                            data.products.forEach(p => {
+                                html += '<a class="search-result-item" href="' + p.url + '">' +
+                                    '<i class="fas fa-coffee"></i>' +
+                                    '<span>' + p.name + '</span>' +
+                                    '<span class="search-price">₱' + p.price.toFixed(2) + '</span>' +
+                                    '</a>';
+                            });
+                        }
+
+                        if (data.inventory.length) {
+                            html += '<div class="search-group-label">Inventory</div>';
+
+                            data.inventory.forEach(i => {
+                                html += '<a class="search-result-item" href="' + i.url + '">' +
+                                    '<i class="fas fa-box"></i>' +
+                                    '<span>' + i.name + '</span>' +
+                                    '<span class="search-stock">' + i.stock + ' ' + i.unit + '</span>' +
+                                    '</a>';
+                            });
+                        }
+
+                        if (data.transactions.length) {
+                            html += '<div class="search-group-label">Transactions</div>';
+
+                            data.transactions.forEach(t => {
+                                html += '<a class="search-result-item" href="' + t.url + '">' +
+                                    '<i class="fas fa-receipt"></i>' +
+                                    '<span>' + t.name + '</span>' +
+                                    '<span class="search-price">₱' + t.amount.toFixed(2) + '</span>' +
+                                    '</a>';
+                            });
+                        }
+
+                        if (!html) {
+                            html = '<div class="search-empty">No results found</div>';
+                        }
+
+                        dd.innerHTML = html;
+                        dd.style.display = "block";
+                    }
+                    catch (e) {
+                        console.error("Search error:", e);
+                    }
+                }, 300);
+            }
+
+            document.addEventListener("click", function(e) {
+                const dd = document.getElementById("searchDropdown");
+                const wrapper = document.querySelector(".search-wrapper");
+
+                if (dd && wrapper && !wrapper.contains(e.target)) {
+                    dd.style.display = "none";
+                }
+            });
+
+            // ── Chat Dropdown Logic ──
+            let chatConn;
+            let currentChatWith = null;
+            const chatCurrentUser = "@(User.FindFirst("Username")?.Value ?? "")";
+
+            function toggleChat() {
+                const dd = document.getElementById("chatDropdown");
+
+                dd.classList.toggle("open");
+
+                if (dd.classList.contains("open")) {
+                    document.getElementById("chatBadge").style.display = "none";
+                    loadChatContacts();
+                }
+            }
+
+            document.addEventListener("click", function(e) {
+                const dd = document.getElementById("chatDropdown");
+                const trigger = document.getElementById("chatTrigger");
+
+                if (dd && trigger && !dd.contains(e.target) && !trigger.contains(e.target)) {
+                    dd.classList.remove("open");
+                }
+            });
+
+            function handleChatKey(event) {
+                if (event.key === 'Enter') {
+                    sendChatMessage();
+                }
+            }
+
+            function sendChatMessage() {
+                const input = document.getElementById("chatInput");
+                const msg = input.value.trim();
+
+                if (!msg || !currentChatWith || !chatConn) return;
+
+                chatConn.invoke("SendMessage", currentChatWith, msg)
+                    .catch(err => console.error("Error sending message:", err));
+
+                input.value = "";
+            }
+
+            async function loadChatContacts() {
+                const select = document.getElementById("chatContactSelect");
+
+                if (select.dataset.loaded === "true") return;
+
+                try {
+                    const res = await fetch('/Chat/GetContacts');
+
+                    if (!res.ok) return;
+
+                    const contacts = await res.json();
+
+                    contacts.forEach(c => {
+                        const opt = document.createElement("option");
+                        opt.value = c.username;
+                        opt.textContent = c.username + " (" + c.role + ")";
+                        select.appendChild(opt);
+                    });
+
+                    select.dataset.loaded = "true";
+
+                    if (contacts.length > 0 && !currentChatWith) {
+                        select.value = contacts[0].username;
+                        switchChatContact(contacts[0].username);
+                    }
+                }
+                catch (err) {
+                    console.error("Failed to load contacts:", err);
+                }
+            }
+
+            async function switchChatContact(username) {
+                currentChatWith = username || null;
+
+                const area = document.getElementById("chatMessages");
+                area.innerHTML = '<div class="system-message">Select a contact to start chatting.</div>';
+
+                if (!currentChatWith) return;
+
+                try {
+                    const res = await fetch(
+                        '/Chat/GetChatHistory?chatWith=' + encodeURIComponent(currentChatWith)
+                    );
+
+                    if (!res.ok) return;
+
+                    const history = await res.json();
+
+                    if (history.length > 0) {
+                        const ph = area.querySelector('.system-message');
+
+                        if (ph) {
+                            ph.remove();
+                        }
+                    }
+
+                    history.forEach(m => renderChatMessage(m.sender, m.text, m.time));
+                }
+                catch (err) {
+                    console.error("Failed to load chat history:", err);
+                }
+            }
+
+            function renderChatMessage(sender, message, timeString) {
+                const area = document.getElementById("chatMessages");
+                const row = document.createElement("div");
+
+                if (sender === chatCurrentUser) {
+                    row.className = "chat-msg-row staff";
+
+                    row.innerHTML =
+                        '<div class="chat-bubble">' +
+                        escapeHTML(message) +
+                        '</div>' +
+                        '<span class="chat-meta">You · ' +
+                        escapeHTML(timeString) +
+                        '</span>';
+                }
+                else {
+                    row.className = "chat-msg-row other";
+
+                    row.innerHTML =
+                        '<div class="chat-bubble">' +
+                        escapeHTML(message) +
+                        '</div>' +
+                        '<span class="chat-meta">' +
+                        escapeHTML(sender) +
+                        ' · ' +
+                        escapeHTML(timeString) +
+                        '</span>';
+                }
+
+                area.appendChild(row);
+                area.scrollTop = area.scrollHeight;
+            }
+
+            function escapeHTML(str) {
+                return str.replace(
+                    /[&<>'"]/g,
+                    function(t) {
+                        return {
+                            '&': '&amp;',
+                            '<': '&lt;',
+                            '>': '&gt;',
+                            "'": '&#39;',
+                            '"': '&quot;'
+                        }[t] || t;
+                    }
+                );
+            }
+
+            document.addEventListener("DOMContentLoaded", function() {
+                chatConn = new signalR.HubConnectionBuilder()
+                    .withUrl("/chatHub")
+                    .build();
+
+                chatConn.start()
+                    .then(function() {
+                        console.log("Cashier Chat Connected!");
+                    })
+                    .catch(function(err) {
+                        console.error("SignalR Error:", err);
+                    });
+
+                chatConn.on("ReceiveMessage", function(sender, receiver, message, time) {
+                    var belongs =
+                        currentChatWith &&
+                        (sender === currentChatWith || receiver === currentChatWith);
+
+                    if (belongs) {
+                        var ph = document
+                            .getElementById("chatMessages")
+                            .querySelector('.system-message');
+
+                        if (ph) {
+                            ph.remove();
+                        }
+
+                        renderChatMessage(sender, message, time);
+                    }
+
+                    if (sender !== chatCurrentUser && !belongs) {
+                        var dd = document.getElementById("chatDropdown");
+
+                        if (!dd.classList.contains("open")) {
+                            document.getElementById("chatBadge").style.display = "block";
+                        }
+                    }
+                });
+            });
     </script>
+
 </body>
 </html>
