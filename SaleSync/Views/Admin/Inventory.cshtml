@@ -207,25 +207,23 @@
                                 {
                                     @foreach (var item in Model)
                                     {
-                                        <tr class="inventory-row">
-                                            <td style="text-align:center;">
-                                                <input type="radio"
-                                                       name="selectedItem"
-                                                       value="@item.ProductId"
-                                                       onclick="fillForm(
-                                                @Json.Serialize(item.ProductId.ToString()),
-                                                @Json.Serialize(item.ItemCategory ?? ""),
-                                                @Json.Serialize(item.ItemName ?? ""),
-                                                @Json.Serialize(item.ItemID ?? ""),
-                                                @Json.Serialize(item.PurchasePrice.ToString()),
-                                                @Json.Serialize(item.Quantity.ToString()),
-                                                @Json.Serialize(item.Unit ?? ""),
-                                                @Json.Serialize(item.StockSupplier ?? ""),
-                                                @Json.Serialize(item.DateAcquired?.ToString() ?? ""),
-                                                @Json.Serialize(item.ExpirationDate?.ToString() ?? ""),
-                                                @Json.Serialize(item.RecipeUnit ?? ""),
-                                                @Json.Serialize(item.ConversionFactor.ToString())
-                                                )" />
+                                        <tr class="inventory-row" style="cursor:pointer;"
+                                            onclick="document.getElementById('radio-@item.ProductId').checked = true; fillForm(
+                                            @Json.Serialize(item.ProductId.ToString()),
+                                            @Json.Serialize(item.ItemCategory ?? ""),
+                                            @Json.Serialize(item.ItemName ?? ""),
+                                            @Json.Serialize(item.ItemID ?? ""),
+                                            @Json.Serialize(item.PurchasePrice.ToString()),
+                                            @Json.Serialize(item.Quantity.ToString()),
+                                            @Json.Serialize(item.Unit ?? ""),
+                                            @Json.Serialize(item.StockSupplier ?? ""),
+                                            @Json.Serialize(item.DateAcquired?.ToString() ?? ""),
+                                            @Json.Serialize(item.ExpirationDate?.ToString() ?? ""),
+                                            @Json.Serialize(item.RecipeUnit ?? ""),
+                                            @Json.Serialize(item.ConversionFactor.ToString())
+                                            )">
+                                            <td style="text-align:center;" onclick="event.stopPropagation();">
+                                                <input type="radio" id="radio-@item.ProductId" name="selectedItem" value="@item.ProductId" />
                                             </td>
                                             <td><strong>@item.ItemCategory</strong></td>
                                             <td>@item.ItemName</td>
@@ -287,195 +285,195 @@
     </form>
 
     <script>
-        function confirmLogout() {
-        Swal.fire({
-        title: 'Are you sure?',
-        text: "You will be logged out of your session.",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Yes, log out',
-        cancelButtonText: 'Cancel'
-        }).then((result) => {
-        if (result.isConfirmed) {
-        document.getElementById('logoutForm').submit();
-        }
-        });
-        }
-        function toggleSidebar() {
-        const sidebar = document.querySelector('.sidebar');
-        const overlay = document.querySelector('.sidebar-overlay');
+            function confirmLogout() {
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You will be logged out of your session.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, log out',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        document.getElementById('logoutForm').submit();
+                    }
+                });
+            }
+            function toggleSidebar() {
+                const sidebar = document.querySelector('.sidebar');
+                const overlay = document.querySelector('.sidebar-overlay');
 
-        sidebar.classList.toggle('mobile-open');
-        overlay.classList.toggle('mobile-open');
-        }
-        const standardConversions = {
-        "gallon_ml": 3785.41,
-        "L_ml": 1000,
-        "kg_g": 1000,
-        "oz_ml": 29.57,
-        "gallon_oz": 128
-        };
+                sidebar.classList.toggle('mobile-open');
+                overlay.classList.toggle('mobile-open');
+            }
+            const standardConversions = {
+                "gallon_ml": 3785.41,
+                "L_ml": 1000,
+                "kg_g": 1000,
+                "oz_ml": 29.57,
+                "gallon_oz": 128
+            };
 
-        document.addEventListener('DOMContentLoaded', function () {
-        const bulkUnitSelect = document.querySelector('select[name="Unit"]');
-        const recipeUnitInput = document.querySelector('input[name="RecipeUnit"]');
-        const convFactorInput = document.querySelector('input[name="ConversionFactor"]');
+            document.addEventListener('DOMContentLoaded', function() {
+                const bulkUnitSelect = document.querySelector('select[name="Unit"]');
+                const recipeUnitInput = document.querySelector('input[name="RecipeUnit"]');
+                const convFactorInput = document.querySelector('input[name="ConversionFactor"]');
 
-        function calculateConversion() {
-        const bulk = bulkUnitSelect.value;
-        const recipe = recipeUnitInput.value.toLowerCase().trim();
-        const key = `${bulk}_${recipe}`;
-        if (standardConversions[key]) {
-        convFactorInput.value = standardConversions[key];
-        convFactorInput.style.backgroundColor = "#1C241C";
-        setTimeout(() => convFactorInput.style.backgroundColor = "", 1000);
-        }
-        }
+                function calculateConversion() {
+                    const bulk = bulkUnitSelect.value;
+                    const recipe = recipeUnitInput.value.toLowerCase().trim();
+                    const key = `${bulk}_${recipe}`;
+                    if (standardConversions[key]) {
+                        convFactorInput.value = standardConversions[key];
+                        convFactorInput.style.backgroundColor = "#1C241C";
+                        setTimeout(() => convFactorInput.style.backgroundColor = "", 1000);
+                    }
+                }
 
-        bulkUnitSelect.addEventListener('change', calculateConversion);
-        recipeUnitInput.addEventListener('keyup', calculateConversion);
-        });
+                bulkUnitSelect.addEventListener('change', calculateConversion);
+                recipeUnitInput.addEventListener('keyup', calculateConversion);
+            });
 
-        let isSubmitting = false;
+            let isSubmitting = false;
 
-        function fillForm(productId, itemCategory, itemName, itemID, purchasePrice, quantity, unit, stockSupplier, dateAcquired, expirationDate, recipeUnit, convFactor) {
-        document.getElementById("ProductId").value = productId;
-        document.querySelector('input[name="ItemCategory"]').value = itemCategory;
-        document.querySelector('input[name="ItemName"]').value = itemName;
-        document.querySelector('input[name="ItemID"]').value = itemID;
-        document.querySelector('input[name="PurchasePrice"]').value = purchasePrice;
-        document.querySelector('input[name="Quantity"]').value = quantity;
-        document.querySelector('select[name="Unit"]').value = unit || "pcs";
-        document.querySelector('input[name="StockSupplier"]').value = stockSupplier;
-        document.querySelector('input[name="DateAcquired"]').value = dateAcquired;
-        document.querySelector('input[name="ExpirationDate"]').value = expirationDate;
-        document.querySelector('input[name="RecipeUnit"]').value = recipeUnit || "";
-        document.querySelector('input[name="ConversionFactor"]').value = convFactor || "1";
-        }
+            function fillForm(productId, itemCategory, itemName, itemID, purchasePrice, quantity, unit, stockSupplier, dateAcquired, expirationDate, recipeUnit, convFactor) {
+                document.getElementById("ProductId").value = productId;
+                document.querySelector('input[name="ItemCategory"]').value = itemCategory;
+                document.querySelector('input[name="ItemName"]').value = itemName;
+                document.querySelector('input[name="ItemID"]').value = itemID;
+                document.querySelector('input[name="PurchasePrice"]').value = purchasePrice;
+                document.querySelector('input[name="Quantity"]').value = quantity;
+                document.querySelector('select[name="Unit"]').value = unit || "pcs";
+                document.querySelector('input[name="StockSupplier"]').value = stockSupplier;
+                document.querySelector('input[name="DateAcquired"]').value = dateAcquired;
+                document.querySelector('input[name="ExpirationDate"]').value = expirationDate;
+                document.querySelector('input[name="RecipeUnit"]').value = recipeUnit || "";
+                document.querySelector('input[name="ConversionFactor"]').value = convFactor || "1";
+            }
 
-        function confirmAdd() {
-        if (isSubmitting) return;
-        const itemName = document.querySelector('input[name="ItemName"]').value;
-        if (!itemName) {
-        Swal.fire({ title: 'Missing Info', text: 'Please enter an Item Name.', icon: 'warning' });
-        return;
-        }
-        Swal.fire({
-        title: 'Add New Item?',
-        text: `Add "${itemName}" to the inventory?`,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'Yes, add it!'
-        }).then((result) => {
-        if (result.isConfirmed) {
-        isSubmitting = true;
-        const btn = document.querySelector('.add-btn');
-        btn.disabled = true;
-        btn.innerText = "Processing...";
-        const form = document.getElementById("inventoryForm");
-        form.action = "/Admin/AddInventory";
-        form.submit();
-        }
-        });
-        }
+            function confirmAdd() {
+                if (isSubmitting) return;
+                const itemName = document.querySelector('input[name="ItemName"]').value;
+                if (!itemName) {
+                    Swal.fire({ title: 'Missing Info', text: 'Please enter an Item Name.', icon: 'warning' });
+                    return;
+                }
+                Swal.fire({
+                    title: 'Add New Item?',
+                    text: `Add "${itemName}" to the inventory?`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, add it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        isSubmitting = true;
+                        const btn = document.querySelector('.add-btn');
+                        btn.disabled = true;
+                        btn.innerText = "Processing...";
+                        const form = document.getElementById("inventoryForm");
+                        form.action = "/Admin/AddInventory";
+                        form.submit();
+                    }
+                });
+            }
 
-        function confirmUpdate() {
-        if (isSubmitting) return;
-        const productId = document.getElementById("ProductId").value;
-        if (!productId) {
-        Swal.fire({ title: 'No Selection', text: 'Please select an item to update.', icon: 'warning' });
-        return;
-        }
-        Swal.fire({
-        title: 'Update Item?',
-        text: "Save changes to this inventory item?",
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'Yes, update it!'
-        }).then((result) => {
-        if (result.isConfirmed) {
-        isSubmitting = true;
-        const btn = document.querySelector('.update-btn');
-        btn.disabled = true;
-        btn.innerText = "Processing...";
-        const form = document.getElementById("inventoryForm");
-        form.action = "/Admin/UpdateInventory";
-        form.submit();
-        }
-        });
-        }
+            function confirmUpdate() {
+                if (isSubmitting) return;
+                const productId = document.getElementById("ProductId").value;
+                if (!productId) {
+                    Swal.fire({ title: 'No Selection', text: 'Please select an item to update.', icon: 'warning' });
+                    return;
+                }
+                Swal.fire({
+                    title: 'Update Item?',
+                    text: "Save changes to this inventory item?",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, update it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        isSubmitting = true;
+                        const btn = document.querySelector('.update-btn');
+                        btn.disabled = true;
+                        btn.innerText = "Processing...";
+                        const form = document.getElementById("inventoryForm");
+                        form.action = "/Admin/UpdateInventory";
+                        form.submit();
+                    }
+                });
+            }
 
-        function getSelectedId() {
-        const selected = document.querySelector('input[name="selectedItem"]:checked');
-        if (!selected) {
-        Swal.fire({ title: 'No Selection', text: 'Please select an item from the table first.', icon: 'warning' });
-        return null;
-        }
-        return selected.value;
-        }
+            function getSelectedId() {
+                const selected = document.querySelector('input[name="selectedItem"]:checked');
+                if (!selected) {
+                    Swal.fire({ title: 'No Selection', text: 'Please select an item from the table first.', icon: 'warning' });
+                    return null;
+                }
+                return selected.value;
+            }
 
-        // 🗄️ Soft Delete / Archive function matching system state behaviors
-        function archiveItem() {
-        if (isSubmitting) return;
-        const id = getSelectedId();
-        if (!id) return;
+            // 🗄️ Soft Delete / Archive function matching system state behaviors
+            function archiveItem() {
+                if (isSubmitting) return;
+                const id = getSelectedId();
+                if (!id) return;
 
-        Swal.fire({
-        title: 'Archive Inventory Item?',
-        text: "This item will be hidden from current stock tables and moved to the system archive repository.",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#4a2511',
-        confirmButtonText: 'Yes, archive item'
-        }).then((result) => {
-        if (result.isConfirmed) {
-        isSubmitting = true;
-        document.getElementById("archiveId").value = id;
-        document.getElementById("archiveForm").submit();
-        }
-        });
-        }
+                Swal.fire({
+                    title: 'Archive Inventory Item?',
+                    text: "This item will be hidden from current stock tables and moved to the system archive repository.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#4a2511',
+                    confirmButtonText: 'Yes, archive item'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        isSubmitting = true;
+                        document.getElementById("archiveId").value = id;
+                        document.getElementById("archiveForm").submit();
+                    }
+                });
+            }
 
-        function filterInventory() {
-        const searchInput = document.getElementById("inventorySearch").value.toLowerCase().trim();
-        const categoryDropdown = document.getElementById("categoryFilter").value;
-        const rows = document.querySelectorAll(".inventory-row");
-        const noResultsRow = document.getElementById("noResultsRow");
-        let visibleCount = 0;
+            function filterInventory() {
+                const searchInput = document.getElementById("inventorySearch").value.toLowerCase().trim();
+                const categoryDropdown = document.getElementById("categoryFilter").value;
+                const rows = document.querySelectorAll(".inventory-row");
+                const noResultsRow = document.getElementById("noResultsRow");
+                let visibleCount = 0;
 
-        rows.forEach(function (row) {
-        const rowText = row.textContent.toLowerCase();
-        const categoryCellText = row.cells[1].textContent.trim();
-        const matchesSearch = rowText.includes(searchInput);
-        const matchesCategory = (categoryDropdown === "ALL" || categoryCellText === categoryDropdown);
+                rows.forEach(function(row) {
+                    const rowText = row.textContent.toLowerCase();
+                    const categoryCellText = row.cells[1].textContent.trim();
+                    const matchesSearch = rowText.includes(searchInput);
+                    const matchesCategory = (categoryDropdown === "ALL" || categoryCellText === categoryDropdown);
 
-        if (matchesSearch && matchesCategory) {
-        row.style.display = "";
-        visibleCount++;
-        } else {
-        row.style.display = "none";
-        }
-        });
+                    if (matchesSearch && matchesCategory) {
+                        row.style.display = "";
+                        visibleCount++;
+                    } else {
+                        row.style.display = "none";
+                    }
+                });
 
-        if (noResultsRow) {
-        noResultsRow.style.display = visibleCount === 0 ? "" : "none";
-        }
-        }
+                if (noResultsRow) {
+                    noResultsRow.style.display = visibleCount === 0 ? "" : "none";
+                }
+            }
     </script>
 
     @if (TempData["ErrorMessage"] != null)
     {
         var errorMsg = TempData["ErrorMessage"].ToString();
         <script>
-            document.addEventListener("DOMContentLoaded", function () {
-            Swal.fire({
-            title: 'Action Blocked',
-            text: @Html.Raw(Json.Serialize(errorMsg)),
-            icon: 'warning'
-            });
-            });
+                document.addEventListener("DOMContentLoaded", function() {
+                    Swal.fire({
+                        title: 'Action Blocked',
+                        text: @Html.Raw(Json.Serialize(errorMsg)),
+                        icon: 'warning'
+                    });
+                });
         </script>
     }
 
@@ -483,15 +481,15 @@
     {
         var successMsg = TempData["SuccessMessage"].ToString();
         <script>
-            document.addEventListener("DOMContentLoaded", function () {
-            Swal.fire({
-            title: 'Success!',
-            text: @Html.Raw(Json.Serialize(successMsg)),
-            icon: 'success',
-            timer: 2000,
-            showConfirmButton: false
-            });
-            });
+                document.addEventListener("DOMContentLoaded", function() {
+                    Swal.fire({
+                        title: 'Success!',
+                        text: @Html.Raw(Json.Serialize(successMsg)),
+                        icon: 'success',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                });
         </script>
     }
 </body>
