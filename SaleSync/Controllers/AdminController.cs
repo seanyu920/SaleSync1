@@ -578,11 +578,11 @@ namespace SaleSync.Controllers
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 string sql = @"
-                      SELECT p.product_id, p.product_name, p.stock_quantity, p.cost_price, p.sku, c.category_name, p.unit, p.recipe_unit, p.conversion_factor 
-                      FROM products p
-                      LEFT JOIN categories c ON p.category_id = c.category_id
-                      WHERE p.is_ingredient = 1
-                      ORDER BY c.category_name ASC, p.product_name ASC";
+      SELECT p.product_id, p.product_name, p.stock_quantity, p.cost_price, p.sku, c.category_name, p.unit, p.recipe_unit, p.conversion_factor 
+      FROM products p
+      LEFT JOIN categories c ON p.category_id = c.category_id
+      WHERE p.is_ingredient = 1 AND p.is_archived = 0
+      ORDER BY c.category_name ASC, p.product_name ASC";
 
                 using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {

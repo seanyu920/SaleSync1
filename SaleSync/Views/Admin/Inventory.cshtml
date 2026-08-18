@@ -207,27 +207,26 @@
                                 {
                                     @foreach (var item in Model)
                                     {
-                                        <tr class="inventory-row">
-                                            <td style="text-align:center;">
-                                                <input type="radio"
-                                                       name="selectedItem"
-                                                       value="@item.ProductId"
-                                                       onclick="fillForm(
-                                                @Json.Serialize(item.ProductId.ToString()),
-                                                @Json.Serialize(item.ItemCategory ?? ""),
-                                                @Json.Serialize(item.ItemName ?? ""),
-                                                @Json.Serialize(item.ItemID ?? ""),
-                                                @Json.Serialize(item.PurchasePrice.ToString()),
-                                                @Json.Serialize(item.Quantity.ToString()),
-                                                @Json.Serialize(item.Unit ?? ""),
-                                                @Json.Serialize(item.StockSupplier ?? ""),
-                                                @Json.Serialize(item.DateAcquired?.ToString() ?? ""),
-                                                @Json.Serialize(item.ExpirationDate?.ToString() ?? ""),
-                                                @Json.Serialize(item.RecipeUnit ?? ""),
-                                                @Json.Serialize(item.ConversionFactor.ToString())
-                                                )" />
+                                        <tr class="inventory-row" style="cursor:pointer;"
+                                            onclick="document.getElementById('radio-@item.ProductId').checked = true; fillForm(
+                                            @Json.Serialize(item.ProductId.ToString()),
+                                            @Json.Serialize(item.ItemCategory ?? ""),
+                                            @Json.Serialize(item.ItemName ?? ""),
+                                            @Json.Serialize(item.ItemID ?? ""),
+                                            @Json.Serialize(item.PurchasePrice.ToString()),
+                                            @Json.Serialize(item.Quantity.ToString()),
+                                            @Json.Serialize(item.Unit ?? ""),
+                                            @Json.Serialize(item.StockSupplier ?? ""),
+                                            @Json.Serialize(item.DateAcquired?.ToString() ?? ""),
+                                            @Json.Serialize(item.ExpirationDate?.ToString() ?? ""),
+                                            @Json.Serialize(item.RecipeUnit ?? ""),
+                                            @Json.Serialize(item.ConversionFactor.ToString())
+                                            )">
+                                            <td style="text-align:center;" onclick="event.stopPropagation();">
+                                                <input type="radio" id="radio-@item.ProductId" name="selectedItem" value="@item.ProductId" />
                                             </td>
                                             <td><strong>@item.ItemCategory</strong></td>
+                                            ...
                                             <td>@item.ItemName</td>
                                             <td>@item.ItemID</td>
                                             <td>₱@item.PurchasePrice.ToString("0.00")</td>
