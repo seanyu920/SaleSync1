@@ -578,11 +578,12 @@ namespace SaleSync.Controllers
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 string sql = @"
-      SELECT p.product_id, p.product_name, p.stock_quantity, p.cost_price, p.sku, c.category_name, p.unit, p.recipe_unit, p.conversion_factor 
-      FROM products p
-      LEFT JOIN categories c ON p.category_id = c.category_id
-      WHERE p.is_ingredient = 1 AND p.is_archived = 0
-      ORDER BY c.category_name ASC, p.product_name ASC";
+  SELECT p.product_id, p.product_name, p.stock_quantity, p.cost_price, p.sku, c.category_name, p.unit, p.recipe_unit, p.conversion_factor,
+         p.stock_supplier, p.date_acquired, p.expiration_date
+  FROM products p
+  LEFT JOIN categories c ON p.category_id = c.category_id
+  WHERE p.is_ingredient = 1 AND p.is_archived = 0
+  ORDER BY c.category_name ASC, p.product_name ASC";
 
                 using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
@@ -602,8 +603,9 @@ namespace SaleSync.Controllers
                                 ItemCategory = r["category_name"]?.ToString() ?? "Raw Materials",
                                 RecipeUnit = r["recipe_unit"]?.ToString(),
                                 ConversionFactor = r["conversion_factor"] != DBNull.Value ? Convert.ToDouble(r["conversion_factor"]) : 1,
-                                DateAcquired = "",
-                                ExpirationDate = ""
+                                StockSupplier = r["stock_supplier"]?.ToString() ?? "",
+                                DateAcquired = r["date_acquired"] != DBNull.Value ? Convert.ToDateTime(r["date_acquired"]).ToString("yyyy-MM-dd") : "",
+                                ExpirationDate = r["expiration_date"] != DBNull.Value ? Convert.ToDateTime(r["expiration_date"]).ToString("yyyy-MM-dd") : ""
                             });
                         }
                     }
@@ -646,7 +648,10 @@ namespace SaleSync.Controllers
                 double currentStock = oldItem?.Quantity ?? 0;
                 double addedQuantity = model.Quantity - currentStock;
 
-                string sql = "UPDATE products SET stock_quantity = @qty, cost_price = @price, unit = @unit, recipe_unit = @runit, conversion_factor = @conv WHERE product_id = @id";
+                string sql = @"UPDATE products SET stock_quantity = @qty, cost_price = @price, unit = @unit, 
+    recipe_unit = @runit, conversion_factor = @conv, stock_supplier = @supplier, 
+    date_acquired = @dateAcq, expiration_date = @expDate 
+    WHERE product_id = @id";
                 using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
                     cmd.Parameters.AddWithValue("@qty", model.Quantity);
@@ -654,6 +659,9 @@ namespace SaleSync.Controllers
                     cmd.Parameters.AddWithValue("@unit", model.Unit ?? "pcs");
                     cmd.Parameters.AddWithValue("@runit", string.IsNullOrEmpty(model.RecipeUnit) ? (object)DBNull.Value : model.RecipeUnit);
                     cmd.Parameters.AddWithValue("@conv", model.ConversionFactor > 0 ? model.ConversionFactor : 1);
+                    cmd.Parameters.AddWithValue("@supplier", string.IsNullOrEmpty(model.StockSupplier) ? (object)DBNull.Value : model.StockSupplier);
+                    cmd.Parameters.AddWithValue("@dateAcq", string.IsNullOrEmpty(model.DateAcquired) ? (object)DBNull.Value : (object)DateTime.Parse(model.DateAcquired));
+                    cmd.Parameters.AddWithValue("@expDate", string.IsNullOrEmpty(model.ExpirationDate) ? (object)DBNull.Value : (object)DateTime.Parse(model.ExpirationDate));
                     cmd.Parameters.AddWithValue("@id", model.ProductId);
                     cmd.ExecuteNonQuery();
                 }
@@ -698,10 +706,10 @@ namespace SaleSync.Controllers
                 }
 
                 string sql = @"
-            INSERT INTO products (product_name, stock_quantity, cost_price, is_ingredient, category_id, sku, barcode, unit, recipe_unit, conversion_factor)
-            VALUES (@name, @qty, @price, 1, 99, 
-                    'ING-' + LEFT(CAST(NEWID() AS VARCHAR(36)), 8),
-                    'BC-' + LEFT(CAST(NEWID() AS VARCHAR(36)), 8), @unit, @runit, @conv)";
+    INSERT INTO products (product_name, stock_quantity, cost_price, is_ingredient, category_id, sku, barcode, unit, recipe_unit, conversion_factor, stock_supplier, date_acquired, expiration_date)
+    VALUES (@name, @qty, @price, 1, 99, 
+            'ING-' + LEFT(CAST(NEWID() AS VARCHAR(36)), 8),
+            'BC-' + LEFT(CAST(NEWID() AS VARCHAR(36)), 8), @unit, @runit, @conv, @supplier, @dateAcq, @expDate)";
 
                 using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
@@ -711,6 +719,9 @@ namespace SaleSync.Controllers
                     cmd.Parameters.AddWithValue("@unit", model.Unit ?? "pcs");
                     cmd.Parameters.AddWithValue("@runit", string.IsNullOrEmpty(model.RecipeUnit) ? (object)DBNull.Value : model.RecipeUnit);
                     cmd.Parameters.AddWithValue("@conv", model.ConversionFactor > 0 ? model.ConversionFactor : 1);
+                    cmd.Parameters.AddWithValue("@supplier", string.IsNullOrEmpty(model.StockSupplier) ? (object)DBNull.Value : model.StockSupplier);
+                    cmd.Parameters.AddWithValue("@dateAcq", string.IsNullOrEmpty(model.DateAcquired) ? (object)DBNull.Value : (object)DateTime.Parse(model.DateAcquired));
+                    cmd.Parameters.AddWithValue("@expDate", string.IsNullOrEmpty(model.ExpirationDate) ? (object)DBNull.Value : (object)DateTime.Parse(model.ExpirationDate));
                     cmd.ExecuteNonQuery();
                 }
 
@@ -1586,12 +1597,11 @@ namespace SaleSync.Controllers
             {
                 conn.Open();
 
-                // 🛍️ Query 1: Fetch Archived Finished Products (Menu Items)
                 string productSql = @"
-            SELECT p.product_id, p.product_name, c.category_name, p.selling_price 
-            FROM products p
-            LEFT JOIN categories c ON p.category_id = c.category_id
-            WHERE p.is_archived = 1 AND p.is_ingredient = 0";
+    SELECT p.product_id, p.product_name, c.category_name, p.selling_price 
+    FROM products p
+    LEFT JOIN categories c ON p.category_id = c.category_id
+    WHERE p.is_archived = 1 AND (p.is_ingredient = 0 OR p.is_ingredient IS NULL)";
 
                 using (SqlCommand cmd = new SqlCommand(productSql, conn))
                 using (SqlDataReader r = cmd.ExecuteReader())
