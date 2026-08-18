@@ -574,42 +574,93 @@ namespace SaleSync.Controllers
         public IActionResult Inventory()
         {
             var inventoryList = new List<InventoryItems>();
+
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 string sql = @"
-  SELECT p.product_id, p.product_name, p.stock_quantity, p.cost_price, p.sku, c.category_name, p.unit, p.recipe_unit, p.conversion_factor,
-         p.stock_supplier, p.date_acquired, p.expiration_date
-  FROM products p
-  LEFT JOIN categories c ON p.category_id = c.category_id
-  WHERE p.is_ingredient = 1 AND p.is_archived = 0
-  ORDER BY c.category_name ASC, p.product_name ASC";
+            SELECT
+                p.product_id,
+                p.product_name,
+                p.stock_quantity,
+                p.cost_price,
+                p.sku,
+                c.category_name,
+                p.unit,
+                p.recipe_unit,
+                p.conversion_factor,
+                p.stock_supplier,
+                p.date_acquired,
+                p.expiration_date
+            FROM products p
+            LEFT JOIN categories c
+                ON p.category_id = c.category_id
+            WHERE p.is_ingredient = 1
+              AND p.is_archived = 0
+            ORDER BY c.category_name ASC, p.product_name ASC";
 
                 using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
                     conn.Open();
+
                     using (SqlDataReader r = cmd.ExecuteReader())
                     {
                         while (r.Read())
                         {
                             inventoryList.Add(new InventoryItems
                             {
-                                ProductId = Convert.ToInt32(r["product_id"]),
-                                ItemID = r["sku"]?.ToString() ?? "N/A",
-                                ItemName = r["product_name"].ToString(),
-                                Quantity = Convert.ToDouble(r["stock_quantity"]),
-                                Unit = r["unit"]?.ToString() ?? "pcs",
-                                PurchasePrice = Convert.ToDecimal(r["cost_price"]),
-                                ItemCategory = r["category_name"]?.ToString() ?? "Raw Materials",
-                                RecipeUnit = r["recipe_unit"]?.ToString(),
-                                ConversionFactor = r["conversion_factor"] != DBNull.Value ? Convert.ToDouble(r["conversion_factor"]) : 1,
-                                StockSupplier = r["stock_supplier"]?.ToString() ?? "",
-                                DateAcquired = r["date_acquired"] != DBNull.Value ? Convert.ToDateTime(r["date_acquired"]).ToString("yyyy-MM-dd") : "",
-                                ExpirationDate = r["expiration_date"] != DBNull.Value ? Convert.ToDateTime(r["expiration_date"]).ToString("yyyy-MM-dd") : ""
+                                ProductId = r["product_id"] != DBNull.Value
+                                    ? Convert.ToInt32(r["product_id"])
+                                    : 0,
+
+                                ItemID = r["sku"] != DBNull.Value
+                                    ? r["sku"].ToString()
+                                    : "N/A",
+
+                                ItemName = r["product_name"] != DBNull.Value
+                                    ? r["product_name"].ToString()
+                                    : "Unnamed Item",
+
+                                Quantity = r["stock_quantity"] != DBNull.Value
+                                    ? Convert.ToDouble(r["stock_quantity"])
+                                    : 0,
+
+                                Unit = r["unit"] != DBNull.Value
+                                    ? r["unit"].ToString()
+                                    : "pcs",
+
+                                PurchasePrice = r["cost_price"] != DBNull.Value
+                                    ? Convert.ToDecimal(r["cost_price"])
+                                    : 0,
+
+                                ItemCategory = r["category_name"] != DBNull.Value
+                                    ? r["category_name"].ToString()
+                                    : "Raw Materials",
+
+                                RecipeUnit = r["recipe_unit"] != DBNull.Value
+                                    ? r["recipe_unit"].ToString()
+                                    : "",
+
+                                ConversionFactor = r["conversion_factor"] != DBNull.Value
+                                    ? Convert.ToDouble(r["conversion_factor"])
+                                    : 1,
+
+                                StockSupplier = r["stock_supplier"] != DBNull.Value
+                                    ? r["stock_supplier"].ToString()
+                                    : "",
+
+                                DateAcquired = r["date_acquired"] != DBNull.Value
+                                    ? Convert.ToDateTime(r["date_acquired"]).ToString("yyyy-MM-dd")
+                                    : "",
+
+                                ExpirationDate = r["expiration_date"] != DBNull.Value
+                                    ? Convert.ToDateTime(r["expiration_date"]).ToString("yyyy-MM-dd")
+                                    : ""
                             });
                         }
                     }
                 }
             }
+
             return View(inventoryList);
         }
 
@@ -633,12 +684,29 @@ namespace SaleSync.Controllers
                         {
                             oldItem = new InventoryItems
                             {
-                                ItemName = r["product_name"].ToString(),
-                                Quantity = Convert.ToDouble(r["stock_quantity"]),
-                                PurchasePrice = Convert.ToDecimal(r["cost_price"]),
-                                Unit = r["unit"]?.ToString(),
-                                RecipeUnit = r["recipe_unit"]?.ToString(),
-                                ConversionFactor = r["conversion_factor"] != DBNull.Value ? Convert.ToDouble(r["conversion_factor"]) : 1
+                                ItemName = r["product_name"] != DBNull.Value
+        ? r["product_name"].ToString()
+        : "Unnamed Item",
+
+                                Quantity = r["stock_quantity"] != DBNull.Value
+        ? Convert.ToDouble(r["stock_quantity"])
+        : 0,
+
+                                PurchasePrice = r["cost_price"] != DBNull.Value
+        ? Convert.ToDecimal(r["cost_price"])
+        : 0,
+
+                                Unit = r["unit"] != DBNull.Value
+        ? r["unit"].ToString()
+        : "pcs",
+
+                                RecipeUnit = r["recipe_unit"] != DBNull.Value
+        ? r["recipe_unit"].ToString()
+        : "",
+
+                                ConversionFactor = r["conversion_factor"] != DBNull.Value
+        ? Convert.ToDouble(r["conversion_factor"])
+        : 1
                             };
                         }
                     }
