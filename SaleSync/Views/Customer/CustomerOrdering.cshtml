@@ -1,9 +1,42 @@
-﻿@model SaleSync.Models.CustomerDashboardViewModel
+﻿
+@model SaleSync.Models.CustomerDashboardViewModel
 @{
     Layout = null;
     var storeSettings = ViewBag.StoreSettings as SaleSync.Models.WebCustomization ?? new SaleSync.Models.WebCustomization();
     var storeStatus = ViewBag.StoreStatus as SaleSync.Models.StoreStatus;
+
+    // Merge "X - Small" / "X - Large" rows into a single card per drink,
+    // keeping the real ProductId and Price for each size so checkout
+    // still submits accurate data.
+    var groupedProducts = Model?.MenuItems != null
+        ? Model.MenuItems
+            .GroupBy(i => new
+            {
+                BaseName = System.Text.RegularExpressions.Regex.Replace(
+                    i.ProductName ?? "",
+                    @"\s*-\s*(Small|Large)\s*$",
+                    "",
+                    System.Text.RegularExpressions.RegexOptions.IgnoreCase
+                ).Trim(),
+                Category = i.CategoryName
+            })
+            .Select(g => new
+            {
+                g.Key.BaseName,
+                g.Key.Category,
+                SmallItem = g.FirstOrDefault(
+                    x => !(x.ProductName != null &&
+                           x.ProductName.Trim().EndsWith("Large", StringComparison.OrdinalIgnoreCase))
+                ) ?? g.First(),
+                LargeItem = g.FirstOrDefault(
+                    x => x.ProductName != null &&
+                         x.ProductName.Trim().EndsWith("Large", StringComparison.OrdinalIgnoreCase)
+                )
+            })
+            .ToList()
+        : null;
 }
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -48,27 +81,27 @@
                 </div>
 
                 <div class="sidebar-tabs">
-                    <button class="tab-btn active" onclick="switchTab('menu', this)">🍽️ Order</button>
-                    <button class="tab-btn" onclick="switchTab('orders', this)">📦 My Orders</button>
+                    <button class="tab-btn active" onclick="switchTab('menu', this)">Order</button>
+                    <button class="tab-btn" onclick="switchTab('orders', this)">My Orders</button>
                 </div>
 
                 <div id="catNav">
                     <p class="sidebar-section-label">Categories</p>
                     <nav class="sidebar-menu">
                         <button class="menu-btn cat-btn active" onclick="filterMenu('all', this)">All Items</button>
-                        <button class="menu-btn cat-btn" onclick="filterMenu('coffee', this)">☕ Coffee</button>
-                        <button class="menu-btn cat-btn" onclick="filterMenu('milktea', this)">🧋 Milktea</button>
-                        <button class="menu-btn cat-btn" onclick="filterMenu('fruittea', this)">🍹 Fruit Tea</button>
-                        <button class="menu-btn cat-btn" onclick="filterMenu('ricemeal', this)">🍱 Rice Meals</button>
-                        <button class="menu-btn cat-btn" onclick="filterMenu('bread&pastry', this)">🥐 Bread & Pastry</button>
-                        <button class="menu-btn cat-btn" onclick="filterMenu('snacks&pasta', this)">🍝 Snacks & Pasta</button>
+                        <button class="menu-btn cat-btn" onclick="filterMenu('coffee', this)">Coffee</button>
+                        <button class="menu-btn cat-btn" onclick="filterMenu('milktea', this)">Milktea</button>
+                        <button class="menu-btn cat-btn" onclick="filterMenu('fruittea', this)">Fruit Tea</button>
+                        <button class="menu-btn cat-btn" onclick="filterMenu('ricemeal', this)">Rice Meals</button>
+                        <button class="menu-btn cat-btn" onclick="filterMenu('bread&pastry', this)">Bread & Pastry</button>
+                        <button class="menu-btn cat-btn" onclick="filterMenu('snacks&pasta', this)">Snacks & Pasta</button>
                         <button class="menu-btn cat-btn fav-btn" onclick="filterMenu('favorites', this)">❤️ My Favorites</button>
                     </nav>
                 </div>
 
                 <div class="loyalty-box" id="loyaltyBox">
                     <div class="loyalty-header">
-                        <span>⭐ Loyalty Points</span>
+                        <span>Loyalty Points</span>
                         <strong id="loyaltyPoints">0 pts</strong>
                     </div>
                     <div class="loyalty-bar-bg">
@@ -87,9 +120,32 @@
             </div>
         </aside>
 
+        <!-- MOBILE HAMBURGER -->
+        <div class="mobile-header">
+            <button type="button"
+                    class="hamburger-btn"
+                    id="mobileMenuButton"
+                    onclick="toggleSidebar(event)"
+                    aria-label="Open menu"
+                    aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+
+            <div class="mobile-brand">
+                @storeSettings.StoreName
+            </div>
+        </div>
+
+        <!-- MOBILE SIDEBAR OVERLAY -->
+        <div class="sidebar-overlay"
+             id="sidebarOverlay"
+             onclick="closeSidebar()"></div>
+
         <main class="main-content slide-up">
             <div class="announcement-banner" id="announcementBanner">
-                🎉 <strong>Welcome to @storeSettings.StoreName!</strong> Free delivery on orders ₱300+
+                <strong>Welcome to @storeSettings.StoreName!</strong> Free delivery on orders ₱300+
                 <button class="close-announcement" onclick="this.parentElement.style.display='none'">✕</button>
             </div>
 
@@ -112,48 +168,83 @@
                 </header>
 
                 <div class="product-container" id="menuGrid" data-current-cat="all">
-                    @if (Model?.MenuItems != null && Model.MenuItems.Count > 0)
+                    @if (groupedProducts != null && groupedProducts.Count > 0)
                     {
-                        var bestSellers = new[] { "Americano - Small", "Spanish Latte", "Iced Latte", "Wintermelon", "Carbonara" };
-                        var newItems = new[] { "Hot Matcha Latte", "Iced Matcha Latte", "Gambas Pasta" };
-
-                        foreach (var item in Model.MenuItems)
+                        foreach (var p in groupedProducts)
                         {
-                            string catRaw = (item.CategoryName ?? "Uncategorized").ToLower().Replace(" ", "");
-                            bool isBest = bestSellers.Contains(item.ProductName);
-                            bool isNew = newItems.Contains(item.ProductName);
-                            string badgeHtml = isBest ? "<span class='item-badge badge-best'>🔥 Best Seller</span>"
-                                             : isNew ? "<span class='item-badge badge-new'>✨ New</span>"
-                                             : "";
+                            var smallItem = p.SmallItem;
+
+                            // Safety check to prevent possible-null Razor warning.
+                            if (smallItem == null)
+                            {
+                                continue;
+                            }
+
+                            var largeItem = p.LargeItem;
+
+                            // Keep the existing Small/Large behavior,
+                            // but avoid possible-null warnings.
+                            int? largeProductId = largeItem?.ProductId;
+                            decimal? largeProductPrice = largeItem?.Price;
+
+                            bool hasLarge = largeProductId.HasValue;
+
+                            string catRaw = (p.Category ?? "Uncategorized")
+                                .ToLower()
+                                .Replace(" ", "");
 
                             <div class="product-card"
                                  data-category="@catRaw"
-                                 data-name="@item.ProductName.ToLower()"
-                                 data-id="@item.ProductId"
-                                 data-price="@item.Price">
-                                @Html.Raw(badgeHtml)
-                                <button class="fav-heart" onclick="toggleFav(this, '@item.ProductId')" title="Add to favorites">♡</button>
+                                 data-name="@p.BaseName.ToLower()"
+                                 data-id="@smallItem.ProductId"
+                                 data-price="@smallItem.Price">
+
+                                <button class="fav-heart"
+                                        onclick="toggleFav(this, '@smallItem.ProductId')"
+                                        title="Add to favorites">
+                                    ♡
+                                </button>
 
                                 <div class="product-img-placeholder">
-                                    @if (!string.IsNullOrEmpty(item.ImagePath))
+                                    @if (!string.IsNullOrEmpty(smallItem.ImagePath))
                                     {
-                                        <img src="@item.ImagePath" alt="@item.ProductName" class="product-uploaded-img" />
+                                        <img src="@smallItem.ImagePath"
+                                             alt="@p.BaseName"
+                                             class="product-uploaded-img" />
                                     }
                                     else
                                     {
-                                        <span class="product-img-emoji">@GetCategoryEmoji(item.CategoryName)</span>
+                                        <span class="product-img-emoji">
+                                            @GetCategoryEmoji(p.Category)
+                                        </span>
                                     }
                                 </div>
 
                                 <div class="product-info">
+
                                     <div class="info-top">
-                                        <h3>@item.ProductName</h3>
-                                        <span class="price">₱@item.Price.ToString("0.##")</span>
+                                        <h3>@p.BaseName</h3>
+
+                                        <span class="price">
+                                            ₱@smallItem.Price.ToString("0.##")
+                                        </span>
                                     </div>
-                                    <p class="description">Freshly prepared @item.ProductName.</p>
+
+                                    <p class="description">
+                                        Freshly prepared @p.BaseName.
+                                    </p>
+
                                     <button class="btn-add-order"
-                                            onclick="openModal(@item.ProductId, @Json.Serialize(item.ProductName), @item.Price)">
+                                            onclick='openModal(
+                                        @smallItem.ProductId,
+                                        @(hasLarge ? largeProductId.Value.ToString() : "null"),
+                                        @Html.Raw(Json.Serialize(p.BaseName)),
+                                        @smallItem.Price,
+                                        @(hasLarge ? largeProductPrice.Value.ToString() : "null")
+                                        )'>
+
                                         + Add to Order
+
                                     </button>
                                 </div>
                             </div>
@@ -161,7 +252,9 @@
                     }
                     else
                     {
-                        <div class="no-items-fallback"><p>No menu items found.</p></div>
+                        <div class="no-items-fallback">
+                            <p>No menu items found.</p>
+                        </div>
                     }
                 </div>
             </div>
@@ -177,77 +270,153 @@
 
                 <div class="orders-section">
                     <h2 class="section-title">Active Orders</h2>
+
                     <div id="activeOrdersList">
                         @{
-                            var activeStatuses = new List<string> { "Pending", "Preparing", "Ready", "On the Way" };
-                            var activeOrders = Model?.OrderHistory?.Where(o => activeStatuses.Contains(o.Status)).ToList();
+                            var activeStatuses = new List<string>
+                            {
+                                "Pending",
+                                "Preparing",
+                                "Ready",
+                                "On the Way"
+                            };
+
+                            var activeOrders = Model?.OrderHistory?
+                                .Where(o => activeStatuses.Contains(o.Status))
+                                .ToList();
                         }
+
                         @if (activeOrders != null && activeOrders.Any())
                         {
                             foreach (var order in activeOrders)
                             {
-                                int step = order.Status == "Preparing" ? 2 : (order.Status == "Ready" || order.Status == "On the Way") ? 3 : 1;
-                                string eta = order.Status == "Preparing" ? "Est. 10–15 mins" : (order.Status == "Ready" || order.Status == "On the Way") ? "Ready for pickup!" : "Est. 15–20 mins";
+                                int step =
+                                    order.Status == "Preparing"
+                                        ? 2
+                                        : (order.Status == "Ready" ||
+                                           order.Status == "On the Way")
+                                            ? 3
+                                            : 1;
+
+                                string eta =
+                                    order.Status == "Preparing"
+                                        ? "Est. 10–15 mins"
+                                        : (order.Status == "Ready" ||
+                                           order.Status == "On the Way")
+                                            ? "Ready for pickup!"
+                                            : "Est. 15–20 mins";
 
                                 <div class="track-card">
                                     <div class="track-header">
-                                        <span class="track-id">Order #@order.SaleId</span>
-                                        <span class="track-badge status-@order.Status.ToLower().Replace(" ", "-")">@order.Status</span>
+                                        <span class="track-id">
+                                            Order #@order.SaleId
+                                        </span>
+
+                                        <span class="track-badge status-@order.Status.ToLower().Replace(" ", "-")">
+                                            @order.Status
+                                        </span>
                                     </div>
+
                                     <div class="track-meta">
-                                        <span class="track-price">₱@order.TotalAmount.ToString("F2")</span>
-                                        <span class="track-time">@order.SaleDate.ToString("hh:mm tt")</span>
+                                        <span class="track-price">
+                                            ₱@order.TotalAmount.ToString("F2")
+                                        </span>
+
+                                        <span class="track-time">
+                                            @order.SaleDate.ToString("hh:mm tt")
+                                        </span>
                                     </div>
-                                    <div class="eta-bar">⏱ @eta</div>
+
+                                    <div class="eta-bar">
+                                        @eta
+                                    </div>
+
                                     <div class="track-steps">
+
                                         <div class="track-step @(step >= 1 ? "done" : "")">
-                                            <div class="step-dot">@(step >= 1 ? "✓" : "1")</div>
+                                            <div class="step-dot">
+                                                @(step >= 1 ? "✓" : "1")
+                                            </div>
                                             <span>Received</span>
                                         </div>
+
                                         <div class="track-line @(step >= 2 ? "done" : "")"></div>
+
                                         <div class="track-step @(step >= 2 ? "done" : "")">
-                                            <div class="step-dot">@(step >= 2 ? "✓" : "2")</div>
+                                            <div class="step-dot">
+                                                @(step >= 2 ? "✓" : "2")
+                                            </div>
                                             <span>Preparing</span>
                                         </div>
+
                                         <div class="track-line @(step >= 3 ? "done" : "")"></div>
+
                                         <div class="track-step @(step >= 3 ? "done" : "")">
-                                            <div class="step-dot">@(step >= 3 ? "✓" : "3")</div>
+                                            <div class="step-dot">
+                                                @(step >= 3 ? "✓" : "3")
+                                            </div>
                                             <span>Ready</span>
                                         </div>
+
                                     </div>
                                 </div>
                             }
                         }
                         else
                         {
-                            <div class="empty-orders-msg">No active orders right now.</div>
+                            <div class="empty-orders-msg">
+                                No active orders right now.
+                            </div>
                         }
                     </div>
                 </div>
 
                 <div class="orders-section">
                     <h2 class="section-title">Order History</h2>
+
                     <div id="orderHistoryList">
                         @if (Model?.OrderHistory != null && Model.OrderHistory.Any())
                         {
                             foreach (var order in Model.OrderHistory)
                             {
                                 <div class="history-row">
+
                                     <div class="history-left">
-                                        <div class="history-id">Order #@order.SaleId</div>
-                                        <div class="history-items">Type: @order.OrderType</div>
-                                        <div class="history-time">@order.SaleDate.ToString("MMM dd, hh:mm tt")</div>
+
+                                        <div class="history-id">
+                                            Order #@order.SaleId
+                                        </div>
+
+                                        <div class="history-items">
+                                            Type: @order.OrderType
+                                        </div>
+
+                                        <div class="history-time">
+                                            @order.SaleDate.ToString("MMM dd, hh:mm tt")
+                                        </div>
+
                                     </div>
+
                                     <div class="history-right">
-                                        <span class="track-badge badge-@order.Status.ToLower()">@order.Status</span>
-                                        <div class="history-total">₱@order.TotalAmount.ToString("F2")</div>
+
+                                        <span class="track-badge badge-@order.Status.ToLower()">
+                                            @order.Status
+                                        </span>
+
+                                        <div class="history-total">
+                                            ₱@order.TotalAmount.ToString("F2")
+                                        </div>
+
                                     </div>
+
                                 </div>
                             }
                         }
                         else
                         {
-                            <div class="empty-orders-msg">No past orders yet.</div>
+                            <div class="empty-orders-msg">
+                                No past orders yet.
+                            </div>
                         }
                     </div>
                 </div>
@@ -256,657 +425,1871 @@
     </div>
 
     <!-- Modals & Overlays -->
+
     <div id="sizeModal" class="modal-overlay">
         <div class="modal-card">
+
             <div class="modal-header">
                 <h2 id="modalItemName">Item Name</h2>
-                <button class="close-modal" onclick="closeModal()">✕</button>
+
+                <button class="close-modal"
+                        onclick="closeModal()">
+                    ✕
+                </button>
             </div>
 
             <div id="sizeSection">
                 <p class="modal-label">Select Size</p>
+
                 <div class="size-options">
+
                     <label class="size-box">
-                        <input type="radio" name="itemSize" value="Small" checked>
+                        <input type="radio"
+                               name="itemSize"
+                               value="Small"
+                               checked>
+
                         <div class="size-content">
                             <span class="size-label">Small</span>
-                            <span class="size-price-mod" id="smallPrice">₱0</span>
+                            <span class="size-price-mod"
+                                  id="smallPrice">
+                                ₱0
+                            </span>
                         </div>
                     </label>
+
                     <label class="size-box">
-                        <input type="radio" name="itemSize" value="Large">
+                        <input type="radio"
+                               name="itemSize"
+                               value="Large">
+
                         <div class="size-content">
                             <span class="size-label">Large</span>
-                            <span class="size-price-mod" id="largePrice">₱0</span>
+                            <span class="size-price-mod"
+                                  id="largePrice">
+                                ₱0
+                            </span>
                         </div>
                     </label>
+
                 </div>
             </div>
 
             <p class="modal-label">Quantity</p>
+
             <div class="quantity-selector">
-                <button type="button" class="qty-btn" onclick="updateQty(-1)">−</button>
-                <input type="number" id="itemQty" value="1" min="1" readonly>
-                <button type="button" class="qty-btn" onclick="updateQty(1)">+</button>
+
+                <button type="button"
+                        class="qty-btn"
+                        onclick="updateQty(-1)">
+                    −
+                </button>
+
+                <input type="number"
+                       id="itemQty"
+                       value="1"
+                       min="1"
+                       readonly>
+
+                <button type="button"
+                        class="qty-btn"
+                        onclick="updateQty(1)">
+                    +
+                </button>
+
             </div>
 
-            <p class="modal-label">Special Instructions <span class="optional-tag">(Optional)</span></p>
-            <textarea id="itemNotes" class="notes-textarea" placeholder="e.g. less sugar, no ice, extra hot..."></textarea>
+            <p class="modal-label">
+                Special Instructions
+                <span class="optional-tag">(Optional)</span>
+            </p>
 
-            <button class="btn-confirm-add" onclick="confirmAddToCart()">Add to Cart</button>
+            <textarea id="itemNotes"
+                      class="notes-textarea"
+                      placeholder="e.g. less sugar, no ice, extra hot..."></textarea>
+
+            <button class="btn-confirm-add"
+                    onclick="confirmAddToCart()">
+                Add to Cart
+            </button>
+
         </div>
     </div>
 
     <div id="cartSidebar" class="cart-sidebar">
+
         <div class="cart-header">
+
             <h2>🛒 Your Order</h2>
-            <button class="close-cart-btn" onclick="toggleCart()">✕</button>
+
+            <button class="close-cart-btn"
+                    onclick="toggleCart()">
+                ✕
+            </button>
+
         </div>
-        <div class="cart-items-container" id="customerCartList">
-            <div class="empty-cart-msg">Your cart is empty.</div>
+
+        <div class="cart-items-container"
+             id="customerCartList">
+
+            <div class="empty-cart-msg">
+                Your cart is empty.
+            </div>
+
         </div>
+
         <div class="cart-footer">
+
             <div class="cart-total-row">
                 <span>Total</span>
-                <span id="customerCartTotal">₱0.00</span>
+                <span id="customerCartTotal">
+                    ₱0.00
+                </span>
             </div>
-            <div class="min-order-note" id="minOrderNote" style="display:none;">
-                ⚠️ Minimum ₱200 for delivery
+
+            <div class="min-order-note"
+                 id="minOrderNote"
+                 style="display:none;">
+                Minimum ₱200 for delivery
             </div>
-            <select id="customerOrderType" class="cart-select" onchange="toggleAddressField()">
-                <option value="Dine In">🍽️ Dine In</option>
-                <option value="Pick-up">🛍️ Pick-up</option>
-                <option value="Delivery">🚴 Delivery</option>
+
+            <select id="customerOrderType"
+                    class="cart-select"
+                    onchange="toggleAddressField">
+
+                <option value="Dine In">Dine In</option>
+                <option value="Pick-up">Pick-up</option>
+                <option value="Delivery">Delivery</option>
+
             </select>
-            <div id="addressContainer" style="display:none;">
-                <textarea id="customerAddress" class="cart-textarea" placeholder="Enter full delivery address..." rows="2"></textarea>
+
+            <div id="addressContainer"
+                 style="display:none;">
+
+                <textarea id="customerAddress"
+                          class="cart-textarea"
+                          placeholder="Enter full delivery address..."
+                          rows="2"></textarea>
+
             </div>
-            <select id="customerPaymentMethod" class="cart-select">
-                <option value="Cash">💵 Pay at Counter (Cash)</option>
-                <option value="GCash">🔵 GCash</option>
-                <option value="Maya">🟢 Maya</option>
-                <option value="Card">💳 Card</option>
+
+            <select id="customerPaymentMethod"
+                    class="cart-select">
+
+                <option value="Cash">
+                    Pay at Counter (Cash)
+                </option>
+
+                <option value="GCash">
+                    GCash
+                </option>
+
+                <option value="Maya">
+                    Maya
+                </option>
+
+                <option value="Card">
+                    Card
+                </option>
+
             </select>
-            <button class="btn-checkout" id="checkoutBtn" onclick="submitOnlineOrder()">
+
+            <button class="btn-checkout"
+                    id="checkoutBtn"
+                    onclick="submitOnlineOrder()">
+
                 Send Order to Kitchen
+
             </button>
+
         </div>
     </div>
-    <div id="cartOverlay" class="cart-overlay" onclick="toggleCart()"></div>
+
+    <div id="cartOverlay"
+         class="cart-overlay"
+         onclick="toggleCart()">
+    </div>
 
     <!-- ── FLOATING CHAT WIDGET HTML ── -->
-    <div class="chat-widget" id="chatWidget">
-        <button class="chat-fab" onclick="toggleChatWidget()" id="chatFab">
+
+    <div class="chat-widget"
+         id="chatWidget">
+
+        <button class="chat-fab"
+                onclick="toggleChatWidget()"
+                id="chatFab">
+
             💬
-            <span class="chat-badge-dot" id="chatBadgeDot" style="display: none;"></span>
+
+            <span class="chat-badge-dot"
+                  id="chatBadgeDot"
+                  style="display: none;">
+            </span>
+
         </button>
-        
-        <div class="chat-window" id="chatWindow">
+
+        <div class="chat-window"
+             id="chatWindow">
+
             <div class="chat-header">
+
                 <div class="chat-header-info">
-                    <span class="chat-avatar">☕</span>
+
+                    <span class="chat-avatar">
+                        ☕
+                    </span>
+
                     <div>
-                        <h4 class="chat-title">@storeSettings.StoreName Assistant</h4>
-                        <span class="chat-status">Online</span>
+
+                        <h4 class="chat-title">
+                            @storeSettings.StoreName Assistant
+                        </h4>
+
+                        <span class="chat-status">
+                            Online
+                        </span>
+
                     </div>
+
                 </div>
-                <button class="close-chat-widget" onclick="toggleChatWidget()">✕</button>
+
+                <button class="close-chat-widget"
+                        onclick="toggleChatWidget()">
+                    ✕
+                </button>
+
             </div>
-            <div class="chat-body" id="chatBody">
-                <div class="system-message">No active messages. Introduce yourself to start chatting...</div>
+
+            <div class="chat-body"
+                 id="chatBody">
+
+                <div class="system-message">
+                    No active messages. Introduce yourself to start chatting...
+                </div>
+
             </div>
+
             <div class="chat-footer">
-                <input type="text" id="chatInput" placeholder="Type a message..." onkeypress="handleChatKey(event)">
-                <button class="chat-send-btn" onclick="sendChatMessage()">➔</button>
+
+                <input type="text"
+                       id="chatInput"
+                       placeholder="Type a message..."
+                       onkeypress="handleChatKey(event)">
+
+                <button class="chat-send-btn"
+                        onclick="sendChatMessage()">
+                    ➔
+                </button>
+
             </div>
+
         </div>
     </div>
 
 @functions {
-    string GetCategoryEmoji(string category)
+    string GetCategoryEmoji(string? category)
     {
-        if (string.IsNullOrEmpty(category)) return "🍴";
-        return category.ToLower() switch
-        {
-            var c when c.Contains("coffee") => "☕",
-            var c when c.Contains("milk") => "🧋",
-            var c when c.Contains("fruit") => "🍹",
-            var c when c.Contains("rice") => "🍱",
-            var c when c.Contains("bread") || c.Contains("pastry") => "🥐",
-            var c when c.Contains("snack") || c.Contains("pasta") => "🍝",
-            _ => "🍴"
-        };
+        return "";
     }
 }
 
 <script>
-    function confirmLogout() {
-    Swal.fire({
-    title: 'Are you sure?',
-    text: "You will be logged out of your session.",
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#3085d6',
-    confirmButtonText: 'Yes, log out',
-    cancelButtonText: 'Cancel'
-    }).then((result) => {
-    if (result.isConfirmed) {
-    document.getElementById('logoutForm').submit();
-    }
-    });
-    }
-    // ── DATA from Razor ────────────────────────────────────────────────────────
-    const allItems = {};
-    @if (Model?.MenuItems != null)
-    {
-        foreach (var item in Model.MenuItems)
-        {
-            @:allItems[@item.ProductId] = {
-            @:    id: @item.ProductId,
-            @:    name: @Html.Raw(Json.Serialize(item.ProductName)),
-            @:    price: @item.Price,
-            @:    cat: @Html.Raw(Json.Serialize((item.CategoryName ?? "").ToLower().Replace(" ", "")))
-            @:};
-        }
-    }
 
-    // ── STATE ──────────────────────────────────────────────────────────────────
-    let customerCart   = JSON.parse(localStorage.getItem('caferoCustomerCart')   || '[]');
-    let favoriteIds    = JSON.parse(localStorage.getItem('caferoFavorites')      || '[]');
-    let loyaltyPts     = parseInt(localStorage.getItem('caferoLoyaltyPoints')    || '0');
-    let activeModalId  = null;
-    let sizedCategories = ['coffee','milktea','fruittea'];
+        function confirmLogout() {
 
-    // ── STORE STATUS ───────────────────────────────────────────────────────────
-    // Real store hours from settings (falls back to 07:00–21:00 if not configured).
-    const storeOpeningTime = @Html.Raw(Json.Serialize(storeSettings.OpeningTime ?? "07:00"));
-    const storeClosingTime = @Html.Raw(Json.Serialize(storeSettings.ClosingTime ?? "21:00"));
-    const storeTemporarilyClosed = @Html.Raw(Json.Serialize(storeSettings.IsTemporarilyClosed));
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You will be logged out of your session.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, log out',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
 
-    function parseTimeToMinutes(hhmm) {
-        const parts = hhmm.split(':');
-        return (parseInt(parts[0], 10) * 60) + parseInt(parts[1], 10);
-    }
+                if (result.isConfirmed) {
+                    document.getElementById('logoutForm').submit();
+                }
 
-    function formatMinutesAsClock(totalMinutes) {
-        const d = new Date();
-        d.setHours(Math.floor(totalMinutes / 60), totalMinutes % 60, 0, 0);
-        return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-    }
-
-    function checkStoreStatus() {
-        const banner = document.getElementById('storeBanner');
-        const text   = document.getElementById('storeStatusText');
-        if (!banner || !text) return;
-
-        if (storeTemporarilyClosed) {
-            banner.classList.remove('open');
-            text.innerText = `We're Temporarily Closed · Opens ${formatMinutesAsClock(parseTimeToMinutes(storeOpeningTime))}`;
-            return;
-        }
-
-        const now = new Date();
-        const nowMinutes = (now.getHours() * 60) + now.getMinutes();
-        const openMinutes = parseTimeToMinutes(storeOpeningTime);
-        const closeMinutes = parseTimeToMinutes(storeClosingTime);
-
-        // Handles overnight schedules (e.g. 18:00–02:00) the same way the server does.
-        const open = closeMinutes > openMinutes
-            ? (nowMinutes >= openMinutes && nowMinutes < closeMinutes)
-            : (nowMinutes >= openMinutes || nowMinutes < closeMinutes);
-
-        if (open) {
-            banner.classList.add('open');
-            text.innerText = `We're Open · Closes ${formatMinutesAsClock(closeMinutes)}`;
-        } else {
-            banner.classList.remove('open');
-            text.innerText = `We're Closed · Opens ${formatMinutesAsClock(openMinutes)}`;
-        }
-    }
-
-    // ── LOYALTY ────────────────────────────────────────────────────────────────
-    function updateLoyaltyUI() {
-        const goal = 500;
-        const display = document.getElementById('loyaltyPoints');
-        const fillBar = document.getElementById('loyaltyBarFill');
-        const hint = document.getElementById('loyaltyHint');
-
-        if (display) display.innerText = loyaltyPts + ' pts';
-        if (fillBar) {
-            const pct = Math.min((loyaltyPts / goal) * 100, 100);
-            fillBar.style.width = pct + '%';
-        }
-        if (hint) {
-            const remaining = goal - loyaltyPts;
-            hint.innerText = loyaltyPts >= goal ? '🎁 You have a reward ready!' : `${remaining} pts until your next reward`;
-        }
-    }
-
-    // ── FAVORITES ─────────────────────────────────────────────────────────────
-    function toggleFav(btn, itemId) {
-        event.stopPropagation();
-        const id  = String(itemId);
-        const idx = favoriteIds.indexOf(id);
-        if (idx > -1) {
-            favoriteIds.splice(idx, 1);
-            btn.innerText = '♡';
-            btn.classList.remove('fav-active');
-        } else {
-            favoriteIds.push(id);
-            btn.innerText = '❤️';
-            btn.classList.add('fav-active');
-        }
-        localStorage.setItem('caferoFavorites', JSON.stringify(favoriteIds));
-        if (document.getElementById('menuGrid').getAttribute('data-current-cat') === 'favorites') {
-            filterMenu('favorites');
-        }
-    }
-
-    // ── RESTORE FAVORITES ──
-    function restoreFavHearts() {
-        document.querySelectorAll('.product-card').forEach(card => {
-            const id = card.getAttribute('data-id');
-            if (favoriteIds.includes(String(id))) {
-                const btn = card.querySelector('.fav-heart');
-                if (btn) { btn.innerText = '❤️'; btn.classList.add('fav-active'); }
-            }
-        });
-    }
-
-    // ── TAB SWITCHER ──────────────────────────────────────────────────────────
-    function switchTab(tab, btn) {
-        document.getElementById('tabMenu').style.display   = tab === 'menu'   ? 'block' : 'none';
-        document.getElementById('tabOrders').style.display = tab === 'orders' ? 'block' : 'none';
-        document.getElementById('catNav').style.display    = tab === 'menu'   ? 'block' : 'none';
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-    }
-
-    // ── CART TOGGLE ───────────────────────────────────────────────────────────
-    function toggleCart() {
-        document.getElementById('cartSidebar').classList.toggle('open');
-        document.getElementById('cartOverlay').classList.toggle('open');
-        renderCustomerCart();
-    }
-
-    function toggleAddressField() {
-        const v = document.getElementById('customerOrderType').value;
-        document.getElementById('addressContainer').style.display  = v === 'Delivery' ? 'block' : 'none';
-        document.getElementById('minOrderNote').style.display      = v === 'Delivery' ? 'block' : 'none';
-    }
-
-    // ── MODAL ─────────────────────────────────────────────────────────────────
-    function openModal(itemId, itemName, basePrice) {
-        activeModalId = parseInt(itemId);
-        const price   = parseFloat(basePrice);
-        const cat      = allItems[activeModalId]?.cat || '';
-        const hasSizes = sizedCategories.some(c => cat.includes(c));
-
-        document.getElementById('modalItemName').innerText = itemName;
-        document.getElementById('sizeSection').style.display = hasSizes ? 'block' : 'none';
-        document.getElementById('smallPrice').innerText = '₱' + price.toFixed(2);
-        document.getElementById('largePrice').innerText = '₱' + (price + 20).toFixed(2);
-        document.getElementById('itemQty').value = 1;
-        document.getElementById('itemNotes').value = '';
-
-        if (!hasSizes) {
-            const radios = document.querySelectorAll('input[name="itemSize"]');
-            radios.forEach(r => r.checked = (r.value === 'Small'));
-        }
-
-        document.getElementById('sizeModal').style.display = 'flex';
-    }
-
-    // ── CLOSE MODAL ──
-    function closeModal() { document.getElementById('sizeModal').style.display = 'none'; }
-
-    // ── QUANTITY CONTROL ──
-    function updateQty(change) {
-        const el = document.getElementById('itemQty');
-        el.value = Math.max(1, parseInt(el.value) + change);
-    }
-
-    function confirmAddToCart() {
-        const item = allItems[activeModalId];
-        if (!item) { Swal.fire('Error','Item not found in menu.','error'); return; }
-
-        const cat      = item.cat || '';
-        const hasSizes = sizedCategories.some(c => cat.includes(c));
-        const size     = hasSizes ? document.querySelector('input[name="itemSize"]:checked').value : 'Regular';
-        const qty      = parseInt(document.getElementById('itemQty').value);
-        const notes    = document.getElementById('itemNotes').value.trim();
-        const price    = size === 'Large' ? item.price + 20 : item.price;
-
-        const existingIdx = customerCart.findIndex(
-            i => i.id === item.id && i.size === size && i.notes === notes
-        );
-
-        if (existingIdx > -1) {
-            customerCart[existingIdx].qty += qty;
-        } else {
-            customerCart.push({ id: item.id, name: item.name, size, qty, price, notes });
-        }
-
-        localStorage.setItem('caferoCustomerCart', JSON.stringify(customerCart));
-        updateCartBadge();
-        closeModal();
-
-        Swal.fire({
-            title: 'Added! 🛒',
-            text: `${qty}× ${item.name} (${size}) added to your order.`,
-            icon: 'success',
-            timer: 1200,
-            showConfirmButton: false
-        });
-    }
-
-    // ── CART RENDER ───────────────────────────────────────────────────────────
-    function updateCartBadge() {
-        const total  = customerCart.reduce((s, i) => s + i.qty, 0);
-        const badge  = document.getElementById('cartBadge');
-        if (badge) {
-            badge.style.display = total > 0 ? 'flex' : 'none';
-            badge.innerText = total;
-        }
-    }
-
-    function renderCustomerCart() {
-        const container    = document.getElementById('customerCartList');
-        const totalDisplay = document.getElementById('customerCartTotal');
-        updateCartBadge();
-
-        if (!container) return;
-
-        if (customerCart.length === 0) {
-            container.innerHTML = '<div class="empty-cart-msg">Your cart is empty.</div>';
-            if (totalDisplay) totalDisplay.innerText = '₱0.00';
-            return;
-        }
-
-        let html = '', grandTotal = 0;
-        customerCart.forEach((item, idx) => {
-            const sub = item.qty * item.price;
-            grandTotal += sub;
-            html += `
-                <div class="cart-item-row">
-                    <div class="cart-item-info">
-                        <h4>${item.name}</h4>
-                        <p>${item.size} · ₱${item.price.toFixed(2)}/ea${item.notes ? '<br><em class="cart-notes">📝 ' + item.notes + '</em>' : ''}</p>
-                    </div>
-                    <div class="cart-item-controls">
-                        <button class="cart-qty-btn" onclick="updateCustomerQty(${idx},-1)">-</button>
-                        <span class="cart-qty-val">${item.qty}</span>
-                        <button class="cart-qty-btn" onclick="updateCustomerQty(${idx},1)">+</button>
-                    </div>
-                    <div class="cart-subtotal-val">₱${sub.toFixed(2)}</div>
-                </div>`;
-        });
-
-        container.innerHTML = html;
-        if (totalDisplay) totalDisplay.innerText = '₱' + grandTotal.toFixed(2);
-    }
-
-    function updateCustomerQty(index, change) {
-        customerCart[index].qty += change;
-        if (customerCart[index].qty <= 0) customerCart.splice(index, 1);
-        localStorage.setItem('caferoCustomerCart', JSON.stringify(customerCart));
-        renderCustomerCart();
-    }
-
-    // ── SUBMIT ORDER VIA API ──────────────────────────────────────────────────
-    async function submitOnlineOrder() {
-        if (customerCart.length === 0) {
-            Swal.fire('Empty Cart', 'Please add items before checking out.', 'warning');
-            return;
-        }
-
-        const orderType     = document.getElementById('customerOrderType').value;
-        const paymentMethod = document.getElementById('customerPaymentMethod').value;
-        const address       = document.getElementById('customerAddress')?.value.trim() || '';
-        const grandTotal    = customerCart.reduce((s, i) => s + i.qty * i.price, 0);
-
-        if (orderType === 'Delivery' && !address) {
-            Swal.fire('Missing Address', 'Please enter your delivery address.', 'warning'); return;
-        }
-        if (orderType === 'Delivery' && grandTotal < 200) {
-            Swal.fire('Minimum Order', 'Delivery requires a minimum order of ₱200.', 'warning'); return;
-        }
-
-        const btn = document.getElementById('checkoutBtn');
-        btn.disabled = true;
-        btn.innerText = 'Sending to kitchen...';
-
-        const payload = {
-            OrderType:       orderType,
-            PaymentMethod:   paymentMethod,
-            DeliveryAddress: orderType === 'Delivery' ? address : null,
-            Items: customerCart.map(i => ({
-                ProductId:           i.id,
-                Quantity:            i.qty,
-                Price:               i.price,
-                Size:                i.size,
-                SpecialInstructions: i.notes || ''
-            }))
-        };
-
-        try {
-            const response = await fetch('/Customer/PlaceOnlineOrder', {
-                method:  'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body:    JSON.stringify(payload)
             });
+        }
 
-            if (response.ok) {
-                const result = await response.json();
+        // ── DATA from Razor ────────────────────────────────────────────────────────
 
-                const earned = Math.floor(grandTotal / 10);
-                loyaltyPts  += earned;
-                localStorage.setItem('caferoLoyaltyPoints', loyaltyPts);
+        const allItems = {};
+
+        @if (Model?.MenuItems != null)
+            {
+                                foreach (var item in Model.MenuItems)
+                {
+                    @:allItems[@item.ProductId] = {
+                    @:id: @item.ProductId,
+                    @:name: @Html.Raw(Json.Serialize(item.ProductName)),
+                    @:price: @item.Price,
+                    @:cat: @Html.Raw(Json.Serialize((item.CategoryName ?? "").ToLower().Replace(" ", "")))
+                        @:};
+            }
+            }
+
+            // ── STATE ──────────────────────────────────────────────────────────────────
+
+            let customerCart =
+                JSON.parse(localStorage.getItem('caferoCustomerCart') || '[]');
+
+        let favoriteIds =
+            JSON.parse(localStorage.getItem('caferoFavorites') || '[]');
+
+        let loyaltyPts =
+            parseInt(localStorage.getItem('caferoLoyaltyPoints') || '0');
+
+        let activeSmallId = null;
+        let activeLargeId = null;
+        let activeSmallPrice = 0;
+        let activeLargePrice = null;
+        let activeItemName = '';
+
+        // ── MOBILE SIDEBAR ─────────────────────────────────────────────────────────
+
+        function toggleSidebar(event) {
+
+            if (event) {
+                event.stopPropagation();
+            }
+
+            const sidebar =
+                document.querySelector('.sidebar');
+
+            const overlay =
+                document.getElementById('sidebarOverlay');
+
+            const button =
+                document.getElementById('mobileMenuButton');
+
+            if (!sidebar) return;
+
+            const isOpen =
+                sidebar.classList.toggle('mobile-open');
+
+            if (overlay) {
+                overlay.classList.toggle('mobile-open', isOpen);
+            }
+
+            if (button) {
+                button.setAttribute(
+                    'aria-expanded',
+                    isOpen ? 'true' : 'false'
+                );
+            }
+        }
+
+        function closeSidebar() {
+
+            const sidebar =
+                document.querySelector('.sidebar');
+
+            const overlay =
+                document.getElementById('sidebarOverlay');
+
+            const button =
+                document.getElementById('mobileMenuButton');
+
+            if (sidebar) {
+                sidebar.classList.remove('mobile-open');
+            }
+
+            if (overlay) {
+                overlay.classList.remove('mobile-open');
+            }
+
+            if (button) {
+                button.setAttribute(
+                    'aria-expanded',
+                    'false'
+                );
+            }
+        }
+
+        // Close the mobile sidebar after selecting a menu item
+        document.addEventListener('click', function(event) {
+
+            const sidebar =
+                document.querySelector('.sidebar');
+
+            const button =
+                document.getElementById('mobileMenuButton');
+
+            if (!sidebar ||
+                !sidebar.classList.contains('mobile-open')) {
+                return;
+            }
+
+            if (button &&
+                button.contains(event.target)) {
+                return;
+            }
+
+            if (sidebar.contains(event.target)) {
+                return;
+            }
+
+            closeSidebar();
+        });
+
+        // ── STORE STATUS ───────────────────────────────────────────────────────────
+
+        const storeOpeningTime =
+                        @Html.Raw(Json.Serialize(storeSettings.OpeningTime ?? "07:00"));
+
+        const storeClosingTime =
+                        @Html.Raw(Json.Serialize(storeSettings.ClosingTime ?? "21:00"));
+
+        const storeTemporarilyClosed =
+                        @Html.Raw(Json.Serialize(storeSettings.IsTemporarilyClosed));
+
+        function parseTimeToMinutes(hhmm) {
+
+            const parts = hhmm.split(':');
+
+            return (
+                parseInt(parts[0], 10) * 60
+            ) + parseInt(parts[1], 10);
+        }
+
+        function formatMinutesAsClock(totalMinutes) {
+
+            const d = new Date();
+
+            d.setHours(
+                Math.floor(totalMinutes / 60),
+                totalMinutes % 60,
+                0,
+                0
+            );
+
+            return d.toLocaleTimeString(
+                [],
+                {
+                    hour: 'numeric',
+                    minute: '2-digit'
+                }
+            );
+        }
+
+        function checkStoreStatus() {
+
+            const banner =
+                document.getElementById('storeBanner');
+
+            const text =
+                document.getElementById('storeStatusText');
+
+            if (!banner || !text) return;
+
+            if (storeTemporarilyClosed) {
+
+                banner.classList.remove('open');
+
+                text.innerText =
+                    `We're Temporarily Closed · Opens ${formatMinutesAsClock(
+                        parseTimeToMinutes(storeOpeningTime)
+                    )}`;
+
+                return;
+            }
+
+            const now = new Date();
+
+            const nowMinutes =
+                (now.getHours() * 60) +
+                now.getMinutes();
+
+            const openMinutes =
+                parseTimeToMinutes(storeOpeningTime);
+
+            const closeMinutes =
+                parseTimeToMinutes(storeClosingTime);
+
+            const open =
+                closeMinutes > openMinutes
+                    ? (
+                        nowMinutes >= openMinutes &&
+                        nowMinutes < closeMinutes
+                    )
+                    : (
+                        nowMinutes >= openMinutes ||
+                        nowMinutes < closeMinutes
+                    );
+
+            if (open) {
+
+                banner.classList.add('open');
+
+                text.innerText =
+                    `We're Open · Closes ${formatMinutesAsClock(closeMinutes)}`;
+
+            }
+            else {
+
+                banner.classList.remove('open');
+
+                text.innerText =
+                    `We're Closed · Opens ${formatMinutesAsClock(openMinutes)}`;
+            }
+        }
+
+        // ── LOYALTY ────────────────────────────────────────────────────────────────
+
+        function updateLoyaltyUI() {
+
+            const goal = 500;
+
+            const display =
+                document.getElementById('loyaltyPoints');
+
+            const fillBar =
+                document.getElementById('loyaltyBarFill');
+
+            const hint =
+                document.getElementById('loyaltyHint');
+
+            if (display) {
+                display.innerText =
+                    loyaltyPts + ' pts';
+            }
+
+            if (fillBar) {
+
+                const pct =
+                    Math.min(
+                        (loyaltyPts / goal) * 100,
+                        100
+                    );
+
+                fillBar.style.width =
+                    pct + '%';
+            }
+
+            if (hint) {
+
+                const remaining =
+                    goal - loyaltyPts;
+
+                hint.innerText =
+                    loyaltyPts >= goal
+                        ? 'You have a reward ready!'
+                        : `${remaining} pts until your next reward`;
+            }
+        }
+
+        // ── FAVORITES ─────────────────────────────────────────────────────────────
+
+        function toggleFav(btn, itemId) {
+
+            event.stopPropagation();
+
+            const id =
+                String(itemId);
+
+            const idx =
+                favoriteIds.indexOf(id);
+
+            if (idx > -1) {
+
+                favoriteIds.splice(idx, 1);
+
+                btn.innerText = '♡';
+
+                btn.classList.remove(
+                    'fav-active'
+                );
+
+            }
+            else {
+
+                favoriteIds.push(id);
+
+                btn.innerText = '❤️';
+
+                btn.classList.add(
+                    'fav-active'
+                );
+            }
+
+            localStorage.setItem(
+                'caferoFavorites',
+                JSON.stringify(favoriteIds)
+            );
+
+            if (
+                document
+                    .getElementById('menuGrid')
+                    .getAttribute('data-current-cat') === 'favorites'
+            ) {
+                filterMenu('favorites');
+            }
+        }
+
+        function restoreFavHearts() {
+
+            document
+                .querySelectorAll('.product-card')
+                .forEach(card => {
+
+                    const id =
+                        card.getAttribute('data-id');
+
+                    if (
+                        favoriteIds.includes(
+                            String(id)
+                        )
+                    ) {
+
+                        const btn =
+                            card.querySelector(
+                                '.fav-heart'
+                            );
+
+                        if (btn) {
+
+                            btn.innerText =
+                                '❤️';
+
+                            btn.classList.add(
+                                'fav-active'
+                            );
+                        }
+                    }
+                });
+        }
+
+        // ── TAB SWITCHER ──────────────────────────────────────────────────────────
+
+        function switchTab(
+            tab,
+            btn
+        ) {
+
+            document.getElementById(
+                'tabMenu'
+            ).style.display =
+                tab === 'menu'
+                    ? 'block'
+                    : 'none';
+
+            document.getElementById(
+                'tabOrders'
+            ).style.display =
+                tab === 'orders'
+                    ? 'block'
+                    : 'none';
+
+            document.getElementById(
+                'catNav'
+            ).style.display =
+                tab === 'menu'
+                    ? 'block'
+                    : 'none';
+
+            document
+                .querySelectorAll('.tab-btn')
+                .forEach(
+                    b =>
+                        b.classList.remove(
+                            'active'
+                        )
+                );
+
+            btn.classList.add(
+                'active'
+            );
+
+            // Close mobile menu after switching tabs
+            closeSidebar();
+        }
+
+        // ── CART TOGGLE ───────────────────────────────────────────────────────────
+
+        function toggleCart() {
+
+            document.getElementById(
+                'cartSidebar'
+            ).classList.toggle(
+                'open'
+            );
+
+            document.getElementById(
+                'cartOverlay'
+            ).classList.toggle(
+                'open'
+            );
+
+            renderCustomerCart();
+        }
+
+        function toggleAddressField() {
+
+            const v =
+                document
+                    .getElementById(
+                        'customerOrderType'
+                    )
+                    .value;
+
+            document.getElementById(
+                'addressContainer'
+            ).style.display =
+                v === 'Delivery'
+                    ? 'block'
+                    : 'none';
+
+            document.getElementById(
+                'minOrderNote'
+            ).style.display =
+                v === 'Delivery'
+                    ? 'block'
+                    : 'none';
+        }
+
+        // ── MODAL ─────────────────────────────────────────────────────────────────
+
+        function openModal(
+            smallId,
+            largeId,
+            itemName,
+            smallPrice,
+            largePrice
+        ) {
+
+            activeSmallId =
+                parseInt(
+                    smallId
+                );
+
+            activeLargeId =
+                largeId !== null
+                    ? parseInt(
+                        largeId
+                    )
+                    : null;
+
+            activeSmallPrice =
+                parseFloat(
+                    smallPrice
+                );
+
+            activeLargePrice =
+                largePrice !== null
+                    ? parseFloat(
+                        largePrice
+                    )
+                    : null;
+
+            activeItemName =
+                itemName;
+
+            const hasSizes =
+                activeLargeId !== null;
+
+            document.getElementById(
+                'modalItemName'
+            ).innerText =
+                itemName;
+
+            document.getElementById(
+                'sizeSection'
+            ).style.display =
+                hasSizes
+                    ? 'block'
+                    : 'none';
+
+            document.getElementById(
+                'smallPrice'
+            ).innerText =
+                '₱' +
+                activeSmallPrice.toFixed(
+                    2
+                );
+
+            document.getElementById(
+                'largePrice'
+            ).innerText =
+                hasSizes
+                    ? '₱' +
+                    activeLargePrice.toFixed(2)
+                    : '';
+
+            document.getElementById(
+                'itemQty'
+            ).value = 1;
+
+            document.getElementById(
+                'itemNotes'
+            ).value = '';
+
+            const radios =
+                document.querySelectorAll(
+                    'input[name="itemSize"]'
+                );
+
+            radios.forEach(
+                radio => {
+
+                    radio.checked =
+                        radio.value === 'Small';
+                }
+            );
+
+            document.getElementById(
+                'sizeModal'
+            ).style.display =
+                'flex';
+        }
+
+        function closeModal() {
+
+            document.getElementById(
+                'sizeModal'
+            ).style.display =
+                'none';
+        }
+
+        function updateQty(change) {
+
+            const el =
+                document.getElementById(
+                    'itemQty'
+                );
+
+            el.value =
+                Math.max(
+                    1,
+                    parseInt(
+                        el.value
+                    ) + change
+                );
+        }
+
+        function confirmAddToCart() {
+
+            if (activeSmallId === null) {
+
+                Swal.fire(
+                    'Error',
+                    'Item not found in menu.',
+                    'error'
+                );
+
+                return;
+            }
+
+            const hasSizes =
+                activeLargeId !== null;
+
+            const size =
+                hasSizes
+                    ? document.querySelector(
+                        'input[name="itemSize"]:checked'
+                    ).value
+                    : 'Regular';
+
+            const qty =
+                parseInt(
+                    document.getElementById(
+                        'itemQty'
+                    ).value
+                );
+
+            const notes =
+                document.getElementById(
+                    'itemNotes'
+                ).value.trim();
+
+            const useLarge =
+                hasSizes &&
+                size === 'Large';
+
+            const productId =
+                useLarge
+                    ? activeLargeId
+                    : activeSmallId;
+
+            const price =
+                useLarge
+                    ? activeLargePrice
+                    : activeSmallPrice;
+
+            const existingIdx =
+                customerCart.findIndex(
+                    i =>
+                        i.id === productId &&
+                        i.size === size &&
+                        i.notes === notes
+                );
+
+            if (existingIdx > -1) {
+
+                customerCart[
+                    existingIdx
+                ].qty += qty;
+
+            }
+            else {
+
+                customerCart.push({
+                    id: productId,
+                    name: activeItemName,
+                    size: size,
+                    qty: qty,
+                    price: price,
+                    notes: notes
+                });
+            }
+
+            localStorage.setItem(
+                'caferoCustomerCart',
+                JSON.stringify(
+                    customerCart
+                )
+            );
+
+            updateCartBadge();
+
+            closeModal();
+
+            Swal.fire({
+
+                title:
+                    'Added! 🛒',
+
+                text:
+                    `${qty}× ${activeItemName}` +
+                    (
+                        hasSizes
+                            ? ' (' + size + ')'
+                            : ''
+                    ) +
+                    ' added to your order.',
+
+                icon:
+                    'success',
+
+                timer:
+                    1200,
+
+                showConfirmButton:
+                    false
+            });
+        }
+
+        // ── CART RENDER ───────────────────────────────────────────────────────────
+
+        function updateCartBadge() {
+
+            const total =
+                customerCart.reduce(
+                    (s, i) =>
+                        s + i.qty,
+                    0
+                );
+
+            const badge =
+                document.getElementById(
+                    'cartBadge'
+                );
+
+            if (badge) {
+
+                badge.style.display =
+                    total > 0
+                        ? 'flex'
+                        : 'none';
+
+                badge.innerText =
+                    total;
+            }
+        }
+
+        function renderCustomerCart() {
+
+            const container =
+                document.getElementById(
+                    'customerCartList'
+                );
+
+            const totalDisplay =
+                document.getElementById(
+                    'customerCartTotal'
+                );
+
+            updateCartBadge();
+
+            if (!container) return;
+
+            if (customerCart.length === 0) {
+
+                container.innerHTML =
+                    '<div class="empty-cart-msg">Your cart is empty.</div>';
+
+                if (totalDisplay) {
+                    totalDisplay.innerText =
+                        '₱0.00';
+                }
+
+                return;
+            }
+
+            let html = '';
+            let grandTotal = 0;
+
+            customerCart.forEach(
+                (item, idx) => {
+
+                    const sub =
+                        item.qty *
+                        item.price;
+
+                    grandTotal +=
+                        sub;
+
+                    html += `
+                                    <div class="cart-item-row">
+
+                                        <div class="cart-item-info">
+                                            <h4>${item.name}</h4>
+
+                                            <p>
+                                                ${item.size}
+                                                · ₱${item.price.toFixed(2)}/ea
+                                                ${item.notes
+                            ? '<br><em class="cart-notes">📝 ' +
+                            item.notes +
+                            '</em>'
+                            : ''
+                        }
+                                            </p>
+                                        </div>
+
+                                        <div class="cart-item-controls">
+
+                                            <button
+                                                class="cart-qty-btn"
+                                                onclick="updateCustomerQty(${idx},-1)">
+                                                -
+                                            </button>
+
+                                            <span class="cart-qty-val">
+                                                ${item.qty}
+                                            </span>
+
+                                            <button
+                                                class="cart-qty-btn"
+                                                onclick="updateCustomerQty(${idx},1)">
+                                                +
+                                            </button>
+
+                                        </div>
+
+                                        <div class="cart-subtotal-val">
+                                            ₱${sub.toFixed(2)}
+                                        </div>
+
+                                    </div>`;
+                }
+            );
+
+            container.innerHTML =
+                html;
+
+            if (totalDisplay) {
+
+                totalDisplay.innerText =
+                    '₱' +
+                    grandTotal.toFixed(
+                        2
+                    );
+            }
+        }
+
+        function updateCustomerQty(
+            index,
+            change
+        ) {
+
+            customerCart[index].qty +=
+                change;
+
+            if (
+                customerCart[index].qty <=
+                0
+            ) {
+
+                customerCart.splice(
+                    index,
+                    1
+                );
+            }
+
+            localStorage.setItem(
+                'caferoCustomerCart',
+                JSON.stringify(
+                    customerCart
+                )
+            );
+
+            renderCustomerCart();
+        }
+
+        // ── SUBMIT ORDER VIA API ──────────────────────────────────────────────────
+
+        async function submitOnlineOrder() {
+
+            if (customerCart.length === 0) {
+
+                Swal.fire(
+                    'Empty Cart',
+                    'Please add items before checking out.',
+                    'warning'
+                );
+
+                return;
+            }
+
+            const orderType =
+                document.getElementById(
+                    'customerOrderType'
+                ).value;
+
+            const paymentMethod =
+                document.getElementById(
+                    'customerPaymentMethod'
+                ).value;
+
+            const address =
+                document.getElementById(
+                    'customerAddress'
+                )?.value.trim() || '';
+
+            const grandTotal =
+                customerCart.reduce(
+                    (s, i) =>
+                        s +
+                        i.qty *
+                        i.price,
+                    0
+                );
+
+            if (
+                orderType === 'Delivery' &&
+                !address
+            ) {
+
+                Swal.fire(
+                    'Missing Address',
+                    'Please enter your delivery address.',
+                    'warning'
+                );
+
+                return;
+            }
+
+            if (
+                orderType === 'Delivery' &&
+                grandTotal < 200
+            ) {
+
+                Swal.fire(
+                    'Minimum Order',
+                    'Delivery requires a minimum order of ₱200.',
+                    'warning'
+                );
+
+                return;
+            }
+
+            const btn =
+                document.getElementById(
+                    'checkoutBtn'
+                );
+
+            btn.disabled =
+                true;
+
+            btn.innerText =
+                'Sending to kitchen...';
+
+            const payload = {
+
+                OrderType:
+                    orderType,
+
+                PaymentMethod:
+                    paymentMethod,
+
+                DeliveryAddress:
+                    orderType === 'Delivery'
+                        ? address
+                        : null,
+
+                Items:
+                    customerCart.map(
+                        i => ({
+
+                            ProductId:
+                                i.id,
+
+                            Quantity:
+                                i.qty,
+
+                            Price:
+                                i.price,
+
+                            Size:
+                                i.size,
+
+                            SpecialInstructions:
+                                i.notes || ''
+                        })
+                    )
+            };
+
+            try {
+
+                const response =
+                    await fetch(
+                        '/Customer/PlaceOnlineOrder',
+                        {
+                            method:
+                                'POST',
+
+                            headers: {
+                                'Content-Type':
+                                    'application/json'
+                            },
+
+                            body:
+                                JSON.stringify(
+                                    payload
+                                )
+                        }
+                    );
+
+                if (response.ok) {
+
+                    const result =
+                        await response.json();
+
+                    const earned =
+                        Math.floor(
+                            grandTotal /
+                            10
+                        );
+
+                    loyaltyPts +=
+                        earned;
+
+                    localStorage.setItem(
+                        'caferoLoyaltyPoints',
+                        loyaltyPts
+                    );
+
+                    updateLoyaltyUI();
+
+                    Swal.fire({
+
+                        title:
+                            'Order Received!',
+
+                        html:
+                            `<b>Order #${result.orderId}</b> sent to the kitchen.<br>
+                                        Estimated wait: <b>15–20 minutes</b><br>
+                                        <small>+${earned} loyalty points earned!</small>`,
+
+                        icon:
+                            'success'
+
+                    }).then(() => {
+
+                        customerCart =
+                            [];
+
+                        localStorage.removeItem(
+                            'caferoCustomerCart'
+                        );
+
+                        location.reload();
+                    });
+
+                }
+                else {
+
+                    const err =
+                        await response
+                            .json()
+                            .catch(
+                                () => ({})
+                            );
+
+                    Swal.fire(
+                        'Checkout Failed',
+                        err.message ||
+                        'Something went wrong. Please try again.',
+                        'error'
+                    );
+                }
+
+            }
+            catch (e) {
+
+                Swal.fire(
+                    'Network Error',
+                    'Could not reach the server.',
+                    'error'
+                );
+
+            }
+            finally {
+
+                btn.disabled =
+                    false;
+
+                btn.innerText =
+                    'Send Order to Kitchen';
+            }
+        }
+
+        // ── MENU FILTER ───────────────────────────────────────────────────────────
+
+        function filterMenu(
+            category,
+            btnEl
+        ) {
+
+            if (category) {
+
+                document
+                    .querySelectorAll('.cat-btn')
+                    .forEach(
+                        b =>
+                            b.classList.remove(
+                                'active'
+                            )
+                    );
+
+                if (btnEl) {
+                    btnEl.classList.add(
+                        'active'
+                    );
+                }
+
+                document
+                    .getElementById(
+                        'menuGrid'
+                    )
+                    .setAttribute(
+                        'data-current-cat',
+                        category
+                    );
+            }
+
+            const currentCat =
+                document
+                    .getElementById(
+                        'menuGrid'
+                    )
+                    .getAttribute(
+                        'data-current-cat'
+                    );
+
+            const search =
+                (
+                    document
+                        .getElementById(
+                            'menuSearch'
+                        )
+                        .value ||
+                    ''
+                ).toLowerCase();
+
+            document
+                .querySelectorAll(
+                    '.product-card'
+                )
+                .forEach(
+                    card => {
+
+                        const cardCat =
+                            (
+                                card.getAttribute(
+                                    'data-category'
+                                ) || ''
+                            )
+                                .toLowerCase()
+                                .replace(
+                                    /\s/g,
+                                    ''
+                                );
+
+                        const cardName =
+                            (
+                                card.getAttribute(
+                                    'data-name'
+                                ) || ''
+                            ).toLowerCase();
+
+                        const cardId =
+                            card.getAttribute(
+                                'data-id'
+                            );
+
+                        let matchCat;
+
+                        if (
+                            currentCat ===
+                            'all'
+                        ) {
+
+                            matchCat =
+                                true;
+
+                        }
+                        else if (
+                            currentCat ===
+                            'favorites'
+                        ) {
+
+                            matchCat =
+                                favoriteIds.includes(
+                                    String(
+                                        cardId
+                                    )
+                                );
+
+                        }
+                        else {
+
+                            matchCat =
+                                cardCat.includes(
+                                    currentCat.replace(
+                                        /\s/g,
+                                        ''
+                                    )
+                                );
+                        }
+
+                        const matchSearch =
+                            !search ||
+                            cardName.includes(
+                                search
+                            );
+
+                        card.style.display =
+                            (
+                                matchCat &&
+                                matchSearch
+                            )
+                                ? ''
+                                : 'none';
+                    }
+                );
+        }
+
+        // ── FLOATING CHAT WIDGET LOGIC ─────────────────────────────────────────────
+
+        let chatConn;
+
+        let supportAgent = null;
+
+        const currentUser =
+            "@(User.FindFirst("Username")?.Value ?? "Customer")";
+
+        function toggleChatWidget() {
+
+            const chatWindow =
+                document.getElementById(
+                    'chatWindow'
+                );
+
+            const dot =
+                document.getElementById(
+                    'chatBadgeDot'
+                );
+
+            chatWindow.classList.toggle(
+                'open'
+            );
+
+            if (
+                chatWindow.classList.contains(
+                    'open'
+                ) &&
+                dot
+            ) {
+
+                dot.style.display =
+                    'none';
+            }
+        }
+
+        function handleChatKey(
+            event
+        ) {
+
+            if (
+                event.key ===
+                'Enter'
+            ) {
+
+                sendChatMessage();
+            }
+        }
+
+        function sendChatMessage() {
+
+            const input =
+                document.getElementById(
+                    'chatInput'
+                );
+
+            const messageText =
+                input.value.trim();
+
+            if (!messageText) return;
+
+            if (!supportAgent) {
+
+                appendChatMessage(
+                    "We couldn't reach a staff member right now. Please try again shortly.",
+                    'bot',
+                    'System'
+                );
+
+                return;
+            }
+
+            if (
+                chatConn &&
+                chatConn.state ===
+                signalR.HubConnectionState.Connected
+            ) {
+
+                chatConn
+                    .invoke(
+                        "SendMessage",
+                        supportAgent,
+                        messageText
+                    )
+                    .catch(
+                        err =>
+                            console.error(
+                                "Error sending message:",
+                                err
+                            )
+                    );
+
+            }
+            else {
+
+                appendChatMessage(
+                    messageText,
+                    'user',
+                    currentUser
+                );
+
+                setTimeout(
+                    () => {
+
+                        appendChatMessage(
+                            "Connecting you back to our customer service...",
+                            'bot',
+                            "System"
+                        );
+
+                    },
+                    1000
+                );
+            }
+
+            input.value =
+                '';
+        }
+
+        function appendChatMessage(
+            text,
+            alignment,
+            displayName
+        ) {
+
+            const body =
+                document.getElementById(
+                    'chatBody'
+                );
+
+            const now =
+                new Date();
+
+            const timeString =
+                now.toLocaleTimeString(
+                    [],
+                    {
+                        hour:
+                            '2-digit',
+                        minute:
+                            '2-digit'
+                    }
+                );
+
+            const msgDiv =
+                document.createElement(
+                    'div'
+                );
+
+            msgDiv.className =
+                `chat-msg ${alignment}`;
+
+            const staticMsg =
+                body.querySelector(
+                    ".system-message"
+                );
+
+            if (staticMsg) {
+
+                staticMsg.remove();
+            }
+
+            const label =
+                displayName
+                    ? `${displayName} • `
+                    : '';
+
+            msgDiv.innerHTML = `
+                            <div class="msg-bubble">
+                                ${escapeHTML(text)}
+                            </div>
+
+                            <span class="msg-time">
+                                ${label}${timeString}
+                            </span>
+                        `;
+
+            body.appendChild(
+                msgDiv
+            );
+
+            body.scrollTop =
+                body.scrollHeight;
+        }
+
+        function escapeHTML(str) {
+
+            return str.replace(
+                /[&<>'"]/g,
+                tag =>
+                ({
+                    '&':
+                        '&amp;',
+                    '<':
+                        '&lt;',
+                    '>':
+                        '&gt;',
+                    "'":
+                        '&#39;',
+                    '"':
+                        '&quot;'
+                }[tag] || tag)
+            );
+        }
+
+        async function loadChatHistory() {
+
+            if (!supportAgent)
+                return;
+
+            try {
+
+                const res =
+                    await fetch(
+                        `/Chat/GetChatHistory?chatWith=${encodeURIComponent(supportAgent)}`
+                    );
+
+                if (!res.ok)
+                    return;
+
+                const history =
+                    await res.json();
+
+                const body =
+                    document.getElementById(
+                        'chatBody'
+                    );
+
+                if (history.length > 0) {
+
+                    const staticMsg =
+                        body.querySelector(
+                            ".system-message"
+                        );
+
+                    if (staticMsg) {
+
+                        staticMsg.remove();
+                    }
+                }
+
+                history.forEach(
+                    msg => {
+
+                        const isUser =
+                            msg.sender ===
+                            currentUser;
+
+                        appendChatMessage(
+                            msg.text,
+                            isUser
+                                ? 'user'
+                                : 'bot',
+                            msg.sender
+                        );
+                    }
+                );
+
+            }
+            catch (err) {
+
+                console.error(
+                    "Failed to load chat history:",
+                    err
+                );
+            }
+        }
+
+        // ── INIT ──────────────────────────────────────────────────────────────────
+
+        window.onload =
+            async () => {
+
+                updateCartBadge();
+
                 updateLoyaltyUI();
 
-                Swal.fire({
-                    title: 'Order Received! 🎉',
-                    html:  `<b>Order #${result.orderId}</b> sent to the kitchen.<br>
-                            Estimated wait: <b>15–20 minutes</b><br>
-                            <small>+${earned} loyalty points earned!</small>`,
-                    icon:  'success'
-                }).then(() => {
-                    customerCart = [];
-                    localStorage.removeItem('caferoCustomerCart');
-                    location.reload();
-                });
-            } else {
-                const err = await response.json().catch(() => ({}));
-                Swal.fire('Checkout Failed', err.message || 'Something went wrong. Please try again.', 'error');
-            }
-        } catch (e) {
-            Swal.fire('Network Error', 'Could not reach the server.', 'error');
-        } finally {
-            btn.disabled = false;
-            btn.innerText = 'Send Order to Kitchen';
-        }
-    }
+                checkStoreStatus();
 
-    // ── MENU FILTER ───────────────────────────────────────────────────────────
-    function filterMenu(category, btnEl) {
-        if (category) {
-            document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-            if (btnEl) btnEl.classList.add('active');
-            document.getElementById('menuGrid').setAttribute('data-current-cat', category);
-        }
+                restoreFavHearts();
 
-        const currentCat = document.getElementById('menuGrid').getAttribute('data-current-cat');
-        const search     = (document.getElementById('menuSearch').value || '').toLowerCase();
+                try {
 
-        document.querySelectorAll('.product-card').forEach(card => {
-            const cardCat   = (card.getAttribute('data-category') || '').toLowerCase().replace(/\s/g, '');
-            const cardName = (card.getAttribute('data-name') || '').toLowerCase();
-            const cardId   = card.getAttribute('data-id');
+                    const res =
+                        await fetch(
+                            '/Chat/GetSupportAgent'
+                        );
 
-            let matchCat;
-            if      (currentCat === 'all')       matchCat = true;
-            else if (currentCat === 'favorites')  matchCat = favoriteIds.includes(String(cardId));
-            else matchCat = cardCat.includes(currentCat.replace(/\s/g, ''));
+                    if (res.ok) {
 
-            const matchSearch = !search || cardName.includes(search);
-            card.style.display = (matchCat && matchSearch) ? '' : 'none';
-        });
-    }
+                        const data =
+                            await res.json();
 
-    // ── FLOATING CHAT WIDGET LOGIC (SIGNALR INTEGRATION) ──────────────────────
-    let chatConn;
-    let supportAgent = null; // resolved staff username the customer talks to
+                        supportAgent =
+                            data.agent;
+                    }
 
-    // This must be the users.username value (matches the "Username" claim set
-    // at login), not the display/full name, or message routing breaks.
-    const currentUser = "@(User.FindFirst("Username")?.Value ?? "Customer")";
+                }
+                catch (err) {
 
-    function toggleChatWidget() {
-        const chatWindow = document.getElementById('chatWindow');
-        const dot = document.getElementById('chatBadgeDot');
-        
-        chatWindow.classList.toggle('open');
-        
-        // Hide red dot notifier on first click
-        if (chatWindow.classList.contains('open') && dot) {
-            dot.style.display = 'none';
-        }
-    }
+                    console.error(
+                        "Failed to resolve support agent:",
+                        err
+                    );
+                }
 
-    function handleChatKey(event) {
-        if (event.key === 'Enter') {
-            sendChatMessage();
-        }
-    }
+                chatConn =
+                    new signalR.HubConnectionBuilder()
+                        .withUrl(
+                            "/chatHub"
+                        )
+                        .build();
 
-    function sendChatMessage() {
-        const input = document.getElementById('chatInput');
-        const messageText = input.value.trim();
-        if (!messageText) return;
+                chatConn
+                    .start()
+                    .then(() => {
 
-        if (!supportAgent) {
-            appendChatMessage("We couldn't reach a staff member right now. Please try again shortly.", 'bot', 'System');
-            return;
-        }
+                        console.log(
+                            "Customer SignalR Chat Connected!"
+                        );
 
-        if (chatConn && chatConn.state === signalR.HubConnectionState.Connected) {
-            chatConn.invoke("SendMessage", supportAgent, messageText)
-                .catch(err => console.error("Error sending message:", err));
-        } else {
-            // Echo locally when disconnected
-            appendChatMessage(messageText, 'user', currentUser);
-            setTimeout(() => {
-                appendChatMessage("Connecting you back to our customer service...", 'bot', "System");
-            }, 1000);
-        }
+                        loadChatHistory();
+                    })
+                    .catch(
+                        err =>
+                            console.error(
+                                "SignalR Startup Error:",
+                                err
+                            )
+                    );
 
-        input.value = '';
-    }
+                chatConn.on(
+                    "ReceiveMessage",
+                    function(
+                        sender,
+                        receiver,
+                        message,
+                        time
+                    ) {
 
-    function appendChatMessage(text, alignment, displayName) {
-        const body = document.getElementById('chatBody');
-        const now = new Date();
-        const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        const isUser =
+                            sender ===
+                            currentUser;
 
-        const msgDiv = document.createElement('div');
-        msgDiv.className = `chat-msg ${alignment}`;
+                        const alignment =
+                            isUser
+                                ? 'user'
+                                : 'bot';
 
-        // Clear dynamic fallback warning or empty text if it exists
-        const staticMsg = body.querySelector(".system-message");
-        if (staticMsg) {
-            staticMsg.remove();
-        }
+                        appendChatMessage(
+                            message,
+                            alignment,
+                            sender
+                        );
 
-        const label = displayName ? `${displayName} • ` : '';
-        msgDiv.innerHTML = `
-            <div class="msg-bubble">${escapeHTML(text)}</div>
-            <span class="msg-time">${label}${timeString}</span>
-        `;
+                        const chatWindow =
+                            document.getElementById(
+                                'chatWindow'
+                            );
 
-        body.appendChild(msgDiv);
-        body.scrollTop = body.scrollHeight; // Auto-scroll to bottom
-    }
+                        const dot =
+                            document.getElementById(
+                                'chatBadgeDot'
+                            );
 
-    function escapeHTML(str) {
-        return str.replace(/[&<>'"]/g, 
-            tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
-        );
-    }
+                        if (
+                            !chatWindow.classList.contains(
+                                'open'
+                            ) &&
+                            !isUser &&
+                            dot
+                        ) {
 
-    async function loadChatHistory() {
-        if (!supportAgent) return;
+                            dot.style.display =
+                                'block';
+                        }
+                    }
+                );
+            };
 
-        try {
-            const res = await fetch(`/Chat/GetChatHistory?chatWith=${encodeURIComponent(supportAgent)}`);
-            if (!res.ok) return;
+        window.onclick =
+            e => {
 
-            const history = await res.json();
-            const body = document.getElementById('chatBody');
-            if (history.length > 0) {
-                const staticMsg = body.querySelector(".system-message");
-                if (staticMsg) staticMsg.remove();
-            }
+                if (
+                    e.target ===
+                    document.getElementById(
+                        'sizeModal'
+                    )
+                ) {
 
-            history.forEach(msg => {
-                const isUser = msg.sender === currentUser;
-                appendChatMessage(msg.text, isUser ? 'user' : 'bot', msg.sender);
-            });
-        } catch (err) {
-            console.error("Failed to load chat history:", err);
-        }
-    }
+                    closeModal();
+                }
+            };
 
-    // ── INIT ──────────────────────────────────────────────────────────────────
-    window.onload = async () => {
-        updateCartBadge();
-        updateLoyaltyUI();
-        checkStoreStatus();
-        restoreFavHearts();
-
-        // Resolve which staff account this customer's messages should go to.
-        try {
-            const res = await fetch('/Chat/GetSupportAgent');
-            if (res.ok) {
-                const data = await res.json();
-                supportAgent = data.agent;
-            }
-        } catch (err) {
-            console.error("Failed to resolve support agent:", err);
-        }
-
-        // ── Real-Time SignalR Connection Setup ──
-        chatConn = new signalR.HubConnectionBuilder()
-            .withUrl("/chatHub")
-            .build();
-
-        chatConn.start()
-            .then(() => {
-                console.log("Customer SignalR Chat Connected!");
-                loadChatHistory();
-            })
-            .catch(err => console.error("SignalR Startup Error:", err));
-
-        chatConn.on("ReceiveMessage", function(sender, receiver, message, time) {
-            // The hub only delivers messages that belong to this conversation
-            // (see ChatHub group routing), so no client-side filtering needed.
-            const isUser = (sender === currentUser);
-            const alignment = isUser ? 'user' : 'bot';
-
-            appendChatMessage(message, alignment, sender);
-
-            // Show red notification badge if the chat window is closed
-            const chatWindow = document.getElementById('chatWindow');
-            const dot = document.getElementById('chatBadgeDot');
-            if (!chatWindow.classList.contains('open') && !isUser && dot) {
-                dot.style.display = 'block';
-            }
-        });
-    };
-
-    window.onclick = e => {
-        if (e.target === document.getElementById('sizeModal')) closeModal();
-    };
 </script>
 </body>
 </html>
+

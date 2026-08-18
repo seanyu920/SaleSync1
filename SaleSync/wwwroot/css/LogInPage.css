@@ -1,28 +1,49 @@
 ﻿/* ==========================================================================
-   1. BRAND DESIGN SYSTEM & TOKENS
+   CAFÈRO — LOGIN PAGE
+   Premium dark moss + gold design
+   Inline login error — no SweetAlert
+   Copy and paste into:
+
+   wwwroot/css/LogInPage.css
    ========================================================================== */
-:root {
-    /* Lifted up from deep pitch black to a premium, warm dark moss slate */
-    --bg-main: #0d120f;
-    /* Elevated surface tone so cards and layout containers clearly pop */
-    --bg-card: #18221c;
-    /* Higher illumination shift on active hover states */
-    --bg-card-hover: #212e26;
-    /* Clean outline boundaries to prevent dark layout sections from bleeding */
-    --border-color: rgba(223, 183, 86, 0.18);
-    --border-subtle: rgba(255, 255, 255, 0.08);
-    /* Typography Contrasts */
-    --text-pure: #ffffff;
-    --text-muted: #a0b2a7; /* Brightened mid-tone gray-sage for premium readability */
-    /* Cafèro Theme Branding Accents */
-    --accent-gold: #dfb756;
-    --accent-gold-hover: #eed074;
-    --gold-glow: rgba(223, 183, 86, 0.15);
-}
+
 
 /* ==========================================================================
-   2. GLOBAL RESETS & BASE STYLES
+   1. BRAND DESIGN SYSTEM
    ========================================================================== */
+
+:root {
+    --bg-main: #0a0f0b;
+    --bg-main-soft: #0d140f;
+    --bg-card: rgba(18, 26, 21, 0.90);
+    --bg-card-solid: #182018;
+    --bg-card-hover: #202a22;
+    --input-bg: rgba(8, 13, 10, 0.72);
+    --border-color: rgba(223, 183, 86, 0.20);
+    --border-gold: rgba(223, 183, 86, 0.42);
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --text-pure: #ffffff;
+    --text-soft: #f2ede4;
+    --text-muted: rgba(242, 237, 228, 0.62);
+    --text-muted-strong: rgba(242, 237, 228, 0.82);
+    --accent-gold: #dfb756;
+    --accent-gold-light: #eed074;
+    --accent-gold-bright: #f3d983;
+    --gold-soft: rgba(223, 183, 86, 0.08);
+    --gold-glow: rgba(223, 183, 86, 0.14);
+    /* Login Error */
+
+    --error-main: #e48b8b;
+    --error-light: #f0b2b2;
+    --error-bg: rgba(185, 61, 61, 0.10);
+    --error-border: rgba(225, 100, 100, 0.30);
+}
+
+
+/* ==========================================================================
+   2. GLOBAL RESET
+   ========================================================================== */
+
 * {
     margin: 0;
     padding: 0;
@@ -30,50 +51,59 @@
     font-family: 'Outfit', sans-serif;
 }
 
-body {
-    background-color: var(--bg-main);
-    color: var(--text-pure);
-    transition: background-color 0.3s ease;
+html {
+    scroll-behavior: smooth;
 }
 
+body {
+    min-width: 320px;
+    min-height: 100vh;
+    background: var(--bg-main);
+    color: var(--text-pure);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+
 /* ==========================================================================
-   3. HOMEPAGE COMPONENTS (Lightened & Enhanced)
+   3. SHARED COMPONENT SUPPORT
    ========================================================================== */
 
-/* Navbar & Dropdowns */
 .navbar-custom {
-    background-color: rgba(13, 18, 15, 0.95);
-    backdrop-filter: blur(10px);
+    background-color: rgba(10, 15, 11, 0.96);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
     border-bottom: 1px solid var(--border-subtle);
 }
 
 .nav-dropdown-menu {
-    background-color: #17211b;
+    background-color: #172019;
     border: 1px solid var(--border-color);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.55);
 }
 
 .nav-dropdown-item:hover {
     background-color: var(--bg-card-hover);
-    color: var(--accent-gold);
+    color: var(--accent-gold-light);
 }
 
-/* Menu Category Selection Grid */
+
 .category-card {
-    background-color: var(--bg-card);
+    background-color: var(--bg-card-solid);
     border: 1px solid var(--border-subtle);
     border-radius: 16px;
     padding: 35px 25px;
     text-align: center;
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease, border-color 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 5px 22px rgba(0, 0, 0, 0.30);
 }
 
     .category-card:hover {
         background-color: var(--bg-card-hover);
         border-color: var(--accent-gold);
         transform: translateY(-4px);
-        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45), 0 0 20px var(--gold-glow);
+        box-shadow: 0 14px 34px rgba(0, 0, 0, 0.48), 0 0 22px var(--gold-glow);
     }
 
     .category-card p {
@@ -88,38 +118,39 @@ body {
         letter-spacing: 1px;
     }
 
-/* Product Menu Popups / Item Cards */
+
 .modal-content-wrapper {
     background-color: #141c17;
     border: 1px solid var(--border-color);
-    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.7);
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.72);
 }
 
 .menu-item-item-card {
-    background-color: var(--bg-card);
+    background-color: var(--bg-card-solid);
     border: 1px solid var(--border-subtle);
     border-radius: 12px;
 }
 
-/* Visit Our Escape / Contact Info Blocks */
+
 .contact-info-card {
     display: flex;
     align-items: center;
-    background-color: var(--bg-card);
+    background-color: var(--bg-card-solid);
     border: 1px solid var(--border-subtle);
     border-radius: 14px;
     padding: 20px;
     margin-bottom: 15px;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
 }
 
     .contact-info-card:hover {
         background-color: var(--bg-card-hover);
         border-color: var(--border-color);
+        transform: translateY(-2px);
     }
 
 .contact-icon-box {
-    background-color: rgba(223, 183, 86, 0.1);
+    background-color: rgba(223, 183, 86, 0.10);
     border: 1px solid var(--border-color);
     border-radius: 10px;
     padding: 12px;
@@ -141,7 +172,6 @@ body {
     font-size: 15px;
 }
 
-/* SVG Icon Styling */
 .contact-icon svg {
     width: 22px;
     height: 22px;
@@ -152,7 +182,6 @@ body {
     stroke-linejoin: round;
 }
 
-/* Neutralized Contact Item */
 .contact-item {
     display: flex;
     align-items: center;
@@ -170,291 +199,531 @@ body {
         box-shadow: none;
     }
 
+
 /* ==========================================================================
-   4. FULL-SCREEN BACKGROUND LOGIN LAYOUT (Enhanced Vignette & Depth)
+   4. LOGIN PAGE CONTAINER
    ========================================================================== */
+
 .login-split-container {
     position: relative;
+    width: 100%;
+    min-height: 100vh;
     display: flex;
-    flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    min-height: 100vh;
-    width: 100%;
-    max-width: 1200px;
+    max-width: 1380px;
     margin: 0 auto;
-    padding: 40px;
-    gap: 80px;
+    padding: 55px 70px;
+    gap: 90px;
+    isolation: isolate;
 }
 
-    /* Base layer: full window background image */
+
+    /* ==========================================================================
+   5. FULL-SCREEN BACKGROUND
+   ========================================================================== */
+
     .login-split-container::before {
         content: '';
         position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: url('/images/HomePage2.jpg') center/cover no-repeat;
-        filter: brightness(0.85) contrast(1.05) saturate(1.1);
-        z-index: -2;
-        transform: scale(1.02);
+        inset: 0;
+        background: linear-gradient( 90deg, rgba(6, 10, 7, 0.84) 0%, rgba(8, 12, 9, 0.68) 42%, rgba(8, 12, 9, 0.76) 100% ), url('/images/HomePage2.jpg') center center / cover no-repeat;
+        filter: brightness(0.58) contrast(1.08) saturate(0.88);
+        transform: scale(1.03);
+        z-index: -3;
     }
 
-    /* Tint layer: dual radial gradient for vignette & golden warm accent */
+
+    /* ==========================================================================
+   6. BACKGROUND VIGNETTE
+   ========================================================================== */
+
     .login-split-container::after {
         content: '';
         position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: radial-gradient(circle at 78% 50%, rgba(223, 183, 86, 0.07) 0%, transparent 45%), radial-gradient(ellipse at center, rgba(13, 18, 15, 0.5) 0%, rgba(7, 10, 8, 0.92) 100%);
+        inset: 0;
+        background: radial-gradient( circle at 76% 50%, rgba(223, 183, 86, 0.10) 0%, rgba(223, 183, 86, 0.035) 22%, transparent 48% ), radial-gradient( ellipse at center, rgba(7, 11, 8, 0.08) 0%, rgba(4, 7, 5, 0.88) 100% );
+        z-index: -2;
+        pointer-events: none;
+    }
+
+
+    /* ==========================================================================
+   7. LEFT WATERMARK
+   ========================================================================== */
+
+    .login-split-container .brand-content::before {
+        content: 'CAFÈRO';
+        position: absolute;
+        left: -88px;
+        top: 50%;
+        transform: translateY(-50%) rotate(-90deg);
+        font-family: 'Merriweather', serif;
+        font-size: clamp(100px, 11vw, 175px);
+        font-weight: 900;
+        letter-spacing: 12px;
+        line-height: 1;
+        color: rgba(242, 237, 228, 0.028);
+        white-space: nowrap;
+        pointer-events: none;
+        user-select: none;
         z-index: -1;
     }
 
-/* Brand content container on left side */
+
+/* ==========================================================================
+   8. BRAND CONTENT
+   ========================================================================== */
+
 .brand-content {
+    position: relative;
     flex: 1;
+    max-width: 525px;
     text-align: left;
-    max-width: 480px;
+    z-index: 1;
 }
+
+    .brand-content::after {
+        content: '';
+        position: absolute;
+        left: -30px;
+        top: 10px;
+        width: 2px;
+        height: 190px;
+        background: linear-gradient( to bottom, transparent, rgba(223, 183, 86, 0.48), transparent );
+        box-shadow: 0 0 15px rgba(223, 183, 86, 0.08);
+        pointer-events: none;
+    }
+
+
+/* ==========================================================================
+   9. CAFÈRO LOGO
+   ========================================================================== */
 
 .login-logo {
-    font-family: 'Playfair Display', serif;
-    font-size: 64px;
-    font-weight: 800;
-    margin-bottom: 4px;
-    letter-spacing: -1.5px;
+    font-family: 'Merriweather', serif;
+    font-size: clamp(52px, 5.4vw, 76px);
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 8px;
+    letter-spacing: -2px;
     color: var(--text-pure);
-    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.9);
+    text-shadow: 0 5px 22px rgba(0, 0, 0, 0.82), 0 0 30px rgba(255, 255, 255, 0.035);
 }
 
+
+/* ==========================================================================
+   10. SALESYNC LABEL
+   ========================================================================== */
+
 .software-tag {
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 2.5px;
-    color: rgba(255, 255, 255, 0.7);
+    display: inline-flex;
+    align-items: center;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 2.8px;
+    color: rgba(255, 255, 255, 0.68);
     text-transform: uppercase;
-    margin-bottom: 24px;
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
+    margin-bottom: 28px;
+    padding: 7px 11px;
+    border: 1px solid rgba(223, 183, 86, 0.20);
+    border-radius: 999px;
+    background: rgba(223, 183, 86, 0.055);
+    box-shadow: 0 7px 20px rgba(0, 0, 0, 0.20);
 }
 
     .software-tag strong {
-        color: var(--accent-gold);
+        color: var(--accent-gold-light);
+        margin-left: 4px;
     }
 
+
+/* ==========================================================================
+   11. BRAND DESCRIPTION
+   ========================================================================== */
+
 .brand-content p {
+    max-width: 500px;
     font-size: 16px;
-    line-height: 1.7;
-    color: #e2ece6;
+    line-height: 1.82;
+    color: var(--text-muted-strong);
     font-weight: 300;
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.88);
 }
 
-/* Right side login card wrapper */
+
+/* ==========================================================================
+   12. LOGIN RIGHT
+   ========================================================================== */
+
 .login-right {
-    flex: 1;
+    flex: 0 0 410px;
     display: flex;
     justify-content: flex-end;
-    max-width: 440px;
+    position: relative;
     z-index: 2;
 }
 
-/* Entire login card with golden highlight border & deep glassmorphism */
+
+/* ==========================================================================
+   13. LOGIN CARD
+   ========================================================================== */
+
 .login-card {
     width: 100%;
-    background: rgba(18, 25, 21, 0.82);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid var(--border-subtle);
+    background: linear-gradient( 145deg, rgba(24, 33, 27, 0.92), rgba(13, 19, 15, 0.90) );
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(255, 255, 255, 0.085);
     border-top: 2px solid var(--accent-gold);
-    border-radius: 20px;
-    padding: 42px 36px;
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75), 0 0 30px rgba(223, 183, 86, 0.08);
+    border-radius: 22px;
+    padding: 40px 34px 34px;
+    box-shadow: 0 28px 70px rgba(0, 0, 0, 0.72), 0 0 45px rgba(223, 183, 86, 0.075), inset 0 1px 0 rgba(255, 255, 255, 0.025);
+    position: relative;
+    overflow: hidden;
 }
+
+    .login-card::before {
+        content: '';
+        position: absolute;
+        top: -180px;
+        right: -150px;
+        width: 320px;
+        height: 320px;
+        border-radius: 50%;
+        background: radial-gradient( circle, rgba(223, 183, 86, 0.11), transparent 70% );
+        filter: blur(25px);
+        pointer-events: none;
+    }
+
+
+/* ==========================================================================
+   14. LOGIN HEADER
+   ========================================================================== */
 
 .login-header {
+    position: relative;
+    z-index: 1;
     text-align: center;
-    margin-bottom: 32px;
+    margin-bottom: 30px;
 }
 
-/* Golden glowing profile avatar circle */
+
+/* ==========================================================================
+   15. USER ICON
+   ========================================================================== */
+
 .top-user-icon {
-    width: 64px;
-    height: 64px;
+    width: 62px;
+    height: 62px;
     margin: 0 auto 16px;
-    background: rgba(223, 183, 86, 0.1);
-    border: 1px solid var(--border-color);
+    background: radial-gradient( circle, rgba(223, 183, 86, 0.13), rgba(223, 183, 86, 0.045) );
+    border: 1px solid var(--border-gold);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 0 20px var(--gold-glow);
+    box-shadow: 0 0 25px rgba(223, 183, 86, 0.10), inset 0 0 20px rgba(223, 183, 86, 0.035);
 }
 
     .top-user-icon svg {
-        width: 28px;
-        height: 28px;
-        stroke: var(--accent-gold);
+        width: 27px;
+        height: 27px;
+        stroke: var(--accent-gold-light);
+        filter: drop-shadow(0 0 5px rgba(223, 183, 86, 0.20));
     }
 
+
+/* ==========================================================================
+   16. LOGIN HEADING
+   ========================================================================== */
+
 .login-header h2 {
-    font-size: 28px;
-    font-weight: 800;
-    color: var(--accent-gold);
-    margin-bottom: 6px;
-    letter-spacing: -0.5px;
+    font-family: 'Merriweather', serif;
+    font-size: 27px;
+    font-weight: 900;
+    color: var(--text-pure);
+    margin-bottom: 7px;
+    letter-spacing: -0.6px;
 }
 
 .login-header p {
     color: var(--text-muted);
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 400;
 }
 
-/* Form Fields & Input Wrappers */
-form {
+
+/* ==========================================================================
+   17. INLINE LOGIN ERROR (Compact Version - Positioned between Password & Button)
+   ========================================================================== */
+
+.login-card .login-error,
+.login-error {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 10px !important;
+    margin: -4px 0 2px 0 !important;
+    padding: 11px 14px !important;
+    border: 1px solid rgba(225, 100, 100, 0.35) !important;
+    border-radius: 12px !important;
+    background: linear-gradient(135deg, rgba(185, 61, 61, 0.12), rgba(120, 35, 35, 0.08)) !important;
+    color: var(--error-light, #f0b2b2) !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    line-height: 1.4 !important;
+    text-align: center !important;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15) !important;
+    min-height: unset !important;
+    max-height: unset !important;
+    animation: loginErrorAppear 0.28s ease-out !important;
+}
+
+    .login-card .login-error .login-error-icon,
+    .login-error .login-error-icon {
+        display: none !important; /* Hides icon as requested by the target visual layout style */
+    }
+
+    .login-card .login-error svg,
+    .login-card .login-error img {
+        display: none !important;
+    }
+
+    .login-card .login-error .login-error-text,
+    .login-error span {
+        margin: 0 !important;
+        padding: 0 !important;
+        font-size: 12px !important;
+        color: var(--error-light, #f0b2b2) !important;
+        display: inline !important;
+    }
+
+@keyframes loginErrorAppear {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* ==========================================================================
+   18. FORM
+   ========================================================================== */
+
+.login-card form {
+    position: relative;
+    z-index: 1;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 19px;
 }
+
+
+/* ==========================================================================
+   19. FORM LABELS
+   ========================================================================== */
 
 .input-group label {
     display: block;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 800;
     margin-bottom: 8px;
     color: var(--accent-gold);
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
 }
+
+
+/* ==========================================================================
+   20. INPUT WRAPPER
+   ========================================================================== */
 
 .input-wrapper {
     position: relative;
     display: flex;
     align-items: center;
-    background-color: rgba(10, 14, 12, 0.65);
-    border: 1px solid var(--border-subtle);
+    min-height: 53px;
+    background: linear-gradient( 135deg, rgba(8, 13, 10, 0.82), rgba(13, 18, 15, 0.66) );
+    border: 1px solid rgba(255, 255, 255, 0.085);
     border-radius: 12px;
-    padding: 0 16px;
-    transition: all 0.3s ease;
+    padding: 0 15px;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease, transform 0.25s ease;
 }
 
-    .input-wrapper:focus-within {
-        border-color: var(--accent-gold);
-        box-shadow: 0 0 16px rgba(223, 183, 86, 0.25);
-        background-color: rgba(10, 14, 12, 0.85);
+    .input-wrapper:hover {
+        border-color: rgba(223, 183, 86, 0.20);
     }
+
+    .input-wrapper:focus-within {
+        border-color: rgba(223, 183, 86, 0.68);
+        box-shadow: 0 0 0 3px rgba(223, 183, 86, 0.055), 0 0 22px rgba(223, 183, 86, 0.13);
+        background: linear-gradient( 135deg, rgba(8, 13, 10, 0.92), rgba(13, 18, 15, 0.78) );
+        transform: translateY(-1px);
+    }
+
+
+/* ==========================================================================
+   21. INPUT ICON
+   ========================================================================== */
 
 .input-icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-right: 12px;
+    margin-right: 11px;
+    flex-shrink: 0;
 }
 
     .input-icon svg {
         width: 18px;
         height: 18px;
         stroke: var(--accent-gold);
+        opacity: 0.92;
     }
+
+
+/* ==========================================================================
+   22. INPUT FIELD
+   ========================================================================== */
 
 .input-wrapper input {
     width: 100%;
-    padding: 14px 38px 14px 0;
+    padding: 15px 44px 15px 0;
     border: none;
     background: transparent;
-    font-size: 15px;
+    font-size: 14px;
     outline: none;
     color: var(--text-pure);
+    font-weight: 400;
 }
 
     .input-wrapper input::placeholder {
-        color: #55685d;
+        color: rgba(160, 178, 167, 0.45);
     }
 
-/* Password Toggle Controls */
+
+/* ==========================================================================
+   23. PASSWORD TOGGLE
+   ========================================================================== */
+
 .password-toggle-btn {
     position: absolute;
-    right: 16px;
-    background: none;
+    right: 14px;
+    background: transparent;
     border: none;
-    padding: 0;
+    padding: 4px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--text-muted);
-    transition: color 0.2s ease;
+    transition: color 0.2s ease, transform 0.2s ease;
+    z-index: 2;
 }
 
     .password-toggle-btn:hover {
-        color: var(--accent-gold);
+        color: var(--accent-gold-light);
+        transform: scale(1.06);
+    }
+
+    .password-toggle-btn:focus-visible {
+        outline: 1px solid var(--accent-gold);
+        outline-offset: 4px;
+        border-radius: 5px;
     }
 
 .eye-icon {
-    width: 20px;
-    height: 20px;
+    width: 19px;
+    height: 19px;
     display: block;
     stroke: currentColor;
+    fill: none;
 }
 
-/* Form Submission Actions & Login Button */
+
+/* ==========================================================================
+   24. FORM ACTIONS
+   ========================================================================== */
+
 .form-actions {
     text-align: center;
-    margin-top: 6px;
+    margin-top: 5px;
 }
+
+
+/* ==========================================================================
+   25. LOGIN BUTTON
+   ========================================================================== */
 
 .btn-login {
     width: 100%;
-    padding: 15px;
-    background: linear-gradient(135deg, var(--accent-gold-hover) 0%, var(--accent-gold) 100%);
-    color: #0d120f;
+    min-height: 52px;
+    padding: 14px 16px;
+    background: linear-gradient( 135deg, var(--accent-gold-light) 0%, var(--accent-gold) 100% );
+    color: #0b100c;
     border: none;
-    border-radius: 12px;
-    font-size: 16px;
-    font-weight: 800;
+    border-radius: 11px;
+    font-size: 15px;
+    font-weight: 900;
     letter-spacing: 0.3px;
     cursor: pointer;
-    box-shadow: 0 6px 20px rgba(223, 183, 86, 0.3);
-    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-    margin-bottom: 18px;
+    box-shadow: 0 8px 24px rgba(223, 183, 86, 0.25);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease;
+    margin-bottom: 16px;
 }
 
     .btn-login:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 28px rgba(223, 183, 86, 0.45);
-        filter: brightness(1.05);
+        box-shadow: 0 12px 30px rgba(223, 183, 86, 0.34);
+        filter: brightness(1.045);
     }
 
     .btn-login:active {
         transform: translateY(0);
     }
 
+
+/* ==========================================================================
+   26. FORGOT PASSWORD
+   ========================================================================== */
+
 .forgot-link {
     color: var(--text-muted);
     text-decoration: none;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
-    transition: color 0.3s;
+    transition: color 0.25s ease;
 }
 
     .forgot-link:hover {
-        color: var(--accent-gold);
+        color: var(--accent-gold-light);
     }
 
-/* Portal Account Routing Anchor */
+
+/* ==========================================================================
+   27. REGISTER AREA
+   ========================================================================== */
+
 .register-prompt {
-    margin-top: 24px;
-    padding-top: 20px;
-    border-top: 1px solid var(--border-subtle);
+    position: relative;
+    z-index: 1;
+    margin-top: 23px;
+    padding-top: 19px;
+    border-top: 1px solid rgba(255, 255, 255, 0.075);
     text-align: center;
 }
 
     .register-prompt p {
         color: var(--text-muted);
-        font-size: 14px;
+        font-size: 13px;
         margin-bottom: 6px;
     }
 
@@ -462,52 +731,21 @@ form {
     color: var(--accent-gold);
     font-weight: 800;
     text-decoration: none;
-    font-size: 15px;
-    transition: color 0.3s;
+    font-size: 14px;
+    transition: color 0.25s ease, text-shadow 0.25s ease;
 }
 
     .register-link:hover {
-        color: var(--accent-gold-hover);
+        color: var(--accent-gold-light);
         text-decoration: underline;
+        text-shadow: 0 0 10px rgba(223, 183, 86, 0.15);
     }
+
 
 /* ==========================================================================
-   5. RESPONSIVE ADAPTABILITY VIEWPORTS
+   28. AUTOFILL FIX
    ========================================================================== */
-@media (max-width: 900px) {
-    .login-split-container {
-        flex-direction: column;
-        justify-content: center;
-        gap: 40px;
-        padding: 40px 24px;
-    }
 
-    .brand-content {
-        text-align: center;
-        max-width: 100%;
-    }
-
-    .login-right {
-        justify-content: center;
-        width: 100%;
-    }
-}
-
-@media (max-width: 480px) {
-    .login-card {
-        padding: 32px 22px;
-    }
-
-    .login-logo {
-        font-size: 46px;
-    }
-}
-
-.slide-up {
-    animation: slideUp 0.3s ease-out;
-}
-
-/* Autofill Text and Background Fix */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
@@ -516,4 +754,308 @@ input:-webkit-autofill:active {
     -webkit-text-fill-color: #ffffff !important;
     caret-color: #ffffff !important;
     transition: background-color 50000s ease-in-out 0s !important;
+}
+
+
+/* ==========================================================================
+   29. ANIMATION
+   ========================================================================== */
+
+.slide-up {
+    animation: loginSlideUp 0.45s ease-out;
+}
+
+@keyframes loginSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* ==========================================================================
+   30. RESPONSIVE — 1100px
+   ========================================================================== */
+
+@media (max-width: 1100px) {
+    .login-split-container {
+        max-width: 1100px;
+        padding-left: 45px;
+        padding-right: 45px;
+        gap: 55px;
+    }
+
+    .brand-content {
+        max-width: 470px;
+    }
+
+    .login-right {
+        flex-basis: 390px;
+    }
+
+    .login-logo {
+        font-size: 61px;
+    }
+
+    .login-split-container .brand-content::before {
+        left: -105px;
+        font-size: 125px;
+    }
+}
+
+
+/* ==========================================================================
+   31. RESPONSIVE — 900px
+   ========================================================================== */
+
+@media (max-width: 900px) {
+    .login-split-container {
+        min-height: 100vh;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 38px;
+        padding: 55px 24px 45px;
+    }
+
+    .brand-content {
+        width: 100%;
+        max-width: 620px;
+        text-align: center;
+    }
+
+    .login-split-container .brand-content::before {
+        left: 50%;
+        top: 15%;
+        transform: translateX(-50%) rotate(0deg);
+        font-size: 110px;
+        opacity: 0.7;
+    }
+
+    .brand-content::after {
+        display: none;
+    }
+
+    .login-logo {
+        font-size: clamp(48px, 9vw, 64px);
+    }
+
+    .software-tag {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .brand-content p {
+        margin-left: auto;
+        margin-right: auto;
+        max-width: 560px;
+        font-size: 15px;
+    }
+
+    .login-right {
+        width: 100%;
+        max-width: 410px;
+        flex: none;
+        justify-content: center;
+    }
+}
+
+
+/* ==========================================================================
+   32. RESPONSIVE — 650px
+   ========================================================================== */
+
+@media (max-width: 650px) {
+    .login-split-container {
+        padding: 42px 18px 36px;
+        gap: 30px;
+    }
+
+        .login-split-container .brand-content::before {
+            font-size: 82px;
+            top: 11%;
+            letter-spacing: 8px;
+        }
+
+    .login-logo {
+        font-size: 46px;
+        letter-spacing: -1.5px;
+    }
+
+    .software-tag {
+        font-size: 8px;
+        letter-spacing: 2.2px;
+        margin-bottom: 20px;
+    }
+
+    .brand-content p {
+        font-size: 14px;
+        line-height: 1.7;
+    }
+
+    .login-card {
+        padding: 34px 25px 28px;
+        border-radius: 19px;
+    }
+
+    .top-user-icon {
+        width: 58px;
+        height: 58px;
+    }
+
+    .login-header h2 {
+        font-size: 24px;
+    }
+
+    .login-header p {
+        font-size: 12px;
+    }
+
+    .login-card form {
+        gap: 17px;
+    }
+}
+
+
+/* ==========================================================================
+   33. RESPONSIVE — 480px
+   ========================================================================== */
+
+@media (max-width: 480px) {
+    .login-split-container {
+        padding: 32px 15px 28px;
+        gap: 27px;
+    }
+
+        .login-split-container .brand-content::before {
+            font-size: 62px;
+            top: 9%;
+            letter-spacing: 5px;
+        }
+
+    .login-logo {
+        font-size: 40px;
+        letter-spacing: -1px;
+    }
+
+    .software-tag {
+        font-size: 7.5px;
+        letter-spacing: 1.9px;
+        padding: 6px 10px;
+    }
+
+    .brand-content p {
+        font-size: 13px;
+        line-height: 1.68;
+    }
+
+    .login-right {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .login-card {
+        padding: 30px 20px 26px;
+        border-radius: 17px;
+    }
+
+    .login-header {
+        margin-bottom: 26px;
+    }
+
+    .top-user-icon {
+        width: 54px;
+        height: 54px;
+        margin-bottom: 13px;
+    }
+
+        .top-user-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+
+    .login-header h2 {
+        font-size: 23px;
+    }
+
+    .login-header p {
+        font-size: 12px;
+    }
+
+    .input-group label {
+        font-size: 9px;
+        letter-spacing: 1.2px;
+    }
+
+    .input-wrapper {
+        min-height: 50px;
+        padding: 0 13px;
+    }
+
+        .input-wrapper input {
+            font-size: 13px;
+            padding-top: 14px;
+            padding-bottom: 14px;
+        }
+
+    .input-icon {
+        margin-right: 9px;
+    }
+
+        .input-icon svg {
+            width: 17px;
+            height: 17px;
+        }
+
+    .password-toggle-btn {
+        right: 12px;
+    }
+
+    .eye-icon {
+        width: 18px;
+        height: 18px;
+    }
+
+    .btn-login {
+        min-height: 50px;
+        font-size: 14px;
+    }
+
+    .forgot-link {
+        font-size: 11px;
+    }
+
+    .register-prompt {
+        margin-top: 20px;
+        padding-top: 17px;
+    }
+
+        .register-prompt p {
+            font-size: 12px;
+        }
+
+    .register-link {
+        font-size: 13px;
+    }
+}
+
+
+/* ==========================================================================
+   34. REDUCED MOTION
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
 }

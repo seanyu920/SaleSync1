@@ -11,9 +11,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Playfair+Display:wght@800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="~/css/LogInPage.css" asp-append-version="true" />
     <link rel="icon" type="image/jpeg" href="~/images/CaferoLogo.jpg" asp-append-version="true" />
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
+
     <div class="login-split-container">
 
         <div class="login-left">
@@ -22,73 +22,186 @@
                     <h1 class="login-logo">Cafèro</h1>
                     <div class="software-tag">Powered by <strong>SaleSync</strong></div>
                 </div>
-                <p>Welcome! Whether you're here to sip, connect, or power our cafe, you’re in the right place. Select your role to continue.</p>
+
+                <p>
+                    Welcome! Whether you're here to sip, connect, or power our cafe,
+                    you’re in the right place.
+                </p>
             </div>
         </div>
 
         <div class="login-right">
             <div class="login-card">
+
                 <div class="login-header">
                     <div class="top-user-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="2"
+                             stroke-linecap="round"
+                             stroke-linejoin="round">
                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                             <circle cx="12" cy="7" r="4"></circle>
                         </svg>
                     </div>
+
                     <h2>Sign In</h2>
                     <p>Enter your credentials to continue.</p>
                 </div>
 
                 <form asp-controller="Home" asp-action="Login" method="post">
+
                     <div class="input-group">
                         <label for="username">Username</label>
+
                         <div class="input-wrapper">
                             <span class="input-icon">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <svg viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="2"
+                                     stroke-linecap="round"
+                                     stroke-linejoin="round">
                                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                                     <circle cx="12" cy="7" r="4"></circle>
                                 </svg>
                             </span>
-                            <input type="text" id="username" name="username" placeholder="Enter username" required />
+
+                            <input type="text"
+                                   id="username"
+                                   name="username"
+                                   placeholder="Enter username"
+                                   required />
                         </div>
                     </div>
+
 
                     <div class="input-group">
                         <label for="password">Password</label>
+
                         <div class="input-wrapper">
+
                             <span class="input-icon">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <svg viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="2"
+                                     stroke-linecap="round"
+                                     stroke-linejoin="round">
+                                    <rect x="3"
+                                          y="11"
+                                          width="18"
+                                          height="11"
+                                          rx="2"
+                                          ry="2"></rect>
+
                                     <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                                 </svg>
                             </span>
-                            <input type="password" id="password" name="password" placeholder="••••••••" required />
 
-                            <!-- Standard SVG Modern Icon Toggle -->
-                            <button type="button" class="password-toggle-btn" id="togglePassword" aria-label="Toggle password visibility">
-                                <!-- Open Eye Icon -->
-                                <svg class="eye-icon eye-open" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <input type="password"
+                                   id="password"
+                                   name="password"
+                                   placeholder="••••••••"
+                                   required />
+
+                            <button type="button"
+                                    class="password-toggle-btn"
+                                    id="togglePassword"
+                                    aria-label="Toggle password visibility">
+
+                                <svg class="eye-icon eye-open"
+                                     xmlns="http://www.w3.org/2000/svg"
+                                     viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="2"
+                                     stroke-linecap="round"
+                                     stroke-linejoin="round">
+
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                    <circle cx="12" cy="12" r="3"></circle>
+
+                                    <circle cx="12"
+                                            cy="12"
+                                            r="3"></circle>
                                 </svg>
-                                <!-- Closed/Slashed Eye Icon -->
-                                <svg class="eye-icon eye-closed" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
-                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+
+                                <svg class="eye-icon eye-closed"
+                                     xmlns="http://www.w3.org/2000/svg"
+                                     viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="2"
+                                     stroke-linecap="round"
+                                     stroke-linejoin="round"
+                                     style="display: none;">
+
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path>
+
+                                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path>
+
+                                    <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"></path>
+
+                                    <line x1="1"
+                                          y1="1"
+                                          x2="23"
+                                          y2="23"></line>
                                 </svg>
+
                             </button>
+
                         </div>
                     </div>
 
+
+                    @* LOGIN ERROR MESSAGE *@
+                    @if (ViewBag.Message != null)
+                    {
+                        <div class="login-error">
+                            <svg viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="2"
+                                 stroke-linecap="round"
+                                 stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="9"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+
+                            <span>@ViewBag.Message</span>
+                        </div>
+                    }
+
+
                     <div class="form-actions" style="margin-top: 20px;">
-                        <button type="submit" class="btn-login">Log In</button>
-                        <a href="#" class="forgot-link">Forgot Password?</a>
+
+                        <button type="submit"
+                                class="btn-login">
+                            Log In
+                        </button>
+
+                        <a href="#"
+                           class="forgot-link">
+                            Forgot Password?
+                        </a>
+
                     </div>
+
                 </form>
 
+
                 <div class="register-prompt">
+
                     <p>Don't have an account?</p>
-                    <a asp-controller="Account" asp-action="Register" class="register-link">Register here</a>
+
+                    <a asp-controller="Account"
+                       asp-action="Register"
+                       class="register-link">
+                        Register here
+                    </a>
+
                 </div>
 
             </div>
@@ -96,68 +209,50 @@
 
     </div>
 
+
+    <!-- Password Visibility Script -->
     <script>
             document.addEventListener("DOMContentLoaded", function() {
-                // Configure the modern "Toast" style
-                const modernToast = Swal.mixin({
-                    toast: true,
-                    position: 'top-end',
-                    showConfirmButton: false,
-                    timer: 4000,
-                    timerProgressBar: true,
-                    background: '#fdfaf6',
-                    color: '#4a2511',
-                    iconColor: '#f46a05',
-                    customClass: {
-                        popup: 'modern-toast-popup'
-                    },
-                    didOpen: (toast) => {
-                        toast.addEventListener('mouseenter', Swal.stopTimer)
-                        toast.addEventListener('mouseleave', Swal.resumeTimer)
-                    }
-                });
 
-                // Catch Login Errors
-                @if (ViewBag.Message != null)
-                    {
-                        <text>
-                                modernToast.fire({
-                                    icon: 'error',
-                                title: '@Html.Raw(ViewBag.Message)'
-                                        });
-                        </text>
-                }
+                const togglePasswordBtn =
+                    document.getElementById('togglePassword');
 
-                    // Catch Registration Success Redirect
-                    @if (TempData["SuccessMessage"] != null)
-                    {
-                        <text>
-                                modernToast.fire({
-                                    icon: 'success',
-                                title: '@Html.Raw(TempData["SuccessMessage"])'
-                                        });
-                        </text>
-                }
+                const passwordInput =
+                    document.getElementById('password');
 
-                        // --- Modern SVG Password Visibility Toggle ---
-                        const togglePasswordBtn = document.getElementById('togglePassword');
-                const passwordInput = document.getElementById('password');
-                const eyeOpenIcon = togglePasswordBtn.querySelector('.eye-open');
-                const eyeClosedIcon = togglePasswordBtn.querySelector('.eye-closed');
+                const eyeOpenIcon =
+                    togglePasswordBtn.querySelector('.eye-open');
+
+                const eyeClosedIcon =
+                    togglePasswordBtn.querySelector('.eye-closed');
+
 
                 togglePasswordBtn.addEventListener('click', function() {
-                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+
+                    const type =
+                        passwordInput.getAttribute('type') === 'password'
+                            ? 'text'
+                            : 'password';
+
                     passwordInput.setAttribute('type', type);
 
+
                     if (type === 'password') {
+
                         eyeOpenIcon.style.display = 'block';
                         eyeClosedIcon.style.display = 'none';
+
                     } else {
+
                         eyeOpenIcon.style.display = 'none';
                         eyeClosedIcon.style.display = 'block';
+
                     }
+
                 });
+
             });
     </script>
+
 </body>
 </html>
