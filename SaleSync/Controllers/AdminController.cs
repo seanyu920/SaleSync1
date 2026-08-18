@@ -314,7 +314,6 @@ namespace SaleSync.Controllers
             return Ok();
         }
 
-        public IActionResult Analytics() => View();
         [HttpGet]
         public IActionResult Analytics(string timeframe = "week")
         {
@@ -1150,7 +1149,7 @@ namespace SaleSync.Controllers
             var list = new List<object>();
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                string sql = "SELECT product_id, product_name, ISNULL(recipe_unit, unit) as display_unit FROM products WHERE is_ingredient = 1 ORDER BY product_name";
+                string sql = "SELECT product_id, product_name, ISNULL(recipe_unit, unit) as display_unit FROM products WHERE is_ingredient = 1 AND (is_archived = 0 OR is_archived IS NULL) ORDER BY product_name";
                 using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
                     conn.Open();
@@ -1789,7 +1788,8 @@ namespace SaleSync.Controllers
                     using (var reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
-                            products.Add(new {
+                            products.Add(new
+                            {
                                 id = reader["product_id"],
                                 name = reader["product_name"].ToString(),
                                 price = reader["selling_price"] != DBNull.Value ? Convert.ToDecimal(reader["selling_price"]) : 0m,
@@ -1809,7 +1809,8 @@ namespace SaleSync.Controllers
                     using (var reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
-                            inventory.Add(new {
+                            inventory.Add(new
+                            {
                                 id = reader["product_id"],
                                 name = reader["product_name"].ToString(),
                                 stock = reader["stock_quantity"],
@@ -1831,7 +1832,8 @@ namespace SaleSync.Controllers
                     using (var reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
-                            transactions.Add(new {
+                            transactions.Add(new
+                            {
                                 id = reader["sale_id"],
                                 name = (reader["customer_name"]?.ToString() ?? "Walk-in") + " (#" + reader["sale_id"] + ")",
                                 amount = Convert.ToDecimal(reader["total_amount"]),
