@@ -103,6 +103,7 @@
 
                             <div class="input-group">
                                 <label>Item Category</label>
+
                                 <input list="categoryList"
                                        name="ItemCategory"
                                        placeholder="e.g. Beverages"
@@ -119,6 +120,7 @@
 
                             <div class="input-group">
                                 <label>Item Name</label>
+
                                 <input type="text"
                                        name="ItemName"
                                        placeholder="Item Name"
@@ -127,6 +129,7 @@
 
                             <div class="input-group">
                                 <label>Item ID</label>
+
                                 <input type="text"
                                        name="ItemID"
                                        placeholder="Item ID"
@@ -135,6 +138,7 @@
 
                             <div class="input-group">
                                 <label>Purchase Price</label>
+
                                 <input type="text"
                                        name="PurchasePrice"
                                        placeholder="₱0.00"
@@ -145,6 +149,7 @@
                                 <label>Bulk Qty & Unit</label>
 
                                 <div style="display: flex; gap: 10px;">
+
                                     <input type="number"
                                            step="any"
                                            name="Quantity"
@@ -164,10 +169,12 @@
                                         <option value="gallon">gallon</option>
 
                                     </select>
+
                                 </div>
                             </div>
 
                             <div class="input-group">
+
                                 <label>
                                     Recipe Unit
                                     <span style="font-size: 11px; color: var(--muted);">
@@ -178,9 +185,11 @@
                                 <input type="text"
                                        name="RecipeUnit"
                                        placeholder="e.g. ml" />
+
                             </div>
 
                             <div class="input-group">
+
                                 <label>
                                     Conversion Factor
                                     <span style="font-size: 11px; color: var(--muted);">
@@ -192,36 +201,44 @@
                                        step="any"
                                        name="ConversionFactor"
                                        placeholder="e.g. 3785.41" />
+
                             </div>
 
                             <div class="input-group">
+
                                 <label>Stock Supplier</label>
 
                                 <input type="text"
                                        name="StockSupplier"
                                        placeholder="Supplier"
                                        required />
+
                             </div>
 
                             <div class="input-group">
+
                                 <label>Date Acquired</label>
 
                                 <input type="date"
                                        name="DateAcquired"
                                        required />
+
                             </div>
 
                             <div class="input-group">
+
                                 <label>Expiration Date</label>
 
                                 <input type="date"
                                        name="ExpirationDate"
                                        required />
+
                             </div>
 
                         </div>
 
                         <div class="action-buttons">
+
                             <button type="button"
                                     onclick="confirmAdd()"
                                     class="action-btn add-btn">
@@ -239,6 +256,7 @@
                                     class="action-btn delete-btn">
                                 Archive
                             </button>
+
                         </div>
 
                     </form>
@@ -274,6 +292,7 @@
                         <table class="inventory-table">
 
                             <thead>
+
                                 <tr>
                                     <th>Select</th>
                                     <th>Category</th>
@@ -284,6 +303,7 @@
                                     <th>Stock Level</th>
                                     <th>Supplier</th>
                                 </tr>
+
                             </thead>
 
                             <tbody id="inventoryTableBody">
@@ -294,26 +314,29 @@
                                     {
                                         <tr class="inventory-row"
                                             style="cursor:pointer;"
-                                            onclick="document.getElementById('radio-@item.ProductId').checked = true; fillForm(
-                                                @Json.Serialize(item.ProductId.ToString()),
-                                                @Json.Serialize(item.ItemCategory ?? ""),
-                                                @Json.Serialize(item.ItemName ?? ""),
-                                                @Json.Serialize(item.ItemID ?? ""),
-                                                @Json.Serialize(item.PurchasePrice.ToString()),
-                                                @Json.Serialize(item.Quantity.ToString()),
-                                                @Json.Serialize(item.Unit ?? ""),
-                                                @Json.Serialize(item.StockSupplier ?? ""),
-                                                @Json.Serialize(item.DateAcquired.ToString()),
-                                                @Json.Serialize(item.ExpirationDate.ToString()),
-                                                @Json.Serialize(item.RecipeUnit ?? ""),
-                                                @Json.Serialize(item.ConversionFactor.ToString())
-                                            )">
+                                            data-product-id="@item.ProductId"
+                                            data-category="@item.ItemCategory"
+                                            data-item-name="@item.ItemName"
+                                            data-item-id="@item.ItemID"
+                                            data-price="@item.PurchasePrice"
+                                            data-quantity="@item.Quantity"
+                                            data-unit="@item.Unit"
+                                            data-supplier="@item.StockSupplier"
+                                            data-date-acquired="@item.DateAcquired"
+                                            data-expiration-date="@item.ExpirationDate"
+                                            data-recipe-unit="@item.RecipeUnit"
+                                            data-conversion-factor="@item.ConversionFactor"
+                                            onclick="selectInventoryRow(this)">
 
                                             <td style="text-align:center;">
+
                                                 <input type="radio"
                                                        id="radio-@item.ProductId"
                                                        name="selectedItem"
-                                                       value="@item.ProductId" />
+                                                       value="@item.ProductId"
+                                                       onclick="event.stopPropagation();"
+                                                       onchange="selectInventoryItem(this)" />
+
                                             </td>
 
                                             <td>
@@ -334,13 +357,13 @@
 
                                             <td>
 
-                                                <div style="font-weight: 700; font-size: 14px;">
+                                                <div style="font-weight:700; font-size:14px;">
                                                     @item.Quantity.ToString("0.##") @item.Unit
                                                 </div>
 
                                                 @if (!string.IsNullOrEmpty(item.RecipeUnit) && item.ConversionFactor > 1)
                                                 {
-                                                    <div style="font-size: 11px; color: var(--muted); margin-top: 2px; font-weight: 500;">
+                                                    <div style="font-size:11px; color:var(--muted); margin-top:2px; font-weight:500;">
                                                         (approx.
                                                         @((item.Quantity * item.ConversionFactor).ToString("N0"))
                                                         @item.RecipeUnit left)
@@ -391,18 +414,23 @@
                                 else
                                 {
                                     <tr id="noItemsRow">
+
                                         <td colspan="8"
-                                            style="text-align:center; padding: 20px;">
+                                            style="text-align:center; padding:20px;">
                                             No inventory items found.
                                         </td>
+
                                     </tr>
                                 }
 
-                                <tr id="noResultsRow" style="display: none;">
+                                <tr id="noResultsRow"
+                                    style="display:none;">
+
                                     <td colspan="8"
-                                        style="text-align:center; padding: 20px;">
+                                        style="text-align:center; padding:20px;">
                                         No matching items found.
                                     </td>
+
                                 </tr>
 
                             </tbody>
@@ -450,16 +478,25 @@
                 }
 
             });
+
         }
 
 
         function toggleSidebar() {
 
-            const sidebar = document.querySelector('.sidebar');
-            const overlay = document.querySelector('.sidebar-overlay');
+            const sidebar =
+                document.querySelector('.sidebar');
 
-            sidebar.classList.toggle('mobile-open');
-            overlay.classList.toggle('mobile-open');
+            const overlay =
+                document.querySelector('.sidebar-overlay');
+
+            if (sidebar) {
+                sidebar.classList.toggle('mobile-open');
+            }
+
+            if (overlay) {
+                overlay.classList.toggle('mobile-open');
+            }
 
         }
 
@@ -475,51 +512,72 @@
         };
 
 
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener(
+            'DOMContentLoaded',
+            function () {
 
-            const bulkUnitSelect =
-                document.querySelector('select[name="Unit"]');
+                const bulkUnitSelect =
+                    document.querySelector(
+                        'select[name="Unit"]'
+                    );
 
-            const recipeUnitInput =
-                document.querySelector('input[name="RecipeUnit"]');
+                const recipeUnitInput =
+                    document.querySelector(
+                        'input[name="RecipeUnit"]'
+                    );
 
-            const convFactorInput =
-                document.querySelector('input[name="ConversionFactor"]');
+                const convFactorInput =
+                    document.querySelector(
+                        'input[name="ConversionFactor"]'
+                    );
 
 
-            function calculateConversion() {
+                function calculateConversion() {
 
-                const bulk = bulkUnitSelect.value;
-                const recipe = recipeUnitInput.value.toLowerCase().trim();
+                    const bulk =
+                        bulkUnitSelect.value;
 
-                const key = `${bulk}_${recipe}`;
+                    const recipe =
+                        recipeUnitInput.value
+                            .toLowerCase()
+                            .trim();
 
-                if (standardConversions[key]) {
+                    const key =
+                        `${bulk}_${recipe}`;
 
-                    convFactorInput.value =
-                        standardConversions[key];
 
-                    convFactorInput.style.backgroundColor =
-                        "#1C241C";
+                    if (standardConversions[key]) {
 
-                    setTimeout(() => {
-                        convFactorInput.style.backgroundColor = "";
-                    }, 1000);
+                        convFactorInput.value =
+                            standardConversions[key];
+
+                        convFactorInput.style.backgroundColor =
+                            "#1C241C";
+
+                        setTimeout(() => {
+
+                            convFactorInput.style.backgroundColor =
+                                "";
+
+                        }, 1000);
+
+                    }
+
                 }
+
+
+                bulkUnitSelect.addEventListener(
+                    'change',
+                    calculateConversion
+                );
+
+                recipeUnitInput.addEventListener(
+                    'keyup',
+                    calculateConversion
+                );
+
             }
-
-
-            bulkUnitSelect.addEventListener(
-                'change',
-                calculateConversion
-            );
-
-            recipeUnitInput.addEventListener(
-                'keyup',
-                calculateConversion
-            );
-
-        });
+        );
 
 
         let isSubmitting = false;
@@ -529,18 +587,19 @@
 
             if (!value) return "";
 
-            const text = String(value).trim();
+            const text =
+                String(value).trim();
 
 
-            // Already yyyy-MM-dd
             if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
                 return text;
             }
 
 
-            // Handle MM/DD/YYYY or M/D/YYYY
             const match =
-                text.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+                text.match(
+                    /^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/
+                );
 
 
             if (match) {
@@ -552,11 +611,12 @@
                     match[2].padStart(2, "0");
 
                 return `${match[3]}-${month}-${day}`;
+
             }
 
 
-            // Handle other valid JavaScript date strings
-            const parsed = new Date(text);
+            const parsed =
+                new Date(text);
 
 
             if (!Number.isNaN(parsed.getTime())) {
@@ -565,91 +625,140 @@
                     parsed.getFullYear();
 
                 const month =
-                    String(parsed.getMonth() + 1).padStart(2, "0");
+                    String(
+                        parsed.getMonth() + 1
+                    ).padStart(2, "0");
 
                 const day =
-                    String(parsed.getDate()).padStart(2, "0");
+                    String(
+                        parsed.getDate()
+                    ).padStart(2, "0");
 
                 return `${year}-${month}-${day}`;
+
             }
 
 
             return "";
+
         }
 
 
-        function fillForm(
-            productId,
-            itemCategory,
-            itemName,
-            itemID,
-            purchasePrice,
-            quantity,
-            unit,
-            stockSupplier,
-            dateAcquired,
-            expirationDate,
-            recipeUnit,
-            convFactor
-        ) {
+        function selectInventoryItem(radio) {
 
-            document.getElementById("ProductId").value =
-                productId;
+            const row =
+                radio.closest(".inventory-row");
+
+
+            if (!row) return;
+
+
+            radio.checked = true;
+
+
+            fillFormFromRow(row);
+
+        }
+
+
+        function selectInventoryRow(row) {
+
+            if (!row) return;
+
+
+            const radio =
+                row.querySelector(
+                    'input[name="selectedItem"]'
+                );
+
+
+            if (!radio) return;
+
+
+            radio.checked = true;
+
+
+            fillFormFromRow(row);
+
+        }
+
+
+        function fillFormFromRow(row) {
+
+            document.getElementById(
+                "ProductId"
+            ).value =
+                row.dataset.productId || "";
 
 
             document.querySelector(
                 'input[name="ItemCategory"]'
-            ).value = itemCategory;
+            ).value =
+                row.dataset.category || "";
 
 
             document.querySelector(
                 'input[name="ItemName"]'
-            ).value = itemName;
+            ).value =
+                row.dataset.itemName || "";
 
 
             document.querySelector(
                 'input[name="ItemID"]'
-            ).value = itemID;
+            ).value =
+                row.dataset.itemId || "";
 
 
             document.querySelector(
                 'input[name="PurchasePrice"]'
-            ).value = purchasePrice;
+            ).value =
+                row.dataset.price || "";
 
 
             document.querySelector(
                 'input[name="Quantity"]'
-            ).value = quantity;
+            ).value =
+                row.dataset.quantity || "";
 
 
             document.querySelector(
                 'select[name="Unit"]'
-            ).value = unit || "pcs";
+            ).value =
+                row.dataset.unit || "pcs";
 
 
             document.querySelector(
                 'input[name="StockSupplier"]'
-            ).value = stockSupplier;
+            ).value =
+                row.dataset.supplier || "";
 
 
             document.querySelector(
                 'input[name="DateAcquired"]'
-            ).value = normalizeDateForInput(dateAcquired);
+            ).value =
+                normalizeDateForInput(
+                    row.dataset.dateAcquired
+                );
 
 
             document.querySelector(
                 'input[name="ExpirationDate"]'
-            ).value = normalizeDateForInput(expirationDate);
+            ).value =
+                normalizeDateForInput(
+                    row.dataset.expirationDate
+                );
 
 
             document.querySelector(
                 'input[name="RecipeUnit"]'
-            ).value = recipeUnit || "";
+            ).value =
+                row.dataset.recipeUnit || "";
 
 
             document.querySelector(
                 'input[name="ConversionFactor"]'
-            ).value = convFactor || "1";
+            ).value =
+                row.dataset.conversionFactor || "1";
 
         }
 
@@ -674,13 +783,15 @@
                 });
 
                 return;
+
             }
 
 
             Swal.fire({
 
                 title: 'Add New Item?',
-                text: `Add "${itemName}" to the inventory?`,
+                text:
+                    `Add "${itemName}" to the inventory?`,
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonText: 'Yes, add it!'
@@ -691,24 +802,33 @@
 
                     isSubmitting = true;
 
+
                     const btn =
-                        document.querySelector('.add-btn');
+                        document.querySelector(
+                            '.add-btn'
+                        );
+
 
                     btn.disabled = true;
                     btn.innerText = "Processing...";
 
 
                     const form =
-                        document.getElementById("inventoryForm");
+                        document.getElementById(
+                            "inventoryForm"
+                        );
+
 
                     form.action =
                         "/Admin/AddInventory";
+
 
                     form.submit();
 
                 }
 
             });
+
         }
 
 
@@ -718,25 +838,30 @@
 
 
             const productId =
-                document.getElementById("ProductId").value;
+                document.getElementById(
+                    "ProductId"
+                ).value;
 
 
             if (!productId) {
 
                 Swal.fire({
                     title: 'No Selection',
-                    text: 'Please select an item to update.',
+                    text:
+                        'Please select an item to update.',
                     icon: 'warning'
                 });
 
                 return;
+
             }
 
 
             Swal.fire({
 
                 title: 'Update Item?',
-                text: "Save changes to this inventory item?",
+                text:
+                    "Save changes to this inventory item?",
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonText: 'Yes, update it!'
@@ -747,24 +872,33 @@
 
                     isSubmitting = true;
 
+
                     const btn =
-                        document.querySelector('.update-btn');
+                        document.querySelector(
+                            '.update-btn'
+                        );
+
 
                     btn.disabled = true;
                     btn.innerText = "Processing...";
 
 
                     const form =
-                        document.getElementById("inventoryForm");
+                        document.getElementById(
+                            "inventoryForm"
+                        );
+
 
                     form.action =
                         "/Admin/UpdateInventory";
+
 
                     form.submit();
 
                 }
 
             });
+
         }
 
 
@@ -780,15 +914,18 @@
 
                 Swal.fire({
                     title: 'No Selection',
-                    text: 'Please select an item from the table first.',
+                    text:
+                        'Please select an item from the table first.',
                     icon: 'warning'
                 });
 
                 return null;
+
             }
 
 
             return selected.value;
+
         }
 
 
@@ -797,7 +934,8 @@
             if (isSubmitting) return;
 
 
-            const id = getSelectedId();
+            const id =
+                getSelectedId();
 
 
             if (!id) return;
@@ -806,7 +944,8 @@
             Swal.fire({
 
                 title: 'Archive Inventory Item?',
-                text: "This item will be hidden from current stock tables and moved to the system archive repository.",
+                text:
+                    "This item will be hidden from current stock tables and moved to the system archive repository.",
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#4a2511',
@@ -818,14 +957,21 @@
 
                     isSubmitting = true;
 
-                    document.getElementById("archiveId").value =
+
+                    document.getElementById(
+                        "archiveId"
+                    ).value =
                         id;
 
-                    document.getElementById("archiveForm").submit();
+
+                    document.getElementById(
+                        "archiveForm"
+                    ).submit();
 
                 }
 
             });
+
         }
 
 
@@ -834,7 +980,9 @@
             const searchInput =
                 document.getElementById(
                     "inventorySearch"
-                ).value.toLowerCase().trim();
+                ).value
+                    .toLowerCase()
+                    .trim();
 
 
             const categoryDropdown =
@@ -865,21 +1013,27 @@
 
 
                 const categoryCellText =
-                    row.cells[1].textContent.trim();
+                    row.cells[1]
+                        .textContent
+                        .trim();
 
 
                 const matchesSearch =
-                    rowText.includes(searchInput);
-
-
-                const matchesCategory =
-                    (
-                        categoryDropdown === "ALL" ||
-                        categoryCellText === categoryDropdown
+                    rowText.includes(
+                        searchInput
                     );
 
 
-                if (matchesSearch && matchesCategory) {
+                const matchesCategory =
+                    categoryDropdown === "ALL" ||
+                    categoryCellText ===
+                    categoryDropdown;
+
+
+                if (
+                    matchesSearch &&
+                    matchesCategory
+                ) {
 
                     row.style.display = "";
                     visibleCount++;
@@ -924,7 +1078,9 @@
                         title: 'Action Blocked',
 
                         text:
-                            @Html.Raw(Json.Serialize(errorMsg)),
+                            @Html.Raw(
+                                Json.Serialize(errorMsg)
+                            ),
 
                         icon: 'warning'
 
@@ -953,7 +1109,9 @@
                         title: 'Success!',
 
                         text:
-                            @Html.Raw(Json.Serialize(successMsg)),
+                            @Html.Raw(
+                                Json.Serialize(successMsg)
+                            ),
 
                         icon: 'success',
 
