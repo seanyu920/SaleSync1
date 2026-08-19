@@ -1,0 +1,496 @@
+@model List<SaleSync.Models.InventoryItems>
+@{
+    Layout = null;
+
+    bool isManager = User.IsInRole("Manager");
+    string homeController = isManager ? "Manager" : "Admin";
+    string displayRole = isManager ? "Manager" : "Admin";
+
+    var dbCategories = new List<string>();
+    if (Model != null && Model.Any())
+    {
+        dbCategories = Model.Select(i => i.ItemCategory)
+                            .Where(c => !string.IsNullOrEmpty(c))
+                            .Distinct()
+                            .OrderBy(c => c)
+                            .ToList();
+    }
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Inventory Management - Cafero</title>
+    <link rel="stylesheet" href="~/css/Inventory.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="icon" type="image/jpeg" href="~/images/CaferoLogo.jpg" asp-append-version="true" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+
+        <aside class="sidebar">
+            <div>
+                <div class="logo-section">
+                    <div class="logo-title">Cafèro</div>
+                    <div class="logo-subtitle">Coffee & Pastries</div>
+                </div>
+
+                <div class="profile-section">
+                    <div class="profile-circle">👤</div>
+                    <div>
+                        <h2 class="admin-name">@(User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? User.Identity?.Name ?? "User")</h2>
+                        <div class="admin-role">@(User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? User.FindFirst("Role")?.Value ?? "User")</div>
+                    </div>
+                </div>
+
+                <nav class="sidebar-menu">
+                    <a href="/@homeController/Dashboard" class="menu-btn">Dashboard</a>
+                    <a href="/Admin/QueueOrder" class="menu-btn">Queue</a>
+
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a href="/Admin/ActivityLog" class="menu-btn">Activity Log</a>
+                    }
+
+                    <a href="/Admin/Analytics" class="menu-btn">Analytics</a>
+                    <a href="/Admin/Products" class="menu-btn">Products</a>
+                    <a href="/Admin/Inventory" class="menu-btn active">Inventory</a>
+                    <a href="/Admin/ArchivedProducts" class="menu-btn">Archived</a>
+
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a href="/Admin/ManageAccounts" class="menu-btn">Accounts</a>
+                    }
+
+                    <a href="/Admin/WebCustomization" class="menu-btn">Customization</a>
+                </nav>
+            </div>
+
+            <div class="logout-section">
+                <form method="post" action="/Home/Logout" id="logoutForm">
+                    <button type="button" class="menu-btn logout-btn" onclick="confirmLogout()">
+                        Log Out
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <div class="mobile-header">
+            <button class="hamburger-btn" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="mobile-brand">Cafero</div>
+        </div>
+
+        <main class="main-content slide-up">
+
+            <div class="page-header" style="margin-bottom: 30px;">
+                <h1 class="greeting-title">Inventory Management </h1>
+                <p class="greeting-subtitle">Track and update your shop's stock levels.</p>
+            </div>
+
+            <div class="inventory-content">
+
+                <div class="form-card">
+                    <h2 class="widget-title">Inventory Item Details</h2>
+
+                    <form id="inventoryForm" method="post">
+                        <input type="hidden" name="ProductId" id="ProductId" />
+
+                        <div class="form-grid">
+                            <div class="input-group">
+                                <label>Item Category</label>
+                                <input list="categoryList" name="ItemCategory" placeholder="e.g. Beverages" required autocomplete="off" />
+                                <datalist id="categoryList">
+                                    @foreach (var cat in dbCategories)
+                                    {
+                                        <option value="@cat"></option>
+                                    }
+                                </datalist>
+                            </div>
+
+                            <div class="input-group">
+                                <label>Item Name</label>
+                                <input type="text" name="ItemName" placeholder="Item Name" required />
+                            </div>
+
+                            <div class="input-group">
+                                <label>Item ID</label>
+                                <input type="text" name="ItemID" placeholder="Item ID" required />
+                            </div>
+
+                            <div class="input-group">
+                                <label>Purchase Price</label>
+                                <input type="text" name="PurchasePrice" placeholder="₱0.00" required />
+                            </div>
+
+                            <div class="input-group">
+                                <label>Bulk Qty & Unit</label>
+                                <div style="display: flex; gap: 10px;">
+                                    <input type="number" step="any" name="Quantity" placeholder="0.00" required style="flex: 2;" />
+                                    <select name="Unit" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); background-color: var(--bg-surface); color: var(--cream); font-family: inherit;">
+                                        <option value="pcs">pcs</option>
+                                        <option value="g">g</option>
+                                        <option value="kg">kg</option>
+                                        <option value="ml">ml</option>
+                                        <option value="L">L</option>
+                                        <option value="oz">oz</option>
+                                        <option value="gallon">gallon</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="input-group">
+                                <label>Recipe Unit <span style="font-size: 11px; color: var(--muted);">(Optional)</span></label>
+                                <input type="text" name="RecipeUnit" placeholder="e.g. ml" />
+                            </div>
+
+                            <div class="input-group">
+                                <label>Conversion Factor <span style="font-size: 11px; color: var(--muted);">(Optional)</span></label>
+                                <input type="number" step="any" name="ConversionFactor" placeholder="e.g. 3785.41" />
+                            </div>
+
+                            <div class="input-group">
+                                <label>Stock Supplier</label>
+                                <input type="text" name="StockSupplier" placeholder="Supplier" required />
+                            </div>
+
+                            <div class="input-group">
+                                <label>Date Acquired</label>
+                                <input type="date" name="DateAcquired" required />
+                            </div>
+
+                            <div class="input-group">
+                                <label>Expiration Date</label>
+                                <input type="date" name="ExpirationDate" required />
+                            </div>
+                        </div>
+
+                        <div class="action-buttons">
+                            <button type="button" onclick="confirmAdd()" class="action-btn add-btn">Add Item</button>
+                            <button type="button" onclick="confirmUpdate()" class="action-btn update-btn">Update Item</button>
+                            <button type="button" onclick="archiveItem()" class="action-btn delete-btn">Archive</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="search-bar">
+                    <select id="categoryFilter" class="filter-select" onchange="filterInventory()">
+                        <option value="ALL">All Categories</option>
+                        @foreach (var cat in dbCategories)
+                        {
+                            <option value="@cat">@cat</option>
+                        }
+                    </select>
+                    <input type="text" id="inventorySearch" class="search-input" placeholder="Search items or IDs..." onkeyup="filterInventory()" />
+                </div>
+
+                <div class="table-card">
+                    <div class="table-wrap">
+                        <table class="inventory-table">
+                            <thead>
+                                <tr>
+                                    <th>Select</th>
+                                    <th>Category</th>
+                                    <th>Item Name</th>
+                                    <th>Item ID</th>
+                                    <th>Price</th>
+                                    <th>Qty</th>
+                                    <th>Stock Level</th>
+                                    <th>Supplier</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventoryTableBody">
+                                @if (Model != null && Model.Count > 0)
+                                {
+                                    @foreach (var item in Model)
+                                    {
+                                        <tr class="inventory-row" style="cursor:pointer;"
+                                            onclick="document.getElementById('radio-@item.ProductId').checked = true; fillForm(
+                                            @Json.Serialize(item.ProductId.ToString()),
+                                            @Json.Serialize(item.ItemCategory ?? ""),
+                                            @Json.Serialize(item.ItemName ?? ""),
+                                            @Json.Serialize(item.ItemID ?? ""),
+                                            @Json.Serialize(item.PurchasePrice.ToString()),
+                                            @Json.Serialize(item.Quantity.ToString()),
+                                            @Json.Serialize(item.Unit ?? ""),
+                                            @Json.Serialize(item.StockSupplier ?? ""),
+                                            @Json.Serialize(item.DateAcquired?.ToString() ?? ""),
+                                            @Json.Serialize(item.ExpirationDate?.ToString() ?? ""),
+                                            @Json.Serialize(item.RecipeUnit ?? ""),
+                                            @Json.Serialize(item.ConversionFactor.ToString())
+                                            )">
+                                            <td style="text-align:center;" onclick="event.stopPropagation();">
+                                                <input type="radio" id="radio-@item.ProductId" name="selectedItem" value="@item.ProductId" />
+                                            </td>
+                                            <td><strong>@item.ItemCategory</strong></td>
+                                            <td>@item.ItemName</td>
+                                            <td>@item.ItemID</td>
+                                            <td>₱@item.PurchasePrice.ToString("0.00")</td>
+                                            <td>
+                                                <div style="font-weight: 700; font-size: 14px;">
+                                                    @item.Quantity.ToString("0.##") @item.Unit
+                                                </div>
+                                                @if (!string.IsNullOrEmpty(item.RecipeUnit) && item.ConversionFactor > 1)
+                                                {
+                                                    <div style="font-size: 11px; color: var(--muted); margin-top: 2px; font-weight: 500;">
+                                                        (approx. @((item.Quantity * item.ConversionFactor).ToString("N0")) @item.RecipeUnit left)
+                                                    </div>
+                                                }
+                                            </td>
+                                            <td>
+                                                @{
+                                                    double qtyVal = 0;
+                                                    double.TryParse(item.Quantity.ToString(), out qtyVal);
+                                                    if (qtyVal <= 10)
+                                                    {
+                                                        <span class="stock-badge badge-low">Low</span>
+                                                    }
+                                                    else if (qtyVal <= 30)
+                                                    {
+                                                        <span class="stock-badge badge-medium">Medium</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="stock-badge badge-high">High</span>
+                                                    }
+                                                }
+                                            </td>
+                                            <td>@item.StockSupplier</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr id="noItemsRow">
+                                        <td colspan="8" style="text-align:center; padding: 20px;">No inventory items found.</td>
+                                    </tr>
+                                }
+                                <tr id="noResultsRow" style="display: none;">
+                                    <td colspan="8" style="text-align:center; padding: 20px;">No matching items found.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <form id="archiveForm" method="post" action="/Admin/ArchiveInventory">
+        <input type="hidden" name="ProductId" id="archiveId" />
+    </form>
+
+    <script>
+            function confirmLogout() {
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You will be logged out of your session.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, log out',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        document.getElementById('logoutForm').submit();
+                    }
+                });
+            }
+            function toggleSidebar() {
+                const sidebar = document.querySelector('.sidebar');
+                const overlay = document.querySelector('.sidebar-overlay');
+
+                sidebar.classList.toggle('mobile-open');
+                overlay.classList.toggle('mobile-open');
+            }
+            const standardConversions = {
+                "gallon_ml": 3785.41,
+                "L_ml": 1000,
+                "kg_g": 1000,
+                "oz_ml": 29.57,
+                "gallon_oz": 128
+            };
+
+            document.addEventListener('DOMContentLoaded', function() {
+                const bulkUnitSelect = document.querySelector('select[name="Unit"]');
+                const recipeUnitInput = document.querySelector('input[name="RecipeUnit"]');
+                const convFactorInput = document.querySelector('input[name="ConversionFactor"]');
+
+                function calculateConversion() {
+                    const bulk = bulkUnitSelect.value;
+                    const recipe = recipeUnitInput.value.toLowerCase().trim();
+                    const key = `${bulk}_${recipe}`;
+                    if (standardConversions[key]) {
+                        convFactorInput.value = standardConversions[key];
+                        convFactorInput.style.backgroundColor = "#1C241C";
+                        setTimeout(() => convFactorInput.style.backgroundColor = "", 1000);
+                    }
+                }
+
+                bulkUnitSelect.addEventListener('change', calculateConversion);
+                recipeUnitInput.addEventListener('keyup', calculateConversion);
+            });
+
+            let isSubmitting = false;
+
+            function fillForm(productId, itemCategory, itemName, itemID, purchasePrice, quantity, unit, stockSupplier, dateAcquired, expirationDate, recipeUnit, convFactor) {
+                document.getElementById("ProductId").value = productId;
+                document.querySelector('input[name="ItemCategory"]').value = itemCategory;
+                document.querySelector('input[name="ItemName"]').value = itemName;
+                document.querySelector('input[name="ItemID"]').value = itemID;
+                document.querySelector('input[name="PurchasePrice"]').value = purchasePrice;
+                document.querySelector('input[name="Quantity"]').value = quantity;
+                document.querySelector('select[name="Unit"]').value = unit || "pcs";
+                document.querySelector('input[name="StockSupplier"]').value = stockSupplier;
+                document.querySelector('input[name="DateAcquired"]').value = dateAcquired;
+                document.querySelector('input[name="ExpirationDate"]').value = expirationDate;
+                document.querySelector('input[name="RecipeUnit"]').value = recipeUnit || "";
+                document.querySelector('input[name="ConversionFactor"]').value = convFactor || "1";
+            }
+
+            function confirmAdd() {
+                if (isSubmitting) return;
+                const itemName = document.querySelector('input[name="ItemName"]').value;
+                if (!itemName) {
+                    Swal.fire({ title: 'Missing Info', text: 'Please enter an Item Name.', icon: 'warning' });
+                    return;
+                }
+                Swal.fire({
+                    title: 'Add New Item?',
+                    text: `Add "${itemName}" to the inventory?`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, add it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        isSubmitting = true;
+                        const btn = document.querySelector('.add-btn');
+                        btn.disabled = true;
+                        btn.innerText = "Processing...";
+                        const form = document.getElementById("inventoryForm");
+                        form.action = "/Admin/AddInventory";
+                        form.submit();
+                    }
+                });
+            }
+
+            function confirmUpdate() {
+                if (isSubmitting) return;
+                const productId = document.getElementById("ProductId").value;
+                if (!productId) {
+                    Swal.fire({ title: 'No Selection', text: 'Please select an item to update.', icon: 'warning' });
+                    return;
+                }
+                Swal.fire({
+                    title: 'Update Item?',
+                    text: "Save changes to this inventory item?",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, update it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        isSubmitting = true;
+                        const btn = document.querySelector('.update-btn');
+                        btn.disabled = true;
+                        btn.innerText = "Processing...";
+                        const form = document.getElementById("inventoryForm");
+                        form.action = "/Admin/UpdateInventory";
+                        form.submit();
+                    }
+                });
+            }
+
+            function getSelectedId() {
+                const selected = document.querySelector('input[name="selectedItem"]:checked');
+                if (!selected) {
+                    Swal.fire({ title: 'No Selection', text: 'Please select an item from the table first.', icon: 'warning' });
+                    return null;
+                }
+                return selected.value;
+            }
+
+            // 🗄️ Soft Delete / Archive function matching system state behaviors
+            function archiveItem() {
+                if (isSubmitting) return;
+                const id = getSelectedId();
+                if (!id) return;
+
+                Swal.fire({
+                    title: 'Archive Inventory Item?',
+                    text: "This item will be hidden from current stock tables and moved to the system archive repository.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#4a2511',
+                    confirmButtonText: 'Yes, archive item'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        isSubmitting = true;
+                        document.getElementById("archiveId").value = id;
+                        document.getElementById("archiveForm").submit();
+                    }
+                });
+            }
+
+            function filterInventory() {
+                const searchInput = document.getElementById("inventorySearch").value.toLowerCase().trim();
+                const categoryDropdown = document.getElementById("categoryFilter").value;
+                const rows = document.querySelectorAll(".inventory-row");
+                const noResultsRow = document.getElementById("noResultsRow");
+                let visibleCount = 0;
+
+                rows.forEach(function(row) {
+                    const rowText = row.textContent.toLowerCase();
+                    const categoryCellText = row.cells[1].textContent.trim();
+                    const matchesSearch = rowText.includes(searchInput);
+                    const matchesCategory = (categoryDropdown === "ALL" || categoryCellText === categoryDropdown);
+
+                    if (matchesSearch && matchesCategory) {
+                        row.style.display = "";
+                        visibleCount++;
+                    } else {
+                        row.style.display = "none";
+                    }
+                });
+
+                if (noResultsRow) {
+                    noResultsRow.style.display = visibleCount === 0 ? "" : "none";
+                }
+            }
+    </script>
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        var errorMsg = TempData["ErrorMessage"].ToString();
+        <script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    Swal.fire({
+                        title: 'Action Blocked',
+                        text: @Html.Raw(Json.Serialize(errorMsg)),
+                        icon: 'warning'
+                    });
+                });
+        </script>
+    }
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        var successMsg = TempData["SuccessMessage"].ToString();
+        <script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    Swal.fire({
+                        title: 'Success!',
+                        text: @Html.Raw(Json.Serialize(successMsg)),
+                        icon: 'success',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                });
+        </script>
+    }
+</body>
+</html>
