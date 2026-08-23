@@ -183,7 +183,8 @@
                         </button>
 
                         <a href="#"
-                           class="forgot-link">
+                           class="forgot-link"
+                           id="openForgotPassword">
                             Forgot Password?
                         </a>
 
@@ -208,7 +209,47 @@
         </div>
 
     </div>
+    <!-- Forgot Password Modal -->
+    <div class="modal-overlay" id="forgotPasswordModal">
+        <div class="modal-content-wrapper forgot-password-modal">
+            <button type="button" class="modal-close-btn" id="closeForgotPassword" aria-label="Close">✕</button>
 
+            <div class="top-user-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+                    <path d="m3 7 9 6 9-6"></path>
+                </svg>
+            </div>
+
+            <div class="login-header">
+                <h2>Reset Password</h2>
+                <p>Enter your email and we'll send you a link to reset your password.</p>
+            </div>
+
+            <form id="forgotPasswordForm" asp-controller="Home" asp-action="ForgotPassword" method="post">
+                <div class="input-group">
+                    <label for="resetEmail">Email Address</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+                                <path d="m3 7 9 6 9-6"></path>
+                            </svg>
+                        </span>
+                        <input type="email" id="resetEmail" name="email" placeholder="you@example.com" required />
+                    </div>
+                </div>
+
+                <div id="forgotPasswordStatus" class="forgot-password-status" style="display:none;"></div>
+
+                <div class="form-actions" style="margin-top: 16px;">
+                    <button type="submit" class="btn-login" id="forgotPasswordSubmitBtn">
+                        Send Reset Link
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- Password Visibility Script -->
     <script>
@@ -251,6 +292,70 @@
 
                 });
 
+            });
+            // Forgot Password Modal
+            const forgotModal = document.getElementById('forgotPasswordModal');
+            const openForgotBtn = document.getElementById('openForgotPassword');
+            const closeForgotBtn = document.getElementById('closeForgotPassword');
+            const forgotForm = document.getElementById('forgotPasswordForm');
+            const forgotStatus = document.getElementById('forgotPasswordStatus');
+            const forgotSubmitBtn = document.getElementById('forgotPasswordSubmitBtn');
+
+            function openForgotModal() {
+                forgotModal.classList.add('open');
+                forgotStatus.style.display = 'none';
+                forgotForm.reset();
+            }
+
+            function closeForgotModal() {
+                forgotModal.classList.remove('open');
+            }
+
+            openForgotBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                openForgotModal();
+            });
+
+            closeForgotBtn.addEventListener('click', closeForgotModal);
+
+            forgotModal.addEventListener('click', function(e) {
+                if (e.target === forgotModal) closeForgotModal();
+            });
+
+            forgotForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                forgotSubmitBtn.disabled = true;
+                forgotSubmitBtn.textContent = 'Sending...';
+
+                const email = document.getElementById('resetEmail').value.trim();
+
+                try {
+                    const response = await fetch(forgotForm.getAttribute('action') || '/Home/ForgotPassword', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: 'email=' + encodeURIComponent(email)
+                    });
+
+                    forgotStatus.style.display = 'block';
+
+                    if (response.ok) {
+                        forgotStatus.className = 'forgot-password-status success';
+                        forgotStatus.textContent = 'If that email is registered, a reset link has been sent.';
+                        forgotSubmitBtn.textContent = 'Link Sent';
+                    } else {
+                        forgotStatus.className = 'forgot-password-status error';
+                        forgotStatus.textContent = 'Something went wrong. Please try again later.';
+                        forgotSubmitBtn.disabled = false;
+                        forgotSubmitBtn.textContent = 'Send Reset Link';
+                    }
+                } catch (err) {
+                    forgotStatus.style.display = 'block';
+                    forgotStatus.className = 'forgot-password-status error';
+                    forgotStatus.textContent = 'Could not reach the server. Please try again.';
+                    forgotSubmitBtn.disabled = false;
+                    forgotSubmitBtn.textContent = 'Send Reset Link';
+                }
             });
     </script>
 

@@ -40,6 +40,7 @@
                 <nav class="sidebar-menu">
                     <a href="/@homeController/Dashboard" class="menu-btn @(currentAction == "Dashboard" ? "active" : "")">Dashboard</a>
                     <a href="/Admin/QueueOrder" class="menu-btn @(currentAction == "QueueOrder" ? "active" : "")">Queue</a>
+                    <a href="/@homeController/Promos" class="menu-btn">Promotions</a>
 
                     @if (User.IsInRole("Admin"))
                     {
