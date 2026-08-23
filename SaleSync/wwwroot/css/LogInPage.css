@@ -1059,3 +1059,93 @@ input:-webkit-autofill:active {
         transition-duration: 0.01ms !important;
     }
 }
+/* ==========================================================================
+   35. FORGOT PASSWORD MODAL
+   ========================================================================== */
+
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+    .modal-overlay.open {
+        display: flex;
+    }
+
+.forgot-password-modal {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    background: linear-gradient(145deg, rgba(24, 33, 27, 0.96), rgba(13, 19, 15, 0.96));
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(255, 255, 255, 0.085);
+    border-top: 2px solid var(--accent-gold);
+    border-radius: 22px;
+    padding: 40px 34px 34px;
+    box-shadow: 0 28px 70px rgba(0, 0, 0, 0.72), 0 0 45px rgba(223, 183, 86, 0.075);
+    text-align: center;
+    animation: loginSlideUp 0.3s ease-out;
+}
+
+    .forgot-password-modal .top-user-icon {
+        margin-bottom: 16px;
+    }
+
+    .forgot-password-modal .input-group {
+        text-align: left;
+        margin-bottom: 4px;
+    }
+
+.modal-close-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--border-subtle);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+    .modal-close-btn:hover {
+        color: var(--accent-gold-light);
+        border-color: var(--border-gold);
+        background: var(--gold-soft);
+    }
+
+.forgot-password-status {
+    margin-top: 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+}
+
+    .forgot-password-status.success {
+        color: var(--accent-gold-light);
+        border: 1px solid rgba(223, 183, 86, 0.35);
+        background: rgba(223, 183, 86, 0.1);
+    }
+
+    .forgot-password-status.error {
+        color: var(--error-light);
+        border: 1px solid var(--error-border);
+        background: var(--error-bg);
+    }

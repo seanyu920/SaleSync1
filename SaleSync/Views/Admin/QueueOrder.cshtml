@@ -52,6 +52,12 @@
                             Queue
                         </a>
                     }
+                    @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+                    {
+                        <a href="@Url.Action("Promos", "Admin")" class="menu-btn @(currentAction == "Promos" || currentAction == "Promos" ? "active" : "")">
+                            Promotions
+                        </a>
+                    }
 
                     @if (User.IsInRole("Admin"))
                     {

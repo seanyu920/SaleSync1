@@ -1,10 +1,11 @@
 ﻿/* ==========================================================================
-   CAFÈRO CUSTOMER ORDERING — LEFT SIDEBAR + MOBILE HAMBURGER
+   CAFÈRO CUSTOMER ORDERING — LEFT SIDEBAR + MOBILE HAMBURGER + PROMOS
    --------------------------------------------------------------------------
    Desktop:
    - Permanent left sidebar
    - Spacious product area
    - Dark green + gold Cafèro theme
+   - Order / My Orders / Promos navigation
 
    Mobile:
    - Sidebar remains on the LEFT
@@ -12,6 +13,7 @@
    - Gold hamburger button opens the sidebar
    - Dark overlay appears behind sidebar
    - Responsive product cards
+   - Responsive promo cards
    - Cafèro-themed chat widget
 
    IMPORTANT:
@@ -283,44 +285,48 @@ body {
 
 
 /* ==========================================================================
-   9. ORDER / MY ORDERS TABS
+   9. ORDER / MY ORDERS / PROMOS TABS
    ========================================================================== */
 
 .sidebar-tabs {
     width: 100%;
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 7px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
 }
 
 .tab-btn {
     width: 100%;
     min-height: 42px;
-    padding: 9px 7px;
+    padding: 9px 5px;
     background: var(--bg-card);
     border: 1px solid var(--border-sub);
     border-radius: 9px;
     color: var(--muted);
     font-family: 'Outfit', sans-serif;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 800;
     cursor: pointer;
     text-align: center;
     white-space: nowrap;
-    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
     .tab-btn.active {
         background: var(--gold);
         color: var(--bg-base);
         border-color: var(--gold);
-        box-shadow: 0 6px 16px rgba(201,168,76,0.15);
+        box-shadow: 0 6px 16px rgba(201,168,76,0.15), 0 0 0 1px rgba(255,255,255,0.04) inset;
     }
 
     .tab-btn:not(.active):hover {
         color: var(--cream);
         background: var(--bg-card-hover);
         border-color: var(--border);
+    }
+
+    .tab-btn:active {
+        transform: translateY(1px);
     }
 
 
@@ -502,7 +508,8 @@ body {
 }
 
     .main-content > #tabMenu,
-    .main-content > #tabOrders {
+    .main-content > #tabOrders,
+    .main-content > #tabPromos {
         width: 100%;
         max-width: var(--content-max);
         margin: 0 auto;
@@ -764,7 +771,7 @@ body {
 .product-img-placeholder {
     width: 100%;
     height: 150px;
-    background: radial-gradient(circle at 50% 48%, rgba(255,255,255,0.018), transparent 46%), var(--bg-card-2);
+    background: radial-gradient( circle at 50% 48%, rgba(255,255,255,0.018), transparent 46% ), var(--bg-card-2);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1651,7 +1658,244 @@ body {
 
 
 /* ==========================================================================
-   31. SWEETALERT2
+   31. CUSTOMER PROMOTIONS
+   ========================================================================== */
+
+#tabPromos {
+    width: 100%;
+}
+
+    #tabPromos .pos-header {
+        margin-bottom: 28px;
+    }
+
+        #tabPromos .pos-header h1 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+            #tabPromos .pos-header h1::before {
+                content: "✦";
+                width: 34px;
+                height: 34px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 10px;
+                background: var(--gold-glow);
+                border: 1px solid var(--border);
+                color: var(--gold-light);
+                font-size: 16px;
+                flex-shrink: 0;
+            }
+
+        #tabPromos .pos-header p {
+            max-width: 620px;
+        }
+
+
+/* --------------------------------------------------------------------------
+   PROMO GRID
+   -------------------------------------------------------------------------- */
+
+.promo-customer-grid {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+    padding-bottom: 40px;
+}
+
+
+/* --------------------------------------------------------------------------
+   PROMO CARD
+   -------------------------------------------------------------------------- */
+
+.customer-promo-card {
+    position: relative;
+    min-height: 235px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    overflow: hidden;
+    background: radial-gradient( circle at 100% 0%, rgba(201,168,76,0.14), transparent 35% ), linear-gradient( 145deg, var(--bg-card-2), var(--bg-card) );
+    border: 1px solid var(--border-sub);
+    border-radius: 16px;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.20);
+    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+}
+
+    .customer-promo-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: linear-gradient( 90deg, var(--gold), var(--gold-light), transparent );
+    }
+
+    .customer-promo-card::after {
+        content: "";
+        position: absolute;
+        width: 110px;
+        height: 110px;
+        right: -45px;
+        bottom: -45px;
+        border-radius: 50%;
+        background: rgba(201,168,76,0.05);
+        pointer-events: none;
+    }
+
+    .customer-promo-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--border-strong);
+        background: radial-gradient( circle at 100% 0%, rgba(201,168,76,0.18), transparent 36% ), linear-gradient( 145deg, var(--bg-card-hover), var(--bg-card) );
+        box-shadow: 0 18px 38px rgba(0,0,0,0.32), 0 0 22px rgba(201,168,76,0.05);
+    }
+
+
+/* --------------------------------------------------------------------------
+   PROMO BADGE
+   -------------------------------------------------------------------------- */
+
+.customer-promo-badge {
+    position: relative;
+    z-index: 2;
+    width: fit-content;
+    padding: 5px 10px;
+    margin-bottom: 16px;
+    border-radius: 999px;
+    background: var(--gold);
+    color: var(--bg-base);
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    box-shadow: 0 5px 14px rgba(201,168,76,0.16);
+}
+
+
+/* --------------------------------------------------------------------------
+   PROMO TITLE
+   -------------------------------------------------------------------------- */
+
+.customer-promo-card h2 {
+    position: relative;
+    z-index: 2;
+    margin-bottom: 8px;
+    color: var(--cream);
+    font-size: 19px;
+    font-weight: 900;
+    line-height: 1.25;
+    letter-spacing: -0.4px;
+}
+
+
+/* --------------------------------------------------------------------------
+   PROMO DESCRIPTION
+   -------------------------------------------------------------------------- */
+
+.customer-promo-card p {
+    position: relative;
+    z-index: 2;
+    margin-bottom: 18px;
+    color: var(--muted-2);
+    font-size: 12.5px;
+    line-height: 1.6;
+}
+
+
+/* --------------------------------------------------------------------------
+   PROMO CODE
+   -------------------------------------------------------------------------- */
+
+.customer-promo-code {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    padding: 10px 12px;
+    background: rgba(13,17,13,0.55);
+    border: 1px dashed var(--border);
+    border-radius: 9px;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+    margin-top: auto;
+}
+
+    .customer-promo-code strong {
+        color: var(--gold-light);
+        font-weight: 900;
+        letter-spacing: 0.5px;
+    }
+
+
+/* --------------------------------------------------------------------------
+   PROMO VALIDITY
+   -------------------------------------------------------------------------- */
+
+.customer-promo-validity {
+    position: relative;
+    z-index: 2;
+    margin-top: 9px;
+    color: var(--muted);
+    font-size: 10px;
+    line-height: 1.4;
+}
+
+
+/* --------------------------------------------------------------------------
+   EMPTY PROMO STATE
+   -------------------------------------------------------------------------- */
+
+.promo-empty-state {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 280px;
+    padding: 30px;
+    background: var(--bg-card);
+    border: 1px dashed var(--border);
+    border-radius: 16px;
+    text-align: center;
+}
+
+    .promo-empty-state .promo-empty-icon {
+        width: 58px;
+        height: 58px;
+        margin-bottom: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: var(--gold-glow);
+        border: 1px solid var(--border);
+        color: var(--gold);
+        font-size: 23px;
+    }
+
+    .promo-empty-state h3 {
+        margin-bottom: 6px;
+        color: var(--cream);
+        font-size: 17px;
+        font-weight: 800;
+    }
+
+    .promo-empty-state p {
+        max-width: 380px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
+
+/* ==========================================================================
+   32. SWEETALERT2
    ========================================================================== */
 
 .swal2-popup {
@@ -1720,7 +1964,7 @@ body {
 
 
 /* ==========================================================================
-   32. CHAT WIDGET — CAFÈRO THEME
+   33. CHAT WIDGET — CAFÈRO THEME
    ========================================================================== */
 
 .chat-widget {
@@ -1988,7 +2232,7 @@ body {
 
 
 /* ==========================================================================
-   33. ANIMATION
+   34. ANIMATION
    ========================================================================== */
 
 .slide-up {
@@ -1997,7 +2241,7 @@ body {
 
 
 /* ==========================================================================
-   34. LARGE DESKTOP
+   35. LARGE DESKTOP
    ========================================================================== */
 
 @media (min-width: 1600px) {
@@ -2031,15 +2275,21 @@ body {
     }
 
     .main-content > #tabMenu,
-    .main-content > #tabOrders {
+    .main-content > #tabOrders,
+    .main-content > #tabPromos {
         padding-left: 40px;
         padding-right: 40px;
+    }
+
+    .promo-customer-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 22px;
     }
 }
 
 
 /* ==========================================================================
-   35. SMALL LAPTOP
+   36. SMALL LAPTOP
    ========================================================================== */
 
 @media (max-width: 1250px) {
@@ -2066,7 +2316,9 @@ body {
     }
 
     .tab-btn {
-        font-size: 12px;
+        font-size: 11px;
+        padding-left: 3px;
+        padding-right: 3px;
     }
 
     .menu-btn {
@@ -2092,7 +2344,8 @@ body {
     }
 
     .main-content > #tabMenu,
-    .main-content > #tabOrders {
+    .main-content > #tabOrders,
+    .main-content > #tabPromos {
         padding-left: 25px;
         padding-right: 25px;
     }
@@ -2101,11 +2354,16 @@ body {
         grid-template-columns: repeat(auto-fill, minmax(215px, 1fr));
         gap: 18px;
     }
+
+    .promo-customer-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+    }
 }
 
 
 /* ==========================================================================
-   36. TABLET LANDSCAPE
+   37. TABLET LANDSCAPE
    ========================================================================== */
 
 @media (max-width: 1000px) {
@@ -2133,9 +2391,9 @@ body {
     }
 
     .tab-btn {
-        font-size: 11px;
-        padding-left: 5px;
-        padding-right: 5px;
+        font-size: 10px;
+        padding-left: 2px;
+        padding-right: 2px;
     }
 
     .menu-btn {
@@ -2157,7 +2415,8 @@ body {
     }
 
     .main-content > #tabMenu,
-    .main-content > #tabOrders {
+    .main-content > #tabOrders,
+    .main-content > #tabPromos {
         padding-left: 20px;
         padding-right: 20px;
     }
@@ -2174,14 +2433,27 @@ body {
         grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
         gap: 16px;
     }
+
+    .promo-customer-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    .customer-promo-card {
+        min-height: 220px;
+        padding: 20px;
+    }
+
+        .customer-promo-card h2 {
+            font-size: 17px;
+        }
 }
 
 
 /* ==========================================================================
-   37. MOBILE — FIXED HAMBURGER + LEFT OFF-CANVAS SIDEBAR
+   38. MOBILE — FIXED HAMBURGER + LEFT OFF-CANVAS SIDEBAR
    ========================================================================== */
 
-/* Hidden on desktop */
 .mobile-header {
     display: none;
 }
@@ -2190,10 +2462,6 @@ body {
     display: none;
 }
 
-
-/* ==========================================================================
-   MOBILE
-   ========================================================================== */
 
 @media (max-width: 760px) {
 
@@ -2232,6 +2500,10 @@ body {
     }
 
 
+    /* ----------------------------------------------------------------------
+       HAMBURGER BUTTON
+       ---------------------------------------------------------------------- */
+
     .hamburger-btn {
         width: 42px;
         height: 42px;
@@ -2246,14 +2518,14 @@ body {
         cursor: pointer;
         position: relative;
         z-index: 7000;
-        box-shadow: 0 5px 16px rgba(0, 0, 0, 0.28);
+        box-shadow: 0 5px 16px rgba(0,0,0,0.28);
         transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
     }
 
         .hamburger-btn:hover {
             background: var(--gold-light);
             transform: translateY(-1px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.35);
         }
 
         .hamburger-btn:active {
@@ -2268,7 +2540,6 @@ body {
             font-size: 0;
         }
 
-            /* Top, middle, bottom lines */
             .hamburger-btn i::before,
             .hamburger-btn i::after {
                 content: "";
@@ -2406,24 +2677,25 @@ body {
 
 
     /* ----------------------------------------------------------------------
-       ORDER TABS
+       ORDER / MY ORDERS / PROMOS
        ---------------------------------------------------------------------- */
 
     .sidebar-tabs {
         width: 100%;
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 7px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 5px;
     }
 
     .tab-btn {
         width: 100%;
         min-height: 44px;
         height: 44px;
-        padding: 0 8px;
-        border-radius: 9px;
-        font-size: 13px;
+        padding: 0 4px;
+        border-radius: 8px;
+        font-size: 11px;
         font-weight: 800;
+        letter-spacing: -0.1px;
     }
 
 
@@ -2540,7 +2812,8 @@ body {
     }
 
         .main-content > #tabMenu,
-        .main-content > #tabOrders {
+        .main-content > #tabOrders,
+        .main-content > #tabPromos {
             width: 100%;
             max-width: none;
             padding: 70px 12px 30px;
@@ -2664,6 +2937,54 @@ body {
 
 
     /* ----------------------------------------------------------------------
+       PROMOS
+       ---------------------------------------------------------------------- */
+
+    #tabPromos .pos-header {
+        margin-bottom: 20px;
+    }
+
+        #tabPromos .pos-header h1 {
+            font-size: 22px;
+        }
+
+            #tabPromos .pos-header h1::before {
+                width: 30px;
+                height: 30px;
+                font-size: 14px;
+                border-radius: 8px;
+            }
+
+        #tabPromos .pos-header p {
+            font-size: 11.5px;
+        }
+
+    .promo-customer-grid {
+        grid-template-columns: 1fr;
+        gap: 13px;
+    }
+
+    .customer-promo-card {
+        min-height: 210px;
+        padding: 19px;
+        border-radius: 14px;
+    }
+
+        .customer-promo-card h2 {
+            font-size: 17px;
+        }
+
+        .customer-promo-card p {
+            font-size: 12px;
+        }
+
+    .customer-promo-badge {
+        font-size: 9px;
+        padding: 4px 9px;
+    }
+
+
+    /* ----------------------------------------------------------------------
        CART
        ---------------------------------------------------------------------- */
 
@@ -2703,7 +3024,7 @@ body {
 
 
 /* ==========================================================================
-   38. SMALL PHONE
+   39. SMALL PHONE
    ========================================================================== */
 
 @media (max-width: 480px) {
@@ -2730,7 +3051,8 @@ body {
     }
 
     .main-content > #tabMenu,
-    .main-content > #tabOrders {
+    .main-content > #tabOrders,
+    .main-content > #tabPromos {
         padding: 66px 9px 27px;
     }
 
@@ -2749,9 +3071,11 @@ body {
     }
 
     .tab-btn {
-        font-size: 12px;
+        font-size: 10px;
         min-height: 43px;
         height: 43px;
+        padding-left: 2px;
+        padding-right: 2px;
     }
 
     .sidebar-section-label {
@@ -2845,6 +3169,50 @@ body {
         font-size: 12px;
     }
 
+
+    /* ----------------------------------------------------------------------
+       PROMOS — SMALL PHONE
+       ---------------------------------------------------------------------- */
+
+    #tabPromos .pos-header h1 {
+        font-size: 20px;
+    }
+
+    #tabPromos .pos-header p {
+        font-size: 11px;
+    }
+
+    .promo-customer-grid {
+        gap: 11px;
+    }
+
+    .customer-promo-card {
+        min-height: 195px;
+        padding: 17px;
+    }
+
+        .customer-promo-card h2 {
+            font-size: 16px;
+        }
+
+        .customer-promo-card p {
+            font-size: 11.5px;
+            line-height: 1.5;
+        }
+
+    .customer-promo-code {
+        font-size: 10px;
+    }
+
+    .customer-promo-validity {
+        font-size: 9px;
+    }
+
+
+    /* ----------------------------------------------------------------------
+       CHAT
+       ---------------------------------------------------------------------- */
+
     .chat-widget {
         right: 11px;
         bottom: 11px;
@@ -2865,7 +3233,7 @@ body {
 
 
 /* ==========================================================================
-   39. VERY SMALL PHONE
+   40. VERY SMALL PHONE
    ========================================================================== */
 
 @media (max-width: 360px) {
@@ -2892,7 +3260,8 @@ body {
     }
 
     .main-content > #tabMenu,
-    .main-content > #tabOrders {
+    .main-content > #tabOrders,
+    .main-content > #tabPromos {
         padding-top: 63px;
     }
 
@@ -2909,7 +3278,9 @@ body {
     }
 
     .tab-btn {
-        font-size: 11px;
+        font-size: 9px;
+        min-height: 42px;
+        height: 42px;
     }
 
     .sidebar-section-label {
@@ -2943,11 +3314,49 @@ body {
         padding-left: 7px;
         padding-right: 7px;
     }
+
+
+    /* ----------------------------------------------------------------------
+       PROMOS — VERY SMALL PHONE
+       ---------------------------------------------------------------------- */
+
+    #tabPromos .pos-header h1 {
+        font-size: 18px;
+    }
+
+        #tabPromos .pos-header h1::before {
+            width: 27px;
+            height: 27px;
+            font-size: 12px;
+        }
+
+    .customer-promo-card {
+        min-height: 185px;
+        padding: 15px;
+    }
+
+        .customer-promo-card h2 {
+            font-size: 15px;
+        }
+
+        .customer-promo-card p {
+            font-size: 11px;
+        }
+
+    .customer-promo-badge {
+        font-size: 8px;
+        padding: 4px 8px;
+    }
+
+    .customer-promo-code {
+        font-size: 9px;
+        padding: 8px 10px;
+    }
 }
 
 
 /* ==========================================================================
-   40. REDUCED MOTION
+   41. REDUCED MOTION
    ========================================================================== */
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,0 +1,387 @@
+﻿/* =========================================================
+               PROMOTION PAGE
+               ========================================================= */
+.promo-page {
+    width: 100%;
+    padding: 30px;
+}
+
+.promo-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    gap: 20px;
+}
+
+    .promo-header h1 {
+        color: #f2ede4;
+        font-size: 28px;
+        font-weight: 900;
+        margin-bottom: 5px;
+    }
+
+    .promo-header p {
+        color: rgba(242,237,228,0.55);
+        font-size: 13px;
+    }
+
+.btn-create-promo {
+    border: none;
+    background: #c9a84c;
+    color: #0d110d;
+    padding: 12px 20px;
+    border-radius: 9px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 900;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+    .btn-create-promo:hover {
+        background: #ddb95e;
+        transform: translateY(-1px);
+    }
+
+.promo-summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 22px;
+}
+
+.promo-summary-card {
+    background: #1c241c;
+    border: 1px solid rgba(255,255,255,0.065);
+    border-radius: 14px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.promo-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 19px;
+}
+
+    .promo-icon.gold {
+        background: rgba(201,168,76,0.12);
+        color: #c9a84c;
+    }
+
+    .promo-icon.green {
+        background: rgba(61,191,120,0.12);
+        color: #3dbf78;
+    }
+
+    .promo-icon.red {
+        background: rgba(224,85,85,0.12);
+        color: #e05555;
+    }
+
+.promo-summary-label {
+    color: rgba(242,237,228,0.5);
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.promo-summary-value {
+    margin-top: 3px;
+    color: #f2ede4;
+    font-size: 22px;
+    font-weight: 900;
+}
+
+.promo-table-card {
+    background: #1c241c;
+    border: 1px solid rgba(255,255,255,0.065);
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+.promo-table-header {
+    padding: 18px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.065);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+    .promo-table-header h2 {
+        color: #f2ede4;
+        font-size: 16px;
+        font-weight: 800;
+    }
+
+.promo-table-wrapper {
+    overflow-x: auto;
+}
+
+.promo-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+    .promo-table th {
+        color: rgba(242,237,228,0.45);
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        text-align: left;
+        padding: 14px 20px;
+        border-bottom: 1px solid rgba(255,255,255,0.065);
+    }
+
+    .promo-table td {
+        color: #f2ede4;
+        font-size: 12px;
+        padding: 15px 20px;
+        border-bottom: 1px solid rgba(255,255,255,0.045);
+    }
+
+    .promo-table tbody tr:hover {
+        background: rgba(255,255,255,0.02);
+    }
+
+.promo-name {
+    font-weight: 800;
+}
+
+.promo-code {
+    color: #c9a84c;
+    font-weight: 800;
+}
+
+.promo-discount {
+    color: #ddb95e;
+    font-weight: 900;
+}
+
+.promo-date {
+    color: rgba(242,237,228,0.65);
+}
+
+.promo-status {
+    display: inline-block;
+    padding: 5px 9px;
+    border-radius: 20px;
+    font-size: 9px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+
+    .promo-status.active {
+        color: #3dbf78;
+        background: rgba(61,191,120,0.12);
+        border: 1px solid rgba(61,191,120,0.22);
+    }
+
+    .promo-status.scheduled {
+        color: #c9a84c;
+        background: rgba(201,168,76,0.10);
+        border: 1px solid rgba(201,168,76,0.20);
+    }
+
+    .promo-status.expired {
+        color: #e05555;
+        background: rgba(224,85,85,0.10);
+        border: 1px solid rgba(224,85,85,0.20);
+    }
+
+.promo-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.promo-action-btn {
+    width: 31px;
+    height: 31px;
+    border-radius: 7px;
+    border: 1px solid rgba(255,255,255,0.07);
+    background: #141a14;
+    color: rgba(242,237,228,0.7);
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+    .promo-action-btn:hover {
+        background: #c9a84c;
+        color: #0d110d;
+        border-color: #c9a84c;
+    }
+
+/* =========================================================
+               MODAL
+               ========================================================= */
+
+.promo-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.72);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 5000;
+    backdrop-filter: blur(5px);
+}
+
+    .promo-modal-overlay.open {
+        display: flex;
+    }
+
+.promo-modal {
+    width: 92%;
+    max-width: 600px;
+    background: #1c241c;
+    border: 1px solid rgba(201,168,76,0.18);
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 25px 70px rgba(0,0,0,0.5);
+}
+
+.promo-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 22px;
+}
+
+    .promo-modal-header h2 {
+        color: #f2ede4;
+        font-size: 20px;
+        font-weight: 900;
+    }
+
+.promo-close {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    color: rgba(242,237,228,0.55);
+    font-size: 18px;
+    border-radius: 7px;
+    cursor: pointer;
+}
+
+    .promo-close:hover {
+        background: rgba(255,255,255,0.05);
+        color: #f2ede4;
+    }
+
+.promo-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.promo-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+    .promo-form-group.full {
+        grid-column: 1 / -1;
+    }
+
+    .promo-form-group label {
+        color: rgba(242,237,228,0.58);
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .promo-form-group input,
+    .promo-form-group select,
+    .promo-form-group textarea {
+        width: 100%;
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 9px;
+        background: #141a14;
+        color: #f2ede4;
+        padding: 11px 12px;
+        outline: none;
+        font-family: 'Outfit', sans-serif;
+        font-size: 13px;
+    }
+
+    .promo-form-group textarea {
+        min-height: 85px;
+        resize: vertical;
+    }
+
+        .promo-form-group input:focus,
+        .promo-form-group select:focus,
+        .promo-form-group textarea:focus {
+            border-color: #c9a84c;
+        }
+
+.promo-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 22px;
+}
+
+.promo-cancel-btn {
+    padding: 11px 18px;
+    border-radius: 8px;
+    background: #141a14;
+    color: #f2ede4;
+    border: 1px solid rgba(255,255,255,0.07);
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.promo-save-btn {
+    padding: 11px 18px;
+    border-radius: 8px;
+    background: #c9a84c;
+    color: #0d110d;
+    border: none;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+/* =========================================================
+               MOBILE
+               ========================================================= */
+
+@media (max-width: 800px) {
+
+    .promo-page {
+        padding: 20px 12px;
+    }
+
+    .promo-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .promo-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .promo-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .promo-form-group.full {
+        grid-column: auto;
+    }
+}
+
