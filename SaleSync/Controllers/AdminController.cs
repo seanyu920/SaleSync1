@@ -1925,5 +1925,10 @@ namespace SaleSync.Controllers
             public string Status { get; set; }
         }
 
+        [Authorize(Roles = "Admin,Manager")]
+        public IActionResult Promos()
+        {
+            return View();
+        }
     }
 }

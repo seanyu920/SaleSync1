@@ -83,6 +83,7 @@
                 <div class="sidebar-tabs">
                     <button class="tab-btn active" onclick="switchTab('menu', this)">Order</button>
                     <button class="tab-btn" onclick="switchTab('orders', this)">My Orders</button>
+                    <button class="tab-btn" onclick="switchTab('promos', this)">Promos</button>
                 </div>
 
                 <div id="catNav">
@@ -419,6 +420,73 @@
                             </div>
                         }
                     </div>
+                </div>
+            </div>
+
+            <div id="tabPromos" style="display:none;">
+                <header class="pos-header">
+                    <div>
+                        <h1>Promotions</h1>
+                        <p>Enjoy our latest deals and special offers.</p>
+                    </div>
+                </header>
+
+                <div class="promo-customer-grid">
+
+                    <div class="customer-promo-card">
+                        <div class="customer-promo-badge">20% OFF</div>
+
+                        <h2>Weekend Coffee Deal</h2>
+
+                        <p>
+                            Enjoy 20% off your favorite coffee drinks this weekend.
+                        </p>
+
+                        <div class="customer-promo-code">
+                            Code: <strong>WEEKEND20</strong>
+                        </div>
+
+                        <div class="customer-promo-validity">
+                            Valid Aug 22 – Aug 30
+                        </div>
+                    </div>
+
+                    <div class="customer-promo-card">
+                        <div class="customer-promo-badge">₱20 OFF</div>
+
+                        <h2>Iced Latte Special</h2>
+
+                        <p>
+                            Get ₱20 off selected iced latte drinks.
+                        </p>
+
+                        <div class="customer-promo-code">
+                            Code: <strong>ICEDLATTE</strong>
+                        </div>
+
+                        <div class="customer-promo-validity">
+                            Valid Aug 25 – Sep 5
+                        </div>
+                    </div>
+
+                    <div class="customer-promo-card">
+                        <div class="customer-promo-badge">10% OFF</div>
+
+                        <h2>New Customer Discount</h2>
+
+                        <p>
+                            New customers can enjoy 10% off their first order.
+                        </p>
+
+                        <div class="customer-promo-code">
+                            Code: <strong>WELCOME10</strong>
+                        </div>
+
+                        <div class="customer-promo-validity">
+                            Promotion available for new customers.
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </main>
@@ -1065,47 +1133,24 @@
 
         // ── TAB SWITCHER ──────────────────────────────────────────────────────────
 
-        function switchTab(
-            tab,
-            btn
-        ) {
+        function switchTab(tab, btn) {
+            document.getElementById('tabMenu').style.display =
+                tab === 'menu' ? 'block' : 'none';
 
-            document.getElementById(
-                'tabMenu'
-            ).style.display =
-                tab === 'menu'
-                    ? 'block'
-                    : 'none';
+            document.getElementById('tabOrders').style.display =
+                tab === 'orders' ? 'block' : 'none';
 
-            document.getElementById(
-                'tabOrders'
-            ).style.display =
-                tab === 'orders'
-                    ? 'block'
-                    : 'none';
+            document.getElementById('tabPromos').style.display =
+                tab === 'promos' ? 'block' : 'none';
 
-            document.getElementById(
-                'catNav'
-            ).style.display =
-                tab === 'menu'
-                    ? 'block'
-                    : 'none';
+            document.getElementById('catNav').style.display =
+                tab === 'menu' ? 'block' : 'none';
 
-            document
-                .querySelectorAll('.tab-btn')
-                .forEach(
-                    b =>
-                        b.classList.remove(
-                            'active'
-                        )
-                );
-
-            btn.classList.add(
-                'active'
+            document.querySelectorAll('.tab-btn').forEach(
+                b => b.classList.remove('active')
             );
 
-            // Close mobile menu after switching tabs
-            closeSidebar();
+            btn.classList.add('active');
         }
 
         // ── CART TOGGLE ───────────────────────────────────────────────────────────
