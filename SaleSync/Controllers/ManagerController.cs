@@ -19,12 +19,14 @@ namespace SaleSync.Controllers
     {
         private readonly IConfiguration _configuration;
         private readonly StoreSettingsService _storeSettingsService;
+        private readonly InventoryDeductionService _inventoryDeductionService;
         private readonly string connectionString;
 
-        public ManagerController(IConfiguration configuration, StoreSettingsService storeSettingsService)
+        public ManagerController(IConfiguration configuration, StoreSettingsService storeSettingsService, InventoryDeductionService inventoryDeductionService)
         {
             _configuration = configuration;
             _storeSettingsService = storeSettingsService;
+            _inventoryDeductionService = inventoryDeductionService;
             connectionString = _configuration.GetConnectionString("DefaultConnection");
         }
 
@@ -263,7 +265,7 @@ namespace SaleSync.Controllers
 
                             foreach (var item in itemsList)
                             {
-                                DeductIngredients(conn, transaction, item.pId, item.qty);
+                                _inventoryDeductionService.DeductIngredients(conn, transaction, item.pId, item.qty);
                             }
                         }
 
@@ -277,50 +279,6 @@ namespace SaleSync.Controllers
                 }
             }
             return Ok();
-        }
-
-        private void DeductIngredients(SqlConnection conn, SqlTransaction transaction, int productId, int qty)
-        {
-            string recipeQuery = @"
-                SELECT ingredient_id, quantity_required
-                FROM   product_ingredients
-                WHERE  product_id = @product_id";
-
-            using SqlCommand cmd = new SqlCommand(recipeQuery, conn, transaction);
-            cmd.Parameters.AddWithValue("@product_id", productId);
-
-            var ingredients = new List<(int id, double qtyReq)>();
-
-            using (SqlDataReader reader = cmd.ExecuteReader())
-            {
-                while (reader.Read())
-                {
-                    ingredients.Add((
-                        Convert.ToInt32(reader["ingredient_id"]),
-                        Convert.ToDouble(reader["quantity_required"])
-                    ));
-                }
-            }
-
-            foreach (var ing in ingredients)
-            {
-                double totalDeduct = ing.qtyReq * qty;
-                string updateQuery = @"
-                    UPDATE products
-                    SET    stock_quantity = stock_quantity - @deduct
-                    WHERE  product_id     = @ingredient_id
-                      AND  stock_quantity >= @deduct";
-
-                using SqlCommand updateCmd = new SqlCommand(updateQuery, conn, transaction);
-                updateCmd.Parameters.AddWithValue("@deduct", totalDeduct);
-                updateCmd.Parameters.AddWithValue("@ingredient_id", ing.id);
-
-                int rows = updateCmd.ExecuteNonQuery();
-                if (rows == 0)
-                {
-                    throw new Exception($"Stock for ingredient ID {ing.id} became insufficient.");
-                }
-            }
         }
 
         // ==========================================

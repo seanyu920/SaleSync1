@@ -21,13 +21,15 @@ namespace SaleSync.Controllers
         private readonly IConfiguration _configuration;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly StoreSettingsService _storeSettingsService;
+        private readonly InventoryDeductionService _inventoryDeductionService;
         private readonly string connectionString; // Remove the hardcoded string here!
 
-        public AdminController(IConfiguration configuration, IWebHostEnvironment webHostEnvironment, StoreSettingsService storeSettingsService)
+        public AdminController(IConfiguration configuration, IWebHostEnvironment webHostEnvironment, StoreSettingsService storeSettingsService, InventoryDeductionService inventoryDeductionService)
         {
             _configuration = configuration;
             _webHostEnvironment = webHostEnvironment;
             _storeSettingsService = storeSettingsService;
+            _inventoryDeductionService = inventoryDeductionService;
             connectionString = _configuration.GetConnectionString("DefaultConnection"); // Reads from appsettings
         }
 
@@ -202,7 +204,7 @@ namespace SaleSync.Controllers
 
                             foreach (var item in itemsList)
                             {
-                                DeductIngredients(conn, transaction, item.pId, item.qty);
+                                _inventoryDeductionService.DeductIngredients(conn, transaction, item.pId, item.qty);
                             }
                         }
 
@@ -1392,57 +1394,6 @@ namespace SaleSync.Controllers
                 }
             }
         }
-
-        private void DeductIngredients(SqlConnection conn, SqlTransaction transaction, int productId, int qty)
-        {
-            string recipeQuery = @"
-        SELECT pi.ingredient_id, pi.quantity_required, ISNULL(p.conversion_factor, 1) as conversion_factor         
-        FROM product_ingredients pi         
-        JOIN products p ON pi.ingredient_id = p.product_id         
-        WHERE pi.product_id = @product_id";
-
-            using SqlCommand cmd = new SqlCommand(recipeQuery, conn, transaction);
-            cmd.Parameters.AddWithValue("@product_id", productId);
-
-            // Changed to decimal to prevent floating-point precision mismatches with database columns
-            var ingredients = new List<(int id, decimal qtyReq, decimal conv)>();
-
-            using (SqlDataReader reader = cmd.ExecuteReader())
-            {
-                while (reader.Read())
-                {
-                    ingredients.Add((
-                        Convert.ToInt32(reader["ingredient_id"]),
-                        Convert.ToDecimal(reader["quantity_required"]),
-                        Convert.ToDecimal(reader["conversion_factor"])
-                    ));
-                }
-            }
-
-            foreach (var ing in ingredients)
-            {
-                // Safe fixed-point decimal mathematics
-                decimal totalDeduct = (ing.qtyReq * qty) / ing.conv;
-
-                string updateQuery = @"
-            UPDATE products     
-            SET    stock_quantity = stock_quantity - @deduct     
-            WHERE  product_id     = @ingredient_id       
-              AND  stock_quantity >= @deduct";
-
-                using SqlCommand updateCmd = new SqlCommand(updateQuery, conn, transaction);
-                updateCmd.Parameters.AddWithValue("@deduct", totalDeduct);
-                updateCmd.Parameters.AddWithValue("@ingredient_id", ing.id);
-
-                int rows = updateCmd.ExecuteNonQuery();
-                if (rows == 0)
-                {
-                    // Provides an explicit error details string that your new SweetAlert can catch and display
-                    throw new Exception($"Stock Shortage: Ingredient ID {ing.id} has insufficient stock to fulfill this order (Required deduction: {totalDeduct}).");
-                }
-            }
-        }
-
         [HttpGet]
         public IActionResult DailyReport()
         {
