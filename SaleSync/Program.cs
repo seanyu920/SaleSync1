@@ -8,6 +8,9 @@ builder.Services.AddControllersWithViews();
 // Shared store settings (branding, receipts, theme, business hours).
 builder.Services.AddScoped<SaleSync.Services.StoreSettingsService>();
 
+// Shared ingredient-deduction logic, used by Admin/Cashier/Manager when a sale completes.
+builder.Services.AddScoped<SaleSync.Services.InventoryDeductionService>();
+
 // 🚀 ADDED FOR SIGNALR: Register the SignalR service engine
 builder.Services.AddSignalR(options =>
 {
