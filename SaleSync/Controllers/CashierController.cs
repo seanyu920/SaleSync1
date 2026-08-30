@@ -203,6 +203,253 @@ namespace SaleSync.Controllers
         }
 
         // =========================================================
+        // CHECKOUT (The Inventory Logic Engine + Promo Redemption)
+        // =========================================================
+
+        [HttpPost]
+        public IActionResult Checkout([FromBody] CheckoutRequest request)
+        {
+            if (request?.Items == null || request.Items.Count == 0)
+                return BadRequest(new { message = "No items were submitted." });
+
+            var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr))
+                return Unauthorized(new { message = "Session expired." });
+
+            int userId = int.Parse(userIdStr);
+            decimal totalAmount = request.Items.Sum(i => i.Quantity * i.Price);
+
+            using SqlConnection conn = new SqlConnection(connectionString);
+            conn.Open();
+            SqlTransaction transaction = conn.BeginTransaction();
+
+            try
+            {
+                // -------------------------------------------------
+                // 0. RE-VALIDATE + REDEEM PROMO (server-side only —
+                //    never trust a discount amount from the client,
+                //    only the code itself)
+                // -------------------------------------------------
+                decimal discountAmount = 0m;
+                int? promotionId = null;
+                string? promoCode = request.PromoCode?.Trim().ToUpperInvariant();
+
+                if (!string.IsNullOrWhiteSpace(promoCode))
+                {
+                    const string promoQuery = @"
+                        SELECT promotion_id, discount_type, discount_value,
+                               minimum_order, start_date, end_date,
+                               max_usage, current_usage, is_active
+                        FROM promotions WITH (UPDLOCK, ROWLOCK)
+                        WHERE UPPER(LTRIM(RTRIM(CAST(promo_code AS NVARCHAR(100))))) = @PromoCode";
+
+                    using SqlCommand promoCmd = new SqlCommand(promoQuery, conn, transaction);
+                    promoCmd.Parameters.Add("@PromoCode", SqlDbType.NVarChar, 100).Value = promoCode;
+
+                    int? foundId = null;
+                    string discountType = "";
+                    decimal discountValue = 0m, minimumOrder = 0m;
+                    DateTime startDate = DateTime.MinValue, endDate = DateTime.MaxValue;
+                    int maxUsage = 0, currentUsage = 0;
+                    bool isActive = false;
+
+                    using (SqlDataReader reader = promoCmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            foundId = Convert.ToInt32(reader["promotion_id"]);
+                            discountType = reader["discount_type"]?.ToString()?.Trim().ToLowerInvariant() ?? "";
+                            discountValue = reader["discount_value"] != DBNull.Value ? Convert.ToDecimal(reader["discount_value"]) : 0m;
+                            minimumOrder = reader["minimum_order"] != DBNull.Value ? Convert.ToDecimal(reader["minimum_order"]) : 0m;
+                            if (reader["start_date"] != DBNull.Value) startDate = Convert.ToDateTime(reader["start_date"]);
+                            if (reader["end_date"] != DBNull.Value) endDate = Convert.ToDateTime(reader["end_date"]);
+                            maxUsage = reader["max_usage"] != DBNull.Value ? Convert.ToInt32(reader["max_usage"]) : 0;
+                            currentUsage = reader["current_usage"] != DBNull.Value ? Convert.ToInt32(reader["current_usage"]) : 0;
+                            isActive = reader["is_active"] != DBNull.Value && Convert.ToBoolean(reader["is_active"]);
+                        }
+                    }
+
+                    if (foundId == null)
+                    {
+                        transaction.Rollback();
+                        return BadRequest(new { message = $"Promo code '{promoCode}' no longer exists." });
+                    }
+
+                    DateTime now = DateTime.Now;
+                    if (!isActive || now < startDate || now > endDate)
+                    {
+                        transaction.Rollback();
+                        return BadRequest(new { message = "This promotion is no longer valid." });
+                    }
+
+                    if (totalAmount < minimumOrder)
+                    {
+                        transaction.Rollback();
+                        return BadRequest(new { message = $"Minimum order of ₱{minimumOrder:N2} is required for this promotion." });
+                    }
+
+                    if (maxUsage > 0 && currentUsage >= maxUsage)
+                    {
+                        transaction.Rollback();
+                        return BadRequest(new { message = "This promotion has reached its maximum usage limit." });
+                    }
+
+                    bool isPercentage = discountType is "0" or "percentage" or "percent" or "percentage discount";
+                    if (isPercentage)
+                    {
+                        if (discountValue > 100m) discountValue = 100m;
+                        discountAmount = totalAmount * (discountValue / 100m);
+                    }
+                    else
+                    {
+                        discountAmount = discountValue;
+                    }
+
+                    if (discountAmount > totalAmount) discountAmount = totalAmount;
+                    discountAmount = Math.Round(discountAmount, 2, MidpointRounding.AwayFromZero);
+                    promotionId = foundId;
+
+                    // Atomic redemption: only succeeds if usage limit still holds
+                    // (protects against two cashiers racing for the last use).
+                    const string redeemQuery = @"
+                        UPDATE promotions
+                        SET current_usage = current_usage + 1
+                        WHERE promotion_id = @PromotionId
+                          AND (max_usage = 0 OR current_usage < max_usage)";
+
+                    using SqlCommand redeemCmd = new SqlCommand(redeemQuery, conn, transaction);
+                    redeemCmd.Parameters.AddWithValue("@PromotionId", promotionId);
+                    int redeemed = redeemCmd.ExecuteNonQuery();
+
+                    if (redeemed == 0)
+                    {
+                        transaction.Rollback();
+                        return BadRequest(new { message = "This promotion was just claimed by another order. Please remove it and try again." });
+                    }
+                }
+
+                decimal finalAmount = totalAmount - discountAmount;
+                if (finalAmount < 0) finalAmount = 0;
+
+                // -------------------------------------------------
+                // 1. Pre-Check Inventory & Gather Recipes (Kept this so cashiers can't sell something that is completely gone)
+                // -------------------------------------------------
+                var requiredDeductions = new Dictionary<int, (double GallonAmount, double RawRecipeAmount, string Name, string InvUnit, string RecUnit)>();
+
+                foreach (var item in request.Items)
+                {
+                    string recipeQuery = @"
+                        SELECT pi.ingredient_id, pi.quantity_required, ISNULL(pi.conversion_factor, 1) as conversion_factor,
+                               pi.unit_of_measure as recipe_unit, ing.product_name, ing.unit as inv_unit
+                        FROM product_ingredients pi
+                        JOIN products ing ON pi.ingredient_id = ing.product_id
+                        WHERE pi.product_id = @product_id";
+
+                    using SqlCommand recipeCmd = new SqlCommand(recipeQuery, conn, transaction);
+                    recipeCmd.Parameters.AddWithValue("@product_id", item.ProductId);
+
+                    using SqlDataReader reader = recipeCmd.ExecuteReader();
+                    while (reader.Read())
+                    {
+                        int ingId = Convert.ToInt32(reader["ingredient_id"]);
+                        double recipeQty = Convert.ToDouble(reader["quantity_required"]);
+                        double convFactor = Convert.ToDouble(reader["conversion_factor"]);
+
+                        double rawTotal = recipeQty * item.Quantity; // e.g. 350ml
+                        double gallonTotal = rawTotal / convFactor; // e.g. 0.09 gallons
+
+                        if (requiredDeductions.ContainsKey(ingId))
+                        {
+                            var existing = requiredDeductions[ingId];
+                            requiredDeductions[ingId] = (existing.GallonAmount + gallonTotal, existing.RawRecipeAmount + rawTotal, existing.Name, existing.InvUnit, existing.RecUnit);
+                        }
+                        else
+                        {
+                            requiredDeductions[ingId] = (gallonTotal, rawTotal, reader["product_name"].ToString(), reader["inv_unit"].ToString(), reader["recipe_unit"]?.ToString() ?? "");
+                        }
+                    }
+                }
+
+                // -------------------------------------------------
+                // 2. Validate Stock Levels
+                // -------------------------------------------------
+                foreach (var kv in requiredDeductions)
+                {
+                    string stockCheckSql = "SELECT stock_quantity FROM products WITH (UPDLOCK, ROWLOCK) WHERE product_id = @ingredient_id";
+                    using SqlCommand checkCmd = new SqlCommand(stockCheckSql, conn, transaction);
+                    checkCmd.Parameters.AddWithValue("@ingredient_id", kv.Key);
+                    var currentStock = Convert.ToDouble(checkCmd.ExecuteScalar() ?? 0);
+
+                    if (currentStock < kv.Value.GallonAmount)
+                    {
+                        transaction.Rollback();
+                        return Conflict(new { message = $"Insufficient stock for {kv.Value.Name}. Available: {currentStock:F2} {kv.Value.InvUnit}, Required: {kv.Value.GallonAmount:F4} {kv.Value.InvUnit}." });
+                    }
+                }
+
+                // -------------------------------------------------
+                // 3. Insert Sale Record (Saves as 'Pending')
+                // -------------------------------------------------
+                int saleId;
+                string saleQuery = @"
+                    INSERT INTO sales (user_id, sale_date, total_amount, discount, tax, final_amount, payment_method, amount_paid, change_amount, status)
+                    VALUES (@user_id, GETDATE(), @total_amount, @discount, 0, @final_amount, @payment_method, @amount_paid, @change_amount, 'Pending');
+                    SELECT SCOPE_IDENTITY();";
+
+                using (SqlCommand cmd = new SqlCommand(saleQuery, conn, transaction))
+                {
+                    decimal amountPaid = request.AmountPaid > 0 ? request.AmountPaid : finalAmount;
+                    cmd.Parameters.AddWithValue("@user_id", userId);
+                    cmd.Parameters.AddWithValue("@total_amount", totalAmount);
+                    cmd.Parameters.AddWithValue("@discount", discountAmount);
+                    cmd.Parameters.AddWithValue("@final_amount", finalAmount);
+                    cmd.Parameters.AddWithValue("@payment_method", request.PaymentMethod ?? "cash");
+                    cmd.Parameters.AddWithValue("@amount_paid", amountPaid);
+                    cmd.Parameters.AddWithValue("@change_amount", (amountPaid - finalAmount) < 0 ? 0 : (amountPaid - finalAmount));
+                    saleId = Convert.ToInt32(cmd.ExecuteScalar());
+                }
+
+                // -------------------------------------------------
+                // 4. Save Items to Database (⭐ NO DEDUCTION YET!)
+                // -------------------------------------------------
+                foreach (var item in request.Items)
+                {
+                    string insertItem = "INSERT INTO sale_items (sale_id, product_id, quantity, price, subtotal) VALUES (@sale_id, @product_id, @quantity, @price, @subtotal)";
+                    using (SqlCommand cmd = new SqlCommand(insertItem, conn, transaction))
+                    {
+                        cmd.Parameters.AddWithValue("@sale_id", saleId);
+                        cmd.Parameters.AddWithValue("@product_id", item.ProductId);
+                        cmd.Parameters.AddWithValue("@quantity", item.Quantity);
+                        cmd.Parameters.AddWithValue("@price", item.Price);
+                        cmd.Parameters.AddWithValue("@subtotal", item.Quantity * item.Price);
+                        cmd.ExecuteNonQuery();
+                    }
+                    // ⭐ REMOVED THE DEDUCTION CALL HERE ⭐
+                }
+
+                transaction.Commit();
+
+                // ⭐ POPUP SUMMARY: Shows raw ml/g to the user, but database is already updated with gallons!
+                var deductionSummary = requiredDeductions.Select(kv => $"- {kv.Value.RawRecipeAmount:F0} {kv.Value.RecUnit} {kv.Value.Name}").ToList();
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Checkout complete. Order is Pending.",
+                    deductions = deductionSummary,
+                    discountApplied = discountAmount,
+                    finalAmount = finalAmount
+                });
+            }
+            catch (Exception ex)
+            {
+                transaction.Rollback();
+                Console.WriteLine($"CHECKOUT ERROR: {ex}");
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        // =========================================================
         // PROMOTION VALIDATION
         // =========================================================
 
@@ -1287,5 +1534,3 @@ namespace SaleSync.Controllers
         }
     }
 }
-
-
