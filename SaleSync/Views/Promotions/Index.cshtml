@@ -1,0 +1,1233 @@
+﻿@model List<SaleSync.Models.Promotion>
+
+@{
+Layout = null;
+
+
+bool isAdmin = User.IsInRole("Admin");
+bool isManager = User.IsInRole("Manager");
+
+string homeController = isAdmin ? "Admin" : "Manager";
+string displayRole = isAdmin ? "Admin" : "Manager";
+
+int totalPromotions = ViewBag.TotalPromotions ?? 0;
+int activePromotions = ViewBag.ActivePromotions ?? 0;
+int expiredPromotions = ViewBag.ExpiredPromotions ?? 0;
+
+
+}
+
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+```
+<title>Promotions - Cafero</title>
+
+<link rel="stylesheet"
+      href="~/css/AdminDashboard.css"
+      asp-append-version="true" />
+
+<link rel="stylesheet"
+      href="~/css/Promos.css"
+      asp-append-version="true" />
+
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+
+<link rel="icon"
+      type="image/jpeg"
+      href="~/images/CaferoLogo.jpg"
+      asp-append-version="true" />
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+```
+
+</head>
+
+<body>
+
+<div class="dashboard-container">
+
+```
+<!-- =========================================================
+     SIDEBAR
+     ========================================================= -->
+<aside class="sidebar">
+
+    <div>
+
+        <div class="logo-section">
+            <div class="logo-title">Cafèro</div>
+            <div class="logo-subtitle">Coffee & Pastries</div>
+        </div>
+
+        <div class="profile-section">
+
+            <div class="profile-circle">
+                👤
+            </div>
+
+            <div>
+
+                <h2 class="admin-name">
+                    @(User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value
+                        ?? User.Identity?.Name
+                        ?? "User")
+                </h2>
+
+                <div class="admin-role">
+                    @displayRole
+                </div>
+
+            </div>
+
+        </div>
+
+        <nav class="sidebar-menu">
+
+            <a href="/@homeController/Dashboard"
+               class="menu-btn">
+                Dashboard
+            </a>
+
+            <a href="/@homeController/QueueOrder"
+               class="menu-btn">
+                Queue
+            </a>
+
+            <a href="/Promotions"
+               class="menu-btn active">
+                Promotions
+            </a>
+
+            @if (isAdmin)
+            {
+                <a href="/Admin/ActivityLog"
+                   class="menu-btn">
+                    Activity Log
+                </a>
+            }
+
+            @if (isAdmin || isManager)
+            {
+                <a href="/@homeController/Analytics"
+                   class="menu-btn">
+                    Analytics
+                </a>
+
+                <a href="/@homeController/Products"
+                   class="menu-btn">
+                    Products
+                </a>
+
+                <a href="/@homeController/Inventory"
+                   class="menu-btn">
+                    Inventory
+                </a>
+
+                <a href="/@homeController/ArchivedProducts"
+                   class="menu-btn">
+                    Archived
+                </a>
+
+                <a href="/@homeController/WebCustomization"
+                   class="menu-btn">
+                    Customization
+                </a>
+            }
+
+            @if (isAdmin)
+            {
+                <a href="/Admin/ManageAccounts"
+                   class="menu-btn">
+                    Accounts
+                </a>
+            }
+
+        </nav>
+
+    </div>
+
+    <!-- LOGOUT -->
+    <div class="logout-section">
+
+        <form method="post"
+              action="/Home/Logout"
+              id="logoutForm">
+
+            <button type="button"
+                    class="menu-btn logout-btn"
+                    onclick="confirmLogout()">
+                Log Out
+            </button>
+
+        </form>
+
+    </div>
+
+</aside>
+
+
+<!-- =========================================================
+     MAIN CONTENT
+     ========================================================= -->
+<main class="main-content">
+
+    <div class="promo-page">
+
+        <!-- HEADER -->
+        <div class="promo-header">
+
+            <div>
+                <h1>Promotions</h1>
+
+                <p>
+                    Create and manage promotions that customers can use when ordering.
+                </p>
+            </div>
+
+            <button class="btn-create-promo"
+                    onclick="openPromoModal()">
+
+                <i class="fas fa-plus"></i>
+                Create Promotion
+
+            </button>
+
+        </div>
+
+
+        <!-- =================================================
+             SUMMARY CARDS
+             ================================================= -->
+        <div class="promo-summary">
+
+            <div class="promo-summary-card">
+
+                <div class="promo-icon gold">
+                    <i class="fas fa-tags"></i>
+                </div>
+
+                <div>
+
+                    <div class="promo-summary-label">
+                        Total Promotions
+                    </div>
+
+                    <div class="promo-summary-value">
+                        @totalPromotions
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="promo-summary-card">
+
+                <div class="promo-icon green">
+                    <i class="fas fa-bolt"></i>
+                </div>
+
+                <div>
+
+                    <div class="promo-summary-label">
+                        Active Promotions
+                    </div>
+
+                    <div class="promo-summary-value">
+                        @activePromotions
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="promo-summary-card">
+
+                <div class="promo-icon red">
+                    <i class="fas fa-clock"></i>
+                </div>
+
+                <div>
+
+                    <div class="promo-summary-label">
+                        Expired
+                    </div>
+
+                    <div class="promo-summary-value">
+                        @expiredPromotions
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             PROMOTION TABLE
+             ================================================= -->
+        <div class="promo-table-card">
+
+            <div class="promo-table-header">
+
+                <h2>
+                    Promotion List
+                </h2>
+
+            </div>
+
+
+            <div class="promo-table-wrapper">
+
+                <table class="promo-table">
+
+                    <thead>
+
+                        <tr>
+                            <th>Promotion</th>
+                            <th>Code</th>
+                            <th>Discount</th>
+                            <th>Validity</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="promotionTableBody">
+
+                        @if (Model == null || Model.Count == 0)
+                        {
+                            <tr>
+
+                                <td colspan="6"
+                                    style="text-align:center; padding:25px;">
+
+                                    No promotions found.
+
+                                </td>
+
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var promotion in Model)
+                            {
+                                DateTime now = DateTime.Now;
+
+                                bool isExpired =
+                                    promotion.EndDate < now;
+
+                                bool isUpcoming =
+                                    promotion.StartDate > now;
+
+                                bool isCurrentlyActive =
+                                    promotion.IsActive &&
+                                    !isExpired &&
+                                    !isUpcoming &&
+                                    promotion.UsageCount < promotion.MaxUsage;
+
+                                string statusText;
+
+                                string statusClass;
+
+                                if (isExpired)
+                                {
+                                    statusText = "Expired";
+                                    statusClass = "expired";
+                                }
+                                else if (isUpcoming)
+                                {
+                                    statusText = "Scheduled";
+                                    statusClass = "scheduled";
+                                }
+                                else if (promotion.UsageCount >= promotion.MaxUsage)
+                                {
+                                    statusText = "Usage Limit";
+                                    statusClass = "expired";
+                                }
+                                else if (isCurrentlyActive)
+                                {
+                                    statusText = "Active";
+                                    statusClass = "active";
+                                }
+                                else
+                                {
+                                    statusText = "Inactive";
+                                    statusClass = "inactive";
+                                }
+
+                                string discountText;
+
+                                if (promotion.Type == SaleSync.Models.DiscountType.Percentage)
+                                {
+                                    discountText =
+                                        $"{promotion.DiscountValue:0.##}% OFF";
+                                }
+                                else
+                                {
+                                    discountText =
+                                        $"₱{promotion.DiscountValue:0.00} OFF";
+                                }
+
+                                <tr>
+
+                                    <!-- PROMOTION -->
+                                    <td>
+
+                                        <div style="font-weight:700;">
+                                            @promotion.Name
+                                        </div>
+
+                                        @if (!string.IsNullOrWhiteSpace(promotion.Description))
+                                        {
+                                            <div style="
+                                                font-size:12px;
+                                                opacity:.6;
+                                                margin-top:4px;">
+                                                @promotion.Description
+                                            </div>
+                                        }
+
+                                    </td>
+
+
+                                    <!-- CODE -->
+                                    <td>
+
+                                        <span style="
+                                            font-weight:700;
+                                            letter-spacing:1px;">
+                                            @promotion.Code
+                                        </span>
+
+                                    </td>
+
+
+                                    <!-- DISCOUNT -->
+                                    <td>
+
+                                        <strong>
+                                            @discountText
+                                        </strong>
+
+                                        @if (promotion.MinimumSpend > 0)
+                                        {
+                                            <div style="
+                                                font-size:11px;
+                                                opacity:.6;
+                                                margin-top:3px;">
+                                                Min. ₱@promotion.MinimumSpend.ToString("0.00")
+                                            </div>
+                                        }
+
+                                    </td>
+
+
+                                    <!-- VALIDITY -->
+                                    <td>
+
+                                        <div>
+                                            @promotion.StartDate.ToString("MMM dd, yyyy")
+                                        </div>
+
+                                        <div style="
+                                            font-size:11px;
+                                            opacity:.6;">
+                                            @promotion.StartDate.ToString("hh:mm tt")
+                                            -
+                                            @promotion.EndDate.ToString("hh:mm tt")
+                                        </div>
+
+                                        <div style="
+                                            font-size:11px;
+                                            opacity:.5;
+                                            margin-top:2px;">
+                                            Ends @promotion.EndDate.ToString("MMM dd, yyyy")
+                                        </div>
+
+                                    </td>
+
+
+                                    <!-- STATUS -->
+                                    <td>
+
+                                        <span class="promo-status @statusClass">
+                                            @statusText
+                                        </span>
+
+                                        <div style="
+                                            font-size:10px;
+                                            opacity:.5;
+                                            margin-top:4px;">
+
+                                            @promotion.UsageCount /
+                                            @promotion.MaxUsage uses
+
+                                        </div>
+
+                                    </td>
+
+
+                                    <!-- ACTION -->
+                                    <td>
+
+                                        <div style="
+                                            display:flex;
+                                            gap:6px;
+                                            align-items:center;">
+
+                                            <button type="button"
+                                                    class="promo-action-btn"
+                                                    title="Edit"
+                                                    onclick='editPromo(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(promotion)))'>
+
+                                                <i class="fas fa-edit"></i>
+
+                                            </button>
+
+                                            <button type="button"
+                                                    class="promo-action-btn"
+                                                    title="Toggle Active"
+                                                    onclick="togglePromo(@promotion.Id, @(!promotion.IsActive).ToString().ToLower())">
+
+                                                @if (promotion.IsActive)
+                                                {
+                                                    <i class="fas fa-toggle-on"></i>
+                                                }
+                                                else
+                                                {
+                                                    <i class="fas fa-toggle-off"></i>
+                                                }
+
+                                            </button>
+
+                                            <button type="button"
+                                                    class="promo-action-btn"
+                                                    title="Delete"
+                                                    onclick="deletePromo(@promotion.Id, @Html.Raw(System.Text.Json.JsonSerializer.Serialize(promotion.Name)))">
+
+                                                <i class="fas fa-trash"></i>
+
+                                            </button>
+
+                                        </div>
+
+                                    </td>
+
+                                </tr>
+                            }
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</main>
+```
+
+</div>
+
+<!-- =============================================================
+     CREATE / EDIT PROMOTION MODAL
+     ============================================================= -->
+
+<div class="promo-modal-overlay"
+     id="promoModal">
+
+```
+<div class="promo-modal">
+
+    <div class="promo-modal-header">
+
+        <h2 id="promoModalTitle">
+            Create Promotion
+        </h2>
+
+        <button type="button"
+                class="promo-close"
+                onclick="closePromoModal()">
+            ✕
+        </button>
+
+    </div>
+
+
+    <form id="promoForm"
+          onsubmit="savePromotion(event)">
+
+        <input type="hidden"
+               id="promotionId"
+               value="0" />
+
+        <div class="promo-form-grid">
+
+            <div class="promo-form-group full">
+
+                <label>
+                    Promotion Name
+                </label>
+
+                <input type="text"
+                       id="promoName"
+                       placeholder="e.g. Weekend Coffee Deal"
+                       maxlength="100"
+                       required />
+
+            </div>
+
+
+            <div class="promo-form-group">
+
+                <label>
+                    Promo Code
+                </label>
+
+                <input type="text"
+                       id="promoCode"
+                       placeholder="e.g. WEEKEND20"
+                       maxlength="50"
+                       required />
+
+            </div>
+
+
+            <div class="promo-form-group">
+
+                <label>
+                    Discount Type
+                </label>
+
+                <select id="discountType">
+
+                    <option value="percentage">
+                        Percentage Discount
+                    </option>
+
+                    <option value="fixed">
+                        Fixed Amount
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="promo-form-group">
+
+                <label>
+                    Discount Value
+                </label>
+
+                <input type="number"
+                       id="discountValue"
+                       placeholder="20"
+                       min="0.01"
+                       step="0.01"
+                       required />
+
+            </div>
+
+
+            <div class="promo-form-group">
+
+                <label>
+                    Minimum Order
+                </label>
+
+                <input type="number"
+                       id="minimumOrder"
+                       placeholder="0"
+                       min="0"
+                       step="0.01"
+                       value="0" />
+
+            </div>
+
+
+            <div class="promo-form-group">
+
+                <label>
+                    Maximum Usage
+                </label>
+
+                <input type="number"
+                       id="maxUsage"
+                       placeholder="e.g. 100"
+                       min="1"
+                       required />
+
+            </div>
+
+
+            <div class="promo-form-group">
+
+                <label>
+                    Start Date & Time
+                </label>
+
+                <input type="datetime-local"
+                       id="startDate"
+                       required />
+
+            </div>
+
+
+            <div class="promo-form-group">
+
+                <label>
+                    End Date & Time
+                </label>
+
+                <input type="datetime-local"
+                       id="endDate"
+                       required />
+
+            </div>
+
+
+            <div class="promo-form-group full">
+
+                <label>
+                    Description
+                </label>
+
+                <textarea id="promoDescription"
+                          maxlength="500"
+                          placeholder="Describe the promotion customers will see..."></textarea>
+
+            </div>
+
+        </div>
+
+
+        <div class="promo-modal-footer">
+
+            <button type="button"
+                    class="promo-cancel-btn"
+                    onclick="closePromoModal()">
+                Cancel
+            </button>
+
+            <button type="submit"
+                    class="promo-save-btn">
+                Save Promotion
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+```
+
+</div>
+
+<script>
+
+    // =========================================================
+    // LOGOUT
+    // =========================================================
+
+    function confirmLogout() {
+
+        Swal.fire({
+            title: "Are you sure?",
+            text: "You will be logged out of your session.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Yes, log out",
+            cancelButtonText: "Cancel"
+        }).then((result) => {
+
+            if (result.isConfirmed) {
+                document.getElementById("logoutForm").submit();
+            }
+
+        });
+
+    }
+
+
+    // =========================================================
+    // CREATE MODAL
+    // =========================================================
+
+    function openPromoModal() {
+
+        document.getElementById("promoModalTitle").innerText =
+            "Create Promotion";
+
+        document.getElementById("promoForm").reset();
+
+        document.getElementById("promotionId").value = "0";
+
+        document.getElementById("minimumOrder").value = "0";
+
+        document.getElementById("promoModal").classList.add("open");
+
+    }
+
+
+    function closePromoModal() {
+
+        document
+            .getElementById("promoModal")
+            .classList.remove("open");
+
+    }
+
+
+    // =========================================================
+    // SAVE / CREATE / UPDATE
+    // =========================================================
+
+    async function savePromotion(event) {
+
+        event.preventDefault();
+
+        const promotionId =
+            parseInt(document.getElementById("promotionId").value) || 0;
+
+        const promotion = {
+
+            id: promotionId,
+
+            name:
+                document.getElementById("promoName").value.trim(),
+
+            code:
+                document.getElementById("promoCode").value
+                    .trim()
+                    .toUpperCase(),
+
+            type:
+                document.getElementById("discountType").value === "percentage"
+                    ? 0
+                    : 1,
+
+            discountValue:
+                parseFloat(
+                    document.getElementById("discountValue").value
+                ),
+
+            minimumSpend:
+                parseFloat(
+                    document.getElementById("minimumOrder").value
+                ) || 0,
+
+            maxUsage:
+                parseInt(
+                    document.getElementById("maxUsage").value
+                ),
+
+            startDate:
+                document.getElementById("startDate").value,
+
+            endDate:
+                document.getElementById("endDate").value,
+
+            description:
+                document.getElementById("promoDescription").value.trim()
+
+        };
+
+
+        const url =
+            promotionId > 0
+                ? "/Promotions/UpdatePromotion"
+                : "/Promotions/CreatePromotion";
+
+
+        try {
+
+            const response = await fetch(
+                url,
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify(promotion)
+                }
+            );
+
+
+            const result = await response.json();
+
+
+            if (result.success) {
+
+                await Swal.fire({
+                    title:
+                        promotionId > 0
+                            ? "Promotion Updated!"
+                            : "Promotion Saved!",
+
+                    text: result.message,
+
+                    icon: "success",
+
+                    confirmButtonText: "OK"
+                });
+
+
+                window.location.reload();
+
+            }
+            else {
+
+                Swal.fire({
+                    title: "Unable to Save Promotion",
+                    text: result.message,
+                    icon: "error"
+                });
+
+            }
+
+        }
+        catch (error) {
+
+            console.error(
+                "Promotion save error:",
+                error
+            );
+
+            Swal.fire({
+                title: "Error",
+                text:
+                    "Something went wrong while saving the promotion.",
+                icon: "error"
+            });
+
+        }
+
+    }
+
+
+    // =========================================================
+    // EDIT
+    // =========================================================
+
+    function editPromo(promotion) {
+
+        document.getElementById("promoModalTitle").innerText =
+            "Edit Promotion";
+
+        document.getElementById("promotionId").value =
+            promotion.Id;
+
+        document.getElementById("promoName").value =
+            promotion.Name || "";
+
+        document.getElementById("promoCode").value =
+            promotion.Code || "";
+
+        document.getElementById("discountType").value =
+            promotion.Type === 0
+                ? "percentage"
+                : "fixed";
+
+        document.getElementById("discountValue").value =
+            promotion.DiscountValue;
+
+        document.getElementById("minimumOrder").value =
+            promotion.MinimumSpend;
+
+        document.getElementById("maxUsage").value =
+            promotion.MaxUsage;
+
+        document.getElementById("startDate").value =
+            formatDateForInput(promotion.StartDate);
+
+        document.getElementById("endDate").value =
+            formatDateForInput(promotion.EndDate);
+
+        document.getElementById("promoDescription").value =
+            promotion.Description || "";
+
+        document
+            .getElementById("promoModal")
+            .classList.add("open");
+
+    }
+
+
+    function formatDateForInput(dateValue) {
+
+        const date = new Date(dateValue);
+
+        if (isNaN(date.getTime())) {
+            return "";
+        }
+
+        const year =
+            date.getFullYear();
+
+        const month =
+            String(date.getMonth() + 1)
+                .padStart(2, "0");
+
+        const day =
+            String(date.getDate())
+                .padStart(2, "0");
+
+        const hours =
+            String(date.getHours())
+                .padStart(2, "0");
+
+        const minutes =
+            String(date.getMinutes())
+                .padStart(2, "0");
+
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+
+    }
+
+
+    // =========================================================
+    // DELETE
+    // =========================================================
+
+    async function deletePromo(id, name) {
+
+        const result =
+            await Swal.fire({
+
+                title: "Delete Promotion?",
+
+                text:
+                    "Are you sure you want to delete " +
+                    name +
+                    "?",
+
+                icon: "warning",
+
+                showCancelButton: true,
+
+                confirmButtonText:
+                    "Yes, delete it",
+
+                cancelButtonText:
+                    "Cancel",
+
+                confirmButtonColor:
+                    "#e05555"
+
+            });
+
+
+        if (!result.isConfirmed) {
+            return;
+        }
+
+
+        try {
+
+            const response =
+                await fetch(
+                    "/Promotions/DeletePromotion",
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify({
+                                id: id
+                            })
+                    }
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (data.success) {
+
+                await Swal.fire({
+                    title: "Deleted!",
+                    text: data.message,
+                    icon: "success"
+                });
+
+                window.location.reload();
+
+            }
+            else {
+
+                Swal.fire({
+                    title: "Unable to Delete",
+                    text: data.message,
+                    icon: "error"
+                });
+
+            }
+
+        }
+        catch (error) {
+
+            console.error(
+                "Delete promotion error:",
+                error
+            );
+
+            Swal.fire({
+                title: "Error",
+                text:
+                    "Something went wrong while deleting the promotion.",
+                icon: "error"
+            });
+
+        }
+
+    }
+
+
+    // =========================================================
+    // TOGGLE ACTIVE / INACTIVE
+    // =========================================================
+
+    async function togglePromo(id, newStatus) {
+
+        const action =
+            newStatus
+                ? "activate"
+                : "deactivate";
+
+
+        const result =
+            await Swal.fire({
+
+                title:
+                    newStatus
+                        ? "Activate Promotion?"
+                        : "Deactivate Promotion?",
+
+                text:
+                    `Are you sure you want to ${action} this promotion?`,
+
+                icon: "question",
+
+                showCancelButton: true,
+
+                confirmButtonText: "Yes",
+
+                cancelButtonText: "Cancel"
+
+            });
+
+
+        if (!result.isConfirmed) {
+            return;
+        }
+
+
+        try {
+
+            const response =
+                await fetch(
+                    "/Promotions/TogglePromotion",
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify({
+                                id: id,
+                                isActive: newStatus
+                            })
+                    }
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (data.success) {
+
+                await Swal.fire({
+                    title: "Success",
+                    text: data.message,
+                    icon: "success"
+                });
+
+                window.location.reload();
+
+            }
+            else {
+
+                Swal.fire({
+                    title: "Unable to Change Status",
+                    text: data.message,
+                    icon: "error"
+                });
+
+            }
+
+        }
+        catch (error) {
+
+            console.error(
+                "Toggle promotion error:",
+                error
+            );
+
+            Swal.fire({
+                title: "Error",
+                text:
+                    "Something went wrong while changing the promotion status.",
+                icon: "error"
+            });
+
+        }
+
+    }
+
+
+    // =========================================================
+    // CLOSE MODAL WHEN CLICKING OUTSIDE
+    // =========================================================
+
+    window.onclick = function(event) {
+
+        const modal =
+            document.getElementById("promoModal");
+
+        if (event.target === modal) {
+            closePromoModal();
+        }
+
+    };
+
+</script>
+
+</body>
+</html>
