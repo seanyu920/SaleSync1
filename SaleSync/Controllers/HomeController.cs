@@ -11,6 +11,9 @@ using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
 using SaleSync.Services;
 using System;
+using System.Security.Cryptography;
+using System.Net;
+using System.Net.Mail;
 
 namespace SaleSync.Controllers
 {
@@ -182,130 +185,203 @@ namespace SaleSync.Controllers
             return View("LogIn");
         }
 
-        // ⭐ 2. REGISTER NOW GENERATES AND SAVES OTP (UPDATED TO ASYNC) ⭐
+        // ⭐ 2. FORGOT PASSWORD FLOW ⭐
+        // Step 1: customer submits their email from the modal on the login page.
         [HttpPost]
-        public async Task<IActionResult> Register(string fullName, string username, string email, string password, string confirmPassword)
+        public async Task<IActionResult> ForgotPassword(string email)
         {
-            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(email) ||
-                string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(fullName))
+            if (string.IsNullOrWhiteSpace(email))
+                return BadRequest();
+
+            int userId = 0;
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                ViewBag.Message = "One or more fields were blank. Please check your form!";
+                await conn.OpenAsync();
+
+                string checkSql = "SELECT user_id FROM users WHERE email = @Email AND is_active = 1";
+                using (SqlCommand checkCmd = new SqlCommand(checkSql, conn))
+                {
+                    checkCmd.Parameters.AddWithValue("@Email", email);
+                    var result = await checkCmd.ExecuteScalarAsync();
+                    if (result != null) userId = Convert.ToInt32(result);
+                }
+
+                // Only generate/send a token if the account actually exists — but
+                // we still return Ok() either way below so the response never
+                // reveals whether an email is registered.
+                if (userId != 0)
+                {
+                    string token = GenerateResetToken();
+                    DateTime expiry = DateTime.Now.AddMinutes(30);
+
+                    string updateSql = @"
+                        UPDATE users 
+                        SET PasswordResetToken = @Token, PasswordResetExpiry = @Expiry 
+                        WHERE user_id = @UserId";
+
+                    using (SqlCommand updateCmd = new SqlCommand(updateSql, conn))
+                    {
+                        updateCmd.Parameters.AddWithValue("@Token", token);
+                        updateCmd.Parameters.AddWithValue("@Expiry", expiry);
+                        updateCmd.Parameters.AddWithValue("@UserId", userId);
+                        await updateCmd.ExecuteNonQueryAsync();
+                    }
+
+                    string resetLink = Url.Action("ResetPassword", "Home",
+                        new { email = email, token = token }, Request.Scheme);
+
+                    try
+                    {
+                        await SendPasswordResetEmailAsync(email, resetLink);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Don't let an SMTP failure turn into a 500 — that would leak
+                        // "this email exists but the send failed" to the caller.
+                        // Log it instead so it's still visible to staff.
+                        LogActivity(userId, "Password Reset Email Failed", ex.Message);
+                    }
+                }
+            }
+
+            return Ok();
+        }
+
+        // Step 2 (GET): customer clicks the link in the email.
+        [HttpGet]
+        public async Task<IActionResult> ResetPassword(string email, string token)
+        {
+            bool isValid = await IsResetTokenValidAsync(email, token);
+            if (!isValid)
+            {
+                ViewBag.Message = "This reset link is invalid or has expired. Please request a new one.";
+                return View("LogIn");
+            }
+
+            ViewBag.Email = email;
+            ViewBag.Token = token;
+            return View();
+        }
+
+        // Step 3 (POST): customer submits their new password.
+        [HttpPost]
+        public async Task<IActionResult> ResetPassword(string email, string token, string password, string confirmPassword)
+        {
+            bool isValid = await IsResetTokenValidAsync(email, token);
+            if (!isValid)
+            {
+                ViewBag.Message = "This reset link is invalid or has expired. Please request a new one.";
+                return View("LogIn");
+            }
+
+            if (string.IsNullOrWhiteSpace(password) || password.Length < 8)
+            {
+                ViewBag.Email = email;
+                ViewBag.Token = token;
+                ViewBag.Message = "Password must be at least 8 characters long.";
                 return View();
             }
 
             if (password != confirmPassword)
             {
+                ViewBag.Email = email;
+                ViewBag.Token = token;
                 ViewBag.Message = "Passwords do not match. Please try again.";
                 return View();
             }
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                await conn.OpenAsync();
-                string checkSql = "SELECT COUNT(*) FROM users WHERE username = @Username OR email = @Email";
+                string updateSql = @"
+                    UPDATE users 
+                    SET password_hash = @Hash, PasswordResetToken = NULL, PasswordResetExpiry = NULL 
+                    WHERE email = @Email";
 
-                int exists = 0;
-                using (SqlCommand checkCmd = new SqlCommand(checkSql, conn))
+                using (SqlCommand cmd = new SqlCommand(updateSql, conn))
                 {
-                    checkCmd.Parameters.AddWithValue("@Username", username);
-                    checkCmd.Parameters.AddWithValue("@Email", email);
-                    exists = (int)await checkCmd.ExecuteScalarAsync();
-                }
-
-                if (exists > 0)
-                {
-                    ViewBag.Message = "An account with that Username or Email already exists.";
-                    return View();
-                }
-
-                // Generate OTP Code and 10-minute expiry window
-                string generatedOtp = Random.Shared.Next(100000, 999999).ToString();
-                DateTime expiryTime = DateTime.Now.AddMinutes(10);
-
-                // Insert user with status 'pending', is_active = 0, and new OTP attributes
-                string insertSql = @"
-                    INSERT INTO users (full_name, username, email, password_hash, role_id, status, is_active, OtpCode, OtpExpiry, IsEmailConfirmed)
-                    VALUES (@FullName, @Username, @Email, @Password, 
-                           (SELECT TOP 1 role_id FROM roles WHERE role_name = 'Customer'), 
-                           'pending', 0, @OtpCode, @OtpExpiry, 0)";
-
-                using (SqlCommand cmd = new SqlCommand(insertSql, conn))
-                {
-                    cmd.Parameters.AddWithValue("@FullName", fullName);
-                    cmd.Parameters.AddWithValue("@Username", username);
+                    cmd.Parameters.AddWithValue("@Hash", PasswordHasher.Hash(password));
                     cmd.Parameters.AddWithValue("@Email", email);
-                    cmd.Parameters.AddWithValue("@Password", PasswordHasher.Hash(password));
-                    cmd.Parameters.AddWithValue("@OtpCode", generatedOtp);
-                    cmd.Parameters.AddWithValue("@OtpExpiry", expiryTime);
-
+                    await conn.OpenAsync();
                     await cmd.ExecuteNonQueryAsync();
                 }
             }
 
-            // ─── STAGE EMAIL ACTIVATION HERE ───
-            // await _emailService.SendOtpEmailAsync(email, generatedOtp);
-
-            TempData["SuccessMessage"] = "Account created! An OTP verification code has been sent to your email.";
-            return RedirectToAction("VerifyOtp", new { email = email });
+            TempData["SuccessMessage"] = "Your password has been reset. You can now log in.";
+            return RedirectToAction("LogIn");
         }
 
-        // ⭐ 3. NEW OTP VERIFICATION ROUTINES ⭐
-        [HttpGet]
-        public IActionResult VerifyOtp(string email)
+        private async Task<bool> IsResetTokenValidAsync(string email, string token)
         {
-            ViewBag.UserEmail = email;
-            return View();
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> VerifyOtp(string email, string enteredOtp)
-        {
-            bool isValid = false;
+            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(token))
+                return false;
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                string verifyQuery = @"SELECT COUNT(1) FROM users 
-                                       WHERE email = @Email AND OtpCode = @OtpCode AND OtpExpiry > @CurrentTime";
+                string sql = @"
+                    SELECT COUNT(1) FROM users 
+                    WHERE email = @Email 
+                      AND PasswordResetToken = @Token 
+                      AND PasswordResetExpiry > @Now";
 
-                using (SqlCommand cmd = new SqlCommand(verifyQuery, conn))
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
                     cmd.Parameters.AddWithValue("@Email", email);
-                    cmd.Parameters.AddWithValue("@OtpCode", enteredOtp);
-                    cmd.Parameters.AddWithValue("@CurrentTime", DateTime.Now);
-
+                    cmd.Parameters.AddWithValue("@Token", token);
+                    cmd.Parameters.AddWithValue("@Now", DateTime.Now);
                     await conn.OpenAsync();
                     int count = (int)await cmd.ExecuteScalarAsync();
-                    if (count > 0) isValid = true;
+                    return count > 0;
                 }
             }
-
-            if (isValid)
-            {
-                using (SqlConnection conn = new SqlConnection(connectionString))
-                {
-                    // Activate account by updating status, is_active, and purging temporary credentials
-                    string activateQuery = @"UPDATE users 
-                                             SET status = 'active', is_active = 1, IsEmailConfirmed = 1, OtpCode = NULL, OtpExpiry = NULL 
-                                             WHERE email = @Email";
-
-                    using (SqlCommand cmd = new SqlCommand(activateQuery, conn))
-                    {
-                        cmd.Parameters.AddWithValue("@Email", email);
-                        await conn.OpenAsync();
-                        await cmd.ExecuteNonQueryAsync();
-                    }
-                }
-
-                TempData["SuccessMessage"] = "Account verified successfully! You can now log in.";
-                return RedirectToAction("LogIn");
-            }
-
-            ViewBag.UserEmail = email;
-            ViewBag.Message = "Invalid or expired OTP code. Please try again.";
-            return View();
         }
 
-        // ⭐ 4. THE ASYNC LOGOUT FIX WITH AUDIT LOGGING ⭐
+        private static string GenerateResetToken()
+        {
+            byte[] tokenBytes = RandomNumberGenerator.GetBytes(32);
+
+            // URL-safe base64 — this value rides in a query string.
+            return Convert.ToBase64String(tokenBytes)
+                .Replace("+", "-")
+                .Replace("/", "_")
+                .Replace("=", "");
+        }
+
+        private async Task SendPasswordResetEmailAsync(string targetEmail, string resetLink)
+        {
+            var smtpServer = _configuration["EmailSettings:SmtpServer"];
+            var port = int.Parse(_configuration["EmailSettings:Port"]);
+            var senderEmail = _configuration["EmailSettings:SenderEmail"];
+            var senderName = _configuration["EmailSettings:SenderName"];
+            var smtpPassword = _configuration["EmailSettings:Password"];
+
+            using (var message = new MailMessage())
+            {
+                message.From = new MailAddress(senderEmail, senderName);
+                message.To.Add(new MailAddress(targetEmail));
+                message.Subject = "Reset your Cafero password";
+
+                message.Body = $@"
+                    <div style='font-family: sans-serif; padding: 20px; color: #4a2511; background-color: #fdfaf6; border-radius: 8px;'>
+                        <h2>Password Reset Request</h2>
+                        <p>We received a request to reset the password on your Cafero account. Click the button below to choose a new one:</p>
+                        <p style='margin: 24px 0;'>
+                            <a href='{resetLink}' style='background-color:#f46a05; color:#ffffff; padding:12px 24px; border-radius:6px; text-decoration:none; font-weight:bold; display:inline-block;'>Reset Password</a>
+                        </p>
+                        <p style='font-size: 12px; color: #a39081;'>This link is valid for 30 minutes. If you didn't request this, you can safely ignore this email — your password will not be changed.</p>
+                    </div>";
+                message.IsBodyHtml = true;
+
+                using (var client = new SmtpClient(smtpServer, port))
+                {
+                    client.Credentials = new NetworkCredential(senderEmail, smtpPassword);
+                    client.EnableSsl = true;
+                    await client.SendMailAsync(message);
+                }
+            }
+        }
+
+        // ⭐ 3. THE ASYNC LOGOUT FIX WITH AUDIT LOGGING ⭐
         public async Task<IActionResult> Logout()
         {
             string userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -333,12 +409,6 @@ namespace SaleSync.Controllers
 
         [HttpGet]
         public IActionResult CustomerLogIn()
-        {
-            return View();
-        }
-
-        [HttpGet]
-        public IActionResult Register()
         {
             return View();
         }
