@@ -124,9 +124,9 @@ namespace SaleSync.Controllers
 
                         // Insert Sale Head Record
                         string insertSale = @"
-                            INSERT INTO sales (sale_date, total_amount, status, customer_name, order_type, payment_method, delivery_address, user_id) 
+                            INSERT INTO sales (sale_date, total_amount, status, customer_name, order_type, payment_method, delivery_address, pickup_datetime, user_id) 
                             OUTPUT INSERTED.sale_id
-                            VALUES (GETDATE(), @total, 'Pending', @custName, @orderType, @paymentMethod, @address, @userId)";
+                            VALUES (GETDATE(), @total, 'Pending', @custName, @orderType, @paymentMethod, @address, @pickupTime, @userId)";
 
                         int newSaleId;
                         using (SqlCommand cmd = new SqlCommand(insertSale, conn, transaction))
@@ -136,6 +136,7 @@ namespace SaleSync.Controllers
                             cmd.Parameters.AddWithValue("@orderType", request.OrderType ?? "Pick-up");
                             cmd.Parameters.AddWithValue("@paymentMethod", request.PaymentMethod ?? "Cash");
                             cmd.Parameters.AddWithValue("@address", string.IsNullOrEmpty(request.DeliveryAddress) ? (object)DBNull.Value : request.DeliveryAddress);
+                            cmd.Parameters.AddWithValue("@pickupTime", request.PickupTime.HasValue ? (object)request.PickupTime.Value : DBNull.Value);
                             cmd.Parameters.AddWithValue("@userId", currentUserId);
 
                             newSaleId = (int)cmd.ExecuteScalar();
@@ -183,6 +184,7 @@ namespace SaleSync.Controllers
         public string OrderType { get; set; }
         public string PaymentMethod { get; set; }
         public string DeliveryAddress { get; set; }
+        public DateTime? PickupTime { get; set; }
         public List<OnlineOrderItemRequest> Items { get; set; }
     }
 
