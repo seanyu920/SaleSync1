@@ -52,6 +52,14 @@
 
                 <form asp-controller="Home" asp-action="Login" method="post">
 
+                    @* LOGIN SUCCESS MESSAGE (e.g. after a password reset) *@
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="forgot-password-status success" style="display:block; margin-bottom: 16px;">
+                            @TempData["SuccessMessage"]
+                        </div>
+                    }
+
                     <div class="input-group">
                         <label for="username">Username</label>
 
