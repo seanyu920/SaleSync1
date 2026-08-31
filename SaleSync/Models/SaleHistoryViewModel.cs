@@ -14,6 +14,7 @@
         public string OrderType { get; set; }
         public string PaymentMethod { get; set; }
         public string DeliveryAddress { get; set; }
+        public DateTime? PickupTime { get; set; }
     }
 
     public class CashierDashboardViewModel
