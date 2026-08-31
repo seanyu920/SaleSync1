@@ -13,6 +13,7 @@ namespace SaleSync.Models
         public string OrderType { get; set; }
         public string PaymentMethod { get; set; }
         public string DeliveryAddress { get; set; }
+        public DateTime? PickupTime { get; set; }
         public List<OnlineOrderItem> Items { get; set; }
     }
 

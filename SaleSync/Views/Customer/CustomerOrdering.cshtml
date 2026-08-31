@@ -623,7 +623,7 @@
 
             <select id="customerOrderType"
                     class="cart-select"
-                    onchange="toggleAddressField">
+                    onchange="toggleAddressField()">
 
                 <option value="Dine In">Dine In</option>
                 <option value="Pick-up">Pick-up</option>
@@ -638,6 +638,20 @@
                           class="cart-textarea"
                           placeholder="Enter full delivery address..."
                           rows="2"></textarea>
+
+            </div>
+
+            <div id="pickupContainer"
+                 style="display:none;">
+
+                <label for="customerPickupTime"
+                       style="display:block; color:var(--cream); font-size:12px; font-weight:600; margin-bottom:6px;">
+                    Preferred pick-up date &amp; time
+                </label>
+
+                <input type="datetime-local"
+                       id="customerPickupTime"
+                       class="cart-select" />
 
             </div>
 
@@ -1194,6 +1208,46 @@
                 v === 'Delivery'
                     ? 'block'
                     : 'none';
+
+            document.getElementById(
+                'pickupContainer'
+            ).style.display =
+                v === 'Pick-up'
+                    ? 'block'
+                    : 'none';
+
+            if (v === 'Pick-up') {
+                setPickupMinDateTime();
+            }
+        }
+
+        // Enforces a minimum lead time on the pick-up time picker so a
+        // customer can't schedule a pick-up in the past or the next minute.
+        function setPickupMinDateTime() {
+
+            const input =
+                document.getElementById(
+                    'customerPickupTime'
+                );
+
+            if (!input) return;
+
+            const minDate =
+                new Date(
+                    Date.now() + 20 * 60 * 1000
+                );
+
+            const pad =
+                n => String(n).padStart(2, '0');
+
+            const localValue =
+                `${minDate.getFullYear()}-${pad(minDate.getMonth() + 1)}-${pad(minDate.getDate())}T${pad(minDate.getHours())}:${pad(minDate.getMinutes())}`;
+
+            input.min = localValue;
+
+            if (!input.value) {
+                input.value = localValue;
+            }
         }
 
         // ── MODAL ─────────────────────────────────────────────────────────────────
@@ -1615,6 +1669,11 @@
                     'customerAddress'
                 )?.value.trim() || '';
 
+            const pickupTimeRaw =
+                document.getElementById(
+                    'customerPickupTime'
+                )?.value || '';
+
             const grandTotal =
                 customerCart.reduce(
                     (s, i) =>
@@ -1652,6 +1711,34 @@
                 return;
             }
 
+            if (
+                orderType === 'Pick-up' &&
+                !pickupTimeRaw
+            ) {
+
+                Swal.fire(
+                    'Missing Pick-up Time',
+                    'Please choose your preferred pick-up date and time.',
+                    'warning'
+                );
+
+                return;
+            }
+
+            if (
+                orderType === 'Pick-up' &&
+                new Date(pickupTimeRaw) < new Date()
+            ) {
+
+                Swal.fire(
+                    'Invalid Pick-up Time',
+                    'Please choose a pick-up time in the future.',
+                    'warning'
+                );
+
+                return;
+            }
+
             const btn =
                 document.getElementById(
                     'checkoutBtn'
@@ -1674,6 +1761,11 @@
                 DeliveryAddress:
                     orderType === 'Delivery'
                         ? address
+                        : null,
+
+                PickupTime:
+                    orderType === 'Pick-up' && pickupTimeRaw
+                        ? pickupTimeRaw
                         : null,
 
                 Items:

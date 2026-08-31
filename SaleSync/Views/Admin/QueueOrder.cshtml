@@ -189,6 +189,10 @@
                                 <div class="order-meta">
                                     <span class="meta-tag"><i class="fas fa-utensils"></i> @(order.OrderType ?? "Dine-In")</span>
                                     <span class="meta-tag"><i class="fas fa-wallet"></i> @(order.PaymentMethod ?? "Cash")</span>
+                                    @if (string.Equals(order.OrderType, "Pick-up", StringComparison.OrdinalIgnoreCase) && order.PickupTime.HasValue)
+                                    {
+                                        <span class="meta-tag"><i class="fas fa-clock"></i> Pick-up: @order.PickupTime.Value.ToString("MMM d, hh:mm tt")</span>
+                                    }
                                 </div>
                             </div>
 
