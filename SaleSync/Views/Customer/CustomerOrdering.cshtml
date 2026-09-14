@@ -79,6 +79,14 @@
                     </span>
                 </div>
 
+                <!-- Staff break indicator: status only, no staff names or account details. -->
+                <div class="store-status-banner @(storeSettings.StaffOnBreak ? "" : "open")" id="staffStatusBanner">
+                    <span class="store-dot"></span>
+                    <span id="staffStatusText">
+                        @(storeSettings.StaffOnBreak ? "🟠 Staff Currently on Break" : "🟢 Staff Available")
+                    </span>
+                </div>
+
                 <div class="sidebar-tabs">
                     <button class="tab-btn active" onclick="switchTab('menu', this)">Order</button>
                     <button class="tab-btn" onclick="switchTab('orders', this)">My Orders</button>

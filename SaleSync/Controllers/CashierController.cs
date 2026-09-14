@@ -41,6 +41,7 @@ namespace SaleSync.Controllers
         public IActionResult Dashboard()
         {
             var storeSettings = _storeSettingsService.GetSettings();
+            ViewBag.StaffOnBreak = storeSettings.StaffOnBreak;
 
             ViewBag.StoreStatus =
                 _storeSettingsService.GetStoreStatus(storeSettings);
@@ -131,10 +132,42 @@ namespace SaleSync.Controllers
                 return View("CashierDashboard", model);
             }
         }
+        
+        [HttpPost]
+        public IActionResult ToggleStaffBreak([FromBody] ToggleStaffBreakRequest request)
+        {
+            try
+            {
+                bool onBreak = request?.OnBreak ?? false;
 
-        // =========================================================
-        // MENU
-        // =========================================================
+                _storeSettingsService.SetStaffOnBreak(onBreak);
+
+                return Json(new
+                {
+                    success = true,
+                    onBreak,
+                    message = onBreak
+                        ? "Staff marked as on break."
+                        : "Staff marked as available."
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Staff break toggle error: {ex.Message}");
+
+                return Json(new
+                {
+                    success = false,
+                    message = "Unable to update staff break status."
+                });
+            }
+        }
+
+        public class ToggleStaffBreakRequest
+        {
+            public bool OnBreak { get; set; }
+        }
+
 
         public IActionResult CashierMenu()
         {
@@ -202,9 +235,7 @@ namespace SaleSync.Controllers
             return View(menuList);
         }
 
-        // =========================================================
-        // CHECKOUT (The Inventory Logic Engine + Promo Redemption)
-        // =========================================================
+
 
         [HttpPost]
         public IActionResult Checkout([FromBody] CheckoutRequest request)
@@ -225,11 +256,7 @@ namespace SaleSync.Controllers
 
             try
             {
-                // -------------------------------------------------
-                // 0. RE-VALIDATE + REDEEM PROMO (server-side only —
-                //    never trust a discount amount from the client,
-                //    only the code itself)
-                // -------------------------------------------------
+      
                 decimal discountAmount = 0m;
                 int? promotionId = null;
                 string? promoCode = request.PromoCode?.Trim().ToUpperInvariant();
@@ -309,8 +336,7 @@ namespace SaleSync.Controllers
                     discountAmount = Math.Round(discountAmount, 2, MidpointRounding.AwayFromZero);
                     promotionId = foundId;
 
-                    // Atomic redemption: only succeeds if usage limit still holds
-                    // (protects against two cashiers racing for the last use).
+               
                     const string redeemQuery = @"
                         UPDATE promotions
                         SET current_usage = current_usage + 1
@@ -331,9 +357,7 @@ namespace SaleSync.Controllers
                 decimal finalAmount = totalAmount - discountAmount;
                 if (finalAmount < 0) finalAmount = 0;
 
-                // -------------------------------------------------
-                // 1. Pre-Check Inventory & Gather Recipes (Kept this so cashiers can't sell something that is completely gone)
-                // -------------------------------------------------
+               
                 var requiredDeductions = new Dictionary<int, (double GallonAmount, double RawRecipeAmount, string Name, string InvUnit, string RecUnit)>();
 
                 foreach (var item in request.Items)
@@ -355,8 +379,8 @@ namespace SaleSync.Controllers
                         double recipeQty = Convert.ToDouble(reader["quantity_required"]);
                         double convFactor = Convert.ToDouble(reader["conversion_factor"]);
 
-                        double rawTotal = recipeQty * item.Quantity; // e.g. 350ml
-                        double gallonTotal = rawTotal / convFactor; // e.g. 0.09 gallons
+                        double rawTotal = recipeQty * item.Quantity; 
+                        double gallonTotal = rawTotal / convFactor; 
 
                         if (requiredDeductions.ContainsKey(ingId))
                         {
@@ -370,9 +394,7 @@ namespace SaleSync.Controllers
                     }
                 }
 
-                // -------------------------------------------------
-                // 2. Validate Stock Levels
-                // -------------------------------------------------
+             
                 foreach (var kv in requiredDeductions)
                 {
                     string stockCheckSql = "SELECT stock_quantity FROM products WITH (UPDLOCK, ROWLOCK) WHERE product_id = @ingredient_id";
@@ -387,9 +409,8 @@ namespace SaleSync.Controllers
                     }
                 }
 
-                // -------------------------------------------------
-                // 3. Insert Sale Record (Saves as 'Pending')
-                // -------------------------------------------------
+        
+               
                 int saleId;
                 string saleQuery = @"
                     INSERT INTO sales (user_id, sale_date, total_amount, discount, tax, final_amount, payment_method, amount_paid, change_amount, status)
@@ -409,9 +430,7 @@ namespace SaleSync.Controllers
                     saleId = Convert.ToInt32(cmd.ExecuteScalar());
                 }
 
-                // -------------------------------------------------
-                // 4. Save Items to Database (⭐ NO DEDUCTION YET!)
-                // -------------------------------------------------
+
                 foreach (var item in request.Items)
                 {
                     string insertItem = "INSERT INTO sale_items (sale_id, product_id, quantity, price, subtotal) VALUES (@sale_id, @product_id, @quantity, @price, @subtotal)";
@@ -424,12 +443,12 @@ namespace SaleSync.Controllers
                         cmd.Parameters.AddWithValue("@subtotal", item.Quantity * item.Price);
                         cmd.ExecuteNonQuery();
                     }
-                    // ⭐ REMOVED THE DEDUCTION CALL HERE ⭐
+
                 }
 
                 transaction.Commit();
 
-                // ⭐ POPUP SUMMARY: Shows raw ml/g to the user, but database is already updated with gallons!
+
                 var deductionSummary = requiredDeductions.Select(kv => $"- {kv.Value.RawRecipeAmount:F0} {kv.Value.RecUnit} {kv.Value.Name}").ToList();
 
                 return Ok(new
@@ -449,9 +468,7 @@ namespace SaleSync.Controllers
             }
         }
 
-        // =========================================================
-        // PROMOTION VALIDATION
-        // =========================================================
+
 
         [HttpPost]
         public IActionResult ValidatePromo(
@@ -459,9 +476,7 @@ namespace SaleSync.Controllers
         {
             try
             {
-                // -------------------------------------------------
-                // BASIC REQUEST VALIDATION
-                // -------------------------------------------------
+
 
                 if (request == null)
                 {
@@ -499,32 +514,14 @@ namespace SaleSync.Controllers
                     });
                 }
 
-                // -------------------------------------------------
-                // DATABASE
-                // -------------------------------------------------
+
 
                 using SqlConnection conn =
                     new SqlConnection(connectionString);
 
                 conn.Open();
 
-                /*
-                 * IMPORTANT:
-                 *
-                 * Do NOT convert discount_type to INT here.
-                 *
-                 * Your database may contain values such as:
-                 *
-                 * 0
-                 * 1
-                 * percentage
-                 * percent
-                 * fixed
-                 * amount
-                 *
-                 * Therefore we read it as text and normalize it
-                 * below.
-                 */
+
 
                 const string query = @"
                     SELECT TOP 1
