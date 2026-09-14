@@ -134,6 +134,25 @@
                             </div>
                         </div>
                     }
+                    @{
+                        bool staffOnBreak = ViewBag.StaffOnBreak ?? false;
+                    }
+                    <div class="system-status-container store-status-container">
+                        <p class="status-label">Staff Status</p>
+                        <button type="button"
+                                id="staffBreakToggle"
+                                class="status-indicator-flex staff-break-toggle"
+                                style="background:none;border:none;cursor:pointer;padding:0;"
+                                data-on-break="@staffOnBreak.ToString().ToLower()"
+                                onclick="toggleStaffBreak()"
+                                title="Click to change staff break status">
+                            <span id="staffBreakDot" class="status-dot @(staffOnBreak ? "store-closed-dot" : "store-open-dot")"></span>
+                            <span id="staffBreakText" class="status-text @(staffOnBreak ? "store-closed-text" : "store-open-text")">
+                                @(staffOnBreak ? "On Break" : "Available")
+                            </span>
+                        </button>
+                    </div>
+                    
                 </div>
             </div>
 
@@ -394,6 +413,51 @@
                         document.getElementById('logoutForm').submit();
                     }
                 });
+            }
+
+            // =========================================================
+            // STAFF BREAK TOGGLE (customer-facing status)
+            // =========================================================
+            async function toggleStaffBreak() {
+
+                const toggleBtn = document.getElementById('staffBreakToggle');
+                const currentlyOnBreak = toggleBtn.dataset.onBreak === 'true';
+                const newStatus = !currentlyOnBreak;
+
+                toggleBtn.disabled = true;
+
+                try {
+                    const response = await fetch('/Cashier/ToggleStaffBreak', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ onBreak: newStatus })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        toggleBtn.dataset.onBreak = String(data.onBreak);
+
+                        const dot = document.getElementById('staffBreakDot');
+                        const text = document.getElementById('staffBreakText');
+
+                        dot.classList.toggle('store-closed-dot', data.onBreak);
+                        dot.classList.toggle('store-open-dot', !data.onBreak);
+                        text.classList.toggle('store-closed-text', data.onBreak);
+                        text.classList.toggle('store-open-text', !data.onBreak);
+                        text.innerText = data.onBreak ? 'On Break' : 'Available';
+                    }
+                    else {
+                        Swal.fire('Unable to Update', data.message, 'error');
+                    }
+                }
+                catch (error) {
+                    console.error('Staff break toggle error:', error);
+                    Swal.fire('Error', 'Something went wrong while updating staff status.', 'error');
+                }
+                finally {
+                    toggleBtn.disabled = false;
+                }
             }
 
             document.addEventListener("DOMContentLoaded", function() {

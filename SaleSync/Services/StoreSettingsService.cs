@@ -4,11 +4,7 @@ using SaleSync.Models;
 
 namespace SaleSync.Services
 {
-    // Reads and writes the single row of store-wide settings (branding, receipt
-    // details, theme colors, business hours) and works out whether the store
-    // should currently show as open or closed. Used by every dashboard and by
-    // the Web Customization page, so there is one source of truth instead of
-    // each controller running its own copy of this logic.
+
     public class StoreSettingsService
     {
         private readonly string _connectionString;
@@ -45,6 +41,7 @@ namespace SaleSync.Services
                             OpeningTime = r["opening_time"] as string ?? "07:00",
                             ClosingTime = r["closing_time"] as string ?? "21:00",
                             IsTemporarilyClosed = r["is_temporarily_closed"] != DBNull.Value && Convert.ToBoolean(r["is_temporarily_closed"]),
+                            StaffOnBreak = HasColumn(r, "staff_on_break") && r["staff_on_break"] != DBNull.Value && Convert.ToBoolean(r["staff_on_break"]),
                             PrimaryColor = r["primary_color"] as string ?? "#4a2511",
                             SidebarColor = r["sidebar_color"] as string ?? "#2b1b17",
                             AccentColor = r["accent_color"] as string ?? "#b58361",
@@ -54,7 +51,7 @@ namespace SaleSync.Services
                     }
                 }
 
-                // No row yet (fresh install) — seed one with defaults so future saves have a row to UPDATE.
+                
                 var defaults = new WebCustomization();
                 InsertDefaultRow(conn, defaults);
                 return defaults;
@@ -113,15 +110,14 @@ namespace SaleSync.Services
                     int rowsAffected = cmd.ExecuteNonQuery();
                     if (rowsAffected == 0)
                     {
-                        // No row existed yet — insert it directly with the values being saved.
+                        
                         InsertDefaultRow(conn, settings);
                     }
                 }
             }
         }
 
-        // Works out whether the store is currently open, honoring an overnight
-        // schedule (e.g. 18:00–02:00) and the manual "temporarily closed" override.
+
         public StoreStatus GetStoreStatus(WebCustomization settings)
         {
             var status = new StoreStatus();
@@ -144,7 +140,7 @@ namespace SaleSync.Services
 
             if (!parsedOpen || !parsedClose)
             {
-                // No valid schedule configured — don't guess, just say so.
+            
                 status.IsOpen = false;
                 status.Label = "Hours Not Set";
                 return status;
@@ -155,12 +151,12 @@ namespace SaleSync.Services
 
             if (closeTime > openTime)
             {
-                // Normal same-day schedule, e.g. 07:00 - 21:00
+           
                 isOpen = now >= openTime && now < closeTime;
             }
             else
             {
-                // Overnight schedule, e.g. 18:00 - 02:00
+
                 isOpen = now >= openTime || now < closeTime;
             }
 
@@ -172,6 +168,35 @@ namespace SaleSync.Services
         private static string FormatTime(TimeSpan time)
         {
             return DateTime.Today.Add(time).ToString("h:mm tt");
+        }
+
+    
+        private static bool HasColumn(SqlDataReader reader, string columnName)
+        {
+            for (int i = 0; i < reader.FieldCount; i++)
+            {
+                if (string.Equals(reader.GetName(i), columnName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+      
+        public void SetStaffOnBreak(bool onBreak)
+        {
+            using (SqlConnection conn = new SqlConnection(_connectionString))
+            {
+                conn.Open();
+
+                const string updateSql = "UPDATE store_settings SET staff_on_break = @onBreak WHERE id = 1";
+                using (SqlCommand cmd = new SqlCommand(updateSql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@onBreak", onBreak);
+                    cmd.ExecuteNonQuery();
+                }
+            }
         }
 
         private void InsertDefaultRow(SqlConnection conn, WebCustomization settings)

@@ -484,39 +484,44 @@ int expiredPromotions = ViewBag.ExpiredPromotions ?? 0;
                                             gap:6px;
                                             align-items:center;">
 
-                                            <button type="button"
-                                                    class="promo-action-btn"
-                                                    title="Edit"
-                                                    onclick='editPromo(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(promotion)))'>
+                                                    <button type="button"
+                                                            class="promo-action-btn"
+                                                            title="Edit"
+                                                            data-action="edit"
+                                                            data-promotion="@System.Text.Json.JsonSerializer.Serialize(promotion)">
 
-                                                <i class="fas fa-edit"></i>
+                                                        <i class="fas fa-edit"></i>
 
-                                            </button>
+                                                    </button>
 
-                                            <button type="button"
-                                                    class="promo-action-btn"
-                                                    title="Toggle Active"
-                                                    onclick="togglePromo(@promotion.Id, @(!promotion.IsActive).ToString().ToLower())">
+                                                    <button type="button"
+                                                            class="promo-action-btn"
+                                                            title="Toggle Active"
+                                                            data-action="toggle"
+                                                            data-id="@promotion.Id"
+                                                            data-new-status="@(!promotion.IsActive).ToString().ToLower()">
 
-                                                @if (promotion.IsActive)
-                                                {
-                                                    <i class="fas fa-toggle-on"></i>
-                                                }
-                                                else
-                                                {
-                                                    <i class="fas fa-toggle-off"></i>
-                                                }
+                                                        @if (promotion.IsActive)
+                                                        {
+                                                            <i class="fas fa-toggle-on"></i>
+                                                        }
+                                                        else
+                                                        {
+                                                            <i class="fas fa-toggle-off"></i>
+                                                        }
 
-                                            </button>
+                                                    </button>
 
-                                            <button type="button"
-                                                    class="promo-action-btn"
-                                                    title="Delete"
-                                                    onclick="deletePromo(@promotion.Id, @Html.Raw(System.Text.Json.JsonSerializer.Serialize(promotion.Name)))">
+                                                    <button type="button"
+                                                            class="promo-action-btn"
+                                                            title="Delete"
+                                                            data-action="delete"
+                                                            data-id="@promotion.Id"
+                                                            data-name="@promotion.Name">
 
-                                                <i class="fas fa-trash"></i>
+                                                        <i class="fas fa-trash"></i>
 
-                                            </button>
+                                                    </button>
 
                                         </div>
 
@@ -1210,22 +1215,69 @@ int expiredPromotions = ViewBag.ExpiredPromotions ?? 0;
     }
 
 
-    // =========================================================
-    // CLOSE MODAL WHEN CLICKING OUTSIDE
-    // =========================================================
+            // =========================================================
+            // CLOSE MODAL WHEN CLICKING OUTSIDE
+            // =========================================================
 
-    window.onclick = function(event) {
+            window.onclick = function(event) {
 
-        const modal =
-            document.getElementById("promoModal");
+                const modal =
+                    document.getElementById("promoModal");
 
-        if (event.target === modal) {
-            closePromoModal();
-        }
+                if (event.target === modal) {
+                    closePromoModal();
+                }
 
-    };
+            };
 
-</script>
+
+            // =========================================================
+            // ROW ACTION BUTTONS (event delegation)
+            //
+            // The Edit/Toggle/Delete buttons used to carry their data inline in
+            // onclick="..." attributes, built with Html.Raw + JsonSerializer. That
+            // broke the Delete button for every promotion: JsonSerializer.Serialize
+            // of a plain string produces a double-quoted JSON string, and Html.Raw
+            // dropped that unescaped into a double-quoted onclick="..." attribute,
+            // so the browser's HTML parser closed the attribute on the JSON's own
+            // opening quote and truncated the handler to "deletePromo(5, ".
+            //
+            // Reading the same data from HTML-encoded data-* attributes instead
+            // (no Html.Raw) avoids the delimiter collision entirely: Razor encodes
+            // any quotes/angle brackets in the JSON as HTML entities, the browser
+            // decodes them back on read, and JSON.parse() gets valid text either way.
+            // =========================================================
+
+            document.getElementById("promotionTableBody")
+                .addEventListener("click", function(event) {
+
+                    const button = event.target.closest("button[data-action]");
+
+                    if (!button) {
+                        return;
+                    }
+
+                    const action = button.dataset.action;
+
+                    if (action === "edit") {
+                        editPromo(JSON.parse(button.dataset.promotion));
+                    }
+                    else if (action === "toggle") {
+                        togglePromo(
+                            parseInt(button.dataset.id, 10),
+                            button.dataset.newStatus === "true"
+                        );
+                    }
+                    else if (action === "delete") {
+                        deletePromo(
+                            parseInt(button.dataset.id, 10),
+                            button.dataset.name
+                        );
+                    }
+
+                });
+
+    </script>
 
 </body>
 </html>

@@ -40,7 +40,7 @@ namespace SaleSync.Controllers
             {
                 conn.Open();
 
-                // 1. Fetch live menu data (ADDED p.image_path to SELECT)
+             
                 string menuSql = @"
             SELECT p.product_id, p.product_name, c.category_name, p.selling_price, p.image_path
             FROM products p
@@ -61,13 +61,13 @@ namespace SaleSync.Controllers
                             CategoryName = r["category_name"]?.ToString() ?? "Uncategorized",
                             Price = r["selling_price"] != DBNull.Value ? Convert.ToDecimal(r["selling_price"]) : 0,
 
-                            // ADDED: Map the image path column from the database reader
+                            
                             ImagePath = r["image_path"] != DBNull.Value ? r["image_path"].ToString() : null
                         });
                     }
                 }
 
-                // 2. Fetch live order tracking records for this customer
+           
                 if (currentUserId != 0)
                 {
                     string orderSql = @"
@@ -106,6 +106,18 @@ namespace SaleSync.Controllers
             if (request == null || request.Items == null || request.Items.Count == 0)
                 return BadRequest(new { message = "Your cart is empty." });
 
+            var storeSettings = _storeSettingsService.GetSettings();
+            var storeStatus = _storeSettingsService.GetStoreStatus(storeSettings);
+
+            if (!storeStatus.IsOpen)
+            {
+                string closedMessage = storeSettings.IsTemporarilyClosed
+                    ? "We're currently closed. Please check back later."
+                    : $"We're closed right now. Ordering opens at {storeStatus.OpeningTimeLabel}.";
+
+                return BadRequest(new { message = closedMessage });
+            }
+
             string customerName = User.Identity?.Name ?? "Online Guest";
             int currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
 
@@ -122,7 +134,7 @@ namespace SaleSync.Controllers
                             totalAmount += item.Quantity * item.Price;
                         }
 
-                        // Insert Sale Head Record
+                       
                         string insertSale = @"
                             INSERT INTO sales (sale_date, total_amount, status, customer_name, order_type, payment_method, delivery_address, pickup_datetime, user_id) 
                             OUTPUT INSERTED.sale_id
@@ -142,7 +154,7 @@ namespace SaleSync.Controllers
                             newSaleId = (int)cmd.ExecuteScalar();
                         }
 
-                        // Connected Customization: size and special_instructions added to columns
+                  
                         string insertItem = @"
                             INSERT INTO sale_items (sale_id, product_id, quantity, price, subtotal, size, special_instructions) 
                             VALUES (@sid, @pid, @qty, @price, @sub, @size, @instructions)";
@@ -157,7 +169,7 @@ namespace SaleSync.Controllers
                                 cmd.Parameters.AddWithValue("@price", item.Price);
                                 cmd.Parameters.AddWithValue("@sub", item.Quantity * item.Price);
 
-                                // Direct custom bindings safely fall back to avoiding schema validation issues
+                                
                                 cmd.Parameters.AddWithValue("@size", string.IsNullOrEmpty(item.Size) ? "Regular" : item.Size);
                                 cmd.Parameters.AddWithValue("@instructions", string.IsNullOrEmpty(item.SpecialInstructions) ? (object)DBNull.Value : item.SpecialInstructions);
 
@@ -178,7 +190,7 @@ namespace SaleSync.Controllers
         }
     }
 
-    // --- Data Transfer Objects supporting matching Frontend Property structures ---
+   
     public class OnlineOrderRequest
     {
         public string OrderType { get; set; }
