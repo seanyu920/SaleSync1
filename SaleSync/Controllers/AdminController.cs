@@ -15,7 +15,11 @@ using static SaleSync.Models.MenuItemModel;
 namespace SaleSync.Controllers
 
 {
-    [Authorize(Roles = "Admin,Manager")]
+    // ⭐ WIDENED: Cashier added so it can reach the shared Queue actions below.
+    // Every action that should stay Admin/Manager-only now carries its own
+    // explicit [Authorize(Roles = "Admin,Manager")] attribute so widening this
+    // class attribute doesn't accidentally open those up to Cashier too.
+    [Authorize(Roles = "Admin,Manager,Cashier")]
     public class AdminController : Controller
     {
         private readonly IConfiguration _configuration;
@@ -58,6 +62,7 @@ namespace SaleSync.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin,Manager")]
         public IActionResult Dashboard()
         {
             var storeSettings = _storeSettingsService.GetSettings();
@@ -112,6 +117,8 @@ namespace SaleSync.Controllers
 
         // ==========================================
         // ☕ Dedicated Workstation Live Queue System
+        // ⭐ Cashier-accessible: no extra [Authorize] here, so it inherits the
+        // class-level "Admin,Manager,Cashier" attribute.
         // ==========================================
         [HttpGet]
         public IActionResult QueueOrder()
@@ -161,6 +168,7 @@ namespace SaleSync.Controllers
             return View(queueItems);
         }
 
+        // ⭐ Cashier-accessible: no extra [Authorize] here.
         [HttpPost]
         public IActionResult UpdateSaleStatus([FromBody] StatusUpdateModel request)
         {
@@ -221,6 +229,7 @@ namespace SaleSync.Controllers
             return Ok();
         }
 
+        // ⭐ Cashier-accessible: no extra [Authorize] here.
         [HttpGet]
         public IActionResult GetOrderDetails(int saleId)
         {
@@ -254,6 +263,10 @@ namespace SaleSync.Controllers
             return Json(result);
         }
 
+        // ⭐ Cashier-accessible: no extra [Authorize] here. The Queue view shows
+        // the Void button to every role, and this action re-verifies an
+        // Admin/Manager password internally before actually voiding anything,
+        // so it's safe to leave open at the role level.
         [HttpPost]
         public IActionResult VerifyAndVoid([FromBody] AdminVoidRequest request)
         {
@@ -317,6 +330,7 @@ namespace SaleSync.Controllers
             return Ok();
         }
 
+        [Authorize(Roles = "Admin,Manager")]
         [HttpGet]
         public IActionResult Analytics(string timeframe = "week")
         {
@@ -472,6 +486,7 @@ namespace SaleSync.Controllers
             return View(model);
         }
 
+        [Authorize(Roles = "Admin,Manager")]
         [HttpGet]
         public IActionResult ActivityLog()
         {
@@ -512,6 +527,7 @@ namespace SaleSync.Controllers
         }
 
         // ⭐ UPDATE: Added Archive Filter to Products
+        [Authorize(Roles = "Admin,Manager")]
         [HttpGet]
         public IActionResult Products()
         {
@@ -548,6 +564,7 @@ namespace SaleSync.Controllers
             return View(menuList);
         }
 
+        [Authorize(Roles = "Admin,Manager")]
         [HttpPost]
         public IActionResult AddMenuItem([FromBody] MenuItemModel model)
         {
@@ -573,6 +590,7 @@ namespace SaleSync.Controllers
             return Ok();
         }
 
+        [Authorize(Roles = "Admin,Manager")]
         [HttpGet]
         public IActionResult Inventory()
         {
@@ -667,6 +685,7 @@ namespace SaleSync.Controllers
             return View(inventoryList);
         }
 
+        [Authorize(Roles = "Admin,Manager")]
         [HttpPost]
         public IActionResult UpdateInventory(InventoryItems model)
         {
@@ -754,6 +773,7 @@ namespace SaleSync.Controllers
             return RedirectToAction("Inventory");
         }
 
+        [Authorize(Roles = "Admin,Manager")]
         [HttpPost]
         public IActionResult AddInventory(InventoryItems model)
         {
@@ -813,6 +833,7 @@ namespace SaleSync.Controllers
             TempData["SuccessMessage"] = $"{model.ItemName} added successfully!";
             return RedirectToAction("Inventory");
         }
+        [Authorize(Roles = "Admin,Manager")]
         [HttpPost]
         public IActionResult ArchiveInventory([FromForm] int productId)
         {
@@ -871,6 +892,7 @@ namespace SaleSync.Controllers
                 }
             }
         }
+        [Authorize(Roles = "Admin,Manager")]
         [HttpPost]
         public IActionResult RestoreInventoryItem([FromBody] int productId)
         {
@@ -925,6 +947,7 @@ namespace SaleSync.Controllers
         }
 
         // ⭐ UPDATE: Soft Delete (Archive) with Enterprise Logging Support
+        [Authorize(Roles = "Admin,Manager")]
         [HttpPost]
         public IActionResult ArchiveProduct([FromBody] int productId) // 👈 Renamed from DeleteMenuItem
         {
@@ -1214,6 +1237,7 @@ namespace SaleSync.Controllers
             return RedirectToAction("ManageAccounts");
         }
 
+        [Authorize(Roles = "Admin,Manager")]
         [HttpGet]
         public IActionResult GetIngredients()
         {
@@ -1234,6 +1258,7 @@ namespace SaleSync.Controllers
             return Json(list);
         }
 
+        [Authorize(Roles = "Admin,Manager")]
         [HttpGet]
         public IActionResult GetRecipe(int productId)
         {
@@ -1259,6 +1284,7 @@ namespace SaleSync.Controllers
             return Json(list);
         }
 
+        [Authorize(Roles = "Admin,Manager")]
         [HttpPost]
         public IActionResult SaveRecipe([FromBody] RecipeSaveRequest request)
         {
@@ -1336,6 +1362,7 @@ namespace SaleSync.Controllers
             return Ok();
         }
 
+        [Authorize(Roles = "Admin,Manager")]
         [HttpPost]
         public IActionResult AddFullProduct([FromBody] ComprehensiveItemModel model)
         {
@@ -1395,6 +1422,7 @@ namespace SaleSync.Controllers
                 }
             }
         }
+        [Authorize(Roles = "Admin,Manager")]
         [HttpGet]
         public IActionResult DailyReport()
         {
@@ -1434,6 +1462,7 @@ namespace SaleSync.Controllers
         }
 
         // ⭐ UPDATE: Added Archive Filter to POS View
+        [Authorize(Roles = "Admin,Manager")]
         [HttpGet]
         public IActionResult PointOfSale()
         {
@@ -1471,6 +1500,7 @@ namespace SaleSync.Controllers
 
         public class UpdatePriceModel { public int ProductId { get; set; } public decimal NewPrice { get; set; } }
 
+        [Authorize(Roles = "Admin,Manager")]
         [HttpPost]
         public IActionResult UpdateProductPrice([FromBody] UpdatePriceModel request)
         {
@@ -1512,6 +1542,7 @@ namespace SaleSync.Controllers
             return Ok();
         }
 
+        [Authorize(Roles = "Admin,Manager")]
         [HttpPost]
         public async Task<IActionResult> UploadProductPhoto(int productId, IFormFile productImageFile)
         {
@@ -1607,6 +1638,7 @@ namespace SaleSync.Controllers
         // ==========================================
         // ⭐ THE ARCHIVE ROOM
         // ==========================================
+        [Authorize(Roles = "Admin,Manager")]
         [HttpGet]
         public IActionResult ArchivedProducts()
         {
@@ -1666,6 +1698,7 @@ namespace SaleSync.Controllers
             return View(viewModel);
         }
 
+        [Authorize(Roles = "Admin,Manager")]
         [HttpPost]
         public IActionResult RestoreMenuItem([FromBody] int productId)
         {
@@ -1695,6 +1728,7 @@ namespace SaleSync.Controllers
         }
 
         // ⭐ NEW: REAL-TIME NOTIFICATION ENDPOINT ⭐
+        [Authorize(Roles = "Admin,Manager")]
         [HttpGet]
         public IActionResult CheckNewOrders()
         {
@@ -1709,6 +1743,7 @@ namespace SaleSync.Controllers
                 }
             }
         }
+        [Authorize(Roles = "Admin,Manager")]
         [HttpGet]
         public IActionResult WebCustomization()
         {
@@ -1716,6 +1751,7 @@ namespace SaleSync.Controllers
             return View(settings);
         }
 
+        [Authorize(Roles = "Admin,Manager")]
         [HttpPost]
         public async Task<IActionResult> UpdateSettings(WebCustomization model, IFormFile? StoreLogo)
         {
@@ -1781,6 +1817,7 @@ namespace SaleSync.Controllers
         // ==========================================
         // GLOBAL SEARCH ENDPOINT
         // ==========================================
+        [Authorize(Roles = "Admin,Manager")]
         [HttpGet]
         public IActionResult GlobalSearch(string q)
         {
@@ -1877,6 +1914,6 @@ namespace SaleSync.Controllers
             public string Status { get; set; }
         }
 
-        
+
     }
 }

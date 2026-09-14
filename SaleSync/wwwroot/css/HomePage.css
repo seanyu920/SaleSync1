@@ -1541,6 +1541,8 @@ textarea {
 
     /* =========================================================
    OPENING HOURS BADGE
+   (fixed: now wraps to fit within the sidebar width instead of
+   overflowing the card list, which was cutting it off on mobile)
    ========================================================= */
 
     .contact-card-list::after {
@@ -1549,7 +1551,8 @@ textarea {
         align-items: center;
         justify-content: center;
         min-height: 44px;
-        width: fit-content;
+        width: 100%;
+        max-width: 100%;
         margin-top: 6px;
         padding: 9px 17px;
         border: 1px solid rgba(224,189,99,.34);
@@ -1560,6 +1563,9 @@ textarea {
         font-weight: 900;
         letter-spacing: 1.8px;
         text-transform: uppercase;
+        text-align: center;
+        white-space: normal;
+        box-sizing: border-box;
         box-shadow: 0 8px 20px rgba(0,0,0,.20), 0 0 18px rgba(201,167,75,.05);
     }
 

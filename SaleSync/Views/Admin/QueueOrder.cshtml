@@ -5,6 +5,7 @@
     bool isManager = User.IsInRole("Manager");
     string displayRole = isManager ? "Manager" : "Admin";
     string currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "QueueOrder";
+    bool isAdminOrManager = User.IsInRole("Admin") || User.IsInRole("Manager");
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -42,11 +43,18 @@
                 </div>
 
                 <nav class="sidebar-menu">
-                    <a href="@Url.Action("Dashboard", "Admin")" class="menu-btn @(currentAction == "Dashboard" ? "active" : "")">
+                    <a href="@(isAdminOrManager ? Url.Action("Dashboard", "Admin") : Url.Action("Dashboard", "Cashier"))" class="menu-btn @(currentAction == "Dashboard" ? "active" : "")">
                         Dashboard
                     </a>
 
-                    @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+                    @if (User.IsInRole("Cashier"))
+                        {
+                        <a href="@Url.Action("CashierMenu", "Cashier")" class="menu-btn @(currentAction == "CashierMenu" || currentAction == "CashierMenu" ? "active" : "")">
+                            POS
+                        </a>
+                        }
+
+                    @if (User.IsInRole("Admin") || User.IsInRole("Manager") || User.IsInRole("Cashier"))
                     {
                         <a href="@Url.Action("QueueOrder", "Admin")" class="menu-btn @(currentAction == "QueueOrder" || currentAction == "QueueOrders" ? "active" : "")">
                             Queue
@@ -91,9 +99,12 @@
                             Accounts
                         </a>
                     }
-                    <a href="@Url.Action("WebCustomization", "Admin")" class="menu-btn @(currentAction == "WebCustomization" ? "active" : "")">
-                        Customization
-                    </a>
+                    @if (isAdminOrManager)
+                    {
+                        <a href="@Url.Action("WebCustomization", "Admin")" class="menu-btn @(currentAction == "WebCustomization" ? "active" : "")">
+                            Customization
+                        </a>
+                    }
                 </nav>
             </div>
 

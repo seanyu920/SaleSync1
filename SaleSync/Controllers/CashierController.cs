@@ -1532,5 +1532,9 @@ namespace SaleSync.Controllers
             public string AdminUser { get; set; }
             public string AdminPass { get; set; }
         }
+        public IActionResult QueueOrder()
+        {
+            return View();
+        }
     }
 }
