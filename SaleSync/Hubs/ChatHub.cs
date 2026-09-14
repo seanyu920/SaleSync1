@@ -7,8 +7,6 @@ using System.Threading.Tasks;
 
 namespace SaleSync.Hubs
 {
-    // Requires the same cookie auth used by the rest of the site, so
-    // Context.User is populated with the logged-in user's claims.
     [Authorize]
     public class ChatHub : Hub
     {
@@ -21,63 +19,103 @@ namespace SaleSync.Hubs
 
         private string CurrentUsername => Context.User?.FindFirst("Username")?.Value;
 
-        // Every connection for a given account joins a group named after their
-        // username. This lets us deliver a message only to the two people
-        // involved in a conversation instead of broadcasting it to every
-        // connected browser (customers and staff alike).
         public override async Task OnConnectedAsync()
         {
-            var username = CurrentUsername;
-            if (!string.IsNullOrEmpty(username))
+            if (!string.IsNullOrWhiteSpace(CurrentUsername))
             {
-                await Groups.AddToGroupAsync(Context.ConnectionId, username);
+                await Groups.AddToGroupAsync(Context.ConnectionId, CurrentUsername);
             }
 
             await base.OnConnectedAsync();
         }
 
-        // The sender is taken from the authenticated connection, not from the
-        // client, so a customer can't spoof messages as another user.
         public async Task SendMessage(string receiver, string message)
         {
             string sender = CurrentUsername;
 
-            if (string.IsNullOrWhiteSpace(sender) || string.IsNullOrWhiteSpace(receiver) || string.IsNullOrWhiteSpace(message))
+            if (string.IsNullOrWhiteSpace(sender) ||
+                string.IsNullOrWhiteSpace(receiver) ||
+                string.IsNullOrWhiteSpace(message))
             {
                 return;
             }
 
+            using var conn = new SqlConnection(_connectionString);
+            await conn.OpenAsync();
+
+            if (!await IsAllowedConversationAsync(conn, sender, receiver))
+            {
+                return; // Blocks Admin↔Manager, Cashier↔Admin, and Customer↔Customer chats.
+            }
+
             DateTime timestamp = DateTime.Now;
 
-            // 1. Save to SQL Server
-            using (SqlConnection conn = new SqlConnection(_connectionString))
+            const string insertQuery = @"
+                INSERT INTO chat_messages
+                    (sender_username, receiver_username, message_text, timestamp, is_read)
+                VALUES
+                    (@Sender, @Receiver, @Message, @Timestamp, 0)";
+
+            using (var cmd = new SqlCommand(insertQuery, conn))
             {
-                string insertQuery = @"
-                    INSERT INTO chat_messages (sender_username, receiver_username, message_text, timestamp)
-                    VALUES (@Sender, @Receiver, @Message, @Timestamp)";
-
-                using (SqlCommand cmd = new SqlCommand(insertQuery, conn))
-                {
-                    cmd.Parameters.AddWithValue("@Sender", sender);
-                    cmd.Parameters.AddWithValue("@Receiver", receiver);
-                    cmd.Parameters.AddWithValue("@Message", message);
-                    cmd.Parameters.AddWithValue("@Timestamp", timestamp);
-
-                    await conn.OpenAsync();
-                    await cmd.ExecuteNonQueryAsync();
-                }
+                cmd.Parameters.AddWithValue("@Sender", sender);
+                cmd.Parameters.AddWithValue("@Receiver", receiver);
+                cmd.Parameters.AddWithValue("@Message", message.Trim());
+                cmd.Parameters.AddWithValue("@Timestamp", timestamp);
+                await cmd.ExecuteNonQueryAsync();
             }
 
             string time = timestamp.ToString("hh:mm tt");
 
-            // 2. Deliver only to the sender's other tabs/devices and the receiver
-            //    (not every connected client).
-            await Clients.Group(sender).SendAsync("ReceiveMessage", sender, receiver, message, time);
+            await Clients.Group(sender)
+                .SendAsync("ReceiveMessage", sender, receiver, message.Trim(), time);
 
             if (!string.Equals(sender, receiver, StringComparison.OrdinalIgnoreCase))
             {
-                await Clients.Group(receiver).SendAsync("ReceiveMessage", sender, receiver, message, time);
+                await Clients.Group(receiver)
+                    .SendAsync("ReceiveMessage", sender, receiver, message.Trim(), time);
             }
         }
+
+        private static async Task<bool> IsAllowedConversationAsync(
+            SqlConnection conn, string sender, string receiver)
+        {
+            const string query = @"
+                SELECT u.username, r.role_name
+                FROM users u
+                LEFT JOIN roles r ON r.role_id = u.role_id
+                WHERE u.username IN (@Sender, @Receiver)
+                  AND u.is_active = 1";
+
+            string senderRole = null;
+            string receiverRole = null;
+
+            using var cmd = new SqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@Sender", sender);
+            cmd.Parameters.AddWithValue("@Receiver", receiver);
+
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                string username = reader["username"].ToString();
+                string role = reader["role_name"]?.ToString() ?? "";
+
+                if (string.Equals(username, sender, StringComparison.OrdinalIgnoreCase))
+                    senderRole = role;
+
+                if (string.Equals(username, receiver, StringComparison.OrdinalIgnoreCase))
+                    receiverRole = role;
+            }
+
+            if (senderRole == null || receiverRole == null) return false;
+
+            bool senderIsStaff = IsStaff(senderRole);
+            bool receiverIsStaff = IsStaff(receiverRole);
+
+            return senderIsStaff != receiverIsStaff;
+        }
+
+        private static bool IsStaff(string role) =>
+            role == "Admin" || role == "Manager" || role == "Cashier";
     }
 }

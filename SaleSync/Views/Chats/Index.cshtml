@@ -1,354 +1,408 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
+﻿@using System.Text.Json
 @{
     Layout = null;
-    var messages = ViewBag.Messages as List<dynamic>;
+    var messages = ViewBag.Messages as List<object>;
     var contacts = ViewBag.Contacts as List<dynamic>;
-    string chatWith = ViewBag.ChatWith;
+    string chatWith = ViewBag.ChatWith ?? "";
 }
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Cafero - Dispatch & Order Coordination</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>Support Inbox | Cafero</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-            body {
-                font-family: 'Outfit', sans-serif;
-                background-color: #fdfaf6;
-                margin: 0;
-                padding: 0;
-                color: #4a2511;
+            * {
+                box-sizing: border-box;
             }
 
-            .chat-container {
+            body {
+                margin: 0;
+                font-family: Outfit, sans-serif;
+                color: #243047;
+                background: #f4f6fa;
+            }
+
+            .inbox {
                 display: flex;
                 height: 100vh;
-                max-width: 1300px;
-                margin: 0 auto;
-                background-color: #fff;
-                box-shadow: 0 4px 20px rgba(74,37,17,0.08);
+                max-width: 1440px;
+                margin: auto;
+                background: #fff;
             }
 
-            /* Sidebar Contact Directory */
-            .chat-sidebar {
-                width: 32%;
-                border-right: 1px solid #dcbca5;
-                background-color: #fcf8f2;
+            .sidebar {
+                width: 350px;
+                border-right: 1px solid #e7ebf2;
                 display: flex;
                 flex-direction: column;
             }
 
-            .sidebar-header {
-                padding: 20px;
-                background-color: #4a2511;
-                color: #fff;
-                font-size: 1.1rem;
-                font-weight: bold;
+            .brand {
+                padding: 25px;
+                border-bottom: 1px solid #e7ebf2;
             }
 
-            .user-list {
-                flex-grow: 1;
+                .brand h1 {
+                    margin: 0;
+                    font-size: 21px;
+                }
+
+                .brand p {
+                    margin: 5px 0 0;
+                    color: #79839a;
+                    font-size: 14px;
+                }
+
+            .contact-list {
                 overflow-y: auto;
-                list-style: none;
-                padding: 0;
-                margin: 0;
+                padding: 10px;
             }
 
-            .user-item {
-                padding: 15px 20px;
-                border-bottom: 1px solid #f3ece6;
-                cursor: pointer;
-                transition: 0.2s;
-                display: flex;
-                flex-direction: column;
-                gap: 4px;
+            .contact {
+                position: relative;
+                display: block;
+                padding: 15px;
+                border-radius: 12px;
+                color: inherit;
                 text-decoration: none;
+                margin-bottom: 4px;
             }
 
-                .user-item:hover {
-                    background-color: #fcf1e8;
+                .contact:hover {
+                    background: #f5f7fb;
                 }
 
-                .user-item.active {
-                    background-color: #f46a05;
+                .contact.active {
+                    background: #edf4ff;
                 }
 
-                    .user-item.active .contact-name, .user-item.active .role-badge {
-                        color: #fff;
-                    }
-
-            .contact-name {
-                font-weight: 700;
-                color: #4a2511;
-                font-size: 1rem;
-            }
-
-            .role-badge {
-                font-size: 0.75rem;
-                color: #f46a05;
-                font-weight: bold;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-            }
-
-            .user-item.active .role-badge {
-                color: #ffe6d5;
-            }
-
-            /* Main Messaging panel */
-            .chat-main {
-                flex-grow: 1;
-                display: flex;
-                flex-direction: column;
-                background-color: #fff;
-            }
-
-            .chat-header {
-                padding: 20px;
-                border-bottom: 1px solid #dcbca5;
-                background-color: #fcf8f2;
+            .contact-top {
                 display: flex;
                 justify-content: space-between;
+                gap: 8px;
                 align-items: center;
             }
 
-                .chat-header h3 {
-                    margin: 0;
-                    font-size: 1.2rem;
-                    color: #4a2511;
-                }
-
-            .back-btn {
-                background-color: #4a2511;
-                color: #fff;
-                padding: 8px 15px;
-                border-radius: 6px;
-                text-decoration: none;
-                font-size: 0.9rem;
+            .contact-name {
                 font-weight: 600;
-                transition: 0.2s;
             }
 
-                .back-btn:hover {
-                    background-color: #f46a05;
-                }
+            .role {
+                color: #75819a;
+                font-size: 12px;
+                margin-top: 4px;
+            }
 
-            /* Messages stream */
-            .chat-messages {
-                flex-grow: 1;
-                padding: 20px;
-                overflow-y: auto;
-                background-color: #fdfaf6;
+            .preview {
+                color: #95a0b5;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                font-size: 13px;
+                margin-top: 7px;
+            }
+
+            .unread-dot {
+                width: 9px;
+                height: 9px;
+                border-radius: 50%;
+                background: #ef4444;
+                flex: 0 0 auto;
+            }
+
+            .main {
+                flex: 1;
+                min-width: 0;
                 display: flex;
                 flex-direction: column;
-                gap: 15px;
+            }
+
+            .header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 20px 28px;
+                border-bottom: 1px solid #e7ebf2;
+            }
+
+                .header h2 {
+                    margin: 0;
+                    font-size: 17px;
+                }
+
+                .header span {
+                    display: block;
+                    margin-top: 4px;
+                    font-size: 13px;
+                    color: #7b879e;
+                }
+
+            .back {
+                text-decoration: none;
+                color: #4169e1;
+                font-weight: 600;
+                font-size: 14px;
+            }
+
+            .messages {
+                flex: 1;
+                overflow-y: auto;
+                padding: 28px;
+                display: flex;
+                flex-direction: column;
+                gap: 14px;
+                background: #fafbfc;
             }
 
             .message {
+                max-width: 70%;
                 display: flex;
                 flex-direction: column;
-                max-width: 70%;
             }
 
-            .message-sent {
+            .sent {
                 align-self: flex-end;
                 align-items: flex-end;
             }
 
-            .message-received {
+            .received {
                 align-self: flex-start;
-                align-items: flex-start;
             }
 
-            .message-bubble {
-                padding: 12px 16px;
+            .bubble {
+                padding: 11px 15px;
                 border-radius: 16px;
-                font-size: 0.95rem;
-                line-height: 1.4;
+                line-height: 1.45;
+                font-size: 14px;
+                word-break: break-word;
             }
 
-            .message-sent .message-bubble {
-                background-color: #f46a05;
-                color: #fff;
-                border-bottom-right-radius: 2px;
+            .sent .bubble {
+                background: #4169e1;
+                color: white;
+                border-bottom-right-radius: 4px;
             }
 
-            .message-received .message-bubble {
-                background-color: #eae1d8;
-                color: #4a2511;
-                border-bottom-left-radius: 2px;
+            .received .bubble {
+                background: white;
+                border: 1px solid #e6eaf0;
+                border-bottom-left-radius: 4px;
             }
 
-            .message-time {
-                font-size: 0.75rem;
-                color: #a39081;
-                margin-top: 4px;
+            .time {
+                color: #98a2b5;
+                font-size: 11px;
+                margin-top: 5px;
             }
 
-            /* Bottom input controller */
-            .chat-input-area {
-                padding: 20px;
-                border-top: 1px solid #dcbca5;
-                background-color: #fff;
+            .composer {
+                padding: 18px 28px;
                 display: flex;
-                gap: 12px;
+                gap: 10px;
+                border-top: 1px solid #e7ebf2;
             }
 
-                .chat-input-area input {
-                    flex-grow: 1;
-                    padding: 12px 16px;
-                    border: 1px solid #dcbca5;
-                    border-radius: 30px;
+                .composer input {
+                    flex: 1;
+                    border: 1px solid #dfe5ee;
+                    border-radius: 10px;
+                    padding: 13px 14px;
+                    font: inherit;
                     outline: none;
-                    font-size: 0.95rem;
-                    font-family: inherit;
                 }
 
-                    .chat-input-area input:focus {
-                        border-color: #f46a05;
+                    .composer input:focus {
+                        border-color: #4169e1;
+                        box-shadow: 0 0 0 3px #4169e122;
                     }
 
-            .chat-send-btn {
-                background-color: #f46a05;
-                color: #fff;
-                border: none;
-                padding: 0 25px;
-                border-radius: 30px;
-                font-weight: bold;
-                cursor: pointer;
-                transition: 0.2s;
+                .composer button {
+                    border: 0;
+                    border-radius: 10px;
+                    padding: 0 20px;
+                    color: white;
+                    background: #4169e1;
+                    font: inherit;
+                    font-weight: 600;
+                    cursor: pointer;
+                }
+
+            .empty {
+                margin: auto;
+                text-align: center;
+                color: #7b879e;
             }
 
-                .chat-send-btn:hover {
-                    background-color: #4a2511;
+            @@media (max-width: 720px) {
+                .sidebar {
+                    width: 110px;
                 }
+
+                .role, .preview, .brand p {
+                    display: none;
+                }
+
+                .brand {
+                    padding: 20px 12px;
+                }
+
+                .contact {
+                    padding: 12px 8px;
+                }
+            }
     </style>
 </head>
 <body>
+    <div class="inbox">
+        <aside class="sidebar">
+            <div class="brand">
+                <h1>Support Inbox</h1>
+                <p>Customer conversations</p>
+            </div>
 
-    <div class="chat-container">
-        <div class="chat-sidebar">
-            <div class="sidebar-header">💬 Active Contacts</div>
-            <div class="user-list">
+            <div class="contact-list">
                 @if (contacts != null && contacts.Count > 0)
                 {
-                    foreach (var contact in contacts)
+                    foreach (dynamic contact in contacts)
                     {
-                        <a href="/Chat?chatWith=@contact.Username" class="user-item @(chatWith == contact.Username ? "active" : "")">
-                            <span class="contact-name">@contact.Username</span>
-                            <span class="role-badge">🏷️ @contact.Role</span>
+                        <a class="contact @(chatWith == contact.Username ? "active" : "")"
+                           href="@Url.Action("Index", "Chat", new { chatWith = contact.Username })">
+                            <div class="contact-top">
+                                <span class="contact-name">@contact.Username</span>
+                                @if (contact.UnreadCount > 0 && chatWith != contact.Username)
+                                {
+                                    <span class="unread-dot" title="Unread message"></span>
+                                }
+                            </div>
+                            <div class="role">@contact.Role</div>
+                            <div class="preview">@(string.IsNullOrWhiteSpace(contact.Preview) ? "No messages yet" : contact.Preview)</div>
                         </a>
                     }
                 }
                 else
                 {
-                    <div style="padding: 20px; text-align: center; color: #a39081;">No other active users found.</div>
+                    <p class="empty">No customer conversations yet.</p>
                 }
             </div>
-        </div>
+        </aside>
 
-        <div class="chat-main">
-            @if (!string.IsNullOrEmpty(chatWith))
+        <main class="main">
+            @if (!string.IsNullOrWhiteSpace(chatWith))
             {
-                <div class="chat-header">
-                    <h3>Chatting with: <strong>@chatWith</strong></h3>
-                    <a href="/" class="back-btn">Go to Dashboard</a>
-                </div>
+                <header class="header">
+                    <div>
+                        <h2>@chatWith</h2>
+                        <span>Customer support conversation</span>
+                    </div>
+                    <a class="back" href="/">Back to dashboard</a>
+                </header>
 
-                <div class="chat-messages" id="chatMessages">
-                    @foreach (var msg in messages)
+                <div class="messages" id="chatMessages">
+                    @foreach (dynamic msg in messages)
                     {
                         bool isMe = msg.Sender == ViewBag.CurrentUser;
-                        <div class="message @(isMe ? "message-sent" : "message-received")">
-                            <div class="message-bubble">@msg.Text</div>
-                            <div class="message-time">@msg.Time</div>
+                        <div class="message @(isMe ? "sent" : "received")">
+                            <div class="bubble">@msg.Text</div>
+                            <div class="time">@msg.Time</div>
                         </div>
                     }
                 </div>
 
-                <div class="chat-input-area">
-                    <input type="text" id="messageInput" placeholder="Send delivery updates or coordinates..." autocomplete="off" />
-                    <button type="button" id="sendButton" class="chat-send-btn">Send</button>
+                <div class="composer">
+                    @Html.AntiForgeryToken()
+                    <input id="messageInput" type="text" placeholder="Write a reply…" autocomplete="off" />
+                    <button id="sendButton" type="button">Send</button>
                 </div>
             }
             else
             {
-                <div style="flex-grow: 1; display: flex; align-items: center; justify-content: center; background-color: #fdfaf6; flex-direction: column;">
-                    <span style="font-size: 3rem;">💬</span>
-                    <h3>Select a contact to begin coordinating</h3>
+                <div class="empty">
+                    <h2>Select a conversation</h2>
+                    <p>Customer messages will appear here.</p>
                 </div>
             }
-        </div>
+        </main>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
     <script>
-            const chatMessages = document.getElementById("chatMessages");
-            if (chatMessages) {
-                chatMessages.scrollTop = chatMessages.scrollHeight;
+            const currentUser = @Html.Raw(JsonSerializer.Serialize((string)ViewBag.CurrentUser ?? ""));
+            const chatWith = @Html.Raw(JsonSerializer.Serialize(chatWith));
+            const messages = document.getElementById("chatMessages");
+            const input = document.getElementById("messageInput");
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
+            messages?.scrollTo(0, messages.scrollHeight);
+
+            function addMessage(sender, text, time) {
+                const item = document.createElement("div");
+                item.className = `message ${sender === currentUser ? "sent" : "received"}`;
+
+                const bubble = document.createElement("div");
+                bubble.className = "bubble";
+                bubble.textContent = text;
+
+                const timestamp = document.createElement("div");
+                timestamp.className = "time";
+                timestamp.textContent = time;
+
+                item.append(bubble, timestamp);
+                messages.appendChild(item);
+                messages.scrollTo(0, messages.scrollHeight);
+            }
+
+            async function markRead() {
+                if (!chatWith || !token) return;
+
+                await fetch(`/Chat/MarkAsRead?chatWith=${encodeURIComponent(chatWith)}`, {
+                    method: "POST",
+                    headers: { "RequestVerificationToken": token }
+                });
             }
 
             const connection = new signalR.HubConnectionBuilder()
                 .withUrl("/chatHub")
+                .withAutomaticReconnect()
                 .build();
 
-            connection.on("ReceiveMessage", function(sender, receiver, message, time) {
-                const currentUser = "@ViewBag.CurrentUser";
-                const chatWith = "@chatWith";
-
-                const isRelevant =
+            connection.on("ReceiveMessage", async (sender, receiver, text, time) => {
+                const isCurrentConversation =
                     (sender === currentUser && receiver === chatWith) ||
                     (sender === chatWith && receiver === currentUser);
 
-                if (isRelevant && chatMessages) {
-                    const isMe = sender === currentUser;
-                    const messageHtml = `
-                                <div class="message ${isMe ? 'message-sent' : 'message-received'}">
-                                    <div class="message-bubble">${message}</div>
-                                    <div class="message-time">${time}</div>
-                                </div>`;
-
-                    chatMessages.innerHTML += messageHtml;
-                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                if (isCurrentConversation && messages) {
+                    addMessage(sender, text, time);
+                    if (receiver === currentUser) await markRead();
+                } else if (receiver === currentUser) {
+                    // Reload updates the red dot and moves the newest conversation to the top.
+                    window.location.reload();
                 }
             });
 
-            connection.start().catch(err => console.error(err.toString()));
+            connection.start().catch(console.error);
 
-            const sendButton = document.getElementById("sendButton");
-            const messageInput = document.getElementById("messageInput");
+            async function sendMessage() {
+                const text = input?.value.trim();
+                if (!text || !chatWith) return;
 
-            if (sendButton && messageInput) {
-                sendButton.addEventListener("click", function(event) {
-                    sendMessage();
+                try {
+                    await connection.invoke("SendMessage", chatWith, text);
+                    input.value = "";
+                    input.focus();
+                } catch (error) {
+                    console.error(error);
+                }
+            }
+
+            document.getElementById("sendButton")?.addEventListener("click", sendMessage);
+            input?.addEventListener("keydown", event => {
+                if (event.key === "Enter") {
                     event.preventDefault();
-                });
-
-                messageInput.addEventListener("keydown", function(event) {
-                    if (event.key === "Enter") {
-                        sendMessage();
-                        event.preventDefault();
-                    }
-                });
-            }
-
-            function sendMessage() {
-                const input = document.getElementById("messageInput");
-                const message = input.value.trim();
-                if (message === "") return;
-
-                const receiver = "@chatWith";
-
-                connection.invoke("SendMessage", receiver, message)
-                    .then(() => {
-                        input.value = "";
-                    })
-                    .catch(err => console.error(err.toString()));
-            }
-    </script></body>
+                    sendMessage();
+                }
+            });
+    </script>
+</body>
 </html>
