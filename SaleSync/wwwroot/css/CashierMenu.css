@@ -1291,3 +1291,132 @@ body {
     .notes-textarea::placeholder {
         color: var(--muted);
     }
+
+/* ==========================================================================
+   ADD-ONS (item modal + receipt editor)
+   ========================================================================== */
+.addon-options {
+    display: flex;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+}
+
+.addon-check {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 11px;
+    margin: 4px 6px 4px 0;
+    background: var(--bg-card-2);
+    border: 1.5px solid var(--border-sub);
+    border-radius: 9px;
+    color: var(--muted-2);
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+
+    .addon-check:hover {
+        border-color: var(--border);
+        color: var(--cream);
+    }
+
+    .addon-check input[type="checkbox"] {
+        width: 15px;
+        height: 15px;
+        accent-color: var(--gold);
+        cursor: pointer;
+    }
+
+    .addon-check:has(input:checked) {
+        border-color: var(--gold);
+        background: var(--gold-glow);
+        color: var(--gold-light);
+    }
+
+/* ==========================================================================
+   RECEIPT ITEM — INLINE EDITOR (Instructions / Add-ons)
+   ========================================================================== */
+.order-item-addons {
+    color: var(--gold-light);
+    font-size: 11px;
+    margin-top: 2px;
+}
+
+.order-item-notes-line {
+    font-size: 11px;
+    color: var(--gold);
+    font-style: italic;
+    margin-top: 2px;
+}
+
+.order-item-edit-btn {
+    margin-top: 6px;
+    background: transparent;
+    border: 1px solid var(--border-sub);
+    color: var(--gold);
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'Outfit', sans-serif;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+    .order-item-edit-btn:hover {
+        border-color: var(--border);
+        background: var(--gold-glow);
+    }
+
+.order-item-editing {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+}
+
+.order-edit-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.btn-order-edit-save {
+    flex: 1;
+    background: var(--gold);
+    color: var(--bg-base);
+    border: none;
+    border-radius: 8px;
+    padding: 9px;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 800;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+    .btn-order-edit-save:hover {
+        background: var(--gold-light);
+        transform: translateY(-1px);
+    }
+
+.btn-order-edit-cancel {
+    flex: 1;
+    background: transparent;
+    color: var(--cream);
+    border: 1px solid var(--border-sub);
+    border-radius: 8px;
+    padding: 9px;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+    .btn-order-edit-cancel:hover {
+        border-color: var(--border);
+        background: rgba(255,255,255,0.03);
+    }

@@ -1,5 +1,4 @@
-﻿
-@model SaleSync.Models.CustomerDashboardViewModel
+﻿@model SaleSync.Models.CustomerDashboardViewModel
 @{
     Layout = null;
     var storeSettings = ViewBag.StoreSettings as SaleSync.Models.WebCustomization ?? new SaleSync.Models.WebCustomization();
@@ -241,7 +240,8 @@
                                         @(hasLarge ? largeProductId.Value.ToString() : "null"),
                                         @Html.Raw(Json.Serialize(p.BaseName)),
                                         @smallItem.Price,
-                                        @(hasLarge ? largeProductPrice.Value.ToString() : "null")
+                                        @(hasLarge ? largeProductPrice.Value.ToString() : "null"),
+                                        @Html.Raw(Json.Serialize(catRaw))
                                         )'>
 
                                         + Add to Order
@@ -279,7 +279,8 @@
                                 "Pending",
                                 "Preparing",
                                 "Ready",
-                                "On the Way"
+                                "On the Way",
+                                "Delivered"
                             };
 
                             var activeOrders = Model?.OrderHistory?
@@ -291,21 +292,60 @@
                         {
                             foreach (var order in activeOrders)
                             {
-                                int step =
-                                    order.Status == "Preparing"
-                                        ? 2
-                                        : (order.Status == "Ready" ||
-                                           order.Status == "On the Way")
-                                            ? 3
-                                            : 1;
+                                bool isDelivery = string.Equals(
+                                    order.OrderType,
+                                    "Delivery",
+                                    StringComparison.OrdinalIgnoreCase
+                                );
 
-                                string eta =
-                                    order.Status == "Preparing"
-                                        ? "Est. 10–15 mins"
-                                        : (order.Status == "Ready" ||
-                                           order.Status == "On the Way")
-                                            ? "Ready for pickup!"
-                                            : "Est. 15–20 mins";
+                                string[] stepLabels = isDelivery
+                                    ? new[] { "Received", "Preparing", "Out for Delivery", "Delivered" }
+                                    : new[] { "Received", "Preparing", "Ready" };
+
+                                int step;
+                                string eta;
+
+                                if (isDelivery)
+                                {
+                                    step =
+                                        order.Status == "Preparing"
+                                            ? 2
+                                            : (order.Status == "Ready" ||
+                                               order.Status == "On the Way")
+                                                ? 3
+                                                : order.Status == "Delivered"
+                                                    ? 4
+                                                    : 1;
+
+                                    eta =
+                                        order.Status == "Preparing"
+                                            ? "Est. 10–15 mins"
+                                            : order.Status == "Ready"
+                                                ? "Preparing for your rider..."
+                                                : order.Status == "On the Way"
+                                                    ? "Your rider is on the way!"
+                                                    : order.Status == "Delivered"
+                                                        ? "Delivered! Enjoy your order 🎉"
+                                                        : "Est. 20–30 mins";
+                                }
+                                else
+                                {
+                                    step =
+                                        order.Status == "Preparing"
+                                            ? 2
+                                            : (order.Status == "Ready" ||
+                                               order.Status == "On the Way")
+                                                ? 3
+                                                : 1;
+
+                                    eta =
+                                        order.Status == "Preparing"
+                                            ? "Est. 10–15 mins"
+                                            : (order.Status == "Ready" ||
+                                               order.Status == "On the Way")
+                                                ? "Ready for pickup!"
+                                                : "Est. 15–20 mins";
+                                }
 
                                 <div class="track-card">
                                     <div class="track-header">
@@ -333,32 +373,25 @@
                                     </div>
 
                                     <div class="track-steps">
+                                        @for (int i = 0; i < stepLabels.Length; i++)
+                                        {
+                                            int stepNum = i + 1;
+                                            bool done = step >= stepNum;
 
-                                        <div class="track-step @(step >= 1 ? "done" : "")">
-                                            <div class="step-dot">
-                                                @(step >= 1 ? "✓" : "1")
+                                            <div class="track-step @(done ? "done" : "")">
+                                                <div class="step-dot">
+                                                    @(done ? "✓" : stepNum.ToString())
+                                                </div>
+                                                <span>@stepLabels[i]</span>
                                             </div>
-                                            <span>Received</span>
-                                        </div>
 
-                                        <div class="track-line @(step >= 2 ? "done" : "")"></div>
+                                            if (i < stepLabels.Length - 1)
+                                            {
+                                                bool lineDone = step >= stepNum + 1;
 
-                                        <div class="track-step @(step >= 2 ? "done" : "")">
-                                            <div class="step-dot">
-                                                @(step >= 2 ? "✓" : "2")
-                                            </div>
-                                            <span>Preparing</span>
-                                        </div>
-
-                                        <div class="track-line @(step >= 3 ? "done" : "")"></div>
-
-                                        <div class="track-step @(step >= 3 ? "done" : "")">
-                                            <div class="step-dot">
-                                                @(step >= 3 ? "✓" : "3")
-                                            </div>
-                                            <span>Ready</span>
-                                        </div>
-
+                                                <div class="track-line @(lineDone ? "done" : "")"></div>
+                                            }
+                                        }
                                     </div>
                                 </div>
                             }
@@ -543,6 +576,19 @@
                 </div>
             </div>
 
+            <!-- ADD-ONS: category-specific checkboxes (e.g. a rice meal won't
+                 show "Oat Milk"). Hidden automatically when a category has
+                 no add-ons defined for it. -->
+            <div id="addonsSection">
+                <p class="modal-label">
+                    Add-ons
+                    <span class="optional-tag">(Optional)</span>
+                </p>
+
+                <div id="addonsList" class="addon-options">
+                </div>
+            </div>
+
             <p class="modal-label">Quantity</p>
 
             <div class="quantity-selector">
@@ -634,10 +680,63 @@
             <div id="addressContainer"
                  style="display:none;">
 
-                <textarea id="customerAddress"
-                          class="cart-textarea"
-                          placeholder="Enter full delivery address..."
-                          rows="2"></textarea>
+                <div class="addr-field-group">
+                    <label class="addr-label" for="customerContactNumber">Contact Number</label>
+                    <input type="tel"
+                           id="customerContactNumber"
+                           class="cart-select"
+                           placeholder="09XX XXX XXXX"
+                           maxlength="20" />
+                </div>
+
+                <div class="addr-field-group">
+                    <label class="addr-label" for="customerStreetAddress">Street Address / House No. &amp; Building</label>
+                    <textarea id="customerStreetAddress"
+                              class="cart-textarea"
+                              placeholder="Unit/House No., Street, Subdivision..."
+                              rows="2"></textarea>
+                </div>
+
+                <div class="addr-field-row">
+                    <div class="addr-field-group">
+                        <label class="addr-label" for="customerBarangay">Barangay</label>
+                        <input type="text"
+                               id="customerBarangay"
+                               class="cart-select"
+                               placeholder="e.g. Barangay 123" />
+                    </div>
+
+                    <div class="addr-field-group">
+                        <label class="addr-label" for="customerLandmark">Landmark</label>
+                        <input type="text"
+                               id="customerLandmark"
+                               class="cart-select"
+                               placeholder="e.g. near XYZ school" />
+                    </div>
+                </div>
+
+                <div class="addr-field-group">
+                    <label class="addr-label" for="customerDeliveryInstructions">
+                        Delivery Instructions
+                        <span class="optional-tag">(Optional)</span>
+                    </label>
+                    <textarea id="customerDeliveryInstructions"
+                              class="cart-textarea"
+                              placeholder="e.g. gate code, floor/unit no., leave with guard..."
+                              rows="2"></textarea>
+                </div>
+
+                <button type="button"
+                        class="btn-use-location"
+                        onclick="useCurrentLocation()"
+                        id="useLocationBtn">
+                    📍 Use my current location
+                </button>
+
+                <label class="addr-save-check">
+                    <input type="checkbox" id="saveAddressCheck" checked />
+                    Save this address for next time
+                </label>
 
             </div>
 
@@ -656,7 +755,8 @@
             </div>
 
             <select id="customerPaymentMethod"
-                    class="cart-select">
+                    class="cart-select"
+                    onchange="togglePaymentProof()">
 
                 <option value="Cash">
                     Pay at Counter (Cash)
@@ -676,11 +776,83 @@
 
             </select>
 
+            <div id="paymentProofContainer" style="display:none;">
+
+                <div class="qr-payment-box">
+
+                    <div class="qr-placeholder" id="qrPlaceholder">
+                        <svg viewBox="0 0 110 110" class="qr-mock-svg" role="img" aria-label="Sample QR code placeholder">
+                            <rect x="0" y="0" width="110" height="110" fill="var(--bg-surface)" />
+
+                            <!-- Finder pattern: top-left -->
+                            <rect x="6" y="6" width="24" height="24" fill="none" stroke="var(--gold)" stroke-width="4" />
+                            <rect x="14" y="14" width="8" height="8" fill="var(--gold)" />
+
+                            <!-- Finder pattern: top-right -->
+                            <rect x="80" y="6" width="24" height="24" fill="none" stroke="var(--gold)" stroke-width="4" />
+                            <rect x="88" y="14" width="8" height="8" fill="var(--gold)" />
+
+                            <!-- Finder pattern: bottom-left -->
+                            <rect x="6" y="80" width="24" height="24" fill="none" stroke="var(--gold)" stroke-width="4" />
+                            <rect x="14" y="88" width="8" height="8" fill="var(--gold)" />
+
+                            <!-- Mock data cells (decorative, not a real scannable code) -->
+                            <g fill="var(--gold-light)" opacity="0.75">
+                                <rect x="40" y="10" width="6" height="6" />
+                                <rect x="52" y="10" width="6" height="6" />
+                                <rect x="64" y="18" width="6" height="6" />
+                                <rect x="40" y="24" width="6" height="6" />
+                                <rect x="58" y="30" width="6" height="6" />
+                                <rect x="10" y="40" width="6" height="6" />
+                                <rect x="22" y="46" width="6" height="6" />
+                                <rect x="36" y="40" width="6" height="6" />
+                                <rect x="48" y="46" width="6" height="6" />
+                                <rect x="60" y="40" width="6" height="6" />
+                                <rect x="72" y="46" width="6" height="6" />
+                                <rect x="84" y="40" width="6" height="6" />
+                                <rect x="96" y="46" width="6" height="6" />
+                                <rect x="40" y="58" width="6" height="6" />
+                                <rect x="52" y="64" width="6" height="6" />
+                                <rect x="64" y="58" width="6" height="6" />
+                                <rect x="76" y="64" width="6" height="6" />
+                                <rect x="40" y="80" width="6" height="6" />
+                                <rect x="52" y="86" width="6" height="6" />
+                                <rect x="64" y="80" width="6" height="6" />
+                                <rect x="76" y="92" width="6" height="6" />
+                                <rect x="88" y="80" width="6" height="6" />
+                                <rect x="96" y="92" width="6" height="6" />
+                            </g>
+                        </svg>
+                        <span class="qr-placeholder-text">Sample QR — coming soon</span>
+                    </div>
+
+                    <p class="qr-account-note" id="qrAccountNote">
+                        Scan to pay via <strong id="qrMethodLabel">GCash</strong>. Account details will be posted here soon —
+                        for now, please coordinate payment with staff via chat before sending.
+                    </p>
+
+                </div>
+
+                <div class="addr-field-group">
+                    <label class="addr-label" for="customerPaymentReference">
+                        Payment Reference Number
+                    </label>
+                    <input type="text"
+                           id="customerPaymentReference"
+                           class="cart-select"
+                           placeholder="e.g. GCash/Maya reference no." />
+                    <p class="qr-hint">
+                        Enter the reference number from your GCash/Maya payment confirmation. Staff will verify this against your order.
+                    </p>
+                </div>
+
+            </div>
+
             <button class="btn-checkout"
                     id="checkoutBtn"
                     onclick="submitOnlineOrder()">
 
-                Send Order to Kitchen
+                Proceed to Checkout
 
             </button>
 
@@ -803,7 +975,7 @@
 
         @if (Model?.MenuItems != null)
             {
-                                foreach (var item in Model.MenuItems)
+                                            foreach (var item in Model.MenuItems)
                 {
                     @:allItems[@item.ProductId] = {
                     @:id: @item.ProductId,
@@ -830,6 +1002,11 @@
         let activeSmallPrice = 0;
         let activeLargePrice = null;
         let activeItemName = '';
+        let activeCategory = '';
+
+        // Tracks which single cart row (by index) is currently showing its
+        // inline Instructions/Add-ons editor. null = none being edited.
+        let editingIndex = null;
 
         // ── MOBILE SIDEBAR ─────────────────────────────────────────────────────────
 
@@ -921,13 +1098,13 @@
         // ── STORE STATUS ───────────────────────────────────────────────────────────
 
         const storeOpeningTime =
-                        @Html.Raw(Json.Serialize(storeSettings.OpeningTime ?? "07:00"));
+                                @Html.Raw(Json.Serialize(storeSettings.OpeningTime ?? "07:00"));
 
         const storeClosingTime =
-                        @Html.Raw(Json.Serialize(storeSettings.ClosingTime ?? "21:00"));
+                                @Html.Raw(Json.Serialize(storeSettings.ClosingTime ?? "21:00"));
 
         const storeTemporarilyClosed =
-                        @Html.Raw(Json.Serialize(storeSettings.IsTemporarilyClosed));
+                                @Html.Raw(Json.Serialize(storeSettings.IsTemporarilyClosed));
 
         function parseTimeToMinutes(hhmm) {
 
@@ -956,6 +1133,24 @@
                     minute: '2-digit'
                 }
             );
+        }
+
+        // Top-level helper so it's callable from anywhere in this file
+        // (e.g. submitOnlineOrder), not just from inside checkStoreStatus().
+        function isStoreOpen() {
+
+            if (storeTemporarilyClosed) {
+                return false;
+            }
+
+            const now = new Date();
+            const nowMinutes = (now.getHours() * 60) + now.getMinutes();
+            const openMinutes = parseTimeToMinutes(storeOpeningTime);
+            const closeMinutes = parseTimeToMinutes(storeClosingTime);
+
+            return closeMinutes > openMinutes
+                ? (nowMinutes >= openMinutes && nowMinutes < closeMinutes)
+                : (nowMinutes >= openMinutes || nowMinutes < closeMinutes);
         }
 
         function checkStoreStatus() {
@@ -1219,6 +1414,164 @@
             if (v === 'Pick-up') {
                 setPickupMinDateTime();
             }
+
+            if (v === 'Delivery') {
+                prefillSavedAddress();
+            }
+        }
+
+        // ── PAYMENT PROOF (GCash / Maya) ─────────────────────────────────────────────
+
+        function togglePaymentProof() {
+
+            const method =
+                document.getElementById('customerPaymentMethod').value;
+
+            const isOnlinePayment =
+                method === 'GCash' || method === 'Maya';
+
+            const proofContainer =
+                document.getElementById('paymentProofContainer');
+
+            if (proofContainer) {
+                proofContainer.style.display =
+                    isOnlinePayment ? 'block' : 'none';
+            }
+
+            const methodLabel =
+                document.getElementById('qrMethodLabel');
+
+            if (methodLabel && isOnlinePayment) {
+                methodLabel.innerText = method;
+            }
+
+            // Clear any leftover reference number when switching away from
+            // an online payment method so it isn't submitted by mistake.
+            if (!isOnlinePayment) {
+
+                const refField =
+                    document.getElementById('customerPaymentReference');
+
+                if (refField) {
+                    refField.value = '';
+                }
+            }
+        }
+
+        // ── SAVED ADDRESS (localStorage) ─────────────────────────────────────────────
+
+        function prefillSavedAddress() {
+
+            const saved =
+                JSON.parse(
+                    localStorage.getItem('caferoSavedAddress') || 'null'
+                );
+
+            if (!saved) return;
+
+            const fields = {
+                customerContactNumber: saved.contactNumber,
+                customerStreetAddress: saved.street,
+                customerBarangay: saved.barangay,
+                customerLandmark: saved.landmark,
+                customerDeliveryInstructions: saved.instructions
+            };
+
+            Object.entries(fields).forEach(([id, val]) => {
+
+                const el = document.getElementById(id);
+
+                if (el && !el.value && val) {
+                    el.value = val;
+                }
+            });
+        }
+
+        function saveAddressIfRequested(addressParts) {
+
+            const shouldSave =
+                document.getElementById('saveAddressCheck')?.checked;
+
+            if (!shouldSave) {
+                localStorage.removeItem('caferoSavedAddress');
+                return;
+            }
+
+            localStorage.setItem(
+                'caferoSavedAddress',
+                JSON.stringify(addressParts)
+            );
+        }
+
+        // ── GEOLOCATION ───────────────────────────────────────────────────────────
+
+        function useCurrentLocation() {
+
+            if (!navigator.geolocation) {
+
+                Swal.fire(
+                    'Not Supported',
+                    'Your browser does not support location services. Please type your address instead.',
+                    'warning'
+                );
+
+                return;
+            }
+
+            const btn =
+                document.getElementById('useLocationBtn');
+
+            btn.disabled = true;
+            btn.innerText = 'Getting location...';
+
+            navigator.geolocation.getCurrentPosition(
+
+                position => {
+
+                    const lat =
+                        position.coords.latitude.toFixed(6);
+
+                    const lng =
+                        position.coords.longitude.toFixed(6);
+
+                    // Stored as a fallback pin for the rider; appended to
+                    // the street address field rather than replacing it,
+                    // since reverse-geocoding isn't wired up yet.
+                    const streetField =
+                        document.getElementById('customerStreetAddress');
+
+                    const pinNote =
+                        `[Pinned location: ${lat}, ${lng}]`;
+
+                    if (streetField &&
+                        !streetField.value.includes('[Pinned location:')) {
+
+                        streetField.value =
+                            (streetField.value.trim() + '\n' + pinNote).trim();
+                    }
+
+                    btn.disabled = false;
+                    btn.innerText = '📍 Location added';
+
+                    setTimeout(() => {
+                        btn.innerText = '📍 Use my current location';
+                    }, 2000);
+                },
+
+                error => {
+
+                    btn.disabled = false;
+                    btn.innerText = '📍 Use my current location';
+
+                    Swal.fire(
+                        'Location Unavailable',
+                        'Could not get your location. Please type your address manually.',
+                        'warning'
+                    );
+                },
+
+                { timeout: 8000 }
+            );
         }
 
         // Enforces a minimum lead time on the pick-up time picker so a
@@ -1250,6 +1603,43 @@
             }
         }
 
+        // ── ADD-ONS ───────────────────────────────────────────────────────────────
+        // Category-specific so a rice meal never shows drink add-ons like
+        // "Oat Milk", and a coffee never shows "Extra Rice". Categories here
+        // match the "data-category" values built in the Razor loop above
+        // (lowercased, spaces stripped).
+
+        const addonsByCategory = {
+            coffee: ['Extra Shot', 'Less Sugar', 'Less Ice', 'Oat Milk', 'Extra Ice'],
+            milktea: ['Less Sugar', 'Less Ice', 'Extra Pearls', 'Extra Ice'],
+            fruittea: ['Less Sugar', 'Less Ice', 'Extra Ice'],
+            ricemeal: ['Extra Rice', 'Less Spicy', 'No Onions', 'Extra Sauce'],
+            'snacks&pasta': ['Extra Rice', 'Less Spicy', 'No Onions', 'Extra Sauce', 'Extra Cheese'],
+            'bread&pastry': ['Warmed Up', 'Extra Butter', 'No Nuts']
+        };
+
+        function getAddonsForCategory(category) {
+            return addonsByCategory[category] || [];
+        }
+
+        // Combines the selected add-ons and free-text notes into a single
+        // string for the existing SpecialInstructions field sent to the
+        // server, so no backend/API changes are required.
+        function buildInstructionsText(item) {
+
+            const parts = [];
+
+            if (item.addons && item.addons.length > 0) {
+                parts.push('Add-ons: ' + item.addons.join(', '));
+            }
+
+            if (item.notes) {
+                parts.push(item.notes);
+            }
+
+            return parts.join(' | ');
+        }
+
         // ── MODAL ─────────────────────────────────────────────────────────────────
 
         function openModal(
@@ -1257,7 +1647,8 @@
             largeId,
             itemName,
             smallPrice,
-            largePrice
+            largePrice,
+            category
         ) {
 
             activeSmallId =
@@ -1286,6 +1677,9 @@
 
             activeItemName =
                 itemName;
+
+            activeCategory =
+                category || '';
 
             const hasSizes =
                 activeLargeId !== null;
@@ -1338,6 +1732,35 @@
                         radio.value === 'Small';
                 }
             );
+
+            // Populate the Add-ons checkboxes for this item's category.
+            const addonOptions =
+                getAddonsForCategory(activeCategory);
+
+            const addonsSection =
+                document.getElementById('addonsSection');
+
+            const addonsList =
+                document.getElementById('addonsList');
+
+            if (addonOptions.length > 0) {
+
+                addonsSection.style.display = 'block';
+
+                addonsList.innerHTML =
+                    addonOptions.map(label => `
+                        <label class="addon-check">
+                            <input type="checkbox" name="modalAddon" value="${label}">
+                            ${label}
+                        </label>
+                    `).join('');
+
+            }
+            else {
+
+                addonsSection.style.display = 'none';
+                addonsList.innerHTML = '';
+            }
 
             document.getElementById(
                 'sizeModal'
@@ -1404,6 +1827,11 @@
                     'itemNotes'
                 ).value.trim();
 
+            const selectedAddons =
+                Array.from(
+                    document.querySelectorAll('input[name="modalAddon"]:checked')
+                ).map(cb => cb.value);
+
             const useLarge =
                 hasSizes &&
                 size === 'Large';
@@ -1423,7 +1851,8 @@
                     i =>
                         i.id === productId &&
                         i.size === size &&
-                        i.notes === notes
+                        i.notes === notes &&
+                        JSON.stringify(i.addons || []) === JSON.stringify(selectedAddons)
                 );
 
             if (existingIdx > -1) {
@@ -1441,7 +1870,9 @@
                     size: size,
                     qty: qty,
                     price: price,
-                    notes: notes
+                    notes: notes,
+                    addons: selectedAddons,
+                    category: activeCategory
                 });
             }
 
@@ -1535,6 +1966,8 @@
                         '₱0.00';
                 }
 
+                editingIndex = null;
+
                 return;
             }
 
@@ -1545,55 +1978,14 @@
                 (item, idx) => {
 
                     const sub =
-                        item.qty *
-                        item.price;
+                        item.qty * item.price;
 
-                    grandTotal +=
-                        sub;
+                    grandTotal += sub;
 
-                    html += `
-                                    <div class="cart-item-row">
-
-                                        <div class="cart-item-info">
-                                            <h4>${item.name}</h4>
-
-                                            <p>
-                                                ${item.size}
-                                                · ₱${item.price.toFixed(2)}/ea
-                                                ${item.notes
-                            ? '<br><em class="cart-notes">📝 ' +
-                            item.notes +
-                            '</em>'
-                            : ''
-                        }
-                                            </p>
-                                        </div>
-
-                                        <div class="cart-item-controls">
-
-                                            <button
-                                                class="cart-qty-btn"
-                                                onclick="updateCustomerQty(${idx},-1)">
-                                                -
-                                            </button>
-
-                                            <span class="cart-qty-val">
-                                                ${item.qty}
-                                            </span>
-
-                                            <button
-                                                class="cart-qty-btn"
-                                                onclick="updateCustomerQty(${idx},1)">
-                                                +
-                                            </button>
-
-                                        </div>
-
-                                        <div class="cart-subtotal-val">
-                                            ₱${sub.toFixed(2)}
-                                        </div>
-
-                                    </div>`;
+                    html +=
+                        (editingIndex === idx)
+                            ? buildCartItemEditHtml(item, idx)
+                            : buildCartItemViewHtml(item, idx, sub);
                 }
             );
 
@@ -1608,6 +2000,189 @@
                         2
                     );
             }
+        }
+
+        // Normal (read-only) row for a cart item.
+        function buildCartItemViewHtml(item, idx, sub) {
+
+            const addonsHtml =
+                (item.addons && item.addons.length > 0)
+                    ? `<div class="cart-addons">🧩 ${escapeHTML(item.addons.join(', '))}</div>`
+                    : '';
+
+            const notesHtml =
+                item.notes
+                    ? `<div class="cart-notes-line"><em class="cart-notes">📝 ${escapeHTML(item.notes)}</em></div>`
+                    : '';
+
+            return `
+                <div class="cart-item-row">
+
+                    <div class="cart-item-info">
+                        <h4>${escapeHTML(item.name)}</h4>
+
+                        <p>
+                            ${escapeHTML(item.size)}
+                            · ₱${item.price.toFixed(2)}/ea
+                        </p>
+
+                        ${addonsHtml}
+                        ${notesHtml}
+
+                        <button type="button"
+                                class="cart-edit-btn"
+                                onclick="toggleCartItemEdit(${idx})">
+                            ✏️ Edit Instructions / Add-ons
+                        </button>
+                    </div>
+
+                    <div class="cart-item-controls">
+
+                        <button
+                            class="cart-qty-btn"
+                            onclick="updateCustomerQty(${idx},-1)">
+                            -
+                        </button>
+
+                        <span class="cart-qty-val">
+                            ${item.qty}
+                        </span>
+
+                        <button
+                            class="cart-qty-btn"
+                            onclick="updateCustomerQty(${idx},1)">
+                            +
+                        </button>
+
+                    </div>
+
+                    <div class="cart-subtotal-val">
+                        ₱${sub.toFixed(2)}
+                    </div>
+
+                </div>`;
+        }
+
+        // Inline editor for a cart item's Add-ons + Special Instructions.
+        // Only one row is ever in edit mode at a time (tracked via
+        // editingIndex), so there's exactly one ".cart-item-editing" element
+        // in the DOM whenever this renders — saveCartItemEdit relies on that.
+        function buildCartItemEditHtml(item, idx) {
+
+            const addonOptions =
+                getAddonsForCategory(item.category || '');
+
+            const currentAddons =
+                item.addons || [];
+
+            const addonsCheckboxes =
+                addonOptions.map(label => {
+
+                    const checked =
+                        currentAddons.includes(label)
+                            ? 'checked'
+                            : '';
+
+                    return `
+                        <label class="addon-check">
+                            <input type="checkbox" class="cart-edit-addon" value="${label}" ${checked}>
+                            ${label}
+                        </label>
+                    `;
+
+                }).join('');
+
+            return `
+                <div class="cart-item-row cart-item-editing">
+
+                    <div class="cart-item-info cart-edit-info">
+
+                        <h4>
+                            ${escapeHTML(item.name)}
+                            <span class="cart-edit-size">
+                                (${escapeHTML(item.size)})
+                            </span>
+                        </h4>
+
+                        ${
+                            addonOptions.length > 0
+                                ? `
+                                    <p class="modal-label">Add-ons</p>
+                                    <div class="addon-options">${addonsCheckboxes}</div>
+                                  `
+                                : ''
+                        }
+
+                        <p class="modal-label">Special Instructions</p>
+
+                        <textarea class="notes-textarea cart-edit-notes"
+                                  rows="2"
+                                  placeholder="e.g. less sugar, no ice, extra hot...">${escapeHTML(item.notes || '')}</textarea>
+
+                        <div class="cart-edit-actions">
+
+                            <button type="button"
+                                    class="btn-cart-edit-save"
+                                    onclick="saveCartItemEdit(${idx})">
+                                Save
+                            </button>
+
+                            <button type="button"
+                                    class="btn-cart-edit-cancel"
+                                    onclick="cancelCartItemEdit()">
+                                Cancel
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>`;
+        }
+
+        function toggleCartItemEdit(idx) {
+
+            editingIndex =
+                (editingIndex === idx)
+                    ? null
+                    : idx;
+
+            renderCustomerCart();
+        }
+
+        function cancelCartItemEdit() {
+
+            editingIndex = null;
+
+            renderCustomerCart();
+        }
+
+        function saveCartItemEdit(idx) {
+
+            const row =
+                document.querySelector('.cart-item-editing');
+
+            if (!row) return;
+
+            const notes =
+                row.querySelector('.cart-edit-notes')?.value.trim() || '';
+
+            const addons =
+                Array.from(
+                    row.querySelectorAll('.cart-edit-addon:checked')
+                ).map(cb => cb.value);
+
+            customerCart[idx].notes = notes;
+            customerCart[idx].addons = addons;
+
+            localStorage.setItem(
+                'caferoCustomerCart',
+                JSON.stringify(customerCart)
+            );
+
+            editingIndex = null;
+
+            renderCustomerCart();
         }
 
         function updateCustomerQty(
@@ -1627,6 +2202,8 @@
                     index,
                     1
                 );
+
+                editingIndex = null;
             }
 
             localStorage.setItem(
@@ -1640,8 +2217,23 @@
         }
 
         // ── SUBMIT ORDER VIA API ──────────────────────────────────────────────────
+        // (fixed: this is now the ONLY submitOnlineOrder() in the file, and it
+        // starts with a store-open check before anything else runs)
 
         async function submitOnlineOrder() {
+
+            if (!isStoreOpen()) {
+
+                Swal.fire(
+                    storeTemporarilyClosed ? 'Store Temporarily Closed' : 'Store Closed',
+                    storeTemporarilyClosed
+                        ? "We're currently on a break. Please check back shortly."
+                        : `We're closed right now. Ordering opens at ${formatMinutesAsClock(parseTimeToMinutes(storeOpeningTime))}.`,
+                    'warning'
+                );
+
+                return;
+            }
 
             if (customerCart.length === 0) {
 
@@ -1664,10 +2256,53 @@
                     'customerPaymentMethod'
                 ).value;
 
-            const address =
+            const paymentReference =
                 document.getElementById(
-                    'customerAddress'
+                    'customerPaymentReference'
                 )?.value.trim() || '';
+
+            const isOnlinePayment =
+                paymentMethod === 'GCash' || paymentMethod === 'Maya';
+
+            if (
+                isOnlinePayment &&
+                !paymentReference
+            ) {
+
+                Swal.fire(
+                    'Missing Reference Number',
+                    `Please enter your ${paymentMethod} payment reference number before sending your order.`,
+                    'warning'
+                );
+
+                return;
+            }
+
+            const contactNumber =
+                document.getElementById('customerContactNumber')?.value.trim() || '';
+
+            const street =
+                document.getElementById('customerStreetAddress')?.value.trim() || '';
+
+            const barangay =
+                document.getElementById('customerBarangay')?.value.trim() || '';
+
+            const landmark =
+                document.getElementById('customerLandmark')?.value.trim() || '';
+
+            const deliveryInstructions =
+                document.getElementById('customerDeliveryInstructions')?.value.trim() || '';
+
+            const addressParts = {
+                contactNumber, street, barangay, landmark, instructions: deliveryInstructions
+            };
+
+            // Combined single-line string for the kitchen/rider display and
+            // for the API payload, which still expects one address string.
+            const address =
+                [street, barangay ? `Brgy. ${barangay}` : '', landmark ? `(near ${landmark})` : '']
+                    .filter(Boolean)
+                    .join(', ');
 
             const pickupTimeRaw =
                 document.getElementById(
@@ -1685,12 +2320,40 @@
 
             if (
                 orderType === 'Delivery' &&
-                !address
+                !contactNumber
             ) {
 
                 Swal.fire(
-                    'Missing Address',
-                    'Please enter your delivery address.',
+                    'Missing Contact Number',
+                    'Please enter a contact number so the rider can reach you.',
+                    'warning'
+                );
+
+                return;
+            }
+
+            if (
+                orderType === 'Delivery' &&
+                street.length < 10
+            ) {
+
+                Swal.fire(
+                    'Incomplete Address',
+                    'Please enter a more complete street address (unit/house no. and street name).',
+                    'warning'
+                );
+
+                return;
+            }
+
+            if (
+                orderType === 'Delivery' &&
+                !barangay
+            ) {
+
+                Swal.fire(
+                    'Missing Barangay',
+                    'Please enter your barangay so we can confirm your delivery zone.',
                     'warning'
                 );
 
@@ -1758,9 +2421,34 @@
                 PaymentMethod:
                     paymentMethod,
 
+                PaymentReference:
+                    isOnlinePayment
+                        ? paymentReference
+                        : null,
+
                 DeliveryAddress:
                     orderType === 'Delivery'
                         ? address
+                        : null,
+
+                ContactNumber:
+                    orderType === 'Delivery'
+                        ? contactNumber
+                        : null,
+
+                Barangay:
+                    orderType === 'Delivery'
+                        ? barangay
+                        : null,
+
+                Landmark:
+                    orderType === 'Delivery'
+                        ? landmark
+                        : null,
+
+                DeliveryInstructions:
+                    orderType === 'Delivery'
+                        ? deliveryInstructions
                         : null,
 
                 PickupTime:
@@ -1785,7 +2473,7 @@
                                 i.size,
 
                             SpecialInstructions:
-                                i.notes || ''
+                                buildInstructionsText(i)
                         })
                     )
             };
@@ -1832,6 +2520,10 @@
 
                     updateLoyaltyUI();
 
+                    if (orderType === 'Delivery') {
+                        saveAddressIfRequested(addressParts);
+                    }
+
                     Swal.fire({
 
                         title:
@@ -1839,8 +2531,8 @@
 
                         html:
                             `<b>Order #${result.orderId}</b> sent to the kitchen.<br>
-                                        Estimated wait: <b>15–20 minutes</b><br>
-                                        <small>+${earned} loyalty points earned!</small>`,
+                                                Estimated wait: <b>15–20 minutes</b><br>
+                                                <small>+${earned} loyalty points earned!</small>`,
 
                         icon:
                             'success'
@@ -2200,14 +2892,14 @@
                     : '';
 
             msgDiv.innerHTML = `
-                            <div class="msg-bubble">
-                                ${escapeHTML(text)}
-                            </div>
+                                    <div class="msg-bubble">
+                                        ${escapeHTML(text)}
+                                    </div>
 
-                            <span class="msg-time">
-                                ${label}${timeString}
-                            </span>
-                        `;
+                                    <span class="msg-time">
+                                        ${label}${timeString}
+                                    </span>
+                                `;
 
             body.appendChild(
                 msgDiv
@@ -2429,4 +3121,3 @@
 </script>
 </body>
 </html>
-
