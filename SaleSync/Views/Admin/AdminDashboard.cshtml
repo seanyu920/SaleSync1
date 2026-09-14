@@ -94,7 +94,7 @@
                         <i class="fas fa-bell"></i>
                         <span class="bell-badge" id="bellBadge" style="display:none;"></span>
                     </div>
-                    <div class="nav-chat-icon" onclick="toggleChat()" id="chatTrigger">
+                    <div class="nav-chat-icon" onclick="toggleChat()" id="chatTrigger" title="Open customer support inbox">
                         <i class="fas fa-comments"></i>
                         <span class="chat-badge" id="chatBadge" style="display: none;"></span>
                     </div>
@@ -751,25 +751,20 @@
 
         </main>
     </div>
-
-    <!-- ── SLIDE-OUT CHAT DRAWER FOR ADMIN ── -->
-    <!-- Chat Dropdown -->
+    <!-- Customer Support Inbox Popup -->
     <div class="chat-dropdown" id="chatDropdown">
-        <div class="chat-dropdown-header">
-            <span class="chat-status-dot"></span>
-            <span>Team Chat</span>
+        @Html.AntiForgeryToken()
+        <div class="support-header">
+            <div><span class="chat-status-dot"></span><strong>Support Inbox</strong><small>Customer conversations</small></div>
+            <button type="button" class="support-close" onclick="toggleChat()" title="Close"><i class="fas fa-times"></i></button>
         </div>
-        <div class="chat-dropdown-contact-bar">
-            <select id="chatContactSelect" onchange="switchChatContact(this.value)">
-                <option value="">Select a contact…</option>
-            </select>
-        </div>
-        <div class="chat-dropdown-body" id="chatMessages">
-            <div class="system-message">Select a contact to start chatting.</div>
-        </div>
-        <div class="chat-dropdown-footer">
-            <input type="text" id="chatInput" placeholder="Type a message..." onkeypress="handleChatKey(event)" />
-            <button class="chat-send-btn" onclick="sendChatMessage()">Send</button>
+        <div class="support-inbox">
+            <aside class="support-contacts" id="chatContactList"><div class="system-message">Loading conversations…</div></aside>
+            <section class="support-conversation">
+                <div class="support-conversation-header"><strong id="activeChatName">Select a customer</strong><small id="activeChatRole">Customer support</small></div>
+                <div class="chat-dropdown-body" id="chatMessages"><div class="system-message">Choose a customer conversation.</div></div>
+                <div class="chat-dropdown-footer"><input type="text" id="chatInput" placeholder="Write a reply…" onkeypress="handleChatKey(event)" /><button class="chat-send-btn" onclick="sendChatMessage()"><i class="fas fa-paper-plane"></i> Send</button></div>
+            </section>
         </div>
     </div>
 
@@ -790,98 +785,84 @@
                     }
                 });
             }
-
-            // ── Chat Dropdown Logic ──
+            // ── Support Inbox Popup Logic ──
             let chatConn;
             let currentChatWith = null;
             const chatCurrentUser = "@(User.FindFirst("Username")?.Value ?? "")";
 
             function toggleChat() {
-                const dd = document.getElementById("chatDropdown");
-                dd.classList.toggle("open");
-                if (dd.classList.contains("open")) {
+                const popup = document.getElementById("chatDropdown");
+                popup.classList.toggle("open");
+                if (popup.classList.contains("open")) {
                     document.getElementById("chatBadge").style.display = "none";
                     loadChatContacts();
                 }
             }
 
-            document.addEventListener("click", function(e) {
-                const dd = document.getElementById("chatDropdown");
+            document.addEventListener("click", event => {
+                const popup = document.getElementById("chatDropdown");
                 const trigger = document.getElementById("chatTrigger");
-                if (dd && !dd.contains(e.target) && !trigger.contains(e.target)) {
-                    dd.classList.remove("open");
-                }
+                if (popup.classList.contains("open") && !popup.contains(event.target) && !trigger.contains(event.target)) popup.classList.remove("open");
             });
 
-            function handleChatKey(event) {
-                if (event.key === 'Enter') sendChatMessage();
-            }
-
+            function handleChatKey(event) { if (event.key === "Enter") sendChatMessage(); }
             function sendChatMessage() {
                 const input = document.getElementById("chatInput");
-                const msg = input.value.trim();
-                if (!msg || !currentChatWith) return;
-                chatConn.invoke("SendMessage", currentChatWith, msg)
-                    .catch(err => console.error("Error sending message:", err));
-                input.value = "";
+                const message = input.value.trim();
+                if (!message || !currentChatWith || !chatConn) return;
+                chatConn.invoke("SendMessage", currentChatWith, message).then(() => { input.value = ""; input.focus(); }).catch(console.error);
             }
 
             async function loadChatContacts() {
-                const select = document.getElementById("chatContactSelect");
-                if (select.dataset.loaded === "true") return;
+                const list = document.getElementById("chatContactList");
                 try {
-                    const res = await fetch('/Chat/GetContacts');
-                    if (!res.ok) return;
-                    const contacts = await res.json();
-                    contacts.forEach(c => {
-                        const opt = document.createElement("option");
-                        opt.value = c.username;
-                        opt.textContent = c.username + " (" + c.role + ")";
-                        select.appendChild(opt);
+                    const response = await fetch("/Chat/GetContacts");
+                    if (!response.ok) return;
+                    const contacts = await response.json();
+                    list.innerHTML = "";
+                    if (!contacts.length) { list.innerHTML = '<div class="system-message">No customer conversations yet.</div>'; return; }
+                    contacts.forEach(contact => {
+                        const item = document.createElement("button");
+                        item.type = "button";
+                        item.className = "support-contact" + (contact.username === currentChatWith ? " active" : "");
+                        const unread = Number(contact.unreadCount || 0) > 0 && contact.username !== currentChatWith ? '<span class="support-unread-dot"></span>' : "";
+                        item.innerHTML = `<span class="support-contact-top"><strong>${escapeHTML(contact.username)}</strong>${unread}</span><small>${escapeHTML(contact.role || "Customer")}</small><span>${escapeHTML(contact.preview || "No messages yet")}</span>`;
+                        item.onclick = () => switchChatContact(contact.username, contact.role);
+                        list.appendChild(item);
                     });
-                    select.dataset.loaded = "true";
-                    if (contacts.length > 0 && !currentChatWith) {
-                        select.value = contacts[0].username;
-                        switchChatContact(contacts[0].username);
-                    }
-                } catch (err) { console.error("Failed to load contacts:", err); }
+                    if (!currentChatWith) switchChatContact(contacts[0].username, contacts[0].role);
+                } catch (error) { console.error("Could not load conversations:", error); }
             }
 
-            async function switchChatContact(username) {
-                currentChatWith = username || null;
+            async function switchChatContact(username, role) {
+                currentChatWith = username;
+                document.getElementById("activeChatName").textContent = username;
+                document.getElementById("activeChatRole").textContent = role || "Customer";
                 const area = document.getElementById("chatMessages");
-                area.innerHTML = '<div class="system-message">Select a contact to start chatting.</div>';
-                if (!currentChatWith) return;
+                area.innerHTML = '<div class="system-message">Loading messages…</div>';
                 try {
-                    const res = await fetch('/Chat/GetChatHistory?chatWith=' + encodeURIComponent(currentChatWith));
-                    if (!res.ok) return;
-                    const history = await res.json();
-                    if (history.length > 0) {
-                        const ph = area.querySelector('.system-message');
-                        if (ph) ph.remove();
-                    }
-                    history.forEach(m => renderChatMessage(m.sender, m.text, m.time));
-                } catch (err) { console.error("Failed to load chat history:", err); }
+                    const response = await fetch("/Chat/GetChatHistory?chatWith=" + encodeURIComponent(username));
+                    if (!response.ok) return;
+                    const history = await response.json();
+                    area.innerHTML = "";
+                    if (!history.length) area.innerHTML = '<div class="system-message">No messages yet. Start the conversation.</div>';
+                    history.forEach(message => renderChatMessage(message.sender, message.text, message.time));
+                    loadChatContacts();
+                } catch (error) { console.error("Could not load messages:", error); }
             }
 
-            function renderChatMessage(sender, message, timeString) {
+            function renderChatMessage(sender, message, time) {
                 const area = document.getElementById("chatMessages");
                 const row = document.createElement("div");
-                if (sender === chatCurrentUser) {
-                    row.className = "chat-msg-row staff";
-                    row.innerHTML = '<div class="chat-bubble">' + escapeHTML(message) + '</div><span class="chat-meta">You · ' + escapeHTML(timeString) + '</span>';
-                } else {
-                    row.className = "chat-msg-row other";
-                    row.innerHTML = '<div class="chat-bubble">' + escapeHTML(message) + '</div><span class="chat-meta">' + escapeHTML(sender) + ' · ' + escapeHTML(timeString) + '</span>';
-                }
-                area.appendChild(row);
-                area.scrollTop = area.scrollHeight;
+                row.className = "chat-msg-row " + (sender === chatCurrentUser ? "staff" : "other");
+                const bubble = document.createElement("div"); bubble.className = "chat-bubble"; bubble.textContent = message;
+                const meta = document.createElement("span"); meta.className = "chat-meta"; meta.textContent = (sender === chatCurrentUser ? "You" : sender) + " · " + time;
+                row.append(bubble, meta); area.appendChild(row); area.scrollTop = area.scrollHeight;
             }
 
-            function escapeHTML(str) {
-                return str.replace(/[&<>'"]/g, function(t) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[t] || t; });
-            }
+            function escapeHTML(value) { return String(value).replace(/[&<>'"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[c])); }
 
+            
             // ── Notification Bell Logic (pending online order alerts) ──
             let lastKnownPendingCount = null;
 
@@ -1121,3 +1102,5 @@
     </script>
 </body>
 </html>
+
+
