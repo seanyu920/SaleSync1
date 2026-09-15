@@ -71,6 +71,18 @@ namespace SaleSync.Controllers
             return Json(await GetHistoryAsync(CurrentUsername, chatWith));
         }
 
+      
+        [HttpGet]
+        public async Task<IActionResult> GetSupportAgent()
+        {
+            if (string.IsNullOrWhiteSpace(CurrentUsername)) return Unauthorized();
+
+            var contacts = await GetContactsForUserAsync(CurrentUsername);
+            string agent = contacts.Count > 0 ? contacts[0].Username : null;
+
+            return Json(new { agent });
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> MarkAsRead(string chatWith)
