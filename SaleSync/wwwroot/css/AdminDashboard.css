@@ -462,7 +462,6 @@ body {
     align-items: center;
 }
 
-/* Store open/closed status badge, shown alongside System Status */
 .store-status-container {
     margin-left: 28px;
     padding-left: 28px;
@@ -638,13 +637,12 @@ body {
         color: var(--gold-light);
     }
 
-/* Scrollable Container (Vertical + Horizontal) */
 .table-responsive {
     width: 100%;
     max-width: 100%;
-    max-height: 220px; /* Limits height so vertical scrolling activates */
-    overflow-y: auto !important; /* Enables vertical scrolling */
-    overflow-x: auto !important; /* Enables horizontal scrolling */
+    max-height: 220px;
+    overflow-y: auto !important;
+    overflow-x: auto !important;
     -webkit-overflow-scrolling: touch;
     display: block;
     margin-top: 8px;
@@ -656,7 +654,6 @@ body {
     border-collapse: collapse;
 }
 
-    /* Sticky Headers so titles stay fixed during vertical scroll */
     .pos-table thead th {
         position: sticky;
         top: 0;
@@ -703,7 +700,6 @@ body {
     text-align: right !important;
 }
 
-/* Custom Dual-Axis Scrollbars */
 .table-responsive::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -1266,19 +1262,18 @@ body {
         padding: 20px 16px;
     }
 
-    /* TOP NAVBAR MOBILE RESTRUCTURE (Single-Row Layout Fix) */
     .top-navbar {
-        flex-direction: row; /* Keep elements side-by-side on mobile */
+        flex-direction: row;
         align-items: center;
         gap: 12px;
         margin-bottom: 20px;
     }
 
     .search-wrapper {
-        flex: 1; /* Allow search input to dynamically fill remaining space */
-        width: auto; /* Override fixed width */
-        order: 1; /* Position search bar first on the left */
-        min-width: 0; /* Prevent overflow issues */
+        flex: 1;
+        width: auto;
+        order: 1;
+        min-width: 0;
     }
 
     .top-nav-controls {
@@ -1286,9 +1281,9 @@ body {
         align-items: center;
         justify-content: flex-end;
         gap: 12px;
-        width: auto; /* Wrap closely around icon controls */
-        order: 2; /* Position control icons to the right */
-        flex-shrink: 0; /* Keep icons from shrinking */
+        width: auto;
+        order: 2;
+        flex-shrink: 0;
     }
 
     .summary-dashboard {
@@ -1332,7 +1327,6 @@ body {
         gap: 10px;
     }
 
-    /* MOBILE CARDS SWITCH: Hide Table, Show Card List */
     .desktop-only {
         display: none !important;
     }
@@ -1356,7 +1350,6 @@ body {
         font-size: 18px;
     }
 
-    /* Mobile Chat Dropdown Overrides */
     .chat-dropdown {
         position: fixed;
         top: 70px !important;
@@ -1385,6 +1378,14 @@ body {
     .chat-dropdown-footer {
         padding: 12px 16px;
         padding-bottom: max(12px, env(safe-area-inset-bottom));
+    }
+
+    .notif-dropdown {
+        position: fixed;
+        top: 70px !important;
+        right: 16px !important;
+        left: 16px !important;
+        width: auto !important;
     }
 }
 
@@ -1608,7 +1609,6 @@ body {
 /* ==========================================================================
    SUPPORT INBOX POPUP
    ========================================================================== */
-/* Cafero Support Inbox popup */
 .chat-dropdown {
     width: min(760px, calc(100vw - 32px));
     height: min(540px, calc(100vh - 110px));
@@ -1761,3 +1761,81 @@ body {
         top: 64px;
     }
 }
+
+/* ==========================================================================
+   QUICK ACTION CARDS (merged into summary-dashboard row)
+   ========================================================================== */
+.summary-dashboard {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.summary-card.action-card {
+    cursor: pointer;
+    background: var(--bg-card);
+}
+
+    .summary-card.action-card:hover {
+        border-color: var(--gold);
+        transform: translateY(-2px);
+    }
+
+.icon-blue {
+    color: #5aa9e6;
+    background: rgba(90, 169, 230, 0.1);
+    border: 1px solid rgba(90, 169, 230, 0.2);
+}
+
+.icon-purple {
+    color: #b18aef;
+    background: rgba(177, 138, 239, 0.1);
+    border: 1px solid rgba(177, 138, 239, 0.2);
+}
+
+
+@media (max-width: 600px) {
+    .summary-dashboard {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* ==========================================================================
+   NOTIFICATION BELL DROPDOWN
+   ========================================================================== */
+.notif-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    width: 340px;
+    max-height: 400px;
+    overflow-y: auto;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+    z-index: 1200;
+    padding: 14px;
+}
+
+    .notif-dropdown.open {
+        display: block;
+    }
+
+.notif-dropdown-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--cream);
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-sub);
+}
+
+.bottom-single-column {
+    display: flex;
+    justify-content: center;
+}
+
+    .bottom-single-column .pos-card-wrapper {
+        width: 100%;
+        max-width: 420px;
+    }

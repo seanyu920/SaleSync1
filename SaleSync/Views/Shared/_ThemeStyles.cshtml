@@ -1,0 +1,16 @@
+﻿@using SaleSync.Services
+@inject StoreSettingsService StoreSettings
+@using System.Text.RegularExpressions
+@{
+    var store = StoreSettings.GetSettings();
+
+    string SafeColor(string? c, string fallback) =>
+        c != null && Regex.IsMatch(c, "^#[0-9a-fA-F]{6}$") ? c : fallback;
+}
+<style>
+    :root {
+        --gold: @SafeColor(store.PrimaryColor, "#C9A84C");
+        --bg-surface: @SafeColor(store.SidebarColor, "#141A14");
+        --bg-base: @SafeColor(store.BackgroundColor, "#0D110D");
+    }
+</style>

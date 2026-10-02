@@ -1757,7 +1757,12 @@ namespace SaleSync.Controllers
         {
             if (!ModelState.IsValid)
             {
-                TempData["SettingsError"] = "Please check the form for missing or invalid values.";
+                var errors = ModelState
+                    .Where(kvp => kvp.Value.Errors.Count > 0)
+                    .Select(kvp => $"{kvp.Key}: {string.Join("; ", kvp.Value.Errors.Select(e => e.ErrorMessage))}")
+                    .ToList();
+
+                TempData["SettingsError"] = "Validation failed — " + string.Join(" | ", errors);
                 return View("WebCustomization", model);
             }
 

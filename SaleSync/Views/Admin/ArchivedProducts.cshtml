@@ -6,6 +6,10 @@
     string displayRole = isManager ? "Manager" : "Admin";
     string currentAction = ViewContext.RouteData.Values["action"]?.ToString();
 }
+@inject SaleSync.Services.StoreSettingsService StoreSettings
+@{
+    var store = StoreSettings.GetSettings();
+}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,109 +20,12 @@
     <!-- FontAwesome Library for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="icon" type="image/jpeg" href="~/images/CaferoLogo.jpg" asp-append-version="true" />
-
     <link rel="stylesheet" href="~/css/AdminDashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/Products.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/Archive.css" asp-append-version="true" />
+    <partial name="_ThemeStyles" />
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <style>
-        /* Custom Table Styling overrides & Layout Responsiveness */
-        .table-card-wrapper {
-        background: var(--bg-card, #1C241C);
-        border: 1px solid var(--border-sub, rgba(255, 255, 255, 0.06));
-        border-radius: 14px;
-        padding: 16px;
-        box-shadow: 0 10px 32px rgba(0, 0, 0, 0.2);
-        margin-bottom: 40px;
-        box-sizing: border-box;
-        }
-
-        /* Container that prevents table clipping and enables smooth touch scrolling */
-        .table-responsive {
-        width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        border-radius: 8px;
-        }
-
-        .archive-table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
-        text-align: left;
-        background: transparent;
-        min-width: 650px;
-        }
-
-        .archive-table th {
-        background: var(--bg-card-2, #212B21) !important;
-        color: var(--gold, #C9A84C);
-        padding: 14px 18px;
-        font-size: 11px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 1.5px;
-        border-bottom: 1px solid var(--border, rgba(201, 168, 76, 0.18));
-        white-space: nowrap;
-        }
-
-        .archive-table td {
-        padding: 14px 18px;
-        border-bottom: 1px solid var(--border-sub, rgba(255, 255, 255, 0.06));
-        color: var(--cream, #F2EDE4);
-        font-size: 13.5px;
-        vertical-align: middle;
-        white-space: nowrap;
-        }
-
-        .archive-table tbody tr:hover {
-        background: rgba(201, 168, 76, 0.03) !important;
-        }
-
-        .restore-btn {
-        background: rgba(61, 191, 120, 0.15);
-        color: var(--success, #3dbf78);
-        border: 1px solid rgba(61, 191, 120, 0.3);
-        padding: 8px 16px;
-        border-radius: 8px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        font-family: 'Outfit', sans-serif;
-        white-space: nowrap;
-        }
-
-        .restore-btn:hover {
-        background: var(--success, #3dbf78);
-        color: var(--bg-base, #0D110D);
-        transform: translateY(-1px);
-        }
-
-        .section-divider-title {
-        font-size: 18px;
-        font-weight: 700;
-        color: var(--gold, #C9A84C);
-        margin-bottom: 15px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        }
-
-        /* Subtle scrollbar touch for table overflow */
-        .table-responsive::-webkit-scrollbar {
-        height: 6px;
-        }
-
-        .table-responsive::-webkit-scrollbar-track {
-        background: rgba(0, 0, 0, 0.2);
-        border-radius: 10px;
-        }
-
-        .table-responsive::-webkit-scrollbar-thumb {
-        background: var(--border, rgba(201, 168, 76, 0.3));
-        border-radius: 10px;
-        }
-    </style>
 </head>
 <body>
     <div class="dashboard-container">
@@ -126,8 +33,8 @@
         <aside class="sidebar">
             <div>
                 <div class="logo-section">
-                    <div class="logo-title">Cafèro</div>
-                    <div class="logo-subtitle">Coffee & Pastries</div>
+                    <div class="logo-title">@store.StoreName</div>
+                    <div class="logo-subtitle">@store.StoreTagline</div>
                 </div>
 
                 <div class="profile-section">
@@ -197,19 +104,19 @@
         </div>
 
         <main class="main-content slide-up">
-            <div class="card-header-flex" style="align-items: flex-end; margin-bottom: 30px;">
+            <div class="card-header-flex page-header">
                 <div>
-                    <h1 class="greeting-title" style="font-size: 22px; font-weight: 800; letter-spacing: -0.5px;">
+                    <h1 class="greeting-title">
                         System Archives
                     </h1>
-                    <p class="widget-subtitle">Completely isolated data states. Restore layers to bring them back to live POS tracking or stock calculations.</p>
+                    <p class="widget-subtitle greeting-subtitle">Completely isolated data states. Restore layers to bring them back to live POS tracking or stock calculations.</p>
                 </div>
             </div>
 
             <h2 class="section-divider-title">Archived Menu Items</h2>
-            <div class="table-card-wrapper">
+            <div class="table-card">
                 <div class="table-responsive">
-                    <table class="archive-table">
+                    <table class="item-table">
                         <thead>
                             <tr>
                                 <th style="width: 80px;">ID</th>
@@ -227,13 +134,13 @@
                                 {
                                     var safeName = System.Web.HttpUtility.JavaScriptStringEncode(item.ProductName);
 
-                                    <tr class="inventory-row">
+                                    <tr>
                                         <td><strong style="color: var(--gold, #C9A84C); font-family: 'Outfit';">#@item.ProductId</strong></td>
                                         <td><span style="font-size: 11px; text-transform: uppercase; background: var(--border-sub, rgba(255, 255, 255, 0.06)); padding: 4px 8px; border-radius: 4px; font-weight: 600;">@item.CategoryName</span></td>
-                                        <td style="color: var(--cream, #F2EDE4); font-weight: 500;">@item.ProductName</td>
+                                        <td class="product-muted-text" style="color: var(--cream, #F2EDE4); font-weight: 500;">@item.ProductName</td>
                                         <td style="font-weight: 600; color: var(--gold-light, #E2C675);">₱@item.Price.ToString("0.00")</td>
                                         <td>
-                                            <span style="background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; border: 1px solid rgba(239, 68, 68, 0.25);">Archived</span>
+                                            <span class="status-badge-archived">Archived</span>
                                         </td>
                                         <td style="text-align: center;">
                                             <button type="button" class="restore-btn" onclick="restoreProduct(@item.ProductId, '@safeName')">
@@ -257,9 +164,9 @@
             </div>
 
             <h2 class="section-divider-title">Archived Inventory Ingredients</h2>
-            <div class="table-card-wrapper">
+            <div class="table-card">
                 <div class="table-responsive">
-                    <table class="archive-table">
+                    <table class="item-table">
                         <thead>
                             <tr>
                                 <th style="width: 80px;">ID</th>
@@ -277,10 +184,10 @@
                                 {
                                     var safeName = System.Web.HttpUtility.JavaScriptStringEncode(item.ItemName);
 
-                                    <tr class="inventory-row">
+                                    <tr>
                                         <td><strong style="color: var(--gold, #C9A84C); font-family: 'Outfit';">#@item.ProductId</strong></td>
                                         <td><span style="font-size: 11px; text-transform: uppercase; background: var(--border-sub, rgba(255, 255, 255, 0.06)); padding: 4px 8px; border-radius: 4px; font-weight: 600; color: #b45309;">@item.ItemCategory</span></td>
-                                        <td style="color: var(--cream, #F2EDE4); font-weight: 500;">@item.ItemName</td>
+                                        <td class="product-muted-text" style="color: var(--cream, #F2EDE4); font-weight: 500;">@item.ItemName</td>
                                         <td style="font-weight: 600; color: var(--gold-light, #E2C675);">₱@item.PurchasePrice.ToString("0.00")</td>
                                         <td style="font-weight: 700;">@item.Quantity.ToString("0.##") @item.Unit</td>
                                         <td style="text-align: center;">
@@ -308,112 +215,112 @@
 
     <script>
         function confirmLogout() {
-        Swal.fire({
-        title: 'Are you sure?',
-        text: "You will be logged out of your session.",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Yes, log out',
-        cancelButtonText: 'Cancel'
-        }).then((result) => {
-        if (result.isConfirmed) {
-        document.getElementById('logoutForm').submit();
-        }
-        });
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You will be logged out of your session.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, log out',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('logoutForm').submit();
+                }
+            });
         }
 
         function restoreProduct(id, name) {
-        Swal.fire({
-        title: 'Restore Product Layer?',
-        text: `Commiting sequence will push "${name}" back into active POS listings context.`,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#0b8a53',
-        cancelButtonColor: '#4a2511',
-        confirmButtonText: 'Yes, restore active tracking'
-        }).then((result) => {
-        if (result.isConfirmed) {
-        fetch('/Admin/RestoreMenuItem', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(id)
-        }).then(res => {
-        if(res.ok) {
-        Swal.fire({
-        title: 'Database Restored',
-        text: `${name} state updated back to active array tracking loop.`,
-        icon: 'success',
-        timer: 1500,
-        showConfirmButton: false
-        }).then(() => location.reload());
-        } else {
-        Swal.fire('Database Drop Error', 'The remote instance dropped the operation update payload.', 'error');
-        }
-        });
-        }
-        });
+            Swal.fire({
+                title: 'Restore Product Layer?',
+                text: `Commiting sequence will push "${name}" back into active POS listings context.`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#0b8a53',
+                cancelButtonColor: '#4a2511',
+                confirmButtonText: 'Yes, restore active tracking'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('/Admin/RestoreMenuItem', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(id)
+                    }).then(res => {
+                        if(res.ok) {
+                            Swal.fire({
+                                title: 'Database Restored',
+                                text: `${name} state updated back to active array tracking loop.`,
+                                icon: 'success',
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => location.reload());
+                        } else {
+                            Swal.fire('Database Drop Error', 'The remote instance dropped the operation update payload.', 'error');
+                        }
+                    });
+                }
+            });
         }
 
         function restoreIngredient(id, name) {
-        Swal.fire({
-        title: 'Restore Inventory Stock Profile?',
-        text: `Returning "${name}" will map its calculations back into active stock levels and recipe deductions.`,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#0b8a53',
-        cancelButtonColor: '#4a2511',
-        confirmButtonText: 'Yes, restore stock line'
-        }).then((result) => {
-        if (result.isConfirmed) {
-        fetch('/Admin/RestoreInventoryItem', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(id)
-        }).then(res => {
-        if(res.ok) {
-        Swal.fire({
-        title: 'Stock Line Restored',
-        text: `${name} is back in operational matrices.`,
-        icon: 'success',
-        timer: 1500,
-        showConfirmButton: false
-        }).then(() => location.reload());
-        } else {
-        Swal.fire('Database Update Error', 'Failed to update ingredient status tracking states.', 'error');
-        }
-        });
-        }
-        });
+            Swal.fire({
+                title: 'Restore Inventory Stock Profile?',
+                text: `Returning "${name}" will map its calculations back into active stock levels and recipe deductions.`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#0b8a53',
+                cancelButtonColor: '#4a2511',
+                confirmButtonText: 'Yes, restore stock line'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('/Admin/RestoreInventoryItem', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(id)
+                    }).then(res => {
+                        if(res.ok) {
+                            Swal.fire({
+                                title: 'Stock Line Restored',
+                                text: `${name} is back in operational matrices.`,
+                                icon: 'success',
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => location.reload());
+                        } else {
+                            Swal.fire('Database Update Error', 'Failed to update ingredient status tracking states.', 'error');
+                        }
+                    });
+                }
+            });
         }
 
         // Safe toggle logic for mobile sidebar
         function toggleSidebar() {
-        const sidebar = document.querySelector('.sidebar');
-        const overlay = document.querySelector('.sidebar-overlay');
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
 
-        if (sidebar) {
-        sidebar.classList.toggle('mobile-open');
-        }
-        if (overlay) {
-        overlay.classList.toggle('mobile-open');
-        }
+            if (sidebar) {
+                sidebar.classList.toggle('mobile-open');
+            }
+            if (overlay) {
+                overlay.classList.toggle('mobile-open');
+            }
         }
 
         // Close sidebar when clicking outside on mobile screen
         document.addEventListener('click', function (event) {
-        const sidebar = document.querySelector('.sidebar');
-        const hamburger = document.querySelector('.hamburger-btn');
+            const sidebar = document.querySelector('.sidebar');
+            const hamburger = document.querySelector('.hamburger-btn');
 
-        if (sidebar && hamburger) {
-        if (sidebar.classList.contains('mobile-open') &&
-        !sidebar.contains(event.target) &&
-        !hamburger.contains(event.target)) {
+            if (sidebar && hamburger) {
+                if (sidebar.classList.contains('mobile-open') &&
+                    !sidebar.contains(event.target) &&
+                    !hamburger.contains(event.target)) {
 
-        sidebar.classList.remove('mobile-open');
-        }
-        }
+                    sidebar.classList.remove('mobile-open');
+                }
+            }
         });
     </script>
 </body>
