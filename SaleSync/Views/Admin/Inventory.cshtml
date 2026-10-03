@@ -16,6 +16,10 @@
                             .ToList();
     }
 }
+@inject SaleSync.Services.StoreSettingsService StoreSettings
+@{
+    var store = StoreSettings.GetSettings();
+}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -23,6 +27,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Inventory Management - Cafero</title>
     <link rel="stylesheet" href="~/css/Inventory.css" asp-append-version="true" />
+    <partial name="_ThemeStyles" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link rel="icon" type="image/jpeg" href="~/images/CaferoLogo.jpg" asp-append-version="true" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -33,8 +38,8 @@
         <aside class="sidebar">
             <div>
                 <div class="logo-section">
-                    <div class="logo-title">Cafèro</div>
-                    <div class="logo-subtitle">Coffee & Pastries</div>
+                    <div class="logo-title">@store.StoreName</div>
+                    <div class="logo-subtitle">@store.StoreTagline</div>
                 </div>
 
                 <div class="profile-section">

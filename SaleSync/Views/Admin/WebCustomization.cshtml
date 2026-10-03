@@ -21,6 +21,11 @@
     // Only Admins and Managers can change store settings; Cashiers see a read-only view.
     bool canEdit = User.IsInRole("Admin") || User.IsInRole("Manager");
 }
+@inject SaleSync.Services.StoreSettingsService StoreSettings
+@{
+    var store = StoreSettings.GetSettings();
+}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -36,7 +41,19 @@
 
     <link rel="stylesheet" href="~/css/AdminDashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/WebCustomization.css" asp-append-version="true" />
+    <partial name="_ThemeStyles" />
     <link rel="icon" type="image/jpeg" href="~/images/CaferoLogo.jpg" asp-append-version="true" />
+
+    <style>
+            /* Safety net: prevents overflow from any existing/legacy long values */
+            .logo-title,
+            .logo-subtitle {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 100%;
+            }
+    </style>
 </head>
 <body>
     <div class="dashboard-container" id="dashboardContainer">
@@ -44,8 +61,8 @@
         <aside class="sidebar">
             <div>
                 <div class="logo-section">
-                    <div class="logo-title">@Html.Raw(Model?.StoreName ?? "Cafero")</div>
-                    <div class="logo-subtitle">@Html.Raw(Model?.StoreTagline ?? "Coffee & Pastries")</div>
+                    <div class="logo-title">@store.StoreName</div>
+                    <div class="logo-subtitle">@store.StoreTagline</div>
                 </div>
 
                 <div class="profile-section">
@@ -69,7 +86,7 @@
                     <!-- Queue (Hidden from Cashier) -->
                     @if (!User.IsInRole("Cashier"))
                     {
-                        <a href="/@homeController/QueueOrder" class="menu-btn">Queue</a>
+                        <a href="/Admin/QueueOrder" class="menu-btn">Queue</a>
                     }
                     <a href="/Promotions" class="menu-btn">Promotions</a>
 
@@ -82,10 +99,10 @@
                     <!-- Management Tabs (Hidden from Cashier) -->
                     @if (!User.IsInRole("Cashier"))
                     {
-                        <a href="/@homeController/Analytics" class="menu-btn">Analytics</a>
-                        <a href="/@homeController/Products" class="menu-btn">Products</a>
-                        <a href="/@homeController/Inventory" class="menu-btn">Inventory</a>
-                        <a href="/@homeController/ArchivedProducts" class="menu-btn">Archived</a>
+                        <a href="/Admin/Analytics" class="menu-btn">Analytics</a>
+                        <a href="/Admin/Products" class="menu-btn">Products</a>
+                        <a href="/Admin/Inventory" class="menu-btn">Inventory</a>
+                        <a href="/Admin/ArchivedProducts" class="menu-btn">Archived</a>
                     }
 
                     <!-- Accounts (Admin Only) -->
@@ -95,7 +112,7 @@
                     }
 
                     <!-- Customization (Visible to Everyone) -->
-                    <a href="/@homeController/WebCustomization" class="menu-btn active">Customization</a>
+                    <a href="/Admin/WebCustomization" class="menu-btn active">Customization</a>
                 </nav>
             </div>
 
@@ -136,153 +153,155 @@
             <form asp-controller="Admin" asp-action="UpdateSettings" method="post" enctype="multipart/form-data" class="settings-form">
                 <fieldset class="settings-fieldset" @(canEdit ? "" : "disabled")>
 
-                <!-- SECTION 1: WEB THEME DESIGN -->
-                <div class="settings-card">
-                    <h3>Application Web Theme</h3>
-                    <p class="card-desc">Change the web application colors and layout interface positions.</p>
+                    <!-- SECTION 1: WEB THEME DESIGN -->
+                    <div class="settings-card">
+                        <h3>Application Web Theme</h3>
+                        <p class="card-desc">Change the web application colors and layout interface positions.</p>
 
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="PrimaryColor">Primary Highlights (Buttons, Selected Tabs)</label>
-                            <input type="color" id="PrimaryColor" name="PrimaryColor" value="@(Model?.PrimaryColor ?? "#C9A84C")" class="color-picker-input" />
-                        </div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="PrimaryColor">Primary Highlights (Buttons, Selected Tabs)</label>
+                                <input type="color" id="PrimaryColor" name="PrimaryColor" value="@(Model?.PrimaryColor ?? "#C9A84C")" class="color-picker-input" />
+                            </div>
 
-                        <div class="form-group">
-                            <label for="SidebarColor">Sidebar Panel Background</label>
-                            <input type="color" id="SidebarColor" name="SidebarColor" value="@(Model?.SidebarColor ?? "#141A14")" class="color-picker-input" />
-                        </div>
+                            <div class="form-group">
+                                <label for="SidebarColor">Sidebar Panel Background</label>
+                                <input type="color" id="SidebarColor" name="SidebarColor" value="@(Model?.SidebarColor ?? "#141A14")" class="color-picker-input" />
+                            </div>
 
-                        <div class="form-group">
-                            <label for="AccentColor">Icons & Detailed Flourishes</label>
-                            <input type="color" id="AccentColor" name="AccentColor" value="@(Model?.AccentColor ?? "#C9A84C")" class="color-picker-input" />
-                        </div>
+                            <div class="form-group">
+                                <label for="AccentColor">Icons & Detailed Flourishes</label>
+                                <input type="color" id="AccentColor" name="AccentColor" value="@(Model?.AccentColor ?? "#C9A84C")" class="color-picker-input" />
+                            </div>
 
-                        <div class="form-group">
-                            <label for="BackgroundColor">Main Application Window Background</label>
-                            <input type="color" id="BackgroundColor" name="BackgroundColor" value="@(Model?.BackgroundColor ?? "#0D110D")" class="color-picker-input" />
-                        </div>
+                            <div class="form-group">
+                                <label for="BackgroundColor">Main Application Window Background</label>
+                                <input type="color" id="BackgroundColor" name="BackgroundColor" value="@(Model?.BackgroundColor ?? "#0D110D")" class="color-picker-input" />
+                            </div>
 
-                        <div class="form-group full-width">
-                            <label for="SidebarPosition">Sidebar Window Dock Alignment</label>
-                            <select id="SidebarPosition" name="SidebarPosition" class="select-dropdown">
-                                <option value="left" selected="@(Model?.SidebarPosition == "left")">Left-aligned (Default)</option>
-                                <option value="right" selected="@(Model?.SidebarPosition == "right")">Right-aligned</option>
-                            </select>
+                            <div class="form-group full-width">
+                                <label for="SidebarPosition">Sidebar Window Dock Alignment</label>
+                                <select id="SidebarPosition" name="SidebarPosition" class="select-dropdown">
+                                    <option value="left" selected="@(Model?.SidebarPosition == "left")">Left-aligned (Default)</option>
+                                    <option value="right" selected="@(Model?.SidebarPosition == "right")">Right-aligned</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- SECTION 2: STORE BRANDING -->
-                <div class="settings-card">
-                    <h3>Store Branding</h3>
-                    <p class="card-desc">Change the identity headers that appear on your menus and login screens.</p>
+                    <!-- SECTION 2: STORE BRANDING -->
+                    <div class="settings-card">
+                        <h3>Store Branding</h3>
+                        <p class="card-desc">Change the identity headers that appear on your menus and login screens.</p>
 
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="StoreName">Store Name</label>
-                            <input type="text" id="StoreName" name="StoreName" value="@(Model?.StoreName)" placeholder="e.g., Cafero" required />
-                        </div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="StoreName">Store Name</label>
+                                <input type="text" id="StoreName" name="StoreName" value="@(Model?.StoreName)" placeholder="e.g., Cafero" maxlength="30" required />
+                                <small class="char-counter"><span id="StoreNameCount">0</span>/30</small>
+                            </div>
 
-                        <div class="form-group">
-                            <label for="StoreTagline">Store Tagline / Subtitle</label>
-                            <input type="text" id="StoreTagline" name="StoreTagline" value="@(Model?.StoreTagline)" placeholder="e.g., Coffee & Pastries" />
-                        </div>
+                            <div class="form-group">
+                                <label for="StoreTagline">Store Tagline / Subtitle</label>
+                                <input type="text" id="StoreTagline" name="StoreTagline" value="@(Model?.StoreTagline)" placeholder="e.g., Coffee & Pastries" maxlength="50" />
+                                <small class="char-counter"><span id="StoreTaglineCount">0</span>/50</small>
+                            </div>
 
-                        <div class="form-group full-width">
-                            <label for="StoreLogo">Upload Logo (Replaces default icons)</label>
-                            @if (!string.IsNullOrEmpty(Model?.LogoPath))
-                            {
-                                <div class="current-logo-preview">
-                                    <img src="@Model.LogoPath" alt="Current store logo" />
-                                    <span>Current logo</span>
+                            <div class="form-group full-width">
+                                <label for="StoreLogo">Upload Logo (Replaces default icons)</label>
+                                @if (!string.IsNullOrEmpty(Model?.LogoPath))
+                                {
+                                    <div class="current-logo-preview">
+                                        <img src="@Model.LogoPath" alt="Current store logo" />
+                                        <span>Current logo</span>
+                                    </div>
+                                }
+                                <div class="file-upload-wrapper">
+                                    <input type="file" id="StoreLogo" name="StoreLogo" accept="image/png,image/jpeg,image/webp,image/svg+xml" />
+                                    <div class="file-upload-btn">Choose Image...</div>
                                 </div>
-                            }
-                            <div class="file-upload-wrapper">
-                                <input type="file" id="StoreLogo" name="StoreLogo" accept="image/png,image/jpeg,image/webp,image/svg+xml" />
-                                <div class="file-upload-btn">Choose Image...</div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- SECTION 3: RECEIPT CUSTOMIZATION -->
-                <div class="settings-card">
-                    <h3>Receipt Customization</h3>
-                    <p class="card-desc">Configure information printed at the top and bottom of your POS receipts.</p>
+                    <!-- SECTION 3: RECEIPT CUSTOMIZATION -->
+                    <div class="settings-card">
+                        <h3>Receipt Customization</h3>
+                        <p class="card-desc">Configure information printed at the top and bottom of your POS receipts.</p>
 
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="BusinessAddress">Business Address</label>
-                            <input type="text" id="BusinessAddress" name="BusinessAddress" value="@(Model?.BusinessAddress)" placeholder="123 Main St, Manila" />
-                        </div>
-
-                        <div class="form-group">
-                            <label for="ContactNumber">Contact Number</label>
-                            <input type="text" id="ContactNumber" name="ContactNumber" value="@(Model?.ContactNumber)" placeholder="0917-XXXX-XXX" />
-                        </div>
-
-                        <div class="form-group">
-                            <label for="TaxIdNumber">TIN (Tax Identification Number)</label>
-                            <input type="text" id="TaxIdNumber" name="TaxIdNumber" value="@(Model?.TaxIdNumber)" placeholder="XXX-XXX-XXX-000" />
-                        </div>
-
-                        <div class="form-group">
-                            <label for="ReceiptFooter">Receipt Footer Message</label>
-                            <input type="text" id="ReceiptFooter" name="ReceiptFooter" value="@(Model?.ReceiptFooter)" placeholder="Thank you, come again!" />
-                        </div>
-                    </div>
-                </div>
-
-                <!-- SECTION 4: POS SYSTEM DEFAULTS -->
-                <div class="settings-card">
-                    <h3>POS & System Defaults</h3>
-                    <p class="card-desc">Set regional currencies, tax baselines, and database threshold alerts.</p>
-
-                    <div class="form-grid">
-                        <div class="form-group-triple">
+                        <div class="form-grid">
                             <div class="form-group">
-                                <label for="CurrencySymbol">Currency Symbol</label>
-                                <input type="text" id="CurrencySymbol" name="CurrencySymbol" value="@(Model?.CurrencySymbol)" max="3" placeholder="₱" required />
+                                <label for="BusinessAddress">Business Address</label>
+                                <input type="text" id="BusinessAddress" name="BusinessAddress" value="@(Model?.BusinessAddress)" placeholder="123 Main St, Manila" maxlength="100" />
                             </div>
 
                             <div class="form-group">
-                                <label for="VatRate">VAT Rate (%)</label>
-                                <input type="number" step="0.01" id="VatRate" name="VatRate" value="@(Model?.VatRate)" placeholder="12" required />
+                                <label for="ContactNumber">Contact Number</label>
+                                <input type="text" id="ContactNumber" name="ContactNumber" value="@(Model?.ContactNumber)" placeholder="0917-XXXX-XXX" maxlength="20" />
                             </div>
 
                             <div class="form-group">
-                                <label for="LowStockThreshold">Low Stock Alert Level</label>
-                                <input type="number" id="LowStockThreshold" name="LowStockThreshold" value="@(Model?.LowStockThreshold)" placeholder="10" required />
+                                <label for="TaxIdNumber">TIN (Tax Identification Number)</label>
+                                <input type="text" id="TaxIdNumber" name="TaxIdNumber" value="@(Model?.TaxIdNumber)" placeholder="XXX-XXX-XXX-000" maxlength="20" />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="ReceiptFooter">Receipt Footer Message</label>
+                                <input type="text" id="ReceiptFooter" name="ReceiptFooter" value="@(Model?.ReceiptFooter)" placeholder="Thank you, come again!" maxlength="100" />
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- SECTION 5: BUSINESS HOURS -->
-                <div class="settings-card">
-                    <h3>Business Hours</h3>
-                    <p class="card-desc">Set your regular opening and closing times. The dashboard and customer-facing pages will show your store as open or closed based on this schedule.</p>
+                    <!-- SECTION 4: POS SYSTEM DEFAULTS -->
+                    <div class="settings-card">
+                        <h3>POS & System Defaults</h3>
+                        <p class="card-desc">Set regional currencies, tax baselines, and database threshold alerts.</p>
 
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="OpeningTime">Opening Time</label>
-                            <input type="time" id="OpeningTime" name="OpeningTime" value="@(Model?.OpeningTime ?? "07:00")" required />
-                        </div>
+                        <div class="form-grid">
+                            <div class="form-group-triple">
+                                <div class="form-group">
+                                    <label for="CurrencySymbol">Currency Symbol</label>
+                                    <input type="text" id="CurrencySymbol" name="CurrencySymbol" value="@(Model?.CurrencySymbol)" maxlength="3" placeholder="₱" required />
+                                </div>
 
-                        <div class="form-group">
-                            <label for="ClosingTime">Closing Time</label>
-                            <input type="time" id="ClosingTime" name="ClosingTime" value="@(Model?.ClosingTime ?? "21:00")" required />
-                        </div>
+                                <div class="form-group">
+                                    <label for="VatRate">VAT Rate (%)</label>
+                                    <input type="number" step="0.01" id="VatRate" name="VatRate" value="@(Model?.VatRate)" min="0" max="100" placeholder="12" required />
+                                </div>
 
-                        <div class="form-group full-width toggle-group">
-                            <label class="toggle-label" for="IsTemporarilyClosed">
-                                <input type="checkbox" id="IsTemporarilyClosed" name="IsTemporarilyClosed" value="true" checked="@(Model?.IsTemporarilyClosed == true)" />
-                                <span>Mark store as temporarily closed</span>
-                            </label>
-                            <p class="card-desc">Turn this on for holidays, emergencies, or any day you're closed outside your regular schedule. This overrides the hours above until you turn it back off.</p>
+                                <div class="form-group">
+                                    <label for="LowStockThreshold">Low Stock Alert Level</label>
+                                    <input type="number" id="LowStockThreshold" name="LowStockThreshold" value="@(Model?.LowStockThreshold)" min="0" max="9999" placeholder="10" required />
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
+
+                    <!-- SECTION 5: BUSINESS HOURS -->
+                    <div class="settings-card">
+                        <h3>Business Hours</h3>
+                        <p class="card-desc">Set your regular opening and closing times. The dashboard and customer-facing pages will show your store as open or closed based on this schedule.</p>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="OpeningTime">Opening Time</label>
+                                <input type="time" id="OpeningTime" name="OpeningTime" value="@(Model?.OpeningTime ?? "07:00")" required />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="ClosingTime">Closing Time</label>
+                                <input type="time" id="ClosingTime" name="ClosingTime" value="@(Model?.ClosingTime ?? "21:00")" required />
+                            </div>
+
+                            <div class="form-group full-width toggle-group">
+                                <label class="toggle-label" for="IsTemporarilyClosed">
+                                    <input type="checkbox" id="IsTemporarilyClosed" name="IsTemporarilyClosed" value="true" checked="@(Model?.IsTemporarilyClosed == true)" />
+                                    <span>Mark store as temporarily closed</span>
+                                </label>
+                                <p class="card-desc">Turn this on for holidays, emergencies, or any day you're closed outside your regular schedule. This overrides the hours above until you turn it back off.</p>
+                            </div>
+                        </div>
+                    </div>
 
                 </fieldset>
 
@@ -290,6 +309,7 @@
                 <div class="form-actions">
                     @if (canEdit)
                     {
+                        <button type="button" class="btn-secondary" onclick="resetToDefaultColors()">Reset Colors to Default</button>
                         <button type="button" class="btn-secondary" onclick="window.location.reload();">Discard Changes</button>
                         <button type="submit" class="btn-primary">Save Settings</button>
                     }
@@ -305,68 +325,94 @@
 
     <!-- Live Preview & Interaction Scripts -->
     <script>
-        function confirmLogout() {
-        Swal.fire({
-        title: 'Are you sure?',
-        text: "You will be logged out of your session.",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Yes, log out',
-        cancelButtonText: 'Cancel'
-        }).then((result) => {
-        if (result.isConfirmed) {
-        document.getElementById('logoutForm').submit();
-        }
-        });
-        }
+            function confirmLogout() {
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You will be logged out of your session.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, log out',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        document.getElementById('logoutForm').submit();
+                    }
+                });
+            }
 
-        const root = document.documentElement;
+            const root = document.documentElement;
 
-        document.getElementById('PrimaryColor').addEventListener('input', (e) => {
-        root.style.setProperty('--primary-color', e.target.value);
-        });
-        document.getElementById('SidebarColor').addEventListener('input', (e) => {
-        root.style.setProperty('--sidebar-bg', e.target.value);
-        });
-        document.getElementById('AccentColor').addEventListener('input', (e) => {
-        root.style.setProperty('--accent-color', e.target.value);
-        });
-        document.getElementById('BackgroundColor').addEventListener('input', (e) => {
-        root.style.setProperty('--main-bg', e.target.value);
-        });
-        document.getElementById('SidebarPosition').addEventListener('change', (e) => {
-        document.getElementById('dashboardContainer').style.flexDirection = e.target.value === 'right' ? 'row-reverse' : 'row';
-        });
+            document.getElementById('PrimaryColor').addEventListener('input', (e) => {
+                root.style.setProperty('--primary-color', e.target.value);
+            });
+            document.getElementById('SidebarColor').addEventListener('input', (e) => {
+                root.style.setProperty('--sidebar-bg', e.target.value);
+            });
+            document.getElementById('AccentColor').addEventListener('input', (e) => {
+                root.style.setProperty('--accent-color', e.target.value);
+            });
+            document.getElementById('BackgroundColor').addEventListener('input', (e) => {
+                root.style.setProperty('--main-bg', e.target.value);
+            });
+            document.getElementById('SidebarPosition').addEventListener('change', (e) => {
+                document.getElementById('dashboardContainer').style.flexDirection = e.target.value === 'right' ? 'row-reverse' : 'row';
+            });
 
-        // Safe toggle logic for mobile sidebar
-        function toggleSidebar() {
-        const sidebar = document.querySelector('.sidebar');
-        const overlay = document.querySelector('.sidebar-overlay');
+            // Reset color pickers back to the system's original theme
+            function resetToDefaultColors() {
+                document.getElementById('PrimaryColor').value = '#C9A84C';
+                document.getElementById('SidebarColor').value = '#141A14';
+                document.getElementById('AccentColor').value = '#C9A84C';
+                document.getElementById('BackgroundColor').value = '#0D110D';
 
-        if (sidebar) {
-        sidebar.classList.toggle('mobile-open');
-        }
-        if (overlay) {
-        overlay.classList.toggle('mobile-open');
-        }
-        }
+                // Trigger the live-preview listeners above
+                document.getElementById('PrimaryColor').dispatchEvent(new Event('input'));
+                document.getElementById('SidebarColor').dispatchEvent(new Event('input'));
+                document.getElementById('AccentColor').dispatchEvent(new Event('input'));
+                document.getElementById('BackgroundColor').dispatchEvent(new Event('input'));
+            }
 
-        // Close sidebar when clicking outside on mobile devices
-        document.addEventListener('click', function (event) {
-        const sidebar = document.querySelector('.sidebar');
-        const hamburger = document.querySelector('.hamburger-btn');
+            // Safe toggle logic for mobile sidebar
+            function toggleSidebar() {
+                const sidebar = document.querySelector('.sidebar');
+                const overlay = document.querySelector('.sidebar-overlay');
 
-        if (sidebar && hamburger) {
-        if (sidebar.classList.contains('mobile-open') &&
-        !sidebar.contains(event.target) &&
-        !hamburger.contains(event.target)) {
+                if (sidebar) {
+                    sidebar.classList.toggle('mobile-open');
+                }
+                if (overlay) {
+                    overlay.classList.toggle('mobile-open');
+                }
+            }
 
-        sidebar.classList.remove('mobile-open');
-        }
-        }
-        });
+            // Close sidebar when clicking outside on mobile devices
+            document.addEventListener('click', function(event) {
+                const sidebar = document.querySelector('.sidebar');
+                const hamburger = document.querySelector('.hamburger-btn');
+
+                if (sidebar && hamburger) {
+                    if (sidebar.classList.contains('mobile-open') &&
+                        !sidebar.contains(event.target) &&
+                        !hamburger.contains(event.target)) {
+
+                        sidebar.classList.remove('mobile-open');
+                    }
+                }
+            });
+
+            // Character counters for Store Name / Tagline
+            function bindCharCounter(inputId, counterId) {
+                const input = document.getElementById(inputId);
+                const counter = document.getElementById(counterId);
+                if (!input || !counter) return;
+                const update = () => counter.textContent = input.value.length;
+                update();
+                input.addEventListener('input', update);
+            }
+            bindCharCounter('StoreName', 'StoreNameCount');
+            bindCharCounter('StoreTagline', 'StoreTaglineCount');
     </script>
 </body>
 </html>

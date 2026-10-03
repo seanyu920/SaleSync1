@@ -1,3 +1,6 @@
 <Solution>
+  <Folder Name="/ViewComponents/">
+    <File Path="ThemeViewComponent.cs" />
+  </Folder>
   <Project Path="SaleSync/SaleSync.csproj" />
 </Solution>

@@ -3,7 +3,11 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews()
+    .AddMvcOptions(options =>
+    {
+        options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
+    });
 
 // Shared store settings (branding, receipts, theme, business hours).
 builder.Services.AddScoped<SaleSync.Services.StoreSettingsService>();
