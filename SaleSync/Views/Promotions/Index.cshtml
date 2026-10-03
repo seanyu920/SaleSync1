@@ -16,6 +16,10 @@ int expiredPromotions = ViewBag.ExpiredPromotions ?? 0;
 
 
 }
+@inject SaleSync.Services.StoreSettingsService StoreSettings
+@{
+    var store = StoreSettings.GetSettings();
+}
 
 <!DOCTYPE html>
 
@@ -37,6 +41,7 @@ int expiredPromotions = ViewBag.ExpiredPromotions ?? 0;
 
 <link rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+      <partial name="_ThemeStyles" />
 
 <link rel="icon"
       type="image/jpeg"
@@ -60,8 +65,9 @@ int expiredPromotions = ViewBag.ExpiredPromotions ?? 0;
     <div>
 
         <div class="logo-section">
-            <div class="logo-title">Cafèro</div>
-            <div class="logo-subtitle">Coffee & Pastries</div>
+            <div class="logo-title">@store.StoreName</div>
+            <div class="logo-subtitle">@store.StoreTagline</div>
+
         </div>
 
         <div class="profile-section">
@@ -86,68 +92,68 @@ int expiredPromotions = ViewBag.ExpiredPromotions ?? 0;
 
         </div>
 
-        <nav class="sidebar-menu">
+                <nav class="sidebar-menu">
 
-            <a href="/@homeController/Dashboard"
-               class="menu-btn">
-                Dashboard
-            </a>
+                    <a href="/@homeController/Dashboard"
+                       class="menu-btn">
+                        Dashboard
+                    </a>
 
-            <a href="/@homeController/QueueOrder"
-               class="menu-btn">
-                Queue
-            </a>
+                    <a href="/Admin/QueueOrder"
+                       class="menu-btn">
+                        Queue
+                    </a>
 
-            <a href="/Promotions"
-               class="menu-btn active">
-                Promotions
-            </a>
+                    <a href="/Promotions"
+                       class="menu-btn active">
+                        Promotions
+                    </a>
 
-            @if (isAdmin)
-            {
-                <a href="/Admin/ActivityLog"
-                   class="menu-btn">
-                    Activity Log
-                </a>
-            }
+                    @if (isAdmin)
+                    {
+                        <a href="/Admin/ActivityLog"
+                           class="menu-btn">
+                            Activity Log
+                        </a>
+                    }
 
-            @if (isAdmin || isManager)
-            {
-                <a href="/@homeController/Analytics"
-                   class="menu-btn">
-                    Analytics
-                </a>
+                    @if (isAdmin || isManager)
+                    {
+                        <a href="/Admin/Analytics"
+                           class="menu-btn">
+                            Analytics
+                        </a>
 
-                <a href="/@homeController/Products"
-                   class="menu-btn">
-                    Products
-                </a>
+                        <a href="/Admin/Products"
+                           class="menu-btn">
+                            Products
+                        </a>
 
-                <a href="/@homeController/Inventory"
-                   class="menu-btn">
-                    Inventory
-                </a>
+                        <a href="/Admin/Inventory"
+                           class="menu-btn">
+                            Inventory
+                        </a>
 
-                <a href="/@homeController/ArchivedProducts"
-                   class="menu-btn">
-                    Archived
-                </a>
+                        <a href="/Admin/ArchivedProducts"
+                           class="menu-btn">
+                            Archived
+                        </a>
 
-                <a href="/@homeController/WebCustomization"
-                   class="menu-btn">
-                    Customization
-                </a>
-            }
+                        @if (isAdmin)
+                        {
+                            <a href="/Admin/ManageAccounts"
+                               class="menu-btn">
+                                Accounts
+                            </a>
+                        }
 
-            @if (isAdmin)
-            {
-                <a href="/Admin/ManageAccounts"
-                   class="menu-btn">
-                    Accounts
-                </a>
-            }
+                        <a href="/Admin/WebCustomization"
+                           class="menu-btn">
+                            Customization
+                        </a>
+                    }
 
-        </nav>
+                </nav>
 
     </div>
 

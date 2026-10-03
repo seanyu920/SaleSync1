@@ -367,10 +367,22 @@ body {
     }
 
 /* Deactivate button — uses dark theme danger */
+/* Deactivate button — uses dark theme danger */
 .status-toggle-btn {
-    background: var(--danger);
     color: #ffffff;
 }
+
+    .status-toggle-btn:hover {
+        filter: brightness(1.15);
+    }
+
+    .status-toggle-btn.deactivate-state {
+        background: var(--danger);
+    }
+
+    .status-toggle-btn.reactivate-state {
+        background: var(--success);
+    }
 
     .status-toggle-btn:hover {
         filter: brightness(1.15);

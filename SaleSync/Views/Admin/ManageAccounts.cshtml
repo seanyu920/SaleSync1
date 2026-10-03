@@ -6,6 +6,10 @@
     string displayRole = isManager ? "Manager" : "Admin";
     string currentAction = ViewContext.RouteData.Values["action"]?.ToString();
 }
+@inject SaleSync.Services.StoreSettingsService StoreSettings
+@{
+    var store = StoreSettings.GetSettings();
+}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,6 +21,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="icon" type="image/jpeg" href="~/images/CaferoLogo.jpg" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/ManageAccounts.css" asp-append-version="true" />
+    <partial name="_ThemeStyles" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
@@ -25,8 +30,8 @@
         <aside class="sidebar">
             <div>
                 <div class="logo-section">
-                    <div class="logo-title">Cafèro</div>
-                    <div class="logo-subtitle">Coffee & Pastries</div>
+                    <div class="logo-title">@store.StoreName</div>
+                    <div class="logo-subtitle">@store.StoreTagline</div>
                 </div>
 
                 <div class="profile-section">
@@ -95,22 +100,22 @@
                         <div class="form-grid">
                             <div class="input-group">
                                 <label for="FullName">Full Name</label>
-                                <input id="FullName" name="FullName" type="text" placeholder="e.g. Jane Doe" required />
+                                <input id="FullName" name="FullName" type="text" placeholder="e.g. Jane Doe" maxlength="50" required />
                             </div>
 
                             <div class="input-group">
                                 <label for="Username">Username</label>
-                                <input id="Username" name="Username" type="text" placeholder="Username" required />
+                                <input id="Username" name="Username" type="text" placeholder="Username" maxlength="30" required />
                             </div>
 
                             <div class="input-group">
                                 <label for="Email">Email Address</label>
-                                <input id="Email" name="Email" type="email" placeholder="name@email.com" required />
+                                <input id="Email" name="Email" type="email" placeholder="name@email.com" maxlength="100" required />
                             </div>
 
                             <div class="input-group">
                                 <label for="Password">Password</label>
-                                <input id="Password" name="Password" type="password" placeholder="••••••••" required />
+                                <input id="Password" name="Password" type="password" placeholder="••••••••" maxlength="64" required />
                             </div>
 
                             <div class="input-group">
@@ -152,7 +157,12 @@
                                     foreach (var user in Model.Where(u => u.IsActive))
                                     {
                                         <tr class="clickable-row"
-                                            onclick="selectUser(@Json.Serialize(user.UserId.ToString()), @Json.Serialize(user.FullName ?? ""), @Json.Serialize(user.Username ?? ""), @Json.Serialize(user.Email ?? ""), @Json.Serialize(user.Role ?? ""), @Json.Serialize(user.IsActive.ToString().ToLower()))">
+                                            data-id="@user.UserId"
+                                            data-fullname="@user.FullName"
+                                            data-username="@user.Username"
+                                            data-email="@user.Email"
+                                            data-role="@user.Role"
+                                            data-active="@user.IsActive.ToString().ToLower()">
 
                                             <td class="cell-center">
                                                 <input type="radio" name="selectedAccount" id="radio_@user.UserId" class="radio-pointer" />
@@ -201,7 +211,12 @@
                                     foreach (var user in Model.Where(u => !u.IsActive))
                                     {
                                         <tr class="clickable-row"
-                                            onclick="selectUser(@Json.Serialize(user.UserId.ToString()), @Json.Serialize(user.FullName ?? ""), @Json.Serialize(user.Username ?? ""), @Json.Serialize(user.Email ?? ""), @Json.Serialize(user.Role ?? ""), @Json.Serialize(user.IsActive.ToString().ToLower()))">
+                                            data-id="@user.UserId"
+                                            data-fullname="@user.FullName"
+                                            data-username="@user.Username"
+                                            data-email="@user.Email"
+                                            data-role="@user.Role"
+                                            data-active="@user.IsActive.ToString().ToLower()">
 
                                             <td class="cell-center">
                                                 <input type="radio" name="selectedAccount" id="radio_@user.UserId" class="radio-pointer" />
@@ -237,201 +252,213 @@
     @if (TempData["ErrorMessage"] != null)
     {
         <script>
-            document.addEventListener("DOMContentLoaded", function() {
-            Swal.fire('Error', '@TempData["ErrorMessage"]', 'error');
-            });
+                document.addEventListener("DOMContentLoaded", function() {
+                    Swal.fire('Error', @Json.Serialize(TempData["ErrorMessage"]?.ToString()), 'error');
+                });
         </script>
     }
     @if (TempData["SuccessMessage"] != null)
     {
         <script>
-            document.addEventListener("DOMContentLoaded", function() {
-            Swal.fire('Success', '@TempData["SuccessMessage"]', 'success');
-            });
+                document.addEventListener("DOMContentLoaded", function() {
+                    Swal.fire('Success', @Json.Serialize(TempData["SuccessMessage"]?.ToString()), 'success');
+                });
         </script>
     }
 
     <script>
-        function confirmLogout() {
-        Swal.fire({
-        title: 'Are you sure?',
-        text: "You will be logged out of your session.",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Yes, log out',
-        cancelButtonText: 'Cancel'
-        }).then((result) => {
-        if (result.isConfirmed) {
-        document.getElementById('logoutForm').submit();
-        }
-        });
-        }
+            function confirmLogout() {
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You will be logged out of your session.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, log out',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        document.getElementById('logoutForm').submit();
+                    }
+                });
+            }
 
-        let originalData = {};
-        let selectedUserIsActive = true;
+            let originalData = {};
+            let selectedUserIsActive = true;
 
-        function selectUser(userId, fullName, username, email, role, isActive) {
-        const radioBtn = document.getElementById('radio_' + userId);
-        if (radioBtn) radioBtn.checked = true;
+            function selectUser(userId, fullName, username, email, role, isActive) {
+                const radioBtn = document.getElementById('radio_' + userId);
+                if (radioBtn) radioBtn.checked = true;
 
-        document.getElementById('UserId').value = userId;
-        document.getElementById('FullName').value = fullName;
-        document.getElementById('Username').value = username;
-        document.getElementById('Email').value = email;
-        document.getElementById('Role').value = role;
+                document.getElementById('UserId').value = userId;
+                document.getElementById('FullName').value = fullName;
+                document.getElementById('Username').value = username;
+                document.getElementById('Email').value = email;
+                document.getElementById('Role').value = role;
 
-        document.getElementById('Password').value = '';
-        document.getElementById('Password').removeAttribute('required');
+                document.getElementById('Password').value = '';
+                document.getElementById('Password').removeAttribute('required');
 
-        originalData = {
-        fullName: fullName,
-        username: username,
-        email: email,
-        role: role
-        };
+                originalData = {
+                    fullName: fullName,
+                    username: username,
+                    email: email,
+                    role: role
+                };
 
-        selectedUserIsActive = (isActive === 'true');
-        const btn = document.getElementById('toggleStatusBtn');
+                selectedUserIsActive = (isActive === 'true');
+                const btn = document.getElementById('toggleStatusBtn');
 
-        if (btn) {
-        if (selectedUserIsActive) {
-        btn.textContent = "Deactivate Selected";
-        btn.classList.remove('reactivate-state');
-        btn.classList.add('deactivate-state');
-        } else {
-        btn.textContent = "Reactivate Selected";
-        btn.classList.remove('deactivate-state');
-        btn.classList.add('reactivate-state');
-        }
-        }
-        }
+                if (btn) {
+                    if (selectedUserIsActive) {
+                        btn.textContent = "Deactivate Selected";
+                        btn.classList.remove('reactivate-state');
+                        btn.classList.add('deactivate-state');
+                    } else {
+                        btn.textContent = "Reactivate Selected";
+                        btn.classList.remove('deactivate-state');
+                        btn.classList.add('reactivate-state');
+                    }
+                }
+            }
 
-        function confirmUpdate() {
-        const form = document.getElementById('accountForm');
-        const userId = document.getElementById('UserId').value;
+            function confirmUpdate() {
+                const form = document.getElementById('accountForm');
+                const userId = document.getElementById('UserId').value;
 
-        if (!userId) {
-        Swal.fire({ title: 'No Selection', text: 'Please select an account from the table to update.', icon: 'warning', confirmButtonColor: '#C9A84C' });
-        return;
-        }
+                if (!userId) {
+                    Swal.fire({ title: 'No Selection', text: 'Please select an account from the table to update.', icon: 'warning', confirmButtonColor: '#C9A84C' });
+                    return;
+                }
 
-        if (!form.reportValidity()) return;
+                if (!form.reportValidity()) return;
 
-        const currentFullName = document.getElementById('FullName').value;
-        const currentUsername = document.getElementById('Username').value;
-        const currentEmail = document.getElementById('Email').value;
-        const currentPassword = document.getElementById('Password').value;
-        const currentRole = document.getElementById('Role').value;
+                const currentFullName = document.getElementById('FullName').value;
+                const currentUsername = document.getElementById('Username').value;
+                const currentEmail = document.getElementById('Email').value;
+                const currentPassword = document.getElementById('Password').value;
+                const currentRole = document.getElementById('Role').value;
 
-        if (currentFullName === originalData.fullName &&
-        currentUsername === originalData.username &&
-        currentEmail === originalData.email &&
-        currentPassword === '' &&
-        currentRole === originalData.role) {
+                if (currentFullName === originalData.fullName &&
+                    currentUsername === originalData.username &&
+                    currentEmail === originalData.email &&
+                    currentPassword === '' &&
+                    currentRole === originalData.role) {
 
-        Swal.fire({ title: 'No Changes Detected', text: 'You have not modified any information for this account.', icon: 'info', confirmButtonColor: '#C9A84C' });
-        return;
-        }
+                    Swal.fire({ title: 'No Changes Detected', text: 'You have not modified any information for this account.', icon: 'info', confirmButtonColor: '#C9A84C' });
+                    return;
+                }
 
-        Swal.fire({
-        title: 'Update Account?',
-        text: `Save changes for ${currentFullName}?`,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#C9A84C',
-        cancelButtonColor: '#141A14',
-        confirmButtonText: 'Yes, update it!'
-        }).then((result) => {
-        if (result.isConfirmed) {
-        form.action = "/Admin/UpdateAccount";
-        form.submit();
-        }
-        });
-        }
+                Swal.fire({
+                    title: 'Update Account?',
+                    text: `Save changes for ${currentFullName}?`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#C9A84C',
+                    cancelButtonColor: '#141A14',
+                    confirmButtonText: 'Yes, update it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.action = "/Admin/UpdateAccount";
+                        form.submit();
+                    }
+                });
+            }
 
-        function confirmAdd() {
-        const form = document.getElementById('accountForm');
-        const fullName = document.getElementById('FullName').value;
+            function confirmAdd() {
+                const form = document.getElementById('accountForm');
 
-        document.getElementById('Password').setAttribute('required', 'required');
-        if (!form.reportValidity()) return;
+                // Clear any selected user so this always creates a NEW account
+                document.getElementById('UserId').value = '';
 
-        Swal.fire({
-        title: 'Add New Account?',
-        text: `Create a system account for ${fullName}?`,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#C9A84C',
-        cancelButtonColor: '#141A14',
-        confirmButtonText: 'Yes, add it!'
-        }).then((result) => {
-        if (result.isConfirmed) {
-        form.action = "/Admin/AddAccount";
-        form.submit();
-        }
-        });
-        }
+                const fullName = document.getElementById('FullName').value;
 
-        function prepareToggleStatus() {
-        const userId = document.getElementById('UserId').value;
-        if (!userId) {
-        Swal.fire({ title: 'No Selection', text: 'Please select an account first.', icon: 'warning', confirmButtonColor: '#C9A84C' });
-        return;
-        }
+                document.getElementById('Password').setAttribute('required', 'required');
+                if (!form.reportValidity()) return;
 
-        const actionName = selectedUserIsActive ? "Deactivate" : "Reactivate";
-        const warningText = selectedUserIsActive
-        ? "This user will no longer be able to log into the system."
-        : "This user will regain full access to the system.";
-        const targetUrl = selectedUserIsActive ? "/Admin/DeactivateAccount" : "/Admin/ReactivateAccount";
-        const btnColor = selectedUserIsActive ? "#e05555" : "#3dbf78";
+                Swal.fire({
+                    title: 'Add New Account?',
+                    text: `Create a system account for ${fullName}?`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#C9A84C',
+                    cancelButtonColor: '#141A14',
+                    confirmButtonText: 'Yes, add it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.action = "/Admin/AddAccount";
+                        form.submit();
+                    }
+                });
+            }
 
-        Swal.fire({
-        title: `${actionName} Account?`,
-        text: warningText,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: btnColor,
-        cancelButtonColor: '#141A14',
-        confirmButtonText: `Yes, ${actionName.toLowerCase()} them!`
-        }).then((result) => {
-        if (result.isConfirmed) {
-        const form = document.getElementById('accountForm');
-        form.action = targetUrl;
-        form.submit();
-        }
-        });
-        }
+            function prepareToggleStatus() {
+                const userId = document.getElementById('UserId').value;
+                if (!userId) {
+                    Swal.fire({ title: 'No Selection', text: 'Please select an account first.', icon: 'warning', confirmButtonColor: '#C9A84C' });
+                    return;
+                }
 
-        // Safe toggle logic for mobile sidebar
-        function toggleSidebar() {
-        const sidebar = document.querySelector('.sidebar');
-        const overlay = document.querySelector('.sidebar-overlay');
+                const actionName = selectedUserIsActive ? "Deactivate" : "Reactivate";
+                const warningText = selectedUserIsActive
+                    ? "This user will no longer be able to log into the system."
+                    : "This user will regain full access to the system.";
+                const targetUrl = selectedUserIsActive ? "/Admin/DeactivateAccount" : "/Admin/ReactivateAccount";
+                const btnColor = selectedUserIsActive ? "#e05555" : "#3dbf78";
 
-        if (sidebar) {
-        sidebar.classList.toggle('mobile-open');
-        }
-        if (overlay) {
-        overlay.classList.toggle('mobile-open');
-        }
-        }
+                Swal.fire({
+                    title: `${actionName} Account?`,
+                    text: warningText,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: btnColor,
+                    cancelButtonColor: '#141A14',
+                    confirmButtonText: `Yes, ${actionName.toLowerCase()} them!`
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const form = document.getElementById('accountForm');
+                        form.action = targetUrl;
+                        form.submit();
+                    }
+                });
+            }
 
-        // Close sidebar when clicking outside on mobile devices
-        document.addEventListener('click', function (event) {
-        const sidebar = document.querySelector('.sidebar');
-        const hamburger = document.querySelector('.hamburger-btn');
+            // Row click handling (reads values from data- attributes)
+            document.querySelectorAll('.clickable-row').forEach(row => {
+                row.addEventListener('click', () => {
+                    const d = row.dataset;
+                    selectUser(d.id, d.fullname, d.username, d.email, d.role, d.active);
+                });
+            });
 
-        if (sidebar && hamburger) {
-        if (sidebar.classList.contains('mobile-open') &&
-        !sidebar.contains(event.target) &&
-        !hamburger.contains(event.target)) {
+            // Safe toggle logic for mobile sidebar
+            function toggleSidebar() {
+                const sidebar = document.querySelector('.sidebar');
+                const overlay = document.querySelector('.sidebar-overlay');
 
-        sidebar.classList.remove('mobile-open');
-        }
-        }
-        });
+                if (sidebar) {
+                    sidebar.classList.toggle('mobile-open');
+                }
+                if (overlay) {
+                    overlay.classList.toggle('mobile-open');
+                }
+            }
+
+            // Close sidebar when clicking outside on mobile devices
+            document.addEventListener('click', function(event) {
+                const sidebar = document.querySelector('.sidebar');
+                const hamburger = document.querySelector('.hamburger-btn');
+
+                if (sidebar && hamburger) {
+                    if (sidebar.classList.contains('mobile-open') &&
+                        !sidebar.contains(event.target) &&
+                        !hamburger.contains(event.target)) {
+
+                        sidebar.classList.remove('mobile-open');
+                    }
+                }
+            });
     </script>
 </body>
 </html>

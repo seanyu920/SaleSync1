@@ -3,6 +3,10 @@
     Layout = null;
     string homeController = "Admin";
 }
+@inject SaleSync.Services.StoreSettingsService StoreSettings
+@{
+    var store = StoreSettings.GetSettings();
+}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,6 +15,7 @@
     <title>Admin Dashboard - Cafero</title>
     <link rel="stylesheet" href="~/css/AdminDashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <partial name="_ThemeStyles" />
     <link rel="icon" type="image/jpeg" href="~/images/CaferoLogo.jpg" asp-append-version="true" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -24,8 +29,8 @@
         <aside class="sidebar">
             <div>
                 <div class="logo-section">
-                    <div class="logo-title">Cafèro</div>
-                    <div class="logo-subtitle">Coffee & Pastries</div>
+                    <div class="logo-title">@store.StoreName</div>
+                    <div class="logo-subtitle">@store.StoreTagline</div>
                 </div>
 
                 <div class="profile-section">
@@ -90,9 +95,33 @@
                         <div id="currentDate"></div>
                         <div id="currentTime"></div>
                     </div>
-                    <div class="notification-bell" id="notifBell" onclick="goToQueue()" title="View pending orders">
+                    <div class="notification-bell" id="notifBell" onclick="toggleNotifDropdown(event)" title="View notifications">
                         <i class="fas fa-bell"></i>
                         <span class="bell-badge" id="bellBadge" style="display:none;"></span>
+
+                        <div class="notif-dropdown" id="notifDropdown">
+                            <div class="notif-dropdown-title">Live Notifications</div>
+                            <div class="notification-list">
+                                <div class="notification-item">
+                                    <div class="notification-info">
+                                        <p>New web pickup order received (#ORD-8036)</p>
+                                        <div class="notification-time">2 mins ago</div>
+                                    </div>
+                                </div>
+                                <div class="notification-item alert-node">
+                                    <div class="notification-info">
+                                        <p>Inventory Alert: Espresso Beans fall below safety margin</p>
+                                        <div class="notification-time">14 mins ago</div>
+                                    </div>
+                                </div>
+                                <div class="notification-item success-node">
+                                    <div class="notification-info">
+                                        <p>System database backup completed securely</p>
+                                        <div class="notification-time">1 hour ago</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="nav-chat-icon" onclick="toggleChat()" id="chatTrigger" title="Open customer support inbox">
                         <i class="fas fa-comments"></i>
@@ -131,7 +160,7 @@
             </div>
 
             <div class="summary-dashboard">
-                <div class="summary-card">
+                <div class="summary-card action-card" onclick="location.href='/Admin/DailyReport'">
                     <div class="card-icon-box icon-orange"><i class="fas fa-list"></i></div>
                     <div>
                         <div class="card-label">All Transactions</div>
@@ -139,7 +168,7 @@
                     </div>
                 </div>
 
-                <div class="summary-card">
+                <div class="summary-card action-card" onclick="location.href='/Admin/QueueOrder'">
                     <div class="card-icon-box icon-green"><i class="fas fa-hourglass-half"></i></div>
                     <div>
                         <div class="card-label">Pending Orders</div>
@@ -147,7 +176,7 @@
                     </div>
                 </div>
 
-                <div class="summary-card">
+                <div class="summary-card action-card" onclick="location.href='/Admin/Analytics'">
                     <div class="card-icon-box icon-light-orange"><i class="fas fa-check-circle"></i></div>
                     <div>
                         <div class="card-label">Completed Sales</div>
@@ -155,7 +184,7 @@
                     </div>
                 </div>
 
-                <div class="summary-card">
+                <div class="summary-card action-card" onclick="location.href='/Admin/Inventory'">
                     <div class="card-icon-box icon-red"><i class="fas fa-exclamation-triangle"></i></div>
                     <div>
                         <div class="card-label">Low Stock Alerts</div>
@@ -310,7 +339,6 @@
                         }
                         else
                         {
-                            <!-- Mobile Fallback Card 1 -->
                             <div class="tx-card">
                                 <div class="tx-card-summary">
                                     <div class="tx-main-info">
@@ -341,7 +369,6 @@
                                 </div>
                             </div>
 
-                            <!-- Mobile Fallback Card 2 -->
                             <div class="tx-card">
                                 <div class="tx-card-summary">
                                     <div class="tx-main-info">
@@ -372,7 +399,6 @@
                                 </div>
                             </div>
 
-                            <!-- Mobile Fallback Card 3 -->
                             <div class="tx-card">
                                 <div class="tx-card-summary">
                                     <div class="tx-main-info">
@@ -412,7 +438,7 @@
                         <span class="volume-label">By Volume</span>
                     </div>
 
-                    <!-- DESKTOP VIEW: Table with Dual-Axis Scrolling -->
+                    <!-- DESKTOP VIEW -->
                     <div class="table-responsive desktop-only">
                         <table class="pos-table">
                             <thead>
@@ -467,9 +493,8 @@
                         </table>
                     </div>
 
-                    <!-- MOBILE VIEW: Expandable Card List -->
+                    <!-- MOBILE VIEW -->
                     <div class="mobile-only">
-                        <!-- Product 1 -->
                         <div class="tx-card">
                             <div class="tx-card-summary">
                                 <div class="tx-main-info">
@@ -493,7 +518,6 @@
                             </div>
                         </div>
 
-                        <!-- Product 2 -->
                         <div class="tx-card">
                             <div class="tx-card-summary">
                                 <div class="tx-main-info">
@@ -517,7 +541,6 @@
                             </div>
                         </div>
 
-                        <!-- Product 3 -->
                         <div class="tx-card">
                             <div class="tx-card-summary">
                                 <div class="tx-main-info">
@@ -541,7 +564,6 @@
                             </div>
                         </div>
 
-                        <!-- Product 4 -->
                         <div class="tx-card">
                             <div class="tx-card-summary">
                                 <div class="tx-main-info">
@@ -573,7 +595,7 @@
                         <a href="/Admin/Inventory" class="manage-link">Manage</a>
                     </div>
 
-                    <!-- DESKTOP VIEW: Table with Dual-Axis Scrolling -->
+                    <!-- DESKTOP VIEW -->
                     <div class="table-responsive desktop-only">
                         <table class="pos-table">
                             <thead>
@@ -613,9 +635,8 @@
                         </table>
                     </div>
 
-                    <!-- MOBILE VIEW: Expandable Card List -->
+                    <!-- MOBILE VIEW -->
                     <div class="mobile-only">
-                        <!-- Item 1 -->
                         <div class="tx-card">
                             <div class="tx-card-summary">
                                 <div class="tx-main-info">
@@ -642,7 +663,6 @@
                             </div>
                         </div>
 
-                        <!-- Item 2 -->
                         <div class="tx-card">
                             <div class="tx-card-summary">
                                 <div class="tx-main-info">
@@ -669,7 +689,6 @@
                             </div>
                         </div>
 
-                        <!-- Item 3 -->
                         <div class="tx-card">
                             <div class="tx-card-summary">
                                 <div class="tx-main-info">
@@ -699,52 +718,13 @@
                 </div>
             </div>
 
-            <div class="bottom-three-column-grid">
-
-                <div class="pos-card-wrapper">
-                    <div class="pos-card-header">
-                        <div class="pos-card-title"><i class="fas fa-bolt"></i> Quick Manager Actions</div>
-                    </div>
-                    <div class="action-button-grid">
-                        <button class="action-btn" onclick="location.href='/@homeController/Queue'"><i class="fas fa-shopping-cart"></i>New Order</button>
-                        <button class="action-btn" onclick="location.href='/Admin/Products'"><i class="fas fa-plus-circle"></i>Add Product</button>
-                        <button class="action-btn" onclick="location.href='/Admin/Inventory'"><i class="fas fa-dolly"></i>Add Inventory</button>
-                        <button class="action-btn" onclick="location.href='/Admin/Analytics'"><i class="fas fa-file-invoice-dollar"></i>Sales Report</button>
-                    </div>
-                </div>
-
+            <div class="bottom-single-column">
                 <div class="pos-card-wrapper">
                     <div class="pos-card-header">
                         <div class="pos-card-title"><i class="fas fa-wallet"></i> Payment Breakdown</div>
                     </div>
                     <div class="payment-chart-canvas-wrapper">
                         <canvas id="paymentMethodsChart"></canvas>
-                    </div>
-                </div>
-
-                <div class="pos-card-wrapper">
-                    <div class="pos-card-header">
-                        <div class="pos-card-title"><i class="fas fa-bell"></i> Live Notifications</div>
-                    </div>
-                    <div class="notification-list">
-                        <div class="notification-item">
-                            <div class="notification-info">
-                                <p>New web pickup order received (#ORD-8036)</p>
-                                <div class="notification-time">2 mins ago</div>
-                            </div>
-                        </div>
-                        <div class="notification-item alert-node">
-                            <div class="notification-info">
-                                <p>Inventory Alert: Espresso Beans fall below safety margin</p>
-                                <div class="notification-time">14 mins ago</div>
-                            </div>
-                        </div>
-                        <div class="notification-item success-node">
-                            <div class="notification-info">
-                                <p>System database backup completed securely</p>
-                                <div class="notification-time">1 hour ago</div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -785,6 +765,21 @@
                     }
                 });
             }
+
+            // ── Notification Bell Dropdown ──
+            function toggleNotifDropdown(event) {
+                event.stopPropagation();
+                document.getElementById('notifDropdown').classList.toggle('open');
+            }
+
+            document.addEventListener('click', function(e) {
+                const dropdown = document.getElementById('notifDropdown');
+                const bell = document.getElementById('notifBell');
+                if (dropdown && dropdown.classList.contains('open') && !bell.contains(e.target)) {
+                    dropdown.classList.remove('open');
+                }
+            });
+
             // ── Support Inbox Popup Logic ──
             let chatConn;
             let currentChatWith = null;
@@ -862,7 +857,6 @@
 
             function escapeHTML(value) { return String(value).replace(/[&<>'"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[c])); }
 
-            
             // ── Notification Bell Logic (pending online order alerts) ──
             let lastKnownPendingCount = null;
 
@@ -875,7 +869,6 @@
                     const pendingCount = data.pendingCount || 0;
 
                     if (lastKnownPendingCount === null) {
-                        // First check on page load — just set the baseline, don't alert.
                         lastKnownPendingCount = pendingCount;
                         updateBellBadge(pendingCount);
                         return;
@@ -912,12 +905,7 @@
                 badge.style.display = count > 0 ? 'block' : 'none';
             }
 
-            function goToQueue() {
-                window.location.href = '/Admin/QueueOrder';
-            }
-
             document.addEventListener("DOMContentLoaded", function() {
-                // Clock Logic
                 function updateClock() {
                     const now = new Date();
                     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
@@ -934,7 +922,6 @@
                 setInterval(updateClock, 1000);
                 updateClock();
 
-                // Weekly Sales Chart Logic
                 const rawTodaySales = parseFloat("@Model.TodayTotalSales") || 8500;
                 const ctxWeekly = document.getElementById('weeklySalesChart').getContext('2d');
                 new Chart(ctxWeekly, {
@@ -966,7 +953,6 @@
                     }
                 });
 
-                // Payment Methods Chart Logic
                 const ctxPayment = document.getElementById('paymentMethodsChart').getContext('2d');
                 new Chart(ctxPayment, {
                     type: 'doughnut',
@@ -986,7 +972,6 @@
                     }
                 });
 
-                // ── Real-Time SignalR Connection Setup ──
                 chatConn = new signalR.HubConnectionBuilder()
                     .withUrl("/chatHub")
                     .build();
@@ -1010,7 +995,6 @@
                     }
                 });
 
-                // Start polling for new online orders.
                 checkForNewOrders();
                 setInterval(checkForNewOrders, 15000);
             });
@@ -1033,12 +1017,9 @@
                 searchTimeout = setTimeout(async () => {
                     try {
                         const url = "/Admin/GlobalSearch?q=" + encodeURIComponent(query);
-                        console.log("Fetching:", url);
                         const res = await fetch(url);
-                        console.log("Status:", res.status);
                         if (!res.ok) { console.error("Search failed:", res.statusText); return; }
                         const data = await res.json();
-                        console.log("Results:", data);
                         let html = "";
                         if (data.products.length) {
                             html += '<div class="search-group-label">Products</div>';
@@ -1072,6 +1053,7 @@
                     dd.style.display = "none";
                 }
             });
+
             function toggleTxDetails(btn) {
                 const card = btn.closest('.tx-card');
                 const details = card.querySelector('.tx-card-details');
@@ -1102,5 +1084,3 @@
     </script>
 </body>
 </html>
-
-

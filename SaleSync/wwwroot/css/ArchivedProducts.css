@@ -48,8 +48,7 @@
     }
 
 /* Table rules to maintain dark theme consistency and proper cell bounds */
-.recent-sales-table,
-.item-table {
+.recent-sales-table, .item-table {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
@@ -119,15 +118,31 @@
 }
 
 /* --- ARCHIVE COMPONENT SPECIFIC RULES --- */
-
 /* Archive Layout Header Adjustments */
 .page-header {
     margin-bottom: 20px;
+    align-items: flex-end;
+}
+
+.greeting-title {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
 }
 
 .greeting-subtitle {
     color: var(--muted, rgba(242, 237, 228, 0.5));
     margin-top: 5px;
+}
+
+.section-divider-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gold, #C9A84C);
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 /* Dedicated Action Row to isolate alignment boundaries */
@@ -202,11 +217,13 @@
     cursor: pointer;
     transition: all 0.2s ease;
     white-space: nowrap;
+    font-family: 'Outfit', sans-serif;
 }
 
     .restore-btn:hover {
         background: var(--success, #3dbf78);
         color: var(--bg-base, #0D110D);
+        transform: translateY(-1px);
     }
 
 .slide-up {
@@ -216,7 +233,6 @@
 /* ==========================================================================
    MEDIA QUERIES & MOBILE BREAKPOINTS
    ========================================================================== */
-
 @media (max-width: 1024px) {
     .dashboard-container {
         display: block;

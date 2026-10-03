@@ -5,6 +5,10 @@
     string homeController = isManager ? "Manager" : "Admin";
     string displayRole = isManager ? "Manager" : "Admin";
 }
+@inject SaleSync.Services.StoreSettingsService StoreSettings
+@{
+    var store = StoreSettings.GetSettings();
+}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -21,6 +25,7 @@
 
     <link rel="stylesheet" href="~/css/AdminDashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/Analytics.css" asp-append-version="true" />
+    <partial name="_ThemeStyles" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -28,8 +33,9 @@
         <aside class="sidebar">
             <div>
                 <div class="logo-section">
-                    <div class="logo-title">Cafèro</div>
-                    <div class="logo-subtitle">Coffee & Pastries</div>
+                    <div class="logo-title">@store.StoreName</div>
+                    <div class="logo-subtitle">@store.StoreTagline</div>
+
                 </div>
 
                 <div class="profile-section">
