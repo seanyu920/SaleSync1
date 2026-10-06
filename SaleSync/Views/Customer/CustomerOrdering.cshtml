@@ -50,6 +50,250 @@
     <!-- Real-Time Chat SignalR Client -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
 
+    <!-- Promo code styles (kept here so no CSS file edit is needed) -->
+    <style>
+            .promo-row {
+                display: flex;
+                gap: 8px;
+                align-items: stretch;
+            }
+
+                .promo-row .cart-select {
+                    flex: 1;
+                    min-width: 0;
+                    cursor: text;
+                    text-transform: uppercase;
+                }
+
+                    .promo-row .cart-select::placeholder {
+                        text-transform: none;
+                        color: var(--muted);
+                        font-weight: 400;
+                    }
+
+                    .promo-row .cart-select:disabled {
+                        opacity: 0.6;
+                        cursor: not-allowed;
+                    }
+
+            .btn-apply-promo {
+                flex-shrink: 0;
+                padding: 0 18px;
+                background: var(--gold);
+                color: var(--bg-base);
+                border: none;
+                border-radius: 10px;
+                font-family: 'Outfit', sans-serif;
+                font-size: 13px;
+                font-weight: 900;
+                cursor: pointer;
+                transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            }
+
+                .btn-apply-promo:hover {
+                    background: var(--gold-light);
+                    transform: translateY(-1px);
+                    box-shadow: 0 6px 16px rgba(201,168,76,0.18);
+                }
+
+                .btn-apply-promo.applied {
+                    background: transparent;
+                    color: var(--cream);
+                    border: 1px solid var(--border-sub);
+                }
+
+                    .btn-apply-promo.applied:hover {
+                        border-color: var(--danger);
+                        color: var(--danger);
+                        box-shadow: none;
+                    }
+
+            .promo-message {
+                font-size: 12px;
+                font-weight: 600;
+                line-height: 1.4;
+            }
+
+                .promo-message.success {
+                    color: var(--success);
+                }
+
+                .promo-message.error {
+                    color: var(--danger);
+                }
+
+            .promo-discount-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                color: var(--success);
+                font-size: 13px;
+                font-weight: 700;
+            }
+
+            /* ── UI FIXES ─────────────────────────────────────────── */
+
+            .brand-text {
+                display: flex;
+                flex-direction: column;
+                min-width: 0;
+                flex: 1;
+            }
+
+            .brand-sub {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 100%;
+            }
+
+            /* Only 2 tabs now, so fill the row (overrides the 3-column rule) */
+            .sidebar-tabs {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .search-icon {
+                display: flex;
+                align-items: center;
+            }
+
+                .search-icon svg {
+                    width: 15px;
+                    height: 15px;
+                }
+
+            .cart-icon-btn svg {
+                width: 20px;
+                height: 20px;
+            }
+
+            .chat-fab svg {
+                width: 26px;
+                height: 26px;
+            }
+
+            select.cart-select {
+                padding-right: 38px;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23C9A84C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+                background-repeat: no-repeat;
+                background-position: right 14px center;
+                background-size: 12px 8px;
+            }
+
+            input[type="datetime-local"].cart-select {
+                color-scheme: dark;
+            }
+
+            .modal-card {
+                max-height: 92vh;
+                overflow-y: auto;
+            }
+
+            @@supports (height: 100dvh) {
+                .sidebar, .cart-sidebar {
+                    height: 100dvh;
+                }
+
+                .dashboard-container, .main-content {
+                    min-height: 100dvh;
+                }
+            }
+
+            @@media (max-width: 760px) {
+                /* keep cart, modal and chat above the fixed mobile header */
+                .cart-overlay {
+                    z-index: 6590;
+                }
+
+                .cart-sidebar {
+                    z-index: 6600;
+                }
+
+                .modal-overlay {
+                    z-index: 6700;
+                }
+
+                .chat-widget {
+                    z-index: 6200;
+                }
+
+                .chat-window {
+                    height: calc(100vh - 150px);
+                }
+
+                .cart-items-container {
+                    padding: 16px;
+                }
+
+                .cart-footer {
+                    padding: 16px;
+                }
+            }
+
+            @@media (max-width: 480px) {
+                .cart-item-row {
+                    flex-wrap: wrap;
+                }
+
+                .cart-item-info {
+                    flex: 1 1 100%;
+                }
+
+                .cart-item-controls {
+                    margin-right: auto;
+                }
+
+                .track-card {
+                    padding: 16px;
+                }
+
+                .track-step {
+                    font-size: 10px;
+                    text-align: center;
+                }
+
+                    .track-step span {
+                        max-width: 62px;
+                    }
+
+                .track-line {
+                    margin: 0 3px 22px;
+                }
+
+                .history-row {
+                    padding: 14px;
+                }
+            }
+            .order-progress-bar-bg {
+                width: 100%;
+                height: 6px;
+                background: var(--bg-surface);
+                border-radius: 3px;
+                overflow: hidden;
+                margin-top: 12px;
+            }
+
+            .order-progress-bar-fill {
+                height: 100%;
+                background: var(--gold);
+                border-radius: 3px;
+                transition: width 0.4s ease;
+            }
+
+            .order-progress-label {
+                font-size: 12px;
+                color: var(--muted);
+                margin-top: 8px;
+            }
+    </style>
+
+    <script>
+            // If a product image fails to load, hide it so the alt text doesn't show.
+            function imageFallback(img) {
+                img.onerror = null;
+                img.style.display = 'none';
+            }
+    </script>
+
 </head>
 <body>
     <div class="dashboard-container">
@@ -61,8 +305,10 @@
                     {
                         <img src="@storeSettings.LogoPath" alt="@storeSettings.StoreName logo" class="brand-logo" />
                     }
-                    <div class="brand-name">@storeSettings.StoreName</div>
-                    <div class="brand-sub">@storeSettings.StoreTagline</div>
+                    <div class="brand-text">
+                        <div class="brand-name">@storeSettings.StoreName</div>
+                        <div class="brand-sub">@storeSettings.StoreTagline</div>
+                    </div>
                 </div>
 
                 <div class="store-status-banner @(storeStatus != null && storeStatus.IsOpen ? "open" : "")" id="storeBanner">
@@ -83,14 +329,13 @@
                 <div class="store-status-banner @(storeSettings.StaffOnBreak ? "" : "open")" id="staffStatusBanner">
                     <span class="store-dot"></span>
                     <span id="staffStatusText">
-                        @(storeSettings.StaffOnBreak ? "🟠 Staff Currently on Break" : "🟢 Staff Available")
+                        @(storeSettings.StaffOnBreak ? "Staff Currently on Break" : "Staff Available")
                     </span>
                 </div>
 
                 <div class="sidebar-tabs">
                     <button class="tab-btn active" onclick="switchTab('menu', this)">Order</button>
                     <button class="tab-btn" onclick="switchTab('orders', this)">My Orders</button>
-                    <button class="tab-btn" onclick="switchTab('promos', this)">Promos</button>
                 </div>
 
                 <div id="catNav">
@@ -136,9 +381,7 @@
                     onclick="toggleSidebar(event)"
                     aria-label="Open menu"
                     aria-expanded="false">
-                <span></span>
-                <span></span>
-                <span></span>
+                <i></i>
             </button>
 
             <div class="mobile-brand">
@@ -152,10 +395,6 @@
              onclick="closeSidebar()"></div>
 
         <main class="main-content slide-up">
-            <div class="announcement-banner" id="announcementBanner">
-                <strong>Welcome to @storeSettings.StoreName!</strong> Free delivery on orders ₱300+
-                <button class="close-announcement" onclick="this.parentElement.style.display='none'">✕</button>
-            </div>
 
             <div id="tabMenu">
                 <header class="pos-header">
@@ -165,11 +404,11 @@
                     </div>
                     <div class="header-actions">
                         <div class="search-container">
-                            <span class="search-icon">🔍</span>
+                            <span class="search-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></svg></span>
                             <input type="text" id="menuSearch" placeholder="Search menu items..." onkeyup="filterMenu()">
                         </div>
                         <button class="cart-icon-btn" onclick="toggleCart()">
-                            🛒
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4" /><circle cx="18" cy="20" r="1.4" /><path d="M2 3h3l2.6 12.2a1.5 1.5 0 0 0 1.5 1.2h8.6a1.5 1.5 0 0 0 1.5-1.1L21 8H6" /></svg>
                             <span class="cart-badge" id="cartBadge" style="display:none;">0</span>
                         </button>
                     </div>
@@ -218,7 +457,8 @@
                                     {
                                         <img src="@smallItem.ImagePath"
                                              alt="@p.BaseName"
-                                             class="product-uploaded-img" />
+                                             class="product-uploaded-img"
+                                             onerror="imageFallback(this)" />
                                     }
                                     else
                                     {
@@ -463,73 +703,6 @@
                     </div>
                 </div>
             </div>
-
-            <div id="tabPromos" style="display:none;">
-                <header class="pos-header">
-                    <div>
-                        <h1>Promotions</h1>
-                        <p>Enjoy our latest deals and special offers.</p>
-                    </div>
-                </header>
-
-                <div class="promo-customer-grid">
-
-                    <div class="customer-promo-card">
-                        <div class="customer-promo-badge">20% OFF</div>
-
-                        <h2>Weekend Coffee Deal</h2>
-
-                        <p>
-                            Enjoy 20% off your favorite coffee drinks this weekend.
-                        </p>
-
-                        <div class="customer-promo-code">
-                            Code: <strong>WEEKEND20</strong>
-                        </div>
-
-                        <div class="customer-promo-validity">
-                            Valid Aug 22 – Aug 30
-                        </div>
-                    </div>
-
-                    <div class="customer-promo-card">
-                        <div class="customer-promo-badge">₱20 OFF</div>
-
-                        <h2>Iced Latte Special</h2>
-
-                        <p>
-                            Get ₱20 off selected iced latte drinks.
-                        </p>
-
-                        <div class="customer-promo-code">
-                            Code: <strong>ICEDLATTE</strong>
-                        </div>
-
-                        <div class="customer-promo-validity">
-                            Valid Aug 25 – Sep 5
-                        </div>
-                    </div>
-
-                    <div class="customer-promo-card">
-                        <div class="customer-promo-badge">10% OFF</div>
-
-                        <h2>New Customer Discount</h2>
-
-                        <p>
-                            New customers can enjoy 10% off their first order.
-                        </p>
-
-                        <div class="customer-promo-code">
-                            Code: <strong>WELCOME10</strong>
-                        </div>
-
-                        <div class="customer-promo-validity">
-                            Promotion available for new customers.
-                        </div>
-                    </div>
-
-                </div>
-            </div>
         </main>
     </div>
 
@@ -662,17 +835,39 @@
 
         <div class="cart-footer">
 
+            <div class="promo-row">
+                <input type="text"
+                       id="customerPromoCode"
+                       class="cart-select"
+                       placeholder="Promo code (optional)"
+                       maxlength="30"
+                       autocomplete="off"
+                       onkeypress="if (event.key === 'Enter') { event.preventDefault(); handlePromoButton(); }" />
+
+                <button type="button"
+                        class="btn-apply-promo"
+                        id="applyPromoBtn"
+                        onclick="handlePromoButton()">
+                    Apply
+                </button>
+            </div>
+
+            <div class="promo-message"
+                 id="promoMessage"
+                 style="display:none;"></div>
+
+            <div class="promo-discount-row"
+                 id="promoDiscountRow"
+                 style="display:none;">
+                <span id="promoDiscountLabel">Promo</span>
+                <span id="promoDiscountAmount">−₱0.00</span>
+            </div>
+
             <div class="cart-total-row">
                 <span>Total</span>
                 <span id="customerCartTotal">
                     ₱0.00
                 </span>
-            </div>
-
-            <div class="min-order-note"
-                 id="minOrderNote"
-                 style="display:none;">
-                Minimum ₱200 for delivery
             </div>
 
             <select id="customerOrderType"
@@ -881,7 +1076,7 @@
                 onclick="toggleChatWidget()"
                 id="chatFab">
 
-            💬
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.5 3 2 6.8 2 11.5c0 2.3 1.1 4.4 3 6l-.9 3.6a.6.6 0 0 0 .9.6l4-2.3c1 .3 2 .4 3 .4 5.5 0 10-3.8 10-8.5S17.5 3 12 3z" /></svg>
 
             <span class="chat-badge-dot"
                   id="chatBadgeDot"
@@ -983,15 +1178,15 @@
 
         @if (Model?.MenuItems != null)
             {
-                                            foreach (var item in Model.MenuItems)
-                {
-                    @:allItems[@item.ProductId] = {
-                    @:id: @item.ProductId,
-                    @:name: @Html.Raw(Json.Serialize(item.ProductName)),
-                    @:price: @item.Price,
-                    @:cat: @Html.Raw(Json.Serialize((item.CategoryName ?? "").ToLower().Replace(" ", "")))
-                        @:};
-            }
+                                                foreach (var item in Model.MenuItems)
+                    {
+                            @:allItems[@item.ProductId] = {
+                            @:id: @item.ProductId,
+                            @:name: @Html.Raw(Json.Serialize(item.ProductName)),
+                            @:price: @item.Price,
+                            @:cat: @Html.Raw(Json.Serialize((item.CategoryName ?? "").ToLower().Replace(" ", "")))
+                                @:};
+                }
             }
 
             // ── STATE ──────────────────────────────────────────────────────────────────
@@ -1357,9 +1552,6 @@
             document.getElementById('tabOrders').style.display =
                 tab === 'orders' ? 'block' : 'none';
 
-            document.getElementById('tabPromos').style.display =
-                tab === 'promos' ? 'block' : 'none';
-
             document.getElementById('catNav').style.display =
                 tab === 'menu' ? 'block' : 'none';
 
@@ -1400,13 +1592,6 @@
 
             document.getElementById(
                 'addressContainer'
-            ).style.display =
-                v === 'Delivery'
-                    ? 'block'
-                    : 'none';
-
-            document.getElementById(
-                'minOrderNote'
             ).style.display =
                 v === 'Delivery'
                     ? 'block'
@@ -1920,6 +2105,162 @@
             });
         }
 
+        // ── PROMO CODES ───────────────────────────────────────────────────────────
+        // Edit this list to add, change or remove promo codes.
+        //   type:           'percent' (value = % off) or 'flat' (value = peso amount off)
+        //   category:       optional - only items in this category get the discount
+        //   nameContains:   optional - only items whose name contains this text
+        //   firstOrderOnly: optional - only for customers with no past orders
+        // NOTE: this only controls what the customer sees. The server must
+        // re-check the code (sent as PromoCode) before actually discounting.
+
+        const promoCodes = {
+            WEEKEND20: { type: 'percent', value: 20, category: 'coffee', label: '20% off coffee drinks' },
+            ICEDLATTE: { type: 'flat', value: 20, nameContains: 'iced latte', label: '₱20 off iced latte' },
+            WELCOME10: { type: 'percent', value: 10, firstOrderOnly: true, label: '10% off your first order' }
+        };
+
+        const hasPastOrders =
+            @Html.Raw(Json.Serialize(Model?.OrderHistory != null && Model.OrderHistory.Any()));
+
+        let appliedPromoCode = null;
+
+        function setPromoMessage(text, kind) {
+
+            const el = document.getElementById('promoMessage');
+
+            if (!el) return;
+
+            if (!text) {
+                el.style.display = 'none';
+                el.innerText = '';
+                return;
+            }
+
+            el.className = 'promo-message ' + kind;
+            el.innerText = text;
+            el.style.display = 'block';
+        }
+
+        // How much the currently applied promo takes off the current cart.
+        function calculatePromoDiscount() {
+
+            if (!appliedPromoCode) return 0;
+
+            const promo = promoCodes[appliedPromoCode];
+
+            if (!promo) return 0;
+
+            let eligible = 0;
+
+            customerCart.forEach(item => {
+
+                const categoryOk =
+                    !promo.category ||
+                    (item.category || '').includes(promo.category);
+
+                const nameOk =
+                    !promo.nameContains ||
+                    (item.name || '').toLowerCase().includes(promo.nameContains);
+
+                if (categoryOk && nameOk) {
+                    eligible += item.qty * item.price;
+                }
+            });
+
+            if (eligible <= 0) return 0;
+
+            return promo.type === 'percent'
+                ? eligible * (promo.value / 100)
+                : Math.min(promo.value, eligible);
+        }
+
+        function syncPromoControls() {
+
+            const input = document.getElementById('customerPromoCode');
+            const btn = document.getElementById('applyPromoBtn');
+
+            if (!input || !btn) return;
+
+            if (appliedPromoCode) {
+                input.value = appliedPromoCode;
+                input.disabled = true;
+                btn.innerText = 'Remove';
+                btn.classList.add('applied');
+            }
+            else {
+                input.disabled = false;
+                btn.innerText = 'Apply';
+                btn.classList.remove('applied');
+            }
+        }
+
+        function handlePromoButton() {
+
+            if (appliedPromoCode) {
+                clearPromo();
+                setPromoMessage('', '');
+                renderCustomerCart();
+            }
+            else {
+                applyPromo();
+            }
+        }
+
+        function applyPromo() {
+
+            const input = document.getElementById('customerPromoCode');
+
+            const code = (input.value || '').trim().toUpperCase();
+
+            if (!code) {
+                setPromoMessage('Please enter a promo code first.', 'error');
+                return;
+            }
+
+            const promo = promoCodes[code];
+
+            if (!promo) {
+                setPromoMessage('Invalid promo code.', 'error');
+                return;
+            }
+
+            if (customerCart.length === 0) {
+                setPromoMessage('Add items to your cart before applying a code.', 'error');
+                return;
+            }
+
+            if (promo.firstOrderOnly && hasPastOrders) {
+                setPromoMessage('This code is only for your first order.', 'error');
+                return;
+            }
+
+            appliedPromoCode = code;
+
+            if (calculatePromoDiscount() <= 0) {
+                appliedPromoCode = null;
+                setPromoMessage('Your cart has no items eligible for this code.', 'error');
+                return;
+            }
+
+            setPromoMessage('Promo applied: ' + promo.label, 'success');
+
+            renderCustomerCart();
+        }
+
+        function clearPromo() {
+
+            appliedPromoCode = null;
+
+            const input = document.getElementById('customerPromoCode');
+
+            if (input) {
+                input.value = '';
+            }
+
+            syncPromoControls();
+        }
+
         // ── CART RENDER ───────────────────────────────────────────────────────────
 
         function updateCartBadge() {
@@ -1974,6 +2315,18 @@
                         '₱0.00';
                 }
 
+                if (appliedPromoCode) {
+                    clearPromo();
+                    setPromoMessage('', '');
+                }
+
+                const emptyDiscountRow =
+                    document.getElementById('promoDiscountRow');
+
+                if (emptyDiscountRow) {
+                    emptyDiscountRow.style.display = 'none';
+                }
+
                 editingIndex = null;
 
                 return;
@@ -2000,11 +2353,50 @@
             container.innerHTML =
                 html;
 
+            let discount =
+                calculatePromoDiscount();
+
+            // If the cart changed so the promo no longer applies, drop it.
+            if (appliedPromoCode && discount <= 0) {
+
+                clearPromo();
+
+                setPromoMessage(
+                    'Promo removed: no eligible items left in your cart.',
+                    'error'
+                );
+
+                discount = 0;
+            }
+
+            syncPromoControls();
+
+            const discountRow =
+                document.getElementById('promoDiscountRow');
+
+            if (discountRow) {
+
+                if (discount > 0) {
+
+                    document.getElementById('promoDiscountLabel').innerText =
+                        'Promo (' + appliedPromoCode + ')';
+
+                    document.getElementById('promoDiscountAmount').innerText =
+                        '−₱' + discount.toFixed(2);
+
+                    discountRow.style.display = 'flex';
+                }
+                else {
+
+                    discountRow.style.display = 'none';
+                }
+            }
+
             if (totalDisplay) {
 
                 totalDisplay.innerText =
                     '₱' +
-                    grandTotal.toFixed(
+                    (grandTotal - discount).toFixed(
                         2
                     );
             }
@@ -2369,20 +2761,6 @@
             }
 
             if (
-                orderType === 'Delivery' &&
-                grandTotal < 200
-            ) {
-
-                Swal.fire(
-                    'Minimum Order',
-                    'Delivery requires a minimum order of ₱200.',
-                    'warning'
-                );
-
-                return;
-            }
-
-            if (
                 orderType === 'Pick-up' &&
                 !pickupTimeRaw
             ) {
@@ -2433,6 +2811,9 @@
                     isOnlinePayment
                         ? paymentReference
                         : null,
+
+                PromoCode:
+                    appliedPromoCode,
 
                 DeliveryAddress:
                     orderType === 'Delivery'
@@ -2514,7 +2895,7 @@
 
                     const earned =
                         Math.floor(
-                            grandTotal /
+                            (grandTotal - calculatePromoDiscount()) /
                             10
                         );
 

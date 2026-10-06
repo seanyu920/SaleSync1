@@ -22,6 +22,10 @@
 
 
 }
+@inject SaleSync.Services.StoreSettingsService StoreSettings
+@{
+    var store = StoreSettings.GetSettings();
+}
 
 <!DOCTYPE html>
 
@@ -36,7 +40,7 @@
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-
+    <partial name="_ThemeStyles" />
     <link rel="icon"
           type="image/jpeg"
           href="~/images/CaferoLogo.jpg"
@@ -61,8 +65,8 @@
             <div>
 
                 <div class="logo-section">
-                    <div class="logo-title">Cafèro</div>
-                    <div class="logo-subtitle">Coffee & Pastries</div>
+                    <div class="logo-title">@store.StoreName</div>
+                    <div class="logo-subtitle">@store.StoreTagline</div>
                 </div>
 
                 <div class="profile-section">
