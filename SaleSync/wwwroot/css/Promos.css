@@ -384,4 +384,136 @@
         grid-column: auto;
     }
 }
+.promo-code-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+}
 
+    .promo-code-row input {
+        flex: 1;
+    }
+
+.btn-apply-promo {
+    background: var(--gold, #C9A84C);
+    color: var(--bg-base, #0D110D);
+    border: none;
+    padding: 0 16px;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.promo-feedback {
+    font-size: 12px;
+    margin-bottom: 8px;
+    min-height: 16px;
+}
+
+    .promo-feedback.success {
+        color: var(--success, #3dbf78);
+    }
+
+    .promo-feedback.error {
+        color: var(--danger, #e05555);
+    }
+
+.cart-subtotal-row, .cart-discount-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--muted, rgba(242,237,228,0.6));
+    margin-bottom: 4px;
+}
+
+    .cart-discount-row span:last-child {
+        color: var(--success, #3dbf78);
+    }
+
+@media (max-width: 1024px) {
+    .dashboard-container {
+        display: block;
+    }
+
+    .sidebar {
+        position: fixed;
+        left: -255px;
+        top: 0;
+        z-index: 1001;
+        transition: left 0.3s ease;
+        height: 100vh;
+        box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+        .sidebar.mobile-open {
+            left: 0;
+        }
+
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.7);
+        z-index: 1000;
+        backdrop-filter: blur(4px);
+    }
+
+        .sidebar-overlay.mobile-open {
+            display: block;
+        }
+
+    /* Mobile Header Panel */
+    .mobile-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 20px;
+        background: var(--bg-base);
+        border-bottom: 1px solid var(--border-sub);
+        margin-bottom: 20px;
+    }
+
+    /* Modern Hamburger */
+    .hamburger-btn {
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        color: var(--gold);
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 18px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    }
+
+        .hamburger-btn:hover {
+            background: var(--gold);
+            color: var(--bg-base);
+            border-color: var(--gold);
+            transform: translateY(-2px);
+        }
+
+    /* Brand Name */
+    .mobile-brand {
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--cream);
+        letter-spacing: -0.5px;
+    }
+}
+
+@media (min-width: 1025px) {
+    .mobile-header, .sidebar-overlay {
+        display: none !important;
+    }
+}

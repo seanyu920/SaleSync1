@@ -157,7 +157,7 @@
                 <div class="queue-grid">
                     @foreach (var order in Model)
                     {
-                        <div class="queue-card status-@order.Status">
+                        <div class="queue-card status-@order.Status" data-sale-id="@order.SaleId">
                             <div>
                                 <div class="card-header-info">
                                     <div style="display: flex; align-items: center; gap: 10px;">
@@ -565,6 +565,41 @@
         event.target.style.display = 'none';
         }
         }
+        // If arriving from a dashboard notification click (?highlight=123),
+        // scroll to that order, flash it, and open its details automatically.
+        document.addEventListener('DOMContentLoaded', function () {
+            const params = new URLSearchParams(window.location.search);
+            const highlightId = params.get('highlight');
+
+            if (!highlightId) return;
+
+            const targetCard = document.querySelector(`.queue-card[data-sale-id="${highlightId}"]`);
+
+            if (!targetCard) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Order Not Found',
+                    text: `Order #ORD-${highlightId} is no longer in the active queue.`,
+                    background: '#1e201f',
+                    color: '#ffffff',
+                    confirmButtonColor: '#C9A84C'
+                });
+                return;
+            }
+
+            targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            targetCard.classList.add('queue-card-highlight');
+
+            setTimeout(() => {
+                targetCard.classList.remove('queue-card-highlight');
+            }, 3000);
+
+            openDetailsModal(parseInt(highlightId, 10));
+
+            // Clean the URL so refreshing the page doesn't re-trigger the highlight.
+            const cleanUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, cleanUrl);
+        });
 
         // Safe toggle logic for mobile sidebar
         function toggleSidebar() {
