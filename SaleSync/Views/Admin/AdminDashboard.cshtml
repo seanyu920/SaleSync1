@@ -101,27 +101,14 @@
 
                         <div class="notif-dropdown" id="notifDropdown">
                             <div class="notif-dropdown-title">Live Notifications</div>
-                            <div class="notification-list">
-                                <div class="notification-item">
-                                    <div class="notification-info">
-                                        <p>New web pickup order received (#ORD-8036)</p>
-                                        <div class="notification-time">2 mins ago</div>
-                                    </div>
-                                </div>
-                                <div class="notification-item alert-node">
-                                    <div class="notification-info">
-                                        <p>Inventory Alert: Espresso Beans fall below safety margin</p>
-                                        <div class="notification-time">14 mins ago</div>
-                                    </div>
-                                </div>
-                                <div class="notification-item success-node">
-                                    <div class="notification-info">
-                                        <p>System database backup completed securely</p>
-                                        <div class="notification-time">1 hour ago</div>
-                                    </div>
+                            <div class="notification-list" id="notificationList">
+                            <div class="notification-item">
+                                <div class="notification-info">
+                                    <p>No new orders right now.</p>
                                 </div>
                             </div>
                         </div>
+                    </div>
                     </div>
                     <div class="nav-chat-icon" onclick="toggleChat()" id="chatTrigger" title="Open customer support inbox">
                         <i class="fas fa-comments"></i>
@@ -867,10 +854,12 @@
 
                     const data = await res.json();
                     const pendingCount = data.pendingCount || 0;
+                    const recentOrders = data.recentOrders || [];
 
                     if (lastKnownPendingCount === null) {
                         lastKnownPendingCount = pendingCount;
                         updateBellBadge(pendingCount);
+                        renderNotificationList(recentOrders);
                         return;
                     }
 
@@ -892,10 +881,35 @@
 
                     lastKnownPendingCount = pendingCount;
                     updateBellBadge(pendingCount);
+                    renderNotificationList(recentOrders);
 
                 } catch (err) {
                     console.error('Failed to check for new orders:', err);
                 }
+            }
+
+            function renderNotificationList(orders) {
+                const list = document.getElementById('notificationList');
+                if (!list) return;
+
+                if (!orders || orders.length === 0) {
+                    list.innerHTML = `
+                        <div class="notification-item">
+                            <div class="notification-info">
+                                <p>No new orders right now.</p>
+                            </div>
+                        </div>`;
+                    return;
+                }
+
+                list.innerHTML = orders.map(o => `
+                <div class="notification-item" style="cursor:pointer;" onclick="location.href='/Admin/QueueOrder?highlight=${o.saleId}'">
+                    <div class="notification-info">
+                        <p>New ${escapeHTML(o.orderType)} order from ${escapeHTML(o.customerName)} (#ORD-${o.saleId}) — ₱${o.total.toFixed(2)}</p>
+                        <div class="notification-time">${escapeHTML(o.saleDate)}</div>
+                    </div>
+                </div>
+            `).join('');
             }
 
             function updateBellBadge(count) {

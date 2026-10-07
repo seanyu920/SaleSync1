@@ -1734,13 +1734,38 @@ namespace SaleSync.Controllers
         {
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                string sql = "SELECT COUNT(*) FROM sales WHERE status = 'Pending'";
-                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                conn.Open();
+
+                int pendingCount;
+                using (SqlCommand countCmd = new SqlCommand("SELECT COUNT(*) FROM sales WHERE status = 'Pending'", conn))
                 {
-                    conn.Open();
-                    int count = (int)cmd.ExecuteScalar();
-                    return Json(new { pendingCount = count });
+                    pendingCount = (int)countCmd.ExecuteScalar();
                 }
+
+                var recentOrders = new List<object>();
+                string recentSql = @"
+            SELECT TOP 5 sale_id, sale_date, total_amount, customer_name, order_type
+            FROM sales
+            WHERE status = 'Pending'
+            ORDER BY sale_date DESC";
+
+                using (SqlCommand cmd = new SqlCommand(recentSql, conn))
+                using (SqlDataReader r = cmd.ExecuteReader())
+                {
+                    while (r.Read())
+                    {
+                        recentOrders.Add(new
+                        {
+                            saleId = Convert.ToInt32(r["sale_id"]),
+                            saleDate = Convert.ToDateTime(r["sale_date"]).ToString("hh:mm tt"),
+                            total = Convert.ToDecimal(r["total_amount"]),
+                            customerName = r["customer_name"]?.ToString() ?? "Walk-in",
+                            orderType = r["order_type"]?.ToString() ?? "Pick-up"
+                        });
+                    }
+                }
+
+                return Json(new { pendingCount, recentOrders });
             }
         }
         [Authorize(Roles = "Admin,Manager")]

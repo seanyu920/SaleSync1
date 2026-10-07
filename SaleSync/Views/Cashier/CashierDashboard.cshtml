@@ -4,6 +4,10 @@
     string homeController = User.IsInRole("Manager") ? "Manager" : "Cashier";
     string displayRole = User.IsInRole("Manager") ? "Manager" : "Cashier";
 }
+@inject SaleSync.Services.StoreSettingsService StoreSettings
+@{
+    var store = StoreSettings.GetSettings();
+}
 
 <!DOCTYPE html>
 
@@ -16,6 +20,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <!-- Added Chart.js CDN to fix potential chart rendering errors -->
     <link rel="icon" type="image/jpeg" href="~/images/CaferoLogo.jpg" asp-append-version="true" />
+    <partial name="_ThemeStyles" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -46,8 +51,8 @@
         <aside class="sidebar">
             <div>
                 <div class="logo-section">
-                    <div class="logo-title">Cafèro</div>
-                    <div class="logo-subtitle">Coffee & Pastries</div>
+                    <div class="logo-title">@store.StoreName</div>
+                    <div class="logo-subtitle">@store.StoreTagline</div>
                 </div>
 
                 <div class="profile-section">

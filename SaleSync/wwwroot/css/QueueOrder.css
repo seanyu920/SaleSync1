@@ -508,3 +508,18 @@
         display: none !important;
     }
 }
+@keyframes highlightPulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(201, 168, 76, 0);
+        border-color: var(--border-sub, rgba(255, 255, 255, 0.06));
+    }
+
+    20%, 60% {
+        box-shadow: 0 0 0 6px rgba(201, 168, 76, 0.35);
+        border-color: #C9A84C;
+    }
+}
+
+.queue-card-highlight {
+    animation: highlightPulse 1.5s ease-in-out 2;
+}

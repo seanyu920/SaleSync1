@@ -176,6 +176,17 @@ int expiredPromotions = ViewBag.ExpiredPromotions ?? 0;
 
 </aside>
 
+<!-- MOBILE SIDEBAR OVERLAY (outside the sidebar so it can dim the page) -->
+<div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+<!-- MOBILE HEADER + HAMBURGER (outside the sidebar so it stays visible on mobile) -->
+<div class="mobile-header">
+    <button class="hamburger-btn" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+    <div class="mobile-brand">Cafero</div>
+</div>
+
 
 <!-- =========================================================
      MAIN CONTENT
@@ -772,6 +783,42 @@ int expiredPromotions = ViewBag.ExpiredPromotions ?? 0;
         });
 
     }
+
+    // =========================================================
+    // MOBILE SIDEBAR (hamburger)
+    // =========================================================
+
+    function toggleSidebar() {
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.querySelector('.sidebar-overlay');
+
+        if (sidebar) {
+            sidebar.classList.toggle('mobile-open');
+        }
+
+        if (overlay) {
+            overlay.classList.toggle('mobile-open');
+        }
+    }
+
+    // Close the sidebar when tapping outside it on mobile
+    document.addEventListener('click', function (event) {
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.querySelector('.sidebar-overlay');
+        const hamburger = document.querySelector('.hamburger-btn');
+
+        if (sidebar && hamburger &&
+            sidebar.classList.contains('mobile-open') &&
+            !sidebar.contains(event.target) &&
+            !hamburger.contains(event.target)) {
+
+            sidebar.classList.remove('mobile-open');
+
+            if (overlay) {
+                overlay.classList.remove('mobile-open');
+            }
+        }
+    });
 
 
     // =========================================================
