@@ -1318,6 +1318,28 @@
             ) + parseInt(parts[1], 10);
         }
 
+        // Store hours are in Philippine time, so compare against the store's clock
+        // rather than the customer's device clock (matches the server-side check).
+        function getStoreNowMinutes() {
+            try {
+                const parts = new Intl.DateTimeFormat('en-GB', {
+                    timeZone: 'Asia/Manila',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                }).formatToParts(new Date());
+
+                const h = parseInt(parts.find(p => p.type === 'hour').value, 10) % 24;
+                const m = parseInt(parts.find(p => p.type === 'minute').value, 10);
+
+                return (h * 60) + m;
+            }
+            catch (e) {
+                const d = new Date();
+                return (d.getHours() * 60) + d.getMinutes();
+            }
+        }
+
         function formatMinutesAsClock(totalMinutes) {
 
             const d = new Date();
@@ -1346,8 +1368,7 @@
                 return false;
             }
 
-            const now = new Date();
-            const nowMinutes = (now.getHours() * 60) + now.getMinutes();
+            const nowMinutes = getStoreNowMinutes();
             const openMinutes = parseTimeToMinutes(storeOpeningTime);
             const closeMinutes = parseTimeToMinutes(storeClosingTime);
 
@@ -1378,11 +1399,8 @@
                 return;
             }
 
-            const now = new Date();
-
             const nowMinutes =
-                (now.getHours() * 60) +
-                now.getMinutes();
+                getStoreNowMinutes();
 
             const openMinutes =
                 parseTimeToMinutes(storeOpeningTime);
