@@ -146,7 +146,9 @@ namespace SaleSync.Services
                 return status;
             }
 
-            var now = DateTime.Now.TimeOfDay;
+            // Evaluate hours against the store's own clock (Philippine time),
+            // not the web server's local clock, which may be UTC on a hosted machine.
+            var now = GetStoreNow().TimeOfDay;
             bool isOpen;
 
             if (closeTime > openTime)
@@ -163,6 +165,33 @@ namespace SaleSync.Services
             status.IsOpen = isOpen;
             status.Label = isOpen ? "Open" : "Closed";
             return status;
+        }
+
+        // The store operates in the Philippines (UTC+8, no DST).
+        private static readonly TimeZoneInfo StoreTimeZone = ResolveStoreTimeZone();
+
+        private static TimeZoneInfo ResolveStoreTimeZone()
+        {
+            // "Asia/Manila" works on Linux and on Windows with ICU (.NET 6+);
+            // "Singapore Standard Time" is the UTC+8 Windows ID used as a fallback.
+            foreach (var id in new[] { "Asia/Manila", "Singapore Standard Time" })
+            {
+                try
+                {
+                    return TimeZoneInfo.FindSystemTimeZoneById(id);
+                }
+                catch (TimeZoneNotFoundException) { }
+                catch (InvalidTimeZoneException) { }
+            }
+
+            return TimeZoneInfo.CreateCustomTimeZone(
+                "PHT", TimeSpan.FromHours(8), "Philippine Time", "Philippine Time");
+        }
+
+        /// <summary>Current date/time in the store's local (Philippine) time.</summary>
+        public static DateTime GetStoreNow()
+        {
+            return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, StoreTimeZone);
         }
 
         private static string FormatTime(TimeSpan time)
