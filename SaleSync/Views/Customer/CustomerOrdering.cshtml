@@ -4,6 +4,18 @@
     var storeSettings = ViewBag.StoreSettings as SaleSync.Models.WebCustomization ?? new SaleSync.Models.WebCustomization();
     var storeStatus = ViewBag.StoreStatus as SaleSync.Models.StoreStatus;
 
+    // Logged-in customer's display name.
+    // If your app stores the customer's real name in a different claim,
+    // change "FullName" below (or set ViewBag.CustomerName in the controller).
+    var displayName = (ViewBag.CustomerName as string)
+        ?? User.FindFirst("FullName")?.Value
+        ?? User.FindFirst("Username")?.Value
+        ?? User.Identity?.Name
+        ?? "Customer";
+    var displayInitial = string.IsNullOrWhiteSpace(displayName)
+        ? "C"
+        : displayName.Trim().Substring(0, 1).ToUpper();
+
     // Merge "X - Small" / "X - Large" rows into a single card per drink,
     // keeping the real ProductId and Price for each size so checkout
     // still submits accurate data.
@@ -50,242 +62,6 @@
     <!-- Real-Time Chat SignalR Client -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
 
-    <!-- Promo code styles (kept here so no CSS file edit is needed) -->
-    <style>
-            .promo-row {
-                display: flex;
-                gap: 8px;
-                align-items: stretch;
-            }
-
-                .promo-row .cart-select {
-                    flex: 1;
-                    min-width: 0;
-                    cursor: text;
-                    text-transform: uppercase;
-                }
-
-                    .promo-row .cart-select::placeholder {
-                        text-transform: none;
-                        color: var(--muted);
-                        font-weight: 400;
-                    }
-
-                    .promo-row .cart-select:disabled {
-                        opacity: 0.6;
-                        cursor: not-allowed;
-                    }
-
-            .btn-apply-promo {
-                flex-shrink: 0;
-                padding: 0 18px;
-                background: var(--gold);
-                color: var(--bg-base);
-                border: none;
-                border-radius: 10px;
-                font-family: 'Outfit', sans-serif;
-                font-size: 13px;
-                font-weight: 900;
-                cursor: pointer;
-                transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-            }
-
-                .btn-apply-promo:hover {
-                    background: var(--gold-light);
-                    transform: translateY(-1px);
-                    box-shadow: 0 6px 16px rgba(201,168,76,0.18);
-                }
-
-                .btn-apply-promo.applied {
-                    background: transparent;
-                    color: var(--cream);
-                    border: 1px solid var(--border-sub);
-                }
-
-                    .btn-apply-promo.applied:hover {
-                        border-color: var(--danger);
-                        color: var(--danger);
-                        box-shadow: none;
-                    }
-
-            .promo-message {
-                font-size: 12px;
-                font-weight: 600;
-                line-height: 1.4;
-            }
-
-                .promo-message.success {
-                    color: var(--success);
-                }
-
-                .promo-message.error {
-                    color: var(--danger);
-                }
-
-            .promo-discount-row {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                color: var(--success);
-                font-size: 13px;
-                font-weight: 700;
-            }
-
-            /* ── UI FIXES ─────────────────────────────────────────── */
-
-            .brand-text {
-                display: flex;
-                flex-direction: column;
-                min-width: 0;
-                flex: 1;
-            }
-
-            .brand-sub {
-                overflow: hidden;
-                text-overflow: ellipsis;
-                max-width: 100%;
-            }
-
-            /* Only 2 tabs now, so fill the row (overrides the 3-column rule) */
-            .sidebar-tabs {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-
-            .search-icon {
-                display: flex;
-                align-items: center;
-            }
-
-                .search-icon svg {
-                    width: 15px;
-                    height: 15px;
-                }
-
-            .cart-icon-btn svg {
-                width: 20px;
-                height: 20px;
-            }
-
-            .chat-fab svg {
-                width: 26px;
-                height: 26px;
-            }
-
-            select.cart-select {
-                padding-right: 38px;
-                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23C9A84C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-                background-repeat: no-repeat;
-                background-position: right 14px center;
-                background-size: 12px 8px;
-            }
-
-            input[type="datetime-local"].cart-select {
-                color-scheme: dark;
-            }
-
-            .modal-card {
-                max-height: 92vh;
-                overflow-y: auto;
-            }
-
-            @@supports (height: 100dvh) {
-                .sidebar, .cart-sidebar {
-                    height: 100dvh;
-                }
-
-                .dashboard-container, .main-content {
-                    min-height: 100dvh;
-                }
-            }
-
-            @@media (max-width: 760px) {
-                /* keep cart, modal and chat above the fixed mobile header */
-                .cart-overlay {
-                    z-index: 6590;
-                }
-
-                .cart-sidebar {
-                    z-index: 6600;
-                }
-
-                .modal-overlay {
-                    z-index: 6700;
-                }
-
-                .chat-widget {
-                    z-index: 6200;
-                }
-
-                .chat-window {
-                    height: calc(100vh - 150px);
-                }
-
-                .cart-items-container {
-                    padding: 16px;
-                }
-
-                .cart-footer {
-                    padding: 16px;
-                }
-            }
-
-            @@media (max-width: 480px) {
-                .cart-item-row {
-                    flex-wrap: wrap;
-                }
-
-                .cart-item-info {
-                    flex: 1 1 100%;
-                }
-
-                .cart-item-controls {
-                    margin-right: auto;
-                }
-
-                .track-card {
-                    padding: 16px;
-                }
-
-                .track-step {
-                    font-size: 10px;
-                    text-align: center;
-                }
-
-                    .track-step span {
-                        max-width: 62px;
-                    }
-
-                .track-line {
-                    margin: 0 3px 22px;
-                }
-
-                .history-row {
-                    padding: 14px;
-                }
-            }
-            .order-progress-bar-bg {
-                width: 100%;
-                height: 6px;
-                background: var(--bg-surface);
-                border-radius: 3px;
-                overflow: hidden;
-                margin-top: 12px;
-            }
-
-            .order-progress-bar-fill {
-                height: 100%;
-                background: var(--gold);
-                border-radius: 3px;
-                transition: width 0.4s ease;
-            }
-
-            .order-progress-label {
-                font-size: 12px;
-                color: var(--muted);
-                margin-top: 8px;
-            }
-    </style>
-
     <script>
             // If a product image fails to load, hide it so the alt text doesn't show.
             function imageFallback(img) {
@@ -311,6 +87,15 @@
                     </div>
                 </div>
 
+                <!-- Logged-in customer -->
+                <div class="user-card">
+                    <div class="user-avatar">@displayInitial</div>
+                    <div class="user-info">
+                        <span class="user-greeting">Welcome back,</span>
+                        <span class="user-name">@displayName</span>
+                    </div>
+                </div>
+
                 <div class="store-status-banner @(storeStatus != null && storeStatus.IsOpen ? "open" : "")" id="storeBanner">
                     <span class="store-dot"></span>
                     <span id="storeStatusText">
@@ -322,14 +107,6 @@
                         {
                             @:We're Open
                         }
-                    </span>
-                </div>
-
-                <!-- Staff break indicator: status only, no staff names or account details. -->
-                <div class="store-status-banner @(storeSettings.StaffOnBreak ? "" : "open")" id="staffStatusBanner">
-                    <span class="store-dot"></span>
-                    <span id="staffStatusText">
-                        @(storeSettings.StaffOnBreak ? "Staff Currently on Break" : "Staff Available")
                     </span>
                 </div>
 
@@ -348,7 +125,7 @@
                         <button class="menu-btn cat-btn" onclick="filterMenu('ricemeal', this)">Rice Meals</button>
                         <button class="menu-btn cat-btn" onclick="filterMenu('bread&pastry', this)">Bread & Pastry</button>
                         <button class="menu-btn cat-btn" onclick="filterMenu('snacks&pasta', this)">Snacks & Pasta</button>
-                        <button class="menu-btn cat-btn fav-btn" onclick="filterMenu('favorites', this)">❤️ My Favorites</button>
+                        <button class="menu-btn cat-btn fav-btn" onclick="filterMenu('favorites', this)">My Favorites</button>
                     </nav>
                 </div>
 
@@ -358,7 +135,7 @@
                         <strong id="loyaltyPoints">0 pts</strong>
                     </div>
                     <div class="loyalty-bar-bg">
-                        <div class="loyalty-bar-fill" id="loyaltyBarFill" style="width:0%"></div>
+                        <div class="loyalty-bar-fill" id="loyaltyBarFill"></div>
                     </div>
                     <p class="loyalty-hint" id="loyaltyHint">Earn points on every order!</p>
                 </div>
@@ -387,6 +164,12 @@
             <div class="mobile-brand">
                 @storeSettings.StoreName
             </div>
+
+            <!-- Cart button for phones (the header one scrolls away) -->
+            <button type="button" class="mobile-cart-btn" onclick="toggleCart()" aria-label="Open cart">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4" /><circle cx="18" cy="20" r="1.4" /><path d="M2 3h3l2.6 12.2a1.5 1.5 0 0 0 1.5 1.2h8.6a1.5 1.5 0 0 0 1.5-1.1L21 8H6" /></svg>
+                <span class="cart-badge">0</span>
+            </button>
         </div>
 
         <!-- MOBILE SIDEBAR OVERLAY -->
@@ -400,7 +183,7 @@
                 <header class="pos-header">
                     <div>
                         <h1>Place an Order</h1>
-                        <p>Handcrafted beverages and meals made with love</p>
+                        <p>Hi <span class="welcome-name">@displayName</span>, handcrafted beverages and meals made with love</p>
                     </div>
                     <div class="header-actions">
                         <div class="search-container">
@@ -409,7 +192,7 @@
                         </div>
                         <button class="cart-icon-btn" onclick="toggleCart()">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4" /><circle cx="18" cy="20" r="1.4" /><path d="M2 3h3l2.6 12.2a1.5 1.5 0 0 0 1.5 1.2h8.6a1.5 1.5 0 0 0 1.5-1.1L21 8H6" /></svg>
-                            <span class="cart-badge" id="cartBadge" style="display:none;">0</span>
+                            <span class="cart-badge" id="cartBadge">0</span>
                         </button>
                     </div>
                 </header>
@@ -508,7 +291,7 @@
                 </div>
             </div>
 
-            <div id="tabOrders" style="display:none;">
+            <div id="tabOrders">
                 <header class="pos-header">
                     <div>
                         <h1>My Orders</h1>
@@ -573,7 +356,7 @@
                                                 : order.Status == "On the Way"
                                                     ? "Your rider is on the way!"
                                                     : order.Status == "Delivered"
-                                                        ? "Delivered! Enjoy your order 🎉"
+                                                        ? "Delivered! Enjoy your order"
                                                         : "Est. 20–30 mins";
                                 }
                                 else
@@ -815,7 +598,7 @@
 
         <div class="cart-header">
 
-            <h2>🛒 Your Order</h2>
+            <h2>Your Order</h2>
 
             <button class="close-cart-btn"
                     onclick="toggleCart()">
@@ -853,12 +636,10 @@
             </div>
 
             <div class="promo-message"
-                 id="promoMessage"
-                 style="display:none;"></div>
+                 id="promoMessage"></div>
 
             <div class="promo-discount-row"
-                 id="promoDiscountRow"
-                 style="display:none;">
+                 id="promoDiscountRow">
                 <span id="promoDiscountLabel">Promo</span>
                 <span id="promoDiscountAmount">−₱0.00</span>
             </div>
@@ -880,8 +661,7 @@
 
             </select>
 
-            <div id="addressContainer"
-                 style="display:none;">
+            <div id="addressContainer">
 
                 <div class="addr-field-group">
                     <label class="addr-label" for="customerContactNumber">Contact Number</label>
@@ -933,7 +713,7 @@
                         class="btn-use-location"
                         onclick="useCurrentLocation()"
                         id="useLocationBtn">
-                    📍 Use my current location
+                    Use my current location
                 </button>
 
                 <label class="addr-save-check">
@@ -943,11 +723,10 @@
 
             </div>
 
-            <div id="pickupContainer"
-                 style="display:none;">
+            <div id="pickupContainer">
 
                 <label for="customerPickupTime"
-                       style="display:block; color:var(--cream); font-size:12px; font-weight:600; margin-bottom:6px;">
+                       class="pickup-label">
                     Preferred pick-up date &amp; time
                 </label>
 
@@ -979,7 +758,7 @@
 
             </select>
 
-            <div id="paymentProofContainer" style="display:none;">
+            <div id="paymentProofContainer">
 
                 <div class="qr-payment-box">
 
@@ -1079,8 +858,7 @@
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.5 3 2 6.8 2 11.5c0 2.3 1.1 4.4 3 6l-.9 3.6a.6.6 0 0 0 .9.6l4-2.3c1 .3 2 .4 3 .4 5.5 0 10-3.8 10-8.5S17.5 3 12 3z" /></svg>
 
             <span class="chat-badge-dot"
-                  id="chatBadgeDot"
-                  style="display: none;">
+                  id="chatBadgeDot">
             </span>
 
         </button>
@@ -1093,7 +871,7 @@
                 <div class="chat-header-info">
 
                     <span class="chat-avatar">
-                        ☕
+                        CS
                     </span>
 
                     <div>
@@ -1197,8 +975,34 @@
         let favoriteIds =
             JSON.parse(localStorage.getItem('caferoFavorites') || '[]');
 
-        let loyaltyPts =
-            parseInt(localStorage.getItem('caferoLoyaltyPoints') || '0');
+        // Loyalty points are stored per account on this device, so two customers
+        // sharing one phone/computer no longer share a points balance.
+        const loyaltyKey =
+            'caferoLoyaltyPoints:' +
+            @Html.Raw(Json.Serialize(User.FindFirst("Username")?.Value ?? "guest"));
+
+        function readLoyaltyPoints() {
+
+            let raw = localStorage.getItem(loyaltyKey);
+
+            // One-time move of points saved under the old shared key.
+            if (raw === null) {
+
+                const legacy = localStorage.getItem('caferoLoyaltyPoints');
+
+                if (legacy !== null) {
+                    raw = legacy;
+                    localStorage.setItem(loyaltyKey, legacy);
+                    localStorage.removeItem('caferoLoyaltyPoints');
+                }
+            }
+
+            const n = parseInt(raw || '0', 10);
+
+            return Number.isFinite(n) && n > 0 ? n : 0;
+        }
+
+        let loyaltyPts = readLoyaltyPoints();
 
         let activeSmallId = null;
         let activeLargeId = null;
@@ -1269,6 +1073,14 @@
                     'aria-expanded',
                     'false'
                 );
+            }
+        }
+
+        // On phones, close the drawer after the customer picks a tab/category
+        function closeSidebarOnMobile() {
+
+            if (window.matchMedia('(max-width: 760px)').matches) {
+                closeSidebar();
             }
         }
 
@@ -1507,7 +1319,7 @@
 
                 favoriteIds.push(id);
 
-                btn.innerText = '❤️';
+                btn.innerText = '\u2665\uFE0E';
 
                 btn.classList.add(
                     'fav-active'
@@ -1551,7 +1363,7 @@
                         if (btn) {
 
                             btn.innerText =
-                                '❤️';
+                                '\u2665\uFE0E';
 
                             btn.classList.add(
                                 'fav-active'
@@ -1578,6 +1390,8 @@
             );
 
             btn.classList.add('active');
+
+            closeSidebarOnMobile();
         }
 
         // ── CART TOGGLE ───────────────────────────────────────────────────────────
@@ -1762,17 +1576,17 @@
                     }
 
                     btn.disabled = false;
-                    btn.innerText = '📍 Location added';
+                    btn.innerText = 'Location added';
 
                     setTimeout(() => {
-                        btn.innerText = '📍 Use my current location';
+                        btn.innerText = 'Use my current location';
                     }, 2000);
                 },
 
                 error => {
 
                     btn.disabled = false;
-                    btn.innerText = '📍 Use my current location';
+                    btn.innerText = 'Use my current location';
 
                     Swal.fire(
                         'Location Unavailable',
@@ -2101,7 +1915,7 @@
             Swal.fire({
 
                 title:
-                    'Added! 🛒',
+                    'Added to cart',
 
                 text:
                     `${qty}× ${activeItemName}` +
@@ -2281,6 +2095,7 @@
 
         // ── CART RENDER ───────────────────────────────────────────────────────────
 
+        // Updates every cart badge (desktop header + mobile header).
         function updateCartBadge() {
 
             const total =
@@ -2290,21 +2105,18 @@
                     0
                 );
 
-            const badge =
-                document.getElementById(
-                    'cartBadge'
-                );
+            document
+                .querySelectorAll('.cart-badge')
+                .forEach(badge => {
 
-            if (badge) {
+                    badge.style.display =
+                        total > 0
+                            ? 'flex'
+                            : 'none';
 
-                badge.style.display =
-                    total > 0
-                        ? 'flex'
-                        : 'none';
-
-                badge.innerText =
-                    total;
-            }
+                    badge.innerText =
+                        total;
+                });
         }
 
         function renderCustomerCart() {
@@ -2425,12 +2237,12 @@
 
             const addonsHtml =
                 (item.addons && item.addons.length > 0)
-                    ? `<div class="cart-addons">🧩 ${escapeHTML(item.addons.join(', '))}</div>`
+                    ? `<div class="cart-addons">Add-ons: ${escapeHTML(item.addons.join(', '))}</div>`
                     : '';
 
             const notesHtml =
                 item.notes
-                    ? `<div class="cart-notes-line"><em class="cart-notes">📝 ${escapeHTML(item.notes)}</em></div>`
+                    ? `<div class="cart-notes-line"><em class="cart-notes">Note: ${escapeHTML(item.notes)}</em></div>`
                     : '';
 
             return `
@@ -2450,7 +2262,7 @@
                         <button type="button"
                                 class="cart-edit-btn"
                                 onclick="toggleCartItemEdit(${idx})">
-                            ✏️ Edit Instructions / Add-ons
+                            Edit Instructions / Add-ons
                         </button>
                     </div>
 
@@ -2635,7 +2447,7 @@
         }
 
         // ── SUBMIT ORDER VIA API ──────────────────────────────────────────────────
-        // (fixed: this is now the ONLY submitOnlineOrder() in the file, and it
+        // (this is the ONLY submitOnlineOrder() in the file, and it
         // starts with a store-open check before anything else runs)
 
         async function submitOnlineOrder() {
@@ -2921,7 +2733,7 @@
                         earned;
 
                     localStorage.setItem(
-                        'caferoLoyaltyPoints',
+                        loyaltyKey,
                         loyaltyPts
                     );
 
@@ -2990,7 +2802,7 @@
                     false;
 
                 btn.innerText =
-                    'Send Order to Kitchen';
+                    'Proceed to Checkout';
             }
         }
 
@@ -3026,6 +2838,8 @@
                         'data-current-cat',
                         category
                     );
+
+                closeSidebarOnMobile();
             }
 
             const currentCat =
@@ -3136,6 +2950,8 @@
 
         let supportAgent = null;
 
+        // Chat sender name — must keep matching the "Username" claim
+        // because the chat hub compares against it.
         const currentUser =
             "@(User.FindFirst("Username")?.Value ?? "Customer")";
 

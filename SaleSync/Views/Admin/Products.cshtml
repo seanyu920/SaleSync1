@@ -5,6 +5,54 @@
     string homeController = isManager ? "Manager" : "Admin";
     string displayRole = isManager ? "Manager" : "Admin";
     string currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+
+    string userDisplayName = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? User.Identity?.Name ?? "User";
+    string userInitial = string.IsNullOrWhiteSpace(userDisplayName) ? "U" : userDisplayName.Trim().Substring(0, 1).ToUpper();
+
+    // Default category cards: Key is what the menu data uses, Title is what the card shows.
+    var defaultCategories = new List<(string Key, string Title)>
+    {
+        ("COFFEE", "COFFEE"),
+        ("MILKTEA", "MILK LINE"),
+        ("FRUIT TEA", "FRUIT TEA"),
+        ("RICE MEAL", "RICE MEALS"),
+        ("BREAD & PASTRY", "BAKERY ITEMS"),
+        ("SNACKS & PASTA", "SNACKS & PASTA")
+    };
+
+    // Any category that is NOT one of the defaults (e.g. one added with "+ Add Category")
+    // is picked up from the items, plus from ViewBag.Categories if the controller sets it
+    // (that is what lets an empty, brand-new category show up before it has any items).
+    var knownKeys = defaultCategories.Select(c => c.Key).ToList();
+
+    var extraCategories = (Model ?? new List<SaleSync.Models.MenuItemModel>())
+        .Select(i => i.CategoryName)
+        .Concat((ViewBag.Categories as IEnumerable<string>) ?? Enumerable.Empty<string>())
+        .Where(c => !string.IsNullOrWhiteSpace(c))
+        .Select(c => c.Trim().ToUpper())
+        .Where(c => !knownKeys.Contains(c))
+        .Distinct()
+        .OrderBy(c => c)
+        .ToList();
+
+    var allCategories = defaultCategories
+        .Concat(extraCategories.Select(c => (Key: c, Title: c)))
+        .ToList();
+
+    // Saved category photos. The controller can set
+    //   ViewBag.CategoryImages = Dictionary<string, string>  (category name -> image path)
+    // and each category card will show its photo.
+    var categoryImages = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+    if (ViewBag.CategoryImages is IDictionary<string, string> savedImages)
+    {
+        foreach (var kv in savedImages)
+        {
+            if (!string.IsNullOrWhiteSpace(kv.Key) && !string.IsNullOrWhiteSpace(kv.Value))
+            {
+                categoryImages[kv.Key.Trim()] = kv.Value;
+            }
+        }
+    }
 }
 @inject SaleSync.Services.StoreSettingsService StoreSettings
 @{
@@ -36,9 +84,9 @@
                 </div>
 
                 <div class="profile-section">
-                    <div class="profile-circle">👤</div>
+                    <div class="profile-circle">@userInitial</div>
                     <div>
-                        <h2 class="admin-name">@(User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? User.Identity?.Name ?? "User")</h2>
+                        <h2 class="admin-name">@userDisplayName</h2>
                         <div class="admin-role">@(User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "User")</div>
                     </div>
                 </div>
@@ -98,7 +146,8 @@
         <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
 
         <div class="mobile-header">
-            <button class="hamburger-btn" onclick="toggleSidebar()">
+            <!-- Menu button (needed on phones to open the sidebar) -->
+            <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Open menu">
                 <i class="fas fa-bars"></i>
             </button>
             <div class="mobile-brand">Cafero</div>
@@ -108,7 +157,7 @@
 
             <div class="card-header-flex" style="align-items: flex-end; margin-bottom: 30px;">
                 <div>
-                    <h1 class="greeting-title" id="pageTitle" style="font-size: 22px; font-weight: 800; letter-spacing: -0.5px;">Menu Categories </h1>
+                    <h1 class="greeting-title" id="pageTitle" style="font-size: 22px; font-weight: 800; letter-spacing: -0.5px;">Menu Categories</h1>
                     <p class="widget-subtitle" id="pageSubtitle">Manage high-level categories or drill down into items.</p>
                 </div>
                 <div style="display: flex; gap: 12px; align-items: center;">
@@ -120,71 +169,35 @@
 
             <div id="categoryContainer" class="product-catalog-grid">
 
-                <div class="menu-item-card" onclick="openSubMenu('COFFEE')">
-                    <div class="item-image-placeholder">
-                        ☕
-                        <button type="button" class="change-photo-btn" disabled title="Photos are set per menu item, not per category. Open this category and add a photo to an item instead." style="opacity:0.5; cursor:not-allowed;">📷 Add Photo</button>
-                    </div>
-                    <div class="item-details">
-                        <div class="item-category">Category</div>
-                        <div class="item-title" style="margin-bottom: 0;">COFFEE</div>
-                    </div>
-                </div>
+                @foreach (var cat in allCategories)
+                {
+                    categoryImages.TryGetValue(cat.Key, out var catImagePath);
 
-                <div class="menu-item-card" onclick="openSubMenu('MILKTEA')">
-                    <div class="item-image-placeholder">
-                        🧋
-                        <button type="button" class="change-photo-btn" disabled title="Photos are set per menu item, not per category. Open this category and add a photo to an item instead." style="opacity:0.5; cursor:not-allowed;">📷 Add Photo</button>
-                    </div>
-                    <div class="item-details">
-                        <div class="item-category">Category</div>
-                        <div class="item-title" style="margin-bottom: 0;">MILK LINE</div>
-                    </div>
-                </div>
+                    <div class="menu-item-card"
+                         data-category="@cat.Key"
+                         onclick="openSubMenu('@Html.Raw(System.Web.HttpUtility.JavaScriptStringEncode(cat.Key))')">
+                        <div class="item-image-placeholder">
+                            @if (!string.IsNullOrEmpty(catImagePath))
+                            {
+                                <img src="@catImagePath" alt="@cat.Title">
+                            }
+                            else
+                            {
+                                <span class="no-photo" style="font-size: 13px; color: var(--muted);">No photo</span>
+                            }
 
-                <div class="menu-item-card" onclick="openSubMenu('FRUIT TEA')">
-                    <div class="item-image-placeholder">
-                        🍹
-                        <button type="button" class="change-photo-btn" disabled title="Photos are set per menu item, not per category. Open this category and add a photo to an item instead." style="opacity:0.5; cursor:not-allowed;">📷 Add Photo</button>
+                            <!-- Category photo: clicking this must NOT open the category, so the clicks are stopped here -->
+                            <label class="change-photo-btn" style="cursor:pointer;" onclick="event.stopPropagation();">
+                                <span class="photo-btn-text">@(string.IsNullOrEmpty(catImagePath) ? "Add Photo" : "Change Photo")</span>
+                                <input type="file" accept="image/png,image/jpeg,image/gif,image/webp" style="display:none;" onclick="event.stopPropagation();" onchange="uploadCategoryPhoto(this)">
+                            </label>
+                        </div>
+                        <div class="item-details">
+                            <div class="item-category">Category</div>
+                            <div class="item-title" style="margin-bottom: 0;">@cat.Title</div>
+                        </div>
                     </div>
-                    <div class="item-details">
-                        <div class="item-category">Category</div>
-                        <div class="item-title" style="margin-bottom: 0;">FRUIT TEA</div>
-                    </div>
-                </div>
-
-                <div class="menu-item-card" onclick="openSubMenu('RICE MEAL')">
-                    <div class="item-image-placeholder">
-                        🍱
-                        <button type="button" class="change-photo-btn" disabled title="Photos are set per menu item, not per category. Open this category and add a photo to an item instead." style="opacity:0.5; cursor:not-allowed;">📷 Add Photo</button>
-                    </div>
-                    <div class="item-details">
-                        <div class="item-category">Category</div>
-                        <div class="item-title" style="margin-bottom: 0;">RICE MEALS</div>
-                    </div>
-                </div>
-
-                <div class="menu-item-card" onclick="openSubMenu('BREAD & PASTRY')">
-                    <div class="item-image-placeholder">
-                        🥐
-                        <button type="button" class="change-photo-btn" disabled title="Photos are set per menu item, not per category. Open this category and add a photo to an item instead." style="opacity:0.5; cursor:not-allowed;">📷 Add Photo</button>
-                    </div>
-                    <div class="item-details">
-                        <div class="item-category">Category</div>
-                        <div class="item-title" style="margin-bottom: 0;">BAKERY ITEMS</div>
-                    </div>
-                </div>
-
-                <div class="menu-item-card" onclick="openSubMenu('SNACKS & PASTA')">
-                    <div class="item-image-placeholder">
-                        🍝
-                        <button type="button" class="change-photo-btn" disabled title="Photos are set per menu item, not per category. Open this category and add a photo to an item instead." style="opacity:0.5; cursor:not-allowed;">📷 Add Photo</button>
-                    </div>
-                    <div class="item-details">
-                        <div class="item-category">Category</div>
-                        <div class="item-title" style="margin-bottom: 0;">SNACKS & PASTA</div>
-                    </div>
-                </div>
+                }
             </div>
 
             <div id="subItemsContainer" class="product-catalog-grid" style="display: none;"></div>
@@ -220,430 +233,566 @@
     </div>
 
     <script>
-        function confirmLogout() {
-        Swal.fire({
-        title: 'Are you sure?',
-        text: "You will be logged out of your session.",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Yes, log out',
-        cancelButtonText: 'Cancel'
-        }).then((result) => {
-        if (result.isConfirmed) {
-        document.getElementById('logoutForm').submit();
-        }
-        });
-        }
-
-        const menuData = {};
-
-        @if (Model != null)
-        {
-            foreach (var item in Model)
-            {
-                var safeName = System.Web.HttpUtility.JavaScriptStringEncode(item.ProductName);
-                var safeCategory = System.Web.HttpUtility.JavaScriptStringEncode(item.CategoryName.ToUpper());
-                var safeImagePath = System.Web.HttpUtility.JavaScriptStringEncode(item.ImagePath ?? "");
-
-                @:if(!menuData["@safeCategory"]) menuData["@safeCategory"] = [];
-                @:menuData["@safeCategory"].push({ id: @item.ProductId, name: "@safeName", price: @item.Price, imagePath: "@safeImagePath" });
+            function confirmLogout() {
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You will be logged out of your session.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, log out',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        document.getElementById('logoutForm').submit();
+                    }
+                });
             }
-        }
 
-        let currentCategory = "";
+            const menuData = {};
 
-        function openSubMenu(cat) {
-        currentCategory = cat;
-        const items = menuData[cat] || [];
-        const container = document.getElementById('subItemsContainer');
+            @if (Model != null)
+            {
+                    foreach (var item in Model)
+                    {
+                            var safeName = System.Web.HttpUtility.JavaScriptStringEncode(item.ProductName);
+                            var safeCategory = System.Web.HttpUtility.JavaScriptStringEncode((item.CategoryName ?? "").ToUpper());
+                            var safeImagePath = System.Web.HttpUtility.JavaScriptStringEncode(item.ImagePath ?? "");
 
-        document.getElementById('pageTitle').innerText = cat;
-        document.getElementById('pageSubtitle').innerText = "Managing structural items and compositions for " + cat;
+                            @:if(!menuData["@safeCategory"]) menuData["@safeCategory"] = [];
+                            @:menuData["@safeCategory"].push({ id: @item.ProductId, name: "@safeName", price: @item.Price, imagePath: "@safeImagePath" });
+                    }
+            }
 
-        document.getElementById('mainAddBtn').innerText = "+ Add Item";
+            let currentCategory = "";
 
-        container.innerHTML = "";
-        items.forEach(item => {
-        let imgTag = item.imagePath ? `<img src="${item.imagePath}">` : `<span style="font-size:40px;">📦</span>`;
+            function openSubMenu(cat) {
+                currentCategory = cat;
+                const items = menuData[cat] || [];
+                const container = document.getElementById('subItemsContainer');
 
-        container.innerHTML += `
-        <div class="menu-item-card">
-        <div class="item-image-placeholder" style="height:130px;" id="item-img-${item.id}">
-        ${imgTag}
-        <label class="change-photo-btn" style="cursor:pointer;">
-        📷 Add Photo
-        <input type="file" accept="image/png,image/jpeg,image/gif,image/webp" style="display:none;" onchange="uploadItemPhoto(${item.id}, this)">
-        </label>
-        </div>
-        <div class="item-details" style="flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 12px;">
-        <div>
-        <div class="item-category">${cat}</div>
-        <div class="item-title" style="font-size:15px; margin-bottom: 0;">${item.name}</div>
-        </div>
+                document.getElementById('pageTitle').innerText = cat;
+                document.getElementById('pageSubtitle').innerText = "Managing structural items and compositions for " + cat;
 
-        <div class="item-price-row">
-        <span class="item-price">₱${item.price.toFixed(2)}</span>
-        <button onclick="event.stopPropagation(); editPrice(${item.id}, '${item.name.replace(/'/g, "\\'")}', ${item.price})" style="background:none; border:none; cursor:pointer; font-size:12px; color: var(--gold-light); font-weight: 600; text-decoration:underline; font-family:'Outfit', sans-serif;">Edit Price</button>
-        </div>
+                document.getElementById('mainAddBtn').innerText = "+ Add Item";
 
-        <div style="display: flex; gap: 8px; margin-top: 4px;">
-        <button type="button" class="btn-secondary" style="flex: 1; padding: 8px; font-size: 12px; border-radius: 6px; text-align: center; justify-content: center;" onclick="event.stopPropagation(); openRecipe(${item.id}, '${item.name.replace(/'/g, "\\'")}');">
-        Edit Recipe
-        </button>
-        <button type="button" style="flex: 1; padding: 8px; font-size: 12px; border-radius: 6px; text-align: center; justify-content: center; background: rgba(220, 53, 69, 0.15); color: #ff6b6b; border: 1px solid rgba(220, 53, 69, 0.3); cursor: pointer; font-family: 'Outfit', sans-serif;" onclick="event.stopPropagation(); archiveProduct(${item.id}, '${item.name.replace(/'/g, "\\'")}');">
-        Archive
-        </button>
-        </div>
-        </div>
-        </div>`;
-        });
+                container.innerHTML = "";
 
-        document.getElementById('categoryContainer').style.display = 'none';
-        document.getElementById('subItemsContainer').style.display = 'grid';
-        document.getElementById('backBtn').style.display = 'block';
-        }
+                if (items.length === 0) {
+                    container.innerHTML = `<div style="grid-column: 1 / -1; text-align:center; padding:60px 20px; color: var(--muted);">No items in this category yet. Click "+ Add Item" to create the first one.</div>`;
+                }
 
-        async function editPrice(id, name, currentPrice) {
-        const { value: newPrice } = await Swal.fire({
-        title: `Modify Listing Price`,
-        html: `Update active menu valuation for <strong>${name}</strong>`,
-        input: 'number',
-        inputAttributes: { min: 0, step: 0.01 },
-        inputValue: currentPrice,
-        showCancelButton: true,
-        confirmButtonText: 'Update Database File'
-        });
+                items.forEach(item => {
+                    let imgTag = item.imagePath
+                        ? `<img src="${item.imagePath}">`
+                        : `<span class="no-photo" style="font-size:13px; color: var(--muted);">No photo</span>`;
 
-        if (newPrice && newPrice !== currentPrice.toString()) {
-        fetch('/Admin/UpdateProductPrice', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ProductId: id, NewPrice: parseFloat(newPrice) })
-        }).then(res => {
-        if (res.ok) {
-        Swal.fire({ title: 'Saved!', text: 'Database pricing array updated.', icon: 'success', timer: 1200, showConfirmButton: false })
-        .then(() => location.reload());
-        } else {
-        Swal.fire('Error Intercept', 'SQL update operation dropped.', 'error');
-        }
-        });
-        }
-        }
+                    container.innerHTML += `
+            <div class="menu-item-card">
+            <div class="item-image-placeholder" style="height:130px;" id="item-img-${item.id}">
+            ${imgTag}
+            <label class="change-photo-btn" style="cursor:pointer;">
+            Add Photo
+            <input type="file" accept="image/png,image/jpeg,image/gif,image/webp" style="display:none;" onchange="uploadItemPhoto(${item.id}, this)">
+            </label>
+            </div>
+            <div class="item-details" style="flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 12px;">
+            <div>
+            <div class="item-category">${cat}</div>
+            <div class="item-title" style="font-size:15px; margin-bottom: 0;">${item.name}</div>
+            </div>
 
-        function showCategories() {
-        currentCategory = "";
-        document.getElementById('pageTitle').innerText = "Menu Categories 🏷️";
-        document.getElementById('pageSubtitle').innerText = "Manage high-level categories or drill down into items.";
+            <div class="item-price-row">
+            <span class="item-price">₱${item.price.toFixed(2)}</span>
+            <button onclick="event.stopPropagation(); editPrice(${item.id}, '${item.name.replace(/'/g, "\\'")}', ${item.price})" style="background:none; border:none; cursor:pointer; font-size:12px; color: var(--gold-light); font-weight: 600; text-decoration:underline; font-family:'Outfit', sans-serif;">Edit Price</button>
+            </div>
 
-        document.getElementById('mainAddBtn').innerText = "+ Add Category";
+            <div style="display: flex; gap: 8px; margin-top: 4px;">
+            <button type="button" class="btn-secondary" style="flex: 1; padding: 8px; font-size: 12px; border-radius: 6px; text-align: center; justify-content: center;" onclick="event.stopPropagation(); openRecipe(${item.id}, '${item.name.replace(/'/g, "\\'")}');">
+            Edit Recipe
+            </button>
+            <button type="button" style="flex: 1; padding: 8px; font-size: 12px; border-radius: 6px; text-align: center; justify-content: center; background: rgba(220, 53, 69, 0.15); color: #ff6b6b; border: 1px solid rgba(220, 53, 69, 0.3); cursor: pointer; font-family: 'Outfit', sans-serif;" onclick="event.stopPropagation(); archiveProduct(${item.id}, '${item.name.replace(/'/g, "\\'")}');">
+            Archive
+            </button>
+            </div>
+            </div>
+            </div>`;
+                });
 
-        document.getElementById('categoryContainer').style.display = 'grid';
-        document.getElementById('subItemsContainer').style.display = 'none';
-        document.getElementById('backBtn').style.display = 'none';
-        }
+                document.getElementById('categoryContainer').style.display = 'none';
+                document.getElementById('subItemsContainer').style.display = 'grid';
+                document.getElementById('backBtn').style.display = 'block';
+            }
 
-        async function uploadItemPhoto(productId, inputEl) {
-        const file = inputEl.files && inputEl.files[0];
-        if (!file) return;
+            async function editPrice(id, name, currentPrice) {
+                const { value: newPrice } = await Swal.fire({
+                    title: `Modify Listing Price`,
+                    html: `Update active menu valuation for <strong>${name}</strong>`,
+                    input: 'number',
+                    inputAttributes: { min: 0, step: 0.01 },
+                    inputValue: currentPrice,
+                    showCancelButton: true,
+                    confirmButtonText: 'Update Database File'
+                });
 
-        const maxSizeBytes = 5 * 1024 * 1024;
-        if (file.size > maxSizeBytes) {
-        Swal.fire('File Too Large', 'Please choose an image under 5 MB.', 'error');
-        inputEl.value = '';
-        return;
-        }
-        if (!file.type.startsWith('image/')) {
-        Swal.fire('Unsupported File', 'Please choose an image file (JPG, PNG, GIF, or WEBP).', 'error');
-        inputEl.value = '';
-        return;
-        }
+                if (newPrice && newPrice !== currentPrice.toString()) {
+                    fetch('/Admin/UpdateProductPrice', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ ProductId: id, NewPrice: parseFloat(newPrice) })
+                    }).then(res => {
+                        if (res.ok) {
+                            Swal.fire({ title: 'Saved!', text: 'Database pricing array updated.', icon: 'success', timer: 1200, showConfirmButton: false })
+                                .then(() => location.reload());
+                        } else {
+                            Swal.fire('Error Intercept', 'SQL update operation dropped.', 'error');
+                        }
+                    });
+                }
+            }
 
-        const placeholder = document.getElementById(`item-img-${productId}`);
-        const originalContent = placeholder ? placeholder.innerHTML : null;
+            function showCategories() {
+                currentCategory = "";
+                document.getElementById('pageTitle').innerText = "Menu Categories";
+                document.getElementById('pageSubtitle').innerText = "Manage high-level categories or drill down into items.";
 
-        if (placeholder) {
-        placeholder.querySelector('img, span')?.remove();
-        placeholder.insertAdjacentHTML('afterbegin', '<span style="font-size:13px;">Uploading…</span>');
-        }
+                document.getElementById('mainAddBtn').innerText = "+ Add Category";
 
-        const formData = new FormData();
-        formData.append("productImageFile", file);
-        formData.append("productId", productId);
+                document.getElementById('categoryContainer').style.display = 'grid';
+                document.getElementById('subItemsContainer').style.display = 'none';
+                document.getElementById('backBtn').style.display = 'none';
+            }
 
-        try {
-        const response = await fetch('/Admin/UploadProductPhoto', {
-        method: 'POST',
-        body: formData
-        });
+            // ── ITEM PHOTO ────────────────────────────────────────────────────────────
+            async function uploadItemPhoto(productId, inputEl) {
+                const file = inputEl.files && inputEl.files[0];
+                if (!file) return;
 
-        if (!response.ok) {
-        const message = await response.text();
-        throw new Error(message || `Server returned ${response.status}`);
-        }
+                const maxSizeBytes = 5 * 1024 * 1024;
+                if (file.size > maxSizeBytes) {
+                    Swal.fire('File Too Large', 'Please choose an image under 5 MB.', 'error');
+                    inputEl.value = '';
+                    return;
+                }
+                if (!file.type.startsWith('image/')) {
+                    Swal.fire('Unsupported File', 'Please choose an image file (JPG, PNG, GIF, or WEBP).', 'error');
+                    inputEl.value = '';
+                    return;
+                }
 
-        const result = await response.json();
+                const placeholder = document.getElementById(`item-img-${productId}`);
+                const originalContent = placeholder ? placeholder.innerHTML : null;
 
-        if (placeholder) {
-        placeholder.querySelector('span')?.remove();
-        placeholder.insertAdjacentHTML('afterbegin', `<img src="${result.imagePath}">`);
-        }
-        if (currentCategory && menuData[currentCategory]) {
-        const item = menuData[currentCategory].find(i => i.id === productId);
-        if (item) item.imagePath = result.imagePath;
-        }
+                if (placeholder) {
+                    placeholder.querySelector('img, .no-photo')?.remove();
+                    placeholder.insertAdjacentHTML('afterbegin', '<span class="uploading-text" style="font-size:13px;">Uploading…</span>');
+                }
 
-        Swal.fire({
-        title: 'Photo Updated',
-        icon: 'success',
-        timer: 1200,
-        showConfirmButton: false
-        });
-        } catch (error) {
-        console.error('Photo upload failed:', error);
-        if (placeholder && originalContent !== null) {
-        placeholder.innerHTML = originalContent;
-        }
-        Swal.fire('Upload Failed', error.message || 'Something went wrong uploading the photo.', 'error');
-        } finally {
-        inputEl.value = '';
-        }
-        }
+                const formData = new FormData();
+                formData.append("productImageFile", file);
+                formData.append("productId", productId);
 
-        document.querySelector('#mainAddBtn').addEventListener('click', async function() {
-        if(!currentCategory) {
-        const { value: categoryData } = await Swal.fire({
-        title: 'Create Menu Category',
-        html: `
-        <div style="text-align: left; margin-bottom: 5px;">
-        <input id="new-cat-name" class="swal2-input" placeholder="e.g. Smoothies" style="width: 100%; margin: 10px 0; background: var(--bg-surface); color: var(--cream); border: 1px solid var(--border-sub); border-radius: 8px;">
-        </div>
-        `,
-        showCancelButton: true,
-        confirmButtonText: 'Commit Category',
-        preConfirm: () => {
-        const name = document.getElementById('new-cat-name').value.trim();
-        if(!name) {
-        Swal.showValidationMessage('Category description string mandatory.');
-        return false;
-        }
-        return { CategoryName: name };
-        }
-        });
-        return;
-        }
+                try {
+                    const response = await fetch('/Admin/UploadProductPhoto', {
+                        method: 'POST',
+                        body: formData
+                    });
 
-        const { value: formValues } = await Swal.fire({
-        title: `Append Menu Item`,
-        width: '540px',
-        html: `
-        <div style="display: flex; flex-direction: column; gap: 12px; text-align: left; margin-top: 10px;">
-        <input id="swal-name" class="swal2-input" placeholder="Product Name" style="width:100%; margin:0; background: var(--bg-surface); color: var(--cream); border: 1px solid var(--border-sub); border-radius: 8px;">
-        <div style="display: flex; gap: 10px;">
-        <select id="swal-size" class="swal2-input" style="flex: 1; margin:0; font-size: 14px; background: var(--bg-surface); color: var(--cream); border: 1px solid var(--border-sub); border-radius: 8px;">
-        <option value="">No Structural Size Variant</option>
-        <option value=" - Small">Small Model</option>
-        <option value=" - Large">Large Model</option>
-        </select>
-        <input id="swal-price" type="number" class="swal2-input" placeholder="Price ₱" style="flex: 1; margin:0; background: var(--bg-surface); color: var(--cream); border: 1px solid var(--border-sub); border-radius: 8px;">
-        </div>
-        </div>
-        `,
-        focusConfirm: false,
-        showCancelButton: true,
-        confirmButtonText: 'Generate Listing Row',
-        preConfirm: () => {
-        const name = document.getElementById('swal-name').value.trim();
-        const size = document.getElementById('swal-size').value;
-        const price = document.getElementById('swal-price').value;
+                    if (!response.ok) {
+                        const message = await response.text();
+                        throw new Error(message || `Server returned ${response.status}`);
+                    }
 
-        if (!name || !price) {
-        Swal.showValidationMessage('Product configuration data incomplete.');
-        return false;
-        }
+                    const result = await response.json();
 
-        return {
-        ProductName: name + size,
-        Price: parseFloat(price),
-        CategoryName: currentCategory,
-        Ingredients: []
-        };
-        }
-        });
+                    if (placeholder) {
+                        placeholder.querySelector('.uploading-text')?.remove();
+                        placeholder.insertAdjacentHTML('afterbegin', `<img src="${result.imagePath}">`);
+                    }
+                    if (currentCategory && menuData[currentCategory]) {
+                        const item = menuData[currentCategory].find(i => i.id === productId);
+                        if (item) item.imagePath = result.imagePath;
+                    }
 
-        if (formValues) {
-        fetch('/Admin/AddFullProduct', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formValues)
-        }).then(res => {
-        if(res.ok) {
-        Swal.fire({ title: 'Success', text: 'System tracking listing synchronized.', icon: 'success', timer: 1200, showConfirmButton: false })
-        .then(() => location.reload());
-        }
-        });
-        }
-        });
+                    Swal.fire({
+                        title: 'Photo Updated',
+                        icon: 'success',
+                        timer: 1200,
+                        showConfirmButton: false
+                    });
+                } catch (error) {
+                    console.error('Photo upload failed:', error);
+                    if (placeholder && originalContent !== null) {
+                        placeholder.innerHTML = originalContent;
+                    }
+                    Swal.fire('Upload Failed', error.message || 'Something went wrong uploading the photo.', 'error');
+                } finally {
+                    inputEl.value = '';
+                }
+            }
 
-        let currentRecipeProductId = 0;
-        let currentRecipeItems = [];
-        let allIngredients = [];
+            // ── CATEGORY PHOTO ────────────────────────────────────────────────────────
+            // Uploads a photo for a whole category card. The server action
+            // /Admin/UploadCategoryPhoto must save the file and remember the path.
+            async function uploadCategoryPhoto(inputEl) {
+                const file = inputEl.files && inputEl.files[0];
+                if (!file) return;
 
-        window.addEventListener('DOMContentLoaded', async () => {
-        const res = await fetch('/Admin/GetIngredients');
-        allIngredients = await res.json();
+                const card = inputEl.closest('.menu-item-card');
+                const categoryName = card ? card.getAttribute('data-category') : '';
 
-        const select = document.getElementById('ingredientSelect');
-        allIngredients.forEach(ing => {
-        select.innerHTML += `<option value="${ing.id}" data-unit="${ing.unit}">${ing.name}</option>`;
-        });
-        });
+                if (!categoryName) {
+                    Swal.fire('Upload Failed', 'Could not tell which category this photo is for.', 'error');
+                    inputEl.value = '';
+                    return;
+                }
 
-        async function openRecipe(productId, productName) {
-        currentRecipeProductId = productId;
-        currentRecipeItems = [];
-        document.getElementById('recipeItemName').innerText = productName + " Formula";
+                const maxSizeBytes = 5 * 1024 * 1024;
+                if (file.size > maxSizeBytes) {
+                    Swal.fire('File Too Large', 'Please choose an image under 5 MB.', 'error');
+                    inputEl.value = '';
+                    return;
+                }
+                if (!file.type.startsWith('image/')) {
+                    Swal.fire('Unsupported File', 'Please choose an image file (JPG, PNG, GIF, or WEBP).', 'error');
+                    inputEl.value = '';
+                    return;
+                }
 
-        const res = await fetch(`/Admin/GetRecipe?productId=${productId}`);
-        const existingData = await res.json();
+                const placeholder = card.querySelector('.item-image-placeholder');
+                const originalContent = placeholder.innerHTML;
 
-        existingData.forEach(item => {
-        currentRecipeItems.push({ id: item.id, name: item.name, qty: item.qty, unit: item.unit });
-        });
+                placeholder.querySelector('img, .no-photo')?.remove();
+                placeholder.insertAdjacentHTML('afterbegin', '<span class="uploading-text" style="font-size:13px;">Uploading…</span>');
 
-        renderRecipeList();
-        document.getElementById('recipeModal').style.display = 'flex';
-        }
+                const formData = new FormData();
+                formData.append("categoryImageFile", file);
+                formData.append("categoryName", categoryName);
 
-        function closeRecipe() {
-        document.getElementById('recipeModal').style.display = 'none';
-        }
+                try {
+                    const response = await fetch('/Admin/UploadCategoryPhoto', {
+                        method: 'POST',
+                        body: formData
+                    });
 
-        function addIngredientToUI() {
-        const select = document.getElementById('ingredientSelect');
-        const qtyInput = document.getElementById('ingredientQty');
+                    if (!response.ok) {
+                        const message = await response.text();
+                        throw new Error(message || `Server returned ${response.status}`);
+                    }
 
-        const id = parseInt(select.value);
-        const name = select.options[select.selectedIndex]?.text;
-        const unit = select.options[select.selectedIndex]?.getAttribute("data-unit") || "units";
-        const qty = parseFloat(qtyInput.value);
+                    const result = await response.json();
 
-        if(!id || !qty || qty <= 0) return;
-        if(currentRecipeItems.find(i => i.id === id)) return;
+                    placeholder.querySelector('.uploading-text')?.remove();
+                    placeholder.insertAdjacentHTML('afterbegin', `<img src="${result.imagePath}" alt="${categoryName}">`);
 
-        currentRecipeItems.push({ id: id, name: name, qty: qty, unit: unit });
-        renderRecipeList();
+                    const label = placeholder.querySelector('.photo-btn-text');
+                    if (label) label.textContent = 'Change Photo';
 
-        select.value = "";
-        qtyInput.value = "";
-        }
+                    Swal.fire({
+                        title: 'Category Photo Updated',
+                        icon: 'success',
+                        timer: 1200,
+                        showConfirmButton: false
+                    });
+                } catch (error) {
+                    console.error('Category photo upload failed:', error);
+                    placeholder.innerHTML = originalContent;
+                    Swal.fire('Upload Failed', error.message || 'Something went wrong uploading the photo.', 'error');
+                } finally {
+                    inputEl.value = '';
+                }
+            }
 
-        function removeIngredientFromUI(id) {
-        currentRecipeItems = currentRecipeItems.filter(i => i.id !== id);
-        renderRecipeList();
-        }
+            // ── ADD CATEGORY ──────────────────────────────────────────────────────────
+            // Before: the dialog collected the name and then just `return`ed, so the
+            // category was never sent anywhere. Now it is posted to /Admin/AddCategory.
+            async function addCategory() {
 
-        function renderRecipeList() {
-        const list = document.getElementById('recipeList');
-        list.innerHTML = "";
+                const { value: categoryData } = await Swal.fire({
+                    title: 'Create Menu Category',
+                    html: `
+            <div style="text-align: left; margin-bottom: 5px;">
+            <input id="new-cat-name" class="swal2-input" placeholder="e.g. Smoothies" style="width: 100%; margin: 10px 0; background: var(--bg-surface); color: var(--cream); border: 1px solid var(--border-sub); border-radius: 8px;">
+            </div>
+            `,
+                    showCancelButton: true,
+                    confirmButtonText: 'Commit Category',
+                    preConfirm: () => {
+                        const name = document.getElementById('new-cat-name').value.trim();
 
-        if(currentRecipeItems.length === 0) {
-        list.innerHTML = "<li style='color: var(--muted); font-size: 13px; text-align: center; padding: 24px 0;'>No active tracking dependencies detected.</li>";
-        return;
-        }
+                        if (!name) {
+                            Swal.showValidationMessage('Category description string mandatory.');
+                            return false;
+                        }
 
-        currentRecipeItems.forEach(item => {
-        list.innerHTML += `
-        <li style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border-sub); align-items: center;">
-        <span style="color: var(--cream); font-size: 13.5px;"><strong style="color: var(--gold);">${item.qty} ${item.unit}</strong> × ${item.name}</span>
-        <button onclick="removeIngredientFromUI(${item.id})" style="color: var(--danger); border: none; background: none; cursor: pointer; font-size: 14px;">&times;</button>
-        </li>`;
-        });
-        }
+                        const exists = Array.from(document.querySelectorAll('#categoryContainer [data-category]'))
+                            .some(card => (card.getAttribute('data-category') || '').toUpperCase() === name.toUpperCase());
 
-        function saveRecipeToDB() {
-        const payload = {
-        ProductId: currentRecipeProductId,
-        Ingredients: currentRecipeItems.map(i => ({ IngredientId: i.id, Quantity: i.qty }))
-        };
+                        if (exists) {
+                            Swal.showValidationMessage('That category already exists.');
+                            return false;
+                        }
 
-        fetch('/Admin/SaveRecipe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-        }).then(res => {
-        if(res.ok) {
-        Swal.fire('Saved', 'Lifecycle schema updated.', 'success');
-        closeRecipe();
-        }
-        });
-        }
+                        return { CategoryName: name };
+                    }
+                });
 
-        async function archiveProduct(id, name) {
-        const result = await Swal.fire({
-        title: 'Archive Menu Item?',
-        html: `Are you sure you want to remove <strong>${name}</strong> from the active POS menu mapping?`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#bd2130',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Confirm Archive'
-        });
+                if (!categoryData) return;
 
-        if (result.isConfirmed) {
-        fetch('/Admin/ArchiveProduct', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(id)
-        })
-        .then(res => {
-        if (res.ok) {
-        Swal.fire({
-        title: 'Archived!',
-        text: 'Product allocation flags updated successfully.',
-        icon: 'success',
-        timer: 1200,
-        showConfirmButton: false
-        })
-        .then(() => location.reload());
-        } else {
-        Swal.fire('Error Intercept', 'SQL status flip operation dropped.', 'error');
-        }
-        })
-        .catch(err => {
-        Swal.fire('Network Fault', 'Unable to reach system server architecture.', 'error');
-        });
-        }
-        }
+                try {
+                    const res = await fetch('/Admin/AddCategory', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(categoryData)
+                    });
 
-        // Safe toggle logic for mobile sidebar
-        function toggleSidebar() {
-        const sidebar = document.querySelector('.sidebar');
-        const overlay = document.querySelector('.sidebar-overlay');
+                    if (!res.ok) {
+                        const message = await res.text().catch(() => '');
+                        throw new Error(message || `Server returned ${res.status}`);
+                    }
 
-        if (sidebar) {
-        sidebar.classList.toggle('mobile-open');
-        }
-        if (overlay) {
-        overlay.classList.toggle('mobile-open');
-        }
-        }
+                    await Swal.fire({
+                        title: 'Category Added',
+                        text: 'You can now add items to it.',
+                        icon: 'success',
+                        timer: 1200,
+                        showConfirmButton: false
+                    });
 
-        // Close sidebar when clicking outside on mobile devices
-        document.addEventListener('click', function (event) {
-        const sidebar = document.querySelector('.sidebar');
-        const hamburger = document.querySelector('.hamburger-btn');
+                    location.reload();
+                }
+                catch (err) {
+                    console.error('Add category failed:', err);
+                    Swal.fire('Could not add category', err.message || 'Something went wrong.', 'error');
+                }
+            }
 
-        if (sidebar && hamburger) {
-        if (sidebar.classList.contains('mobile-open') &&
-        !sidebar.contains(event.target) &&
-        !hamburger.contains(event.target)) {
+            async function addMenuItem() {
 
-        sidebar.classList.remove('mobile-open');
-        }
-        }
-        });
+                const { value: formValues } = await Swal.fire({
+                    title: `Append Menu Item`,
+                    width: '540px',
+                    html: `
+            <div style="display: flex; flex-direction: column; gap: 12px; text-align: left; margin-top: 10px;">
+            <input id="swal-name" class="swal2-input" placeholder="Product Name" style="width:100%; margin:0; background: var(--bg-surface); color: var(--cream); border: 1px solid var(--border-sub); border-radius: 8px;">
+            <div style="display: flex; gap: 10px;">
+            <select id="swal-size" class="swal2-input" style="flex: 1; margin:0; font-size: 14px; background: var(--bg-surface); color: var(--cream); border: 1px solid var(--border-sub); border-radius: 8px;">
+            <option value="">No Structural Size Variant</option>
+            <option value=" - Small">Small Model</option>
+            <option value=" - Large">Large Model</option>
+            </select>
+            <input id="swal-price" type="number" class="swal2-input" placeholder="Price ₱" style="flex: 1; margin:0; background: var(--bg-surface); color: var(--cream); border: 1px solid var(--border-sub); border-radius: 8px;">
+            </div>
+            </div>
+            `,
+                    focusConfirm: false,
+                    showCancelButton: true,
+                    confirmButtonText: 'Generate Listing Row',
+                    preConfirm: () => {
+                        const name = document.getElementById('swal-name').value.trim();
+                        const size = document.getElementById('swal-size').value;
+                        const price = document.getElementById('swal-price').value;
+
+                        if (!name || !price) {
+                            Swal.showValidationMessage('Product configuration data incomplete.');
+                            return false;
+                        }
+
+                        return {
+                            ProductName: name + size,
+                            Price: parseFloat(price),
+                            CategoryName: currentCategory,
+                            Ingredients: []
+                        };
+                    }
+                });
+
+                if (formValues) {
+                    fetch('/Admin/AddFullProduct', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formValues)
+                    }).then(res => {
+                        if (res.ok) {
+                            Swal.fire({ title: 'Success', text: 'System tracking listing synchronized.', icon: 'success', timer: 1200, showConfirmButton: false })
+                                .then(() => location.reload());
+                        } else {
+                            Swal.fire('Could not add item', 'The server rejected the new item.', 'error');
+                        }
+                    }).catch(() => {
+                        Swal.fire('Network Fault', 'Unable to reach the server.', 'error');
+                    });
+                }
+            }
+
+            // The one "+" button does Add Category on the category screen and Add Item inside a category.
+            document.querySelector('#mainAddBtn').addEventListener('click', function () {
+                if (!currentCategory) {
+                    addCategory();
+                } else {
+                    addMenuItem();
+                }
+            });
+
+            let currentRecipeProductId = 0;
+            let currentRecipeItems = [];
+            let allIngredients = [];
+
+            window.addEventListener('DOMContentLoaded', async () => {
+                const res = await fetch('/Admin/GetIngredients');
+                allIngredients = await res.json();
+
+                const select = document.getElementById('ingredientSelect');
+                allIngredients.forEach(ing => {
+                    select.innerHTML += `<option value="${ing.id}" data-unit="${ing.unit}">${ing.name}</option>`;
+                });
+            });
+
+            async function openRecipe(productId, productName) {
+                currentRecipeProductId = productId;
+                currentRecipeItems = [];
+                document.getElementById('recipeItemName').innerText = productName + " Formula";
+
+                const res = await fetch(`/Admin/GetRecipe?productId=${productId}`);
+                const existingData = await res.json();
+
+                existingData.forEach(item => {
+                    currentRecipeItems.push({ id: item.id, name: item.name, qty: item.qty, unit: item.unit });
+                });
+
+                renderRecipeList();
+                document.getElementById('recipeModal').style.display = 'flex';
+            }
+
+            function closeRecipe() {
+                document.getElementById('recipeModal').style.display = 'none';
+            }
+
+            function addIngredientToUI() {
+                const select = document.getElementById('ingredientSelect');
+                const qtyInput = document.getElementById('ingredientQty');
+
+                const id = parseInt(select.value);
+                const name = select.options[select.selectedIndex]?.text;
+                const unit = select.options[select.selectedIndex]?.getAttribute("data-unit") || "units";
+                const qty = parseFloat(qtyInput.value);
+
+                if (!id || !qty || qty <= 0) return;
+                if (currentRecipeItems.find(i => i.id === id)) return;
+
+                currentRecipeItems.push({ id: id, name: name, qty: qty, unit: unit });
+                renderRecipeList();
+
+                select.value = "";
+                qtyInput.value = "";
+            }
+
+            function removeIngredientFromUI(id) {
+                currentRecipeItems = currentRecipeItems.filter(i => i.id !== id);
+                renderRecipeList();
+            }
+
+            function renderRecipeList() {
+                const list = document.getElementById('recipeList');
+                list.innerHTML = "";
+
+                if (currentRecipeItems.length === 0) {
+                    list.innerHTML = "<li style='color: var(--muted); font-size: 13px; text-align: center; padding: 24px 0;'>No active tracking dependencies detected.</li>";
+                    return;
+                }
+
+                currentRecipeItems.forEach(item => {
+                    list.innerHTML += `
+            <li style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border-sub); align-items: center;">
+            <span style="color: var(--cream); font-size: 13.5px;"><strong style="color: var(--gold);">${item.qty} ${item.unit}</strong> × ${item.name}</span>
+            <button onclick="removeIngredientFromUI(${item.id})" style="color: var(--danger); border: none; background: none; cursor: pointer; font-size: 14px;">&times;</button>
+            </li>`;
+                });
+            }
+
+            function saveRecipeToDB() {
+                const payload = {
+                    ProductId: currentRecipeProductId,
+                    Ingredients: currentRecipeItems.map(i => ({ IngredientId: i.id, Quantity: i.qty }))
+                };
+
+                fetch('/Admin/SaveRecipe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                }).then(res => {
+                    if (res.ok) {
+                        Swal.fire('Saved', 'Lifecycle schema updated.', 'success');
+                        closeRecipe();
+                    }
+                });
+            }
+
+            async function archiveProduct(id, name) {
+                const result = await Swal.fire({
+                    title: 'Archive Menu Item?',
+                    html: `Are you sure you want to remove <strong>${name}</strong> from the active POS menu mapping?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#bd2130',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Confirm Archive'
+                });
+
+                if (result.isConfirmed) {
+                    fetch('/Admin/ArchiveProduct', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(id)
+                    })
+                        .then(res => {
+                            if (res.ok) {
+                                Swal.fire({
+                                    title: 'Archived!',
+                                    text: 'Product allocation flags updated successfully.',
+                                    icon: 'success',
+                                    timer: 1200,
+                                    showConfirmButton: false
+                                })
+                                    .then(() => location.reload());
+                            } else {
+                                Swal.fire('Error Intercept', 'SQL status flip operation dropped.', 'error');
+                            }
+                        })
+                        .catch(err => {
+                            Swal.fire('Network Fault', 'Unable to reach system server architecture.', 'error');
+                        });
+                }
+            }
+
+            // Safe toggle logic for mobile sidebar
+            function toggleSidebar() {
+                const sidebar = document.querySelector('.sidebar');
+                const overlay = document.querySelector('.sidebar-overlay');
+
+                if (sidebar) {
+                    sidebar.classList.toggle('mobile-open');
+                }
+                if (overlay) {
+                    overlay.classList.toggle('mobile-open');
+                }
+            }
+
+            // Close sidebar when clicking outside on mobile devices
+            document.addEventListener('click', function (event) {
+                const sidebar = document.querySelector('.sidebar');
+                const hamburger = document.querySelector('.hamburger-btn');
+
+                if (sidebar && hamburger) {
+                    if (sidebar.classList.contains('mobile-open') &&
+                        !sidebar.contains(event.target) &&
+                        !hamburger.contains(event.target)) {
+
+                        sidebar.classList.remove('mobile-open');
+                    }
+                }
+            });
     </script>
 </body>
 </html>
