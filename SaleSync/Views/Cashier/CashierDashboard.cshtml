@@ -18,7 +18,6 @@
     <title>Dashboard - Cafero</title>
     <link rel="stylesheet" href="~/css/AdminDashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-    <!-- Added Chart.js CDN to fix potential chart rendering errors -->
     <link rel="icon" type="image/jpeg" href="~/images/CaferoLogo.jpg" asp-append-version="true" />
     <partial name="_ThemeStyles" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -30,7 +29,7 @@
 </head>
 <body>
 
-    
+
     <!-- VOID MODAL -->
     <div id="voidModal" class="modal-overlay">
         <div class="auth-modal">
@@ -67,7 +66,7 @@
                     <a href="/@homeController/Dashboard" class="menu-btn active">
                         Dashboard
                     </a>
-                    <a href="/Cashier/CashierMenu" class="menu-btn"> POS</a>  
+                    <a href="/Cashier/CashierMenu" class="menu-btn"> POS</a>
                     <a href="/Admin/QueueOrder" class="menu-btn"> Queue </a>
                 </nav>
             </div>
@@ -102,11 +101,22 @@
                         <div id="currentDate"></div>
                         <div id="currentTime"></div>
                     </div>
-                    <div class="notification-bell">
+                    <div class="notification-bell" id="notifBell" onclick="toggleNotifDropdown(event)" title="View notifications">
                         <i class="fas fa-bell"></i>
-                        <span class="bell-badge"></span>
+                        <span class="bell-badge" id="bellBadge" style="display:none;"></span>
+
+                        <div class="notif-dropdown" id="notifDropdown">
+                            <div class="notif-dropdown-title">Live Notifications</div>
+                            <div class="notification-list" id="notificationList">
+                                <div class="notification-item">
+                                    <div class="notification-info">
+                                        <p>No new orders right now.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="nav-chat-icon" onclick="toggleChat()" id="chatTrigger">
+                    <div class="nav-chat-icon" onclick="toggleChat()" id="chatTrigger" title="Open customer support inbox">
                         <i class="fas fa-comments"></i>
                         <span class="chat-badge" id="chatBadge" style="display: none;"></span>
                     </div>
@@ -157,12 +167,12 @@
                             </span>
                         </button>
                     </div>
-                    
+
                 </div>
             </div>
 
             <div class="summary-dashboard">
-                <div class="summary-card">
+                <div class="summary-card action-card" onclick="location.href='/Admin/DailyReport'">
                     <div class="card-icon-box icon-orange"><i class="fas fa-list"></i></div>
                     <div>
                         <div class="card-label">All Transactions</div>
@@ -170,7 +180,7 @@
                     </div>
                 </div>
 
-                <div class="summary-card">
+                <div class="summary-card action-card" onclick="location.href='/Admin/QueueOrder'">
                     <div class="card-icon-box icon-green"><i class="fas fa-hourglass-half"></i></div>
                     <div>
                         <div class="card-label">Pending Orders</div>
@@ -208,7 +218,9 @@
                         <div class="pos-card-title"><i class="fas fa-history"></i> Recent Transactions</div>
                         <a href="/Admin/DailyReport" class="view-all-link">View All &rarr;</a>
                     </div>
-                    <div class="table-responsive">
+
+                    <!-- DESKTOP VIEW: Table Structure -->
+                    <div class="table-responsive desktop-only">
                         <table class="pos-table">
                             <thead>
                                 <tr>
@@ -278,71 +290,313 @@
                             </tbody>
                         </table>
                     </div>
+
+                    <!-- MOBILE VIEW: Expandable Mobile Cards -->
+                    <div class="mobile-tx-list mobile-only">
+                        @if (Model.RecentSales != null && Model.RecentSales.Any())
+                        {
+                            @foreach (var sale in Model.RecentSales.Take(5))
+                            {
+                                <div class="tx-card">
+                                    <div class="tx-card-summary">
+                                        <div class="tx-main-info">
+                                            <span class="sale-id">#@sale.SaleId</span>
+                                            <span class="tx-customer">@(sale.CustomerName ?? "Walk-in")</span>
+                                        </div>
+                                        <button type="button" class="tx-view-btn" onclick="toggleTxDetails(this)">
+                                            View <i class="fas fa-chevron-down"></i>
+                                        </button>
+                                    </div>
+                                    <div class="tx-card-details hidden">
+                                        <div class="tx-detail-row">
+                                            <span class="tx-label">Total:</span>
+                                            <span class="tx-value">₱@sale.TotalAmount.ToString("N2")</span>
+                                        </div>
+                                        <div class="tx-detail-row">
+                                            <span class="tx-label">Method:</span>
+                                            <span class="tx-value">@(sale.PaymentMethod ?? "Cash")</span>
+                                        </div>
+                                        <div class="tx-detail-row">
+                                            <span class="tx-label">Status:</span>
+                                            <span class="tx-value">
+                                                @if (sale.Status == "Completed")
+                                                {
+                                                    <span class="badge badge-success">Completed</span>
+                                                }
+                                                else if (sale.Status == "Cancelled" || sale.Status == "Voided")
+                                                {
+                                                    <span class="badge badge-danger">Cancelled</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge badge-warning">Pending</span>
+                                                }
+                                            </span>
+                                        </div>
+                                        <div class="tx-detail-row">
+                                            <span class="tx-label">Time:</span>
+                                            <span class="tx-value text-muted">@sale.SaleDate.ToString("hh:mm tt")</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="tx-card">
+                                <div class="tx-card-summary">
+                                    <div class="tx-main-info">
+                                        <span class="sale-id">#8036</span>
+                                        <span class="tx-customer">Walk-in</span>
+                                    </div>
+                                    <button type="button" class="tx-view-btn" onclick="toggleTxDetails(this)">
+                                        View <i class="fas fa-chevron-down"></i>
+                                    </button>
+                                </div>
+                                <div class="tx-card-details hidden">
+                                    <div class="tx-detail-row">
+                                        <span class="tx-label">Total:</span>
+                                        <span class="tx-value">₱79.00</span>
+                                    </div>
+                                    <div class="tx-detail-row">
+                                        <span class="tx-label">Method:</span>
+                                        <span class="tx-value">Cash</span>
+                                    </div>
+                                    <div class="tx-detail-row">
+                                        <span class="tx-label">Status:</span>
+                                        <span class="tx-value"><span class="badge badge-warning">Pending</span></span>
+                                    </div>
+                                    <div class="tx-detail-row">
+                                        <span class="tx-label">Time:</span>
+                                        <span class="tx-value text-muted">07:34 PM</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="tx-card">
+                                <div class="tx-card-summary">
+                                    <div class="tx-main-info">
+                                        <span class="sale-id">#8035</span>
+                                        <span class="tx-customer">Walk-in</span>
+                                    </div>
+                                    <button type="button" class="tx-view-btn" onclick="toggleTxDetails(this)">
+                                        View <i class="fas fa-chevron-down"></i>
+                                    </button>
+                                </div>
+                                <div class="tx-card-details hidden">
+                                    <div class="tx-detail-row">
+                                        <span class="tx-label">Total:</span>
+                                        <span class="tx-value">₱158.00</span>
+                                    </div>
+                                    <div class="tx-detail-row">
+                                        <span class="tx-label">Method:</span>
+                                        <span class="tx-value">GCash</span>
+                                    </div>
+                                    <div class="tx-detail-row">
+                                        <span class="tx-label">Status:</span>
+                                        <span class="tx-value"><span class="badge badge-success">Completed</span></span>
+                                    </div>
+                                    <div class="tx-detail-row">
+                                        <span class="tx-label">Time:</span>
+                                        <span class="tx-value text-muted">07:12 PM</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="tx-card">
+                                <div class="tx-card-summary">
+                                    <div class="tx-main-info">
+                                        <span class="sale-id">#7036</span>
+                                        <span class="tx-customer">Juan Dela Cruz</span>
+                                    </div>
+                                    <button type="button" class="tx-view-btn" onclick="toggleTxDetails(this)">
+                                        View <i class="fas fa-chevron-down"></i>
+                                    </button>
+                                </div>
+                                <div class="tx-card-details hidden">
+                                    <div class="tx-detail-row">
+                                        <span class="tx-label">Total:</span>
+                                        <span class="tx-value">₱89.00</span>
+                                    </div>
+                                    <div class="tx-detail-row">
+                                        <span class="tx-label">Method:</span>
+                                        <span class="tx-value">Card</span>
+                                    </div>
+                                    <div class="tx-detail-row">
+                                        <span class="tx-label">Status:</span>
+                                        <span class="tx-value"><span class="badge badge-success">Completed</span></span>
+                                    </div>
+                                    <div class="tx-detail-row">
+                                        <span class="tx-label">Time:</span>
+                                        <span class="tx-value text-muted">03:46 PM</span>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
                 </div>
             </div>
 
-            <div class="pos-grid-container">
+            <div class="pos-grid-container single-card-grid">
                 <div class="pos-card-wrapper">
                     <div class="pos-card-header">
                         <div class="pos-card-title"><i class="fas fa-crown"></i> Best Selling Products</div>
                         <span class="volume-label">By Volume</span>
                     </div>
-                    <table class="pos-table">
-                        <thead>
-                            <tr>
-                                <th>Product Name</th>
-                                <th>Units Sold</th>
-                                <th class="text-right">Revenue Generated</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Spanish Latte (Iced)</td>
-                                <td>
-                                    <div class="progress-info">
-                                        <span>142 units</span>
-                                    </div>
-                                    <div class="progress-container"><div class="progress-bar" style="width: 92%;"></div></div>
-                                </td>
-                                <td class="text-right revenue-val">₱22,720.00</td>
-                            </tr>
-                            <tr>
-                                <td>Café Americana (Hot)</td>
-                                <td>
-                                    <div class="progress-info">
-                                        <span>98 units</span>
-                                    </div>
-                                    <div class="progress-container"><div class="progress-bar" style="width: 68%;"></div></div>
-                                </td>
-                                <td class="text-right revenue-val">₱10,780.00</td>
-                            </tr>
-                            <tr>
-                                <td>Cream Cheese Ensaymada</td>
-                                <td>
-                                    <div class="progress-info">
-                                        <span>75 units</span>
-                                    </div>
-                                    <div class="progress-container"><div class="progress-bar" style="width: 51%;"></div></div>
-                                </td>
-                                <td class="text-right revenue-val">₱6,375.00</td>
-                            </tr>
-                            <tr>
-                                <td>Caramel Macchiato</td>
-                                <td>
-                                    <div class="progress-info">
-                                        <span>64 units</span>
-                                    </div>
-                                    <div class="progress-container"><div class="progress-bar" style="width: 43%;"></div></div>
-                                </td>
-                                <td class="text-right revenue-val">₱10,880.00</td>
-                            </tr>
-                        </tbody>
-                    </table>
+
+                    <!-- DESKTOP VIEW -->
+                    <div class="table-responsive desktop-only">
+                        <table class="pos-table">
+                            <thead>
+                                <tr>
+                                    <th>Product Name</th>
+                                    <th>Units Sold</th>
+                                    <th class="text-right">Revenue Generated</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Spanish Latte (Iced)</td>
+                                    <td>
+                                        <div class="progress-info">
+                                            <span>142 units</span>
+                                        </div>
+                                        <div class="progress-container"><div class="progress-bar" style="width: 92%;"></div></div>
+                                    </td>
+                                    <td class="text-right revenue-val">₱22,720.00</td>
+                                </tr>
+                                <tr>
+                                    <td>Café Americana (Hot)</td>
+                                    <td>
+                                        <div class="progress-info">
+                                            <span>98 units</span>
+                                        </div>
+                                        <div class="progress-container"><div class="progress-bar" style="width: 68%;"></div></div>
+                                    </td>
+                                    <td class="text-right revenue-val">₱10,780.00</td>
+                                </tr>
+                                <tr>
+                                    <td>Cream Cheese Ensaymada</td>
+                                    <td>
+                                        <div class="progress-info">
+                                            <span>75 units</span>
+                                        </div>
+                                        <div class="progress-container"><div class="progress-bar" style="width: 51%;"></div></div>
+                                    </td>
+                                    <td class="text-right revenue-val">₱6,375.00</td>
+                                </tr>
+                                <tr>
+                                    <td>Caramel Macchiato</td>
+                                    <td>
+                                        <div class="progress-info">
+                                            <span>64 units</span>
+                                        </div>
+                                        <div class="progress-container"><div class="progress-bar" style="width: 43%;"></div></div>
+                                    </td>
+                                    <td class="text-right revenue-val">₱10,880.00</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- MOBILE VIEW -->
+                    <div class="mobile-only">
+                        <div class="tx-card">
+                            <div class="tx-card-summary">
+                                <div class="tx-main-info">
+                                    <span class="tx-customer">Spanish Latte (Iced)</span>
+                                </div>
+                                <button type="button" class="tx-view-btn" onclick="toggleCardDetails(this)">
+                                    <span>Details</span>
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </div>
+                            <div class="tx-card-details hidden">
+                                <div class="tx-detail-row">
+                                    <span class="tx-label">Units Sold:</span>
+                                    <span class="tx-value">142 units</span>
+                                </div>
+                                <div class="progress-container mb-2"><div class="progress-bar" style="width: 92%;"></div></div>
+                                <div class="tx-detail-row">
+                                    <span class="tx-label">Revenue Generated:</span>
+                                    <span class="tx-value revenue-val">₱22,720.00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tx-card">
+                            <div class="tx-card-summary">
+                                <div class="tx-main-info">
+                                    <span class="tx-customer">Café Americana (Hot)</span>
+                                </div>
+                                <button type="button" class="tx-view-btn" onclick="toggleCardDetails(this)">
+                                    <span>Details</span>
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </div>
+                            <div class="tx-card-details hidden">
+                                <div class="tx-detail-row">
+                                    <span class="tx-label">Units Sold:</span>
+                                    <span class="tx-value">98 units</span>
+                                </div>
+                                <div class="progress-container mb-2"><div class="progress-bar" style="width: 68%;"></div></div>
+                                <div class="tx-detail-row">
+                                    <span class="tx-label">Revenue Generated:</span>
+                                    <span class="tx-value revenue-val">₱10,780.00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tx-card">
+                            <div class="tx-card-summary">
+                                <div class="tx-main-info">
+                                    <span class="tx-customer">Cream Cheese Ensaymada</span>
+                                </div>
+                                <button type="button" class="tx-view-btn" onclick="toggleCardDetails(this)">
+                                    <span>Details</span>
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </div>
+                            <div class="tx-card-details hidden">
+                                <div class="tx-detail-row">
+                                    <span class="tx-label">Units Sold:</span>
+                                    <span class="tx-value">75 units</span>
+                                </div>
+                                <div class="progress-container mb-2"><div class="progress-bar" style="width: 51%;"></div></div>
+                                <div class="tx-detail-row">
+                                    <span class="tx-label">Revenue Generated:</span>
+                                    <span class="tx-value revenue-val">₱6,375.00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tx-card">
+                            <div class="tx-card-summary">
+                                <div class="tx-main-info">
+                                    <span class="tx-customer">Caramel Macchiato</span>
+                                </div>
+                                <button type="button" class="tx-view-btn" onclick="toggleCardDetails(this)">
+                                    <span>Details</span>
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </div>
+                            <div class="tx-card-details hidden">
+                                <div class="tx-detail-row">
+                                    <span class="tx-label">Units Sold:</span>
+                                    <span class="tx-value">64 units</span>
+                                </div>
+                                <div class="progress-container mb-2"><div class="progress-bar" style="width: 43%;"></div></div>
+                                <div class="tx-detail-row">
+                                    <span class="tx-label">Revenue Generated:</span>
+                                    <span class="tx-value revenue-val">₱10,880.00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="bottom-three-column-grid">
-
+            <div class="bottom-single-column">
                 <div class="pos-card-wrapper">
                     <div class="pos-card-header">
                         <div class="pos-card-title"><i class="fas fa-wallet"></i> Payment Breakdown</div>
@@ -351,527 +605,527 @@
                         <canvas id="paymentMethodsChart"></canvas>
                     </div>
                 </div>
-
-                <div class="pos-card-wrapper">
-                    <div class="pos-card-header">
-                        <div class="pos-card-title"><i class="fas fa-bell"></i> Live Notifications</div>
-                    </div>
-                    <div class="notification-list">
-                        <div class="notification-item">
-                            <div class="notification-info">
-                                <p>New web pickup order received (#ORD-8036)</p>
-                                <div class="notification-time">2 mins ago</div>
-                            </div>
-                        </div>
-                        <div class="notification-item alert-node">
-                            <div class="notification-info">
-                                <p>Inventory Alert: Espresso Beans fall below safety margin</p>
-                                <div class="notification-time">14 mins ago</div>
-                            </div>
-                        </div>
-                        <div class="notification-item success-node">
-                            <div class="notification-info">
-                                <p>System database backup completed securely</p>
-                                <div class="notification-time">1 hour ago</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
 
         </main>
     </div>
 
-    <!-- Chat Dropdown -->
+    <!-- Customer Support Inbox Popup -->
     <div class="chat-dropdown" id="chatDropdown">
-        <div class="chat-dropdown-header">
-            <span class="chat-status-dot"></span>
-            <span>Team Chat</span>
+        @Html.AntiForgeryToken()
+        <div class="support-header">
+            <div><span class="chat-status-dot"></span><strong>Support Inbox</strong><small>Customer conversations</small></div>
+            <button type="button" class="support-close" onclick="toggleChat()" title="Close"><i class="fas fa-times"></i></button>
         </div>
-        <div class="chat-dropdown-contact-bar">
-            <select id="chatContactSelect" onchange="switchChatContact(this.value)">
-                <option value="">Select a contact…</option>
-            </select>
-        </div>
-        <div class="chat-dropdown-body" id="chatMessages">
-            <div class="system-message">Select a contact to start chatting.</div>
-        </div>
-        <div class="chat-dropdown-footer">
-            <input type="text" id="chatInput" placeholder="Type a message..." onkeypress="handleChatKey(event)" />
-            <button class="chat-send-btn" onclick="sendChatMessage()">Send</button>
+        <div class="support-inbox">
+            <aside class="support-contacts" id="chatContactList"><div class="system-message">Loading conversations…</div></aside>
+            <section class="support-conversation">
+                <div class="support-conversation-header"><strong id="activeChatName">Select a customer</strong><small id="activeChatRole">Customer support</small></div>
+                <div class="chat-dropdown-body" id="chatMessages"><div class="system-message">Choose a customer conversation.</div></div>
+                <div class="chat-dropdown-footer"><input type="text" id="chatInput" placeholder="Write a reply…" onkeypress="handleChatKey(event)" /><button class="chat-send-btn" onclick="sendChatMessage()"><i class="fas fa-paper-plane"></i> Send</button></div>
+            </section>
         </div>
     </div>
 
     <script>
-            function confirmLogout() {
-                Swal.fire({
-                    title: 'Are you sure?',
-                    text: "You will be logged out of your session.",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#d33',
-                    cancelButtonColor: '#3085d6',
-                    confirmButtonText: 'Yes, log out',
-                    cancelButtonText: 'Cancel'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        document.getElementById('logoutForm').submit();
-                    }
-                });
-            }
-
-            // =========================================================
-            // STAFF BREAK TOGGLE (customer-facing status)
-            // =========================================================
-            async function toggleStaffBreak() {
-
-                const toggleBtn = document.getElementById('staffBreakToggle');
-                const currentlyOnBreak = toggleBtn.dataset.onBreak === 'true';
-                const newStatus = !currentlyOnBreak;
-
-                toggleBtn.disabled = true;
-
-                try {
-                    const response = await fetch('/Cashier/ToggleStaffBreak', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ onBreak: newStatus })
-                    });
-
-                    const data = await response.json();
-
-                    if (data.success) {
-                        toggleBtn.dataset.onBreak = String(data.onBreak);
-
-                        const dot = document.getElementById('staffBreakDot');
-                        const text = document.getElementById('staffBreakText');
-
-                        dot.classList.toggle('store-closed-dot', data.onBreak);
-                        dot.classList.toggle('store-open-dot', !data.onBreak);
-                        text.classList.toggle('store-closed-text', data.onBreak);
-                        text.classList.toggle('store-open-text', !data.onBreak);
-                        text.innerText = data.onBreak ? 'On Break' : 'Available';
-                    }
-                    else {
-                        Swal.fire('Unable to Update', data.message, 'error');
-                    }
+        function confirmLogout() {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You will be logged out of your session.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, log out',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('logoutForm').submit();
                 }
-                catch (error) {
-                    console.error('Staff break toggle error:', error);
-                    Swal.fire('Error', 'Something went wrong while updating staff status.', 'error');
-                }
-                finally {
-                    toggleBtn.disabled = false;
-                }
-            }
+            });
+        }
 
-            document.addEventListener("DOMContentLoaded", function() {
-                function updateClock() {
-                    const now = new Date();
-                    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        // =========================================================
+        // STAFF BREAK TOGGLE (customer-facing status)
+        // =========================================================
+        async function toggleStaffBreak() {
 
-                    document.getElementById('currentDate').innerText =
-                        now.toLocaleDateString('en-US', options);
+            const toggleBtn = document.getElementById('staffBreakToggle');
+            const currentlyOnBreak = toggleBtn.dataset.onBreak === 'true';
+            const newStatus = !currentlyOnBreak;
 
-                    let hours = now.getHours();
-                    let minutes = now.getMinutes();
-                    const ampm = hours >= 12 ? 'PM' : 'AM';
+            toggleBtn.disabled = true;
 
-                    hours = hours % 12;
-                    hours = hours ? hours : 12;
-                    minutes = minutes < 10 ? '0' + minutes : minutes;
-
-                    document.getElementById('currentTime').innerText =
-                        hours + ':' + minutes + ' ' + ampm;
-                }
-
-                setInterval(updateClock, 1000);
-                updateClock();
-
-                const rawTodaySales = parseFloat("@Model.TodayTotalSales") || 8500;
-
-                const ctxWeekly = document.getElementById('weeklySalesChart').getContext('2d');
-
-                new Chart(ctxWeekly, {
-                    type: 'line',
-                    data: {
-                        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                        datasets: [{
-                            label: 'Sales (₱)',
-                            data: [
-                                rawTodaySales * 0.85,
-                                rawTodaySales * 0.95,
-                                rawTodaySales * 1.1,
-                                rawTodaySales,
-                                rawTodaySales * 1.25,
-                                rawTodaySales * 1.4,
-                                rawTodaySales * 1.3
-                            ],
-                            borderColor: '#D4AF37',
-                            backgroundColor: 'rgba(212, 175, 55, 0.05)',
-                            borderWidth: 3,
-                            fill: true,
-                            tension: 0.35
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: false
-                            }
-                        }
-                    }
+            try {
+                const response = await fetch('/Cashier/ToggleStaffBreak', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ onBreak: newStatus })
                 });
 
-                const ctxPayment = document.getElementById('paymentMethodsChart').getContext('2d');
+                const data = await response.json();
 
-                new Chart(ctxPayment, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Cash', 'GCash', 'Card'],
-                        datasets: [{
-                            data: [55, 30, 15],
-                            backgroundColor: ['#D4AF37', '#2ECC71', '#F39C12'],
-                            borderWidth: 0
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'right'
-                            }
-                        },
-                        cutout: '72%'
-                    }
-                });
-            });
+                if (data.success) {
+                    toggleBtn.dataset.onBreak = String(data.onBreak);
 
-            function toggleSidebar() {
-                const sidebar = document.querySelector('.sidebar');
-                const overlay = document.querySelector('.sidebar-overlay');
+                    const dot = document.getElementById('staffBreakDot');
+                    const text = document.getElementById('staffBreakText');
 
-                if (sidebar) {
-                    sidebar.classList.toggle('mobile-open');
-                }
-
-                if (overlay) {
-                    overlay.classList.toggle('mobile-open');
-                }
-            }
-
-            // Close sidebar when clicking outside of it on mobile screens
-            document.addEventListener('click', function(event) {
-                const sidebar = document.querySelector('.sidebar');
-                const hamburgerBtn = document.querySelector('.hamburger-btn');
-                const overlay = document.querySelector('.sidebar-overlay');
-
-                if (!sidebar) return;
-
-                // Do not immediately close the sidebar when clicking the hamburger.
-                if (hamburgerBtn && hamburgerBtn.contains(event.target)) {
-                    return;
-                }
-
-                // Clicking the overlay should close the sidebar.
-                if (overlay && overlay.classList.contains('mobile-open') && event.target === overlay) {
-                    sidebar.classList.remove('mobile-open');
-                    overlay.classList.remove('mobile-open');
-                    return;
-                }
-
-                // Close sidebar when clicking outside of it.
-                if (sidebar.classList.contains('mobile-open')) {
-                    if (!sidebar.contains(event.target)) {
-                        sidebar.classList.remove('mobile-open');
-
-                        if (overlay) {
-                            overlay.classList.remove('mobile-open');
-                        }
-                    }
-                }
-            });
-
-            function filterDashboard(query) {
-                /* unused - replaced by globalSearch */
-            }
-
-            let searchTimeout;
-
-            function globalSearch(query) {
-                const dd = document.getElementById("searchDropdown");
-
-                if (!query || query.length < 2) {
-                    dd.style.display = "none";
-                    dd.innerHTML = "";
-                    return;
-                }
-
-                clearTimeout(searchTimeout);
-
-                searchTimeout = setTimeout(async () => {
-                    try {
-                        const res = await fetch("/Cashier/GlobalSearch?q=" + encodeURIComponent(query));
-
-                        if (!res.ok) return;
-
-                        const data = await res.json();
-                        let html = "";
-
-                        if (data.products.length) {
-                            html += '<div class="search-group-label">Products</div>';
-
-                            data.products.forEach(p => {
-                                html += '<a class="search-result-item" href="' + p.url + '">' +
-                                    '<i class="fas fa-coffee"></i>' +
-                                    '<span>' + p.name + '</span>' +
-                                    '<span class="search-price">₱' + p.price.toFixed(2) + '</span>' +
-                                    '</a>';
-                            });
-                        }
-
-                        if (data.inventory.length) {
-                            html += '<div class="search-group-label">Inventory</div>';
-
-                            data.inventory.forEach(i => {
-                                html += '<a class="search-result-item" href="' + i.url + '">' +
-                                    '<i class="fas fa-box"></i>' +
-                                    '<span>' + i.name + '</span>' +
-                                    '<span class="search-stock">' + i.stock + ' ' + i.unit + '</span>' +
-                                    '</a>';
-                            });
-                        }
-
-                        if (data.transactions.length) {
-                            html += '<div class="search-group-label">Transactions</div>';
-
-                            data.transactions.forEach(t => {
-                                html += '<a class="search-result-item" href="' + t.url + '">' +
-                                    '<i class="fas fa-receipt"></i>' +
-                                    '<span>' + t.name + '</span>' +
-                                    '<span class="search-price">₱' + t.amount.toFixed(2) + '</span>' +
-                                    '</a>';
-                            });
-                        }
-
-                        if (!html) {
-                            html = '<div class="search-empty">No results found</div>';
-                        }
-
-                        dd.innerHTML = html;
-                        dd.style.display = "block";
-                    }
-                    catch (e) {
-                        console.error("Search error:", e);
-                    }
-                }, 300);
-            }
-
-            document.addEventListener("click", function(e) {
-                const dd = document.getElementById("searchDropdown");
-                const wrapper = document.querySelector(".search-wrapper");
-
-                if (dd && wrapper && !wrapper.contains(e.target)) {
-                    dd.style.display = "none";
-                }
-            });
-
-            // ── Chat Dropdown Logic ──
-            let chatConn;
-            let currentChatWith = null;
-            const chatCurrentUser = "@(User.FindFirst("Username")?.Value ?? "")";
-
-            function toggleChat() {
-                const dd = document.getElementById("chatDropdown");
-
-                dd.classList.toggle("open");
-
-                if (dd.classList.contains("open")) {
-                    document.getElementById("chatBadge").style.display = "none";
-                    loadChatContacts();
-                }
-            }
-
-            document.addEventListener("click", function(e) {
-                const dd = document.getElementById("chatDropdown");
-                const trigger = document.getElementById("chatTrigger");
-
-                if (dd && trigger && !dd.contains(e.target) && !trigger.contains(e.target)) {
-                    dd.classList.remove("open");
-                }
-            });
-
-            function handleChatKey(event) {
-                if (event.key === 'Enter') {
-                    sendChatMessage();
-                }
-            }
-
-            function sendChatMessage() {
-                const input = document.getElementById("chatInput");
-                const msg = input.value.trim();
-
-                if (!msg || !currentChatWith || !chatConn) return;
-
-                chatConn.invoke("SendMessage", currentChatWith, msg)
-                    .catch(err => console.error("Error sending message:", err));
-
-                input.value = "";
-            }
-
-            async function loadChatContacts() {
-                const select = document.getElementById("chatContactSelect");
-
-                if (select.dataset.loaded === "true") return;
-
-                try {
-                    const res = await fetch('/Chat/GetContacts');
-
-                    if (!res.ok) return;
-
-                    const contacts = await res.json();
-
-                    contacts.forEach(c => {
-                        const opt = document.createElement("option");
-                        opt.value = c.username;
-                        opt.textContent = c.username + " (" + c.role + ")";
-                        select.appendChild(opt);
-                    });
-
-                    select.dataset.loaded = "true";
-
-                    if (contacts.length > 0 && !currentChatWith) {
-                        select.value = contacts[0].username;
-                        switchChatContact(contacts[0].username);
-                    }
-                }
-                catch (err) {
-                    console.error("Failed to load contacts:", err);
-                }
-            }
-
-            async function switchChatContact(username) {
-                currentChatWith = username || null;
-
-                const area = document.getElementById("chatMessages");
-                area.innerHTML = '<div class="system-message">Select a contact to start chatting.</div>';
-
-                if (!currentChatWith) return;
-
-                try {
-                    const res = await fetch(
-                        '/Chat/GetChatHistory?chatWith=' + encodeURIComponent(currentChatWith)
-                    );
-
-                    if (!res.ok) return;
-
-                    const history = await res.json();
-
-                    if (history.length > 0) {
-                        const ph = area.querySelector('.system-message');
-
-                        if (ph) {
-                            ph.remove();
-                        }
-                    }
-
-                    history.forEach(m => renderChatMessage(m.sender, m.text, m.time));
-                }
-                catch (err) {
-                    console.error("Failed to load chat history:", err);
-                }
-            }
-
-            function renderChatMessage(sender, message, timeString) {
-                const area = document.getElementById("chatMessages");
-                const row = document.createElement("div");
-
-                if (sender === chatCurrentUser) {
-                    row.className = "chat-msg-row staff";
-
-                    row.innerHTML =
-                        '<div class="chat-bubble">' +
-                        escapeHTML(message) +
-                        '</div>' +
-                        '<span class="chat-meta">You · ' +
-                        escapeHTML(timeString) +
-                        '</span>';
+                    dot.classList.toggle('store-closed-dot', data.onBreak);
+                    dot.classList.toggle('store-open-dot', !data.onBreak);
+                    text.classList.toggle('store-closed-text', data.onBreak);
+                    text.classList.toggle('store-open-text', !data.onBreak);
+                    text.innerText = data.onBreak ? 'On Break' : 'Available';
                 }
                 else {
-                    row.className = "chat-msg-row other";
+                    Swal.fire('Unable to Update', data.message, 'error');
+                }
+            }
+            catch (error) {
+                console.error('Staff break toggle error:', error);
+                Swal.fire('Error', 'Something went wrong while updating staff status.', 'error');
+            }
+            finally {
+                toggleBtn.disabled = false;
+            }
+        }
 
-                    row.innerHTML =
-                        '<div class="chat-bubble">' +
-                        escapeHTML(message) +
-                        '</div>' +
-                        '<span class="chat-meta">' +
-                        escapeHTML(sender) +
-                        ' · ' +
-                        escapeHTML(timeString) +
-                        '</span>';
+        // ── Notification Bell Dropdown ──
+        function toggleNotifDropdown(event) {
+            event.stopPropagation();
+            document.getElementById('notifDropdown').classList.toggle('open');
+        }
+
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('notifDropdown');
+            const bell = document.getElementById('notifBell');
+            if (dropdown && dropdown.classList.contains('open') && !bell.contains(e.target)) {
+                dropdown.classList.remove('open');
+            }
+        });
+
+        // ── Support Inbox Popup Logic ──
+        let chatConn;
+        let currentChatWith = null;
+        const chatCurrentUser = "@(User.FindFirst("Username")?.Value ?? "")";
+
+        function toggleChat() {
+            const popup = document.getElementById("chatDropdown");
+            popup.classList.toggle("open");
+            if (popup.classList.contains("open")) {
+                document.getElementById("chatBadge").style.display = "none";
+                loadChatContacts();
+            }
+        }
+
+        document.addEventListener("click", event => {
+            const popup = document.getElementById("chatDropdown");
+            const trigger = document.getElementById("chatTrigger");
+            if (popup.classList.contains("open") && !popup.contains(event.target) && !trigger.contains(event.target)) popup.classList.remove("open");
+        });
+
+        function handleChatKey(event) { if (event.key === "Enter") sendChatMessage(); }
+
+        function sendChatMessage() {
+            const input = document.getElementById("chatInput");
+            const message = input.value.trim();
+            if (!message || !currentChatWith || !chatConn) return;
+            chatConn.invoke("SendMessage", currentChatWith, message).then(() => { input.value = ""; input.focus(); }).catch(console.error);
+        }
+
+        async function loadChatContacts() {
+            const list = document.getElementById("chatContactList");
+            try {
+                const response = await fetch("/Chat/GetContacts");
+                if (!response.ok) return;
+                const contacts = await response.json();
+                list.innerHTML = "";
+                if (!contacts.length) { list.innerHTML = '<div class="system-message">No customer conversations yet.</div>'; return; }
+                contacts.forEach(contact => {
+                    const item = document.createElement("button");
+                    item.type = "button";
+                    item.className = "support-contact" + (contact.username === currentChatWith ? " active" : "");
+                    const unread = Number(contact.unreadCount || 0) > 0 && contact.username !== currentChatWith ? '<span class="support-unread-dot"></span>' : "";
+                    item.innerHTML = `<span class="support-contact-top"><strong>${escapeHTML(contact.username)}</strong>${unread}</span><small>${escapeHTML(contact.role || "Customer")}</small><span>${escapeHTML(contact.preview || "No messages yet")}</span>`;
+                    item.onclick = () => switchChatContact(contact.username, contact.role);
+                    list.appendChild(item);
+                });
+                if (!currentChatWith) switchChatContact(contacts[0].username, contacts[0].role);
+            } catch (error) { console.error("Could not load conversations:", error); }
+        }
+
+        async function switchChatContact(username, role) {
+            currentChatWith = username;
+            document.getElementById("activeChatName").textContent = username;
+            document.getElementById("activeChatRole").textContent = role || "Customer";
+            const area = document.getElementById("chatMessages");
+            area.innerHTML = '<div class="system-message">Loading messages…</div>';
+            try {
+                const response = await fetch("/Chat/GetChatHistory?chatWith=" + encodeURIComponent(username));
+                if (!response.ok) return;
+                const history = await response.json();
+                area.innerHTML = "";
+                if (!history.length) area.innerHTML = '<div class="system-message">No messages yet. Start the conversation.</div>';
+                history.forEach(message => renderChatMessage(message.sender, message.text, message.time));
+                loadChatContacts();
+            } catch (error) { console.error("Could not load messages:", error); }
+        }
+
+        function renderChatMessage(sender, message, time) {
+            const area = document.getElementById("chatMessages");
+            const row = document.createElement("div");
+            row.className = "chat-msg-row " + (sender === chatCurrentUser ? "staff" : "other");
+            const bubble = document.createElement("div"); bubble.className = "chat-bubble"; bubble.textContent = message;
+            const meta = document.createElement("span"); meta.className = "chat-meta"; meta.textContent = (sender === chatCurrentUser ? "You" : sender) + " · " + time;
+            row.append(bubble, meta); area.appendChild(row); area.scrollTop = area.scrollHeight;
+        }
+
+        function escapeHTML(value) { return String(value).replace(/[&<>'"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[c])); }
+
+        // ── Notification Bell Logic (pending online order alerts) ──
+        let lastKnownPendingCount = null;
+
+        async function checkForNewOrders() {
+            try {
+                const res = await fetch('/Admin/CheckNewOrders');
+                if (!res.ok) return;
+
+                const data = await res.json();
+                const pendingCount = data.pendingCount || 0;
+                const recentOrders = data.recentOrders || [];
+
+                if (lastKnownPendingCount === null) {
+                    lastKnownPendingCount = pendingCount;
+                    updateBellBadge(pendingCount);
+                    renderNotificationList(recentOrders);
+                    return;
                 }
 
-                area.appendChild(row);
-                area.scrollTop = area.scrollHeight;
-            }
+                if (pendingCount > lastKnownPendingCount) {
+                    const newOrders = pendingCount - lastKnownPendingCount;
 
-            function escapeHTML(str) {
-                return str.replace(
-                    /[&<>'"]/g,
-                    function(t) {
-                        return {
-                            '&': '&amp;',
-                            '<': '&lt;',
-                            '>': '&gt;',
-                            "'": '&#39;',
-                            '"': '&quot;'
-                        }[t] || t;
-                    }
-                );
-            }
-
-            document.addEventListener("DOMContentLoaded", function() {
-                chatConn = new signalR.HubConnectionBuilder()
-                    .withUrl("/chatHub")
-                    .build();
-
-                chatConn.start()
-                    .then(function() {
-                        console.log("Cashier Chat Connected!");
-                    })
-                    .catch(function(err) {
-                        console.error("SignalR Error:", err);
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'info',
+                        title: newOrders === 1 ? 'New order received!' : `${newOrders} new orders received!`,
+                        showConfirmButton: false,
+                        timer: 4000,
+                        timerProgressBar: true,
+                        background: '#1C241C',
+                        color: '#F2EDE4'
                     });
+                }
 
-                chatConn.on("ReceiveMessage", function(sender, receiver, message, time) {
-                    var belongs =
-                        currentChatWith &&
-                        (sender === currentChatWith || receiver === currentChatWith);
+                lastKnownPendingCount = pendingCount;
+                updateBellBadge(pendingCount);
+                renderNotificationList(recentOrders);
 
-                    if (belongs) {
-                        var ph = document
-                            .getElementById("chatMessages")
-                            .querySelector('.system-message');
+            } catch (err) {
+                console.error('Failed to check for new orders:', err);
+            }
+        }
 
-                        if (ph) {
-                            ph.remove();
+        function renderNotificationList(orders) {
+            const list = document.getElementById('notificationList');
+            if (!list) return;
+
+            if (!orders || orders.length === 0) {
+                list.innerHTML = `
+                    <div class="notification-item">
+                        <div class="notification-info">
+                            <p>No new orders right now.</p>
+                        </div>
+                    </div>`;
+                return;
+            }
+
+            list.innerHTML = orders.map(o => `
+            <div class="notification-item" style="cursor:pointer;" onclick="location.href='/Admin/QueueOrder?highlight=${o.saleId}'">
+                <div class="notification-info">
+                    <p>New ${escapeHTML(o.orderType)} order from ${escapeHTML(o.customerName)} (#ORD-${o.saleId}) — ₱${o.total.toFixed(2)}</p>
+                    <div class="notification-time">${escapeHTML(o.saleDate)}</div>
+                </div>
+            </div>
+        `).join('');
+        }
+
+        function updateBellBadge(count) {
+            const badge = document.getElementById('bellBadge');
+            if (!badge) return;
+
+            badge.style.display = count > 0 ? 'block' : 'none';
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            function updateClock() {
+                const now = new Date();
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+
+                document.getElementById('currentDate').innerText =
+                    now.toLocaleDateString('en-US', options);
+
+                let hours = now.getHours();
+                let minutes = now.getMinutes();
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+
+                hours = hours % 12;
+                hours = hours ? hours : 12;
+                minutes = minutes < 10 ? '0' + minutes : minutes;
+
+                document.getElementById('currentTime').innerText =
+                    hours + ':' + minutes + ' ' + ampm;
+            }
+
+            setInterval(updateClock, 1000);
+            updateClock();
+
+            const rawTodaySales = parseFloat("@Model.TodayTotalSales") || 8500;
+
+            const ctxWeekly = document.getElementById('weeklySalesChart').getContext('2d');
+
+            new Chart(ctxWeekly, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Sales (₱)',
+                        data: [
+                            rawTodaySales * 0.85,
+                            rawTodaySales * 0.95,
+                            rawTodaySales * 1.1,
+                            rawTodaySales,
+                            rawTodaySales * 1.25,
+                            rawTodaySales * 1.4,
+                            rawTodaySales * 1.3
+                        ],
+                        borderColor: '#D4AF37',
+                        backgroundColor: 'rgba(212, 175, 55, 0.05)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.35
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
                         }
-
-                        renderChatMessage(sender, message, time);
                     }
-
-                    if (sender !== chatCurrentUser && !belongs) {
-                        var dd = document.getElementById("chatDropdown");
-
-                        if (!dd.classList.contains("open")) {
-                            document.getElementById("chatBadge").style.display = "block";
-                        }
-                    }
-                });
+                }
             });
+
+            const ctxPayment = document.getElementById('paymentMethodsChart').getContext('2d');
+
+            new Chart(ctxPayment, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Cash', 'GCash', 'Card'],
+                    datasets: [{
+                        data: [55, 30, 15],
+                        backgroundColor: ['#D4AF37', '#2ECC71', '#F39C12'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    },
+                    cutout: '72%'
+                }
+            });
+
+            // Real-time chat connection
+            chatConn = new signalR.HubConnectionBuilder()
+                .withUrl("/chatHub")
+                .build();
+
+            chatConn.start()
+                .then(() => console.log("Cashier Chat Connected!"))
+                .catch(err => console.error("SignalR Startup Error:", err));
+
+            chatConn.on("ReceiveMessage", function(sender, receiver, message, time) {
+                var belongs = currentChatWith && (sender === currentChatWith || receiver === currentChatWith);
+                if (belongs) {
+                    var ph = document.getElementById("chatMessages").querySelector('.system-message');
+                    if (ph) ph.remove();
+                    renderChatMessage(sender, message, time);
+                }
+                if (sender !== chatCurrentUser && !belongs) {
+                    var dd = document.getElementById("chatDropdown");
+                    if (!dd.classList.contains("open")) {
+                        document.getElementById("chatBadge").style.display = "block";
+                    }
+                }
+            });
+
+            checkForNewOrders();
+            setInterval(checkForNewOrders, 15000);
+        });
+
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+
+            if (sidebar) {
+                sidebar.classList.toggle('mobile-open');
+            }
+
+            if (overlay) {
+                overlay.classList.toggle('mobile-open');
+            }
+        }
+
+        // Close sidebar when clicking outside of it on mobile screens
+        document.addEventListener('click', function(event) {
+            const sidebar = document.querySelector('.sidebar');
+            const hamburgerBtn = document.querySelector('.hamburger-btn');
+            const overlay = document.querySelector('.sidebar-overlay');
+
+            if (!sidebar) return;
+
+            // Do not immediately close the sidebar when clicking the hamburger.
+            if (hamburgerBtn && hamburgerBtn.contains(event.target)) {
+                return;
+            }
+
+            // Clicking the overlay should close the sidebar.
+            if (overlay && overlay.classList.contains('mobile-open') && event.target === overlay) {
+                sidebar.classList.remove('mobile-open');
+                overlay.classList.remove('mobile-open');
+                return;
+            }
+
+            // Close sidebar when clicking outside of it.
+            if (sidebar.classList.contains('mobile-open')) {
+                if (!sidebar.contains(event.target)) {
+                    sidebar.classList.remove('mobile-open');
+
+                    if (overlay) {
+                        overlay.classList.remove('mobile-open');
+                    }
+                }
+            }
+        });
+
+        function filterDashboard(query) {
+            /* unused - replaced by globalSearch */
+        }
+
+        let searchTimeout;
+
+        function globalSearch(query) {
+            const dd = document.getElementById("searchDropdown");
+
+            if (!query || query.length < 2) {
+                dd.style.display = "none";
+                dd.innerHTML = "";
+                return;
+            }
+
+            clearTimeout(searchTimeout);
+
+            searchTimeout = setTimeout(async () => {
+                try {
+                    const res = await fetch("/Cashier/GlobalSearch?q=" + encodeURIComponent(query));
+
+                    if (!res.ok) return;
+
+                    const data = await res.json();
+                    let html = "";
+
+                    if (data.products.length) {
+                        html += '<div class="search-group-label">Products</div>';
+
+                        data.products.forEach(p => {
+                            html += '<a class="search-result-item" href="' + p.url + '">' +
+                                '<i class="fas fa-coffee"></i>' +
+                                '<span>' + p.name + '</span>' +
+                                '<span class="search-price">₱' + p.price.toFixed(2) + '</span>' +
+                                '</a>';
+                        });
+                    }
+
+                    if (data.inventory.length) {
+                        html += '<div class="search-group-label">Inventory</div>';
+
+                        data.inventory.forEach(i => {
+                            html += '<a class="search-result-item" href="' + i.url + '">' +
+                                '<i class="fas fa-box"></i>' +
+                                '<span>' + i.name + '</span>' +
+                                '<span class="search-stock">' + i.stock + ' ' + i.unit + '</span>' +
+                                '</a>';
+                        });
+                    }
+
+                    if (data.transactions.length) {
+                        html += '<div class="search-group-label">Transactions</div>';
+
+                        data.transactions.forEach(t => {
+                            html += '<a class="search-result-item" href="' + t.url + '">' +
+                                '<i class="fas fa-receipt"></i>' +
+                                '<span>' + t.name + '</span>' +
+                                '<span class="search-price">₱' + t.amount.toFixed(2) + '</span>' +
+                                '</a>';
+                        });
+                    }
+
+                    if (!html) {
+                        html = '<div class="search-empty">No results found</div>';
+                    }
+
+                    dd.innerHTML = html;
+                    dd.style.display = "block";
+                }
+                catch (e) {
+                    console.error("Search error:", e);
+                }
+            }, 300);
+        }
+
+        document.addEventListener("click", function(e) {
+            const dd = document.getElementById("searchDropdown");
+            const wrapper = document.querySelector(".search-wrapper");
+
+            if (dd && wrapper && !wrapper.contains(e.target)) {
+                dd.style.display = "none";
+            }
+        });
+
+        function toggleTxDetails(btn) {
+            const card = btn.closest('.tx-card');
+            const details = card.querySelector('.tx-card-details');
+            const icon = btn.querySelector('i');
+
+            details.classList.toggle('hidden');
+
+            if (details.classList.contains('hidden')) {
+                btn.childNodes[0].nodeValue = "View ";
+                icon.style.transform = "rotate(0deg)";
+            } else {
+                btn.childNodes[0].nodeValue = "Hide ";
+                icon.style.transform = "rotate(180deg)";
+            }
+        }
+
+        function toggleCardDetails(button) {
+            const card = button.closest('.tx-card');
+            const details = card.querySelector('.tx-card-details');
+            const icon = button.querySelector('i');
+
+            details.classList.toggle('hidden');
+            if (details.classList.contains('hidden')) {
+                icon.style.transform = 'rotate(0deg)';
+            } else {
+                icon.style.transform = 'rotate(180deg)';
+            }
+        }
     </script>
 
 </body>

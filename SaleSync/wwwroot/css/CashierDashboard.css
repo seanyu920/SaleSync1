@@ -1054,6 +1054,7 @@ body {
 .slide-up {
     animation: slideUp 0.3s ease-out;
 }
+
 @media (max-width: 1024px) {
     .dashboard-container {
         display: block;
@@ -1316,3 +1317,613 @@ body {
     .chat-send-btn:hover {
         background: var(--gold-light);
     }
+
+
+
+/* ==========================================================================
+   CASHIER DASHBOARD RESPONSIVE OVERRIDES
+   Keep existing colors and behavior; improve layout at laptop/tablet/mobile.
+   ========================================================================== */
+.main-content,
+.pos-grid-container,
+.pos-card-wrapper,
+.summary-card,
+.dashboard-header-card {
+    min-width: 0;
+}
+
+.main-content {
+    width: 100%;
+    max-width: 100%;
+}
+
+.summary-dashboard {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.pos-grid-container {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+}
+
+    .pos-grid-container > .pos-card-wrapper {
+        min-width: 0;
+    }
+
+    .pos-grid-container.single-card-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+        .pos-grid-container.single-card-grid > .pos-card-wrapper {
+            width: 100%;
+        }
+
+.pos-table {
+    min-width: 560px;
+}
+
+.table-responsive {
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
+}
+
+.mobile-only {
+    display: none !important;
+}
+
+.desktop-only {
+    display: block;
+}
+
+.action-card {
+    cursor: pointer;
+}
+
+.tx-card {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.tx-card-summary,
+.tx-detail-row {
+    gap: 12px;
+}
+
+.tx-main-info {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.chart-container,
+.payment-chart-canvas-wrapper {
+    min-width: 0;
+}
+
+@media (max-width: 1200px) {
+    .main-content {
+        padding: 28px 24px;
+    }
+
+    .dashboard-header-card {
+        gap: 24px;
+        padding: 24px;
+    }
+
+    .header-status-group {
+        gap: 18px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .store-status-container {
+        margin-left: 0;
+        padding-left: 18px;
+    }
+
+    .summary-dashboard {
+        gap: 12px;
+    }
+
+    .summary-card {
+        padding: 18px 16px;
+    }
+
+    .pos-card-wrapper {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 1024px) {
+    .main-content {
+        padding: 22px;
+        overflow-x: clip;
+    }
+
+    .top-navbar {
+        gap: 16px;
+        align-items: center;
+    }
+
+    .search-wrapper {
+        width: min(100%, 440px);
+        min-width: 0;
+    }
+
+    .top-nav-controls {
+        gap: 18px;
+    }
+
+    .summary-dashboard {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .pos-grid-container {
+        gap: 18px;
+    }
+
+    .dashboard-header-card {
+        align-items: flex-start;
+    }
+
+    .header-status-group {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px 18px;
+    }
+
+    .system-status-container,
+    .store-status-container {
+        text-align: left;
+        margin-left: 0;
+        padding-left: 0;
+        border-left: 0;
+    }
+
+    .status-indicator-flex {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 760px) {
+    .mobile-only {
+        display: block !important;
+    }
+
+    .desktop-only {
+        display: none !important;
+    }
+
+    .mobile-header {
+        position: sticky;
+        top: 0;
+        z-index: 900;
+        padding: 12px 16px;
+        margin-bottom: 0;
+        gap: 12px;
+        min-height: 64px;
+        background: var(--bg-surface);
+    }
+
+    .hamburger-btn {
+        width: 42px;
+        height: 42px;
+        flex: 0 0 42px;
+    }
+
+    .mobile-brand {
+        font-size: 19px;
+    }
+
+    .sidebar {
+        width: min(285px, 86vw);
+        left: calc(-1 * min(285px, 86vw));
+        padding: 24px 18px;
+    }
+
+        .sidebar.mobile-open {
+            left: 0;
+        }
+
+    .main-content {
+        padding: 16px;
+        overflow-x: clip;
+    }
+
+    .top-navbar {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 14px;
+        margin-bottom: 18px;
+        padding-bottom: 14px;
+    }
+
+    .search-wrapper {
+        width: 100%;
+        padding: 11px 13px;
+    }
+
+    .search-input {
+        font-size: 13px;
+    }
+
+    .top-nav-controls {
+        justify-content: space-between;
+        gap: 14px;
+        width: 100%;
+    }
+
+    .datetime-display {
+        text-align: left;
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
+    .notification-bell,
+    .nav-chat-icon {
+        font-size: 18px;
+        padding: 6px;
+    }
+
+    .page-header {
+        margin-bottom: 18px;
+    }
+
+    .dashboard-header-card {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 20px;
+        padding: 22px 18px 18px 22px;
+        border-radius: 14px;
+    }
+
+    .header-label {
+        font-size: 10px;
+        letter-spacing: 1.5px;
+    }
+
+    .header-sales-value {
+        font-size: clamp(30px, 8vw, 38px);
+        overflow-wrap: anywhere;
+    }
+
+    .header-status-group {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 12px;
+        justify-content: stretch;
+    }
+
+    .system-status-container,
+    .store-status-container {
+        padding: 10px 0 0;
+        border-top: 1px solid var(--border-sub);
+        border-left: 0;
+        margin: 0;
+        text-align: left;
+    }
+
+    .status-label {
+        font-size: 10px;
+        letter-spacing: 1px;
+    }
+
+    .status-indicator-flex {
+        justify-content: flex-start;
+        margin-top: 5px;
+        gap: 7px;
+    }
+
+    .status-text {
+        font-size: 12px;
+        overflow-wrap: anywhere;
+    }
+
+    .summary-dashboard {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+        margin-bottom: 18px;
+    }
+
+    .summary-card {
+        padding: 15px;
+        border-radius: 12px;
+        gap: 13px;
+    }
+
+    .card-icon-box {
+        width: 42px;
+        height: 42px;
+    }
+
+    .card-label {
+        font-size: 10px;
+        letter-spacing: .7px;
+    }
+
+    .card-value {
+        font-size: 22px;
+    }
+
+    .pos-grid-container,
+    .pos-grid-container.single-card-grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .pos-card-wrapper {
+        padding: 16px 14px;
+        border-radius: 12px;
+    }
+
+    .pos-card-header {
+        gap: 12px;
+        align-items: flex-start;
+        margin-bottom: 14px;
+    }
+
+    .pos-card-title {
+        font-size: 15px;
+        line-height: 1.4;
+    }
+
+    .rolling-label,
+    .volume-label {
+        font-size: 10px;
+        text-align: right;
+        flex-shrink: 0;
+    }
+
+    .weekly-sales-value {
+        font-size: 22px;
+    }
+
+    .chart-container {
+        height: 220px;
+    }
+
+    .payment-chart-canvas-wrapper {
+        height: 190px;
+    }
+
+    .mobile-tx-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .tx-card {
+        padding: 12px;
+        background: var(--bg-surface);
+        border: 1px solid var(--border-sub);
+        border-radius: 10px;
+    }
+
+    .tx-card-summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-width: 0;
+    }
+
+    .tx-main-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+    }
+
+    .tx-customer {
+        font-size: 13px;
+        overflow-wrap: anywhere;
+    }
+
+    .tx-view-btn {
+        flex: 0 0 auto;
+    }
+
+    .tx-card-details {
+        padding-top: 12px;
+        margin-top: 10px;
+        border-top: 1px solid var(--border-sub);
+    }
+
+    .tx-detail-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 5px 0;
+        font-size: 12px;
+    }
+
+    .tx-label {
+        color: var(--muted);
+    }
+
+    .tx-value {
+        text-align: right;
+        overflow-wrap: anywhere;
+    }
+
+    .bottom-single-column {
+        margin-bottom: 16px;
+    }
+
+    .chat-dropdown {
+        top: 72px !important;
+        right: 10px !important;
+        left: 10px !important;
+        width: auto !important;
+        max-width: none !important;
+        max-height: calc(100dvh - 84px);
+        overflow: hidden;
+    }
+
+    .support-inbox {
+        min-width: 0;
+    }
+
+    .support-contacts {
+        max-width: 38%;
+        min-width: 100px;
+    }
+
+    .support-conversation {
+        min-width: 0;
+    }
+
+    .chat-dropdown-footer {
+        gap: 6px;
+    }
+
+        .chat-dropdown-footer input {
+            min-width: 0;
+            width: 100%;
+        }
+
+    .chat-send-btn {
+        flex-shrink: 0;
+    }
+
+    .auth-modal {
+        width: calc(100% - 32px);
+        max-width: 380px;
+        padding: 26px 20px;
+    }
+}
+
+@media (max-width: 420px) {
+    .main-content {
+        padding: 12px;
+    }
+
+    .mobile-header {
+        padding: 10px 12px;
+    }
+
+    .dashboard-header-card {
+        padding: 20px 14px 16px 18px;
+    }
+
+    .pos-card-wrapper {
+        padding: 14px 11px;
+    }
+
+    .pos-card-header {
+        flex-wrap: wrap;
+    }
+
+    .rolling-label,
+    .volume-label {
+        text-align: left;
+    }
+
+    .chart-container {
+        height: 195px;
+    }
+
+    .payment-chart-canvas-wrapper {
+        height: 175px;
+    }
+
+    .tx-card-summary {
+        align-items: flex-start;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .slide-up,
+    .animate-pulse {
+        animation: none !important;
+    }
+
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+    }
+}
+
+/* ================================================================
+   POSITIONING FIX — CASHIER DASHBOARD
+   Ensures summary cards and single-card sections use the full content
+   width instead of leaving an unused column on the right.
+   ================================================================ */
+.dashboard-container {
+    width: 100%;
+    min-width: 0;
+}
+
+.main-content {
+    flex: 1 1 0%;
+    width: 0;
+    min-width: 0;
+    max-width: none;
+}
+
+.summary-dashboard {
+    display: grid !important;
+    width: 100% !important;
+    max-width: none !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    align-items: stretch;
+}
+
+    .summary-dashboard > .summary-card {
+        width: 100%;
+        min-width: 0;
+    }
+
+.pos-grid-container {
+    display: grid !important;
+    width: 100% !important;
+    max-width: none !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+}
+
+    .pos-grid-container > .pos-card-wrapper {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .pos-grid-container.single-card-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+        width: 100% !important;
+    }
+
+        .pos-grid-container.single-card-grid > .pos-card-wrapper {
+            grid-column: 1 / -1;
+            width: 100% !important;
+            max-width: none !important;
+        }
+
+@media (max-width: 1024px) and (min-width: 761px) {
+    .summary-dashboard {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+
+    .pos-grid-container:not(.single-card-grid) {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 760px) {
+    .main-content {
+        width: 100%;
+        padding: 16px;
+    }
+
+    .summary-dashboard {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    .pos-grid-container,
+    .pos-grid-container.single-card-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+}

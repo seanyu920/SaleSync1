@@ -1,32 +1,10 @@
 ﻿/* ==========================================================================
    CAFÈRO CUSTOMER ORDERING — LEFT SIDEBAR + MOBILE HAMBURGER + PROMOS
-   --------------------------------------------------------------------------
-   Desktop:
-   - Permanent left sidebar
-   - Spacious product area
-   - Dark green + gold Cafèro theme
-   - Order / My Orders / Promos navigation
- 
-   Mobile:
-   - Sidebar remains on the LEFT
-   - Sidebar becomes an off-canvas menu
-   - Gold hamburger button opens the sidebar
-   - Dark overlay appears behind sidebar
-   - Responsive product cards
-   - Responsive promo cards
-   - Cafèro-themed chat widget
- 
-   IMPORTANT:
-   Existing Razor / HTML / JavaScript functionality is preserved.
    ========================================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap');
 
-
-/* ==========================================================================
-   1. DESIGN TOKENS
-   ========================================================================== */
-
+/* 1. DESIGN TOKENS */
 :root {
     --bg-base: #0D110D;
     --bg-surface: #141A14;
@@ -52,11 +30,7 @@
     --content-max: 1700px;
 }
 
-
-/* ==========================================================================
-   2. GLOBAL RESET
-   ========================================================================== */
-
+/* 2. GLOBAL RESET */
 * {
     margin: 0;
     padding: 0;
@@ -78,11 +52,7 @@ body {
     overflow-x: hidden;
 }
 
-
-/* ==========================================================================
-   3. MAIN PAGE
-   ========================================================================== */
-
+/* 3. MAIN PAGE */
 .dashboard-container {
     display: flex;
     min-height: 100vh;
@@ -90,11 +60,7 @@ body {
     background: var(--bg-base);
 }
 
-
-/* ==========================================================================
-   4. ANNOUNCEMENT BANNER
-   ========================================================================== */
-
+/* 4. ANNOUNCEMENT BANNER */
 .announcement-banner {
     width: 100%;
     background: linear-gradient(135deg, #173918, #265e27);
@@ -137,11 +103,7 @@ body {
         color: var(--cream);
     }
 
-
-/* ==========================================================================
-   5. LEFT SIDEBAR
-   ========================================================================== */
-
+/* 5. LEFT SIDEBAR */
 .sidebar {
     position: sticky;
     top: 0;
@@ -174,11 +136,7 @@ body {
         border-radius: 999px;
     }
 
-
-/* ==========================================================================
-   6. SIDEBAR TOP
-   ========================================================================== */
-
+/* 6. SIDEBAR TOP */
 .sidebar-top {
     display: flex;
     flex-direction: column;
@@ -186,11 +144,7 @@ body {
     width: 100%;
 }
 
-
-/* ==========================================================================
-   7. BRAND
-   ========================================================================== */
-
+/* 7. BRAND */
 .logo-section {
     width: 100%;
     display: flex;
@@ -229,11 +183,7 @@ body {
     white-space: nowrap;
 }
 
-
-/* ==========================================================================
-   8. STORE STATUS
-   ========================================================================== */
-
+/* 8. STORE STATUS */
 .store-status-banner {
     width: 100%;
     display: flex;
@@ -283,11 +233,7 @@ body {
     }
 }
 
-
-/* ==========================================================================
-   9. ORDER / MY ORDERS / PROMOS TABS
-   ========================================================================== */
-
+/* 9. ORDER / MY ORDERS / PROMOS TABS */
 .sidebar-tabs {
     width: 100%;
     display: grid;
@@ -329,11 +275,7 @@ body {
         transform: translateY(1px);
     }
 
-
-/* ==========================================================================
-   10. CATEGORY AREA
-   ========================================================================== */
-
+/* 10. CATEGORY AREA */
 #catNav {
     width: 100%;
     margin-top: 3px;
@@ -352,11 +294,7 @@ body {
     margin-bottom: 9px;
 }
 
-
-/* ==========================================================================
-   11. CATEGORY MENU
-   ========================================================================== */
-
+/* 11. CATEGORY MENU */
 .sidebar-menu {
     display: flex;
     flex-direction: column;
@@ -407,11 +345,7 @@ body {
         box-shadow: none;
     }
 
-
-/* ==========================================================================
-   12. LOYALTY BOX
-   ========================================================================== */
-
+/* 12. LOYALTY BOX */
 .loyalty-box {
     width: 100%;
     padding: 13px;
@@ -461,11 +395,7 @@ body {
     text-overflow: ellipsis;
 }
 
-
-/* ==========================================================================
-   13. SIDEBAR BOTTOM
-   ========================================================================== */
-
+/* 13. SIDEBAR BOTTOM */
 .logout-section {
     margin-top: auto;
     padding-top: 14px;
@@ -492,11 +422,7 @@ body {
         background: rgba(224,85,85,0.07);
     }
 
-
-/* ==========================================================================
-   14. MAIN CONTENT
-   ========================================================================== */
-
+/* 14. MAIN CONTENT */
 .main-content {
     flex: 1;
     min-width: 0;
@@ -517,11 +443,7 @@ body {
         flex: 1;
     }
 
-
-/* ==========================================================================
-   15. POS HEADER
-   ========================================================================== */
-
+/* 15. POS HEADER */
 .pos-header {
     display: flex;
     align-items: flex-end;
@@ -547,11 +469,7 @@ body {
         line-height: 1.45;
     }
 
-
-/* ==========================================================================
-   16. HEADER ACTIONS
-   ========================================================================== */
-
+/* 16. HEADER ACTIONS */
 .header-actions {
     display: flex;
     align-items: center;
@@ -559,11 +477,7 @@ body {
     flex-shrink: 0;
 }
 
-
-/* ==========================================================================
-   17. SEARCH
-   ========================================================================== */
-
+/* 17. SEARCH */
 .search-container {
     width: 285px;
     height: 44px;
@@ -605,11 +519,7 @@ body {
         font-weight: 400;
     }
 
-
-/* ==========================================================================
-   18. CART BUTTON
-   ========================================================================== */
-
+/* 18. CART BUTTON */
 .cart-icon-btn {
     position: relative;
     width: 44px;
@@ -650,11 +560,7 @@ body {
     justify-content: center;
 }
 
-
-/* ==========================================================================
-   19. PRODUCT GRID
-   ========================================================================== */
-
+/* 19. PRODUCT GRID */
 .product-container {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -675,11 +581,7 @@ body {
     }
 }
 
-
-/* ==========================================================================
-   20. PRODUCT CARD
-   ========================================================================== */
-
+/* 20. PRODUCT CARD */
 .product-card {
     position: relative;
     min-width: 0;
@@ -700,11 +602,7 @@ body {
         box-shadow: 0 16px 34px rgba(0,0,0,0.30), 0 0 20px rgba(201,168,76,0.035);
     }
 
-
-/* ==========================================================================
-   21. ITEM BADGES
-   ========================================================================== */
-
+/* 21. ITEM BADGES */
 .item-badge {
     position: absolute;
     top: -9px;
@@ -728,11 +626,7 @@ body {
     border: 1px solid rgba(61,191,120,0.28);
 }
 
-
-/* ==========================================================================
-   22. FAVORITE HEART
-   ========================================================================== */
-
+/* 22. FAVORITE HEART */
 .fav-heart {
     position: absolute;
     top: 10px;
@@ -763,11 +657,7 @@ body {
         transform: scale(1.05);
     }
 
-
-/* ==========================================================================
-   23. PRODUCT IMAGE
-   ========================================================================== */
-
+/* 23. PRODUCT IMAGE */
 .product-img-placeholder {
     width: 100%;
     height: 150px;
@@ -800,11 +690,7 @@ body {
     transform: scale(1.025);
 }
 
-
-/* ==========================================================================
-   24. PRODUCT INFO
-   ========================================================================== */
-
+/* 24. PRODUCT INFO */
 .product-info {
     padding: 15px 16px 15px;
     display: flex;
@@ -844,11 +730,7 @@ body {
     flex-grow: 1;
 }
 
-
-/* ==========================================================================
-   25. ADD ORDER BUTTON
-   ========================================================================== */
-
+/* 25. ADD ORDER BUTTON */
 .btn-add-order {
     width: 100%;
     min-height: 42px;
@@ -877,11 +759,7 @@ body {
     color: var(--muted);
 }
 
-
-/* ==========================================================================
-   26. SIZE + NOTES MODAL
-   ========================================================================== */
-
+/* 26. SIZE + NOTES MODAL */
 .modal-overlay {
     position: fixed;
     inset: 0;
@@ -1100,11 +978,7 @@ body {
         box-shadow: 0 7px 18px rgba(201,168,76,0.14);
     }
 
-
-/* ==========================================================================
-   27. CART SIDEBAR
-   ========================================================================== */
-
+/* 27. CART SIDEBAR */
 .cart-sidebar {
     position: fixed;
     top: 0;
@@ -1392,11 +1266,7 @@ body {
         transform: none;
     }
 
-
-/* ==========================================================================
-   28. MY ORDERS
-   ========================================================================== */
-
+/* 28. MY ORDERS */
 .refresh-btn {
     background: var(--bg-card);
     color: var(--gold);
@@ -1434,11 +1304,7 @@ body {
     padding: 24px 0;
 }
 
-
-/* ==========================================================================
-   29. TRACK CARDS
-   ========================================================================== */
-
+/* 29. TRACK CARDS */
 .track-card {
     background: var(--bg-card);
     border: 1px solid var(--border-sub);
@@ -1599,11 +1465,7 @@ body {
     font-weight: 600;
 }
 
-
-/* ==========================================================================
-   30. HISTORY
-   ========================================================================== */
-
+/* 30. HISTORY */
 .history-row {
     display: flex;
     justify-content: space-between;
@@ -1671,11 +1533,7 @@ body {
         color: var(--bg-base);
     }
 
-
-/* ==========================================================================
-   31. CUSTOMER PROMOTIONS
-   ========================================================================== */
-
+/* 31. CUSTOMER PROMOTIONS */
 #tabPromos {
     width: 100%;
 }
@@ -1709,11 +1567,6 @@ body {
             max-width: 620px;
         }
 
-
-/* --------------------------------------------------------------------------
-   PROMO GRID
-   -------------------------------------------------------------------------- */
-
 .promo-customer-grid {
     width: 100%;
     display: grid;
@@ -1721,11 +1574,6 @@ body {
     gap: 20px;
     padding-bottom: 40px;
 }
-
-
-/* --------------------------------------------------------------------------
-   PROMO CARD
-   -------------------------------------------------------------------------- */
 
 .customer-promo-card {
     position: relative;
@@ -1771,11 +1619,6 @@ body {
         box-shadow: 0 18px 38px rgba(0,0,0,0.32), 0 0 22px rgba(201,168,76,0.05);
     }
 
-
-/* --------------------------------------------------------------------------
-   PROMO BADGE
-   -------------------------------------------------------------------------- */
-
 .customer-promo-badge {
     position: relative;
     z-index: 2;
@@ -1792,11 +1635,6 @@ body {
     box-shadow: 0 5px 14px rgba(201,168,76,0.16);
 }
 
-
-/* --------------------------------------------------------------------------
-   PROMO TITLE
-   -------------------------------------------------------------------------- */
-
 .customer-promo-card h2 {
     position: relative;
     z-index: 2;
@@ -1808,11 +1646,6 @@ body {
     letter-spacing: -0.4px;
 }
 
-
-/* --------------------------------------------------------------------------
-   PROMO DESCRIPTION
-   -------------------------------------------------------------------------- */
-
 .customer-promo-card p {
     position: relative;
     z-index: 2;
@@ -1821,11 +1654,6 @@ body {
     font-size: 12.5px;
     line-height: 1.6;
 }
-
-
-/* --------------------------------------------------------------------------
-   PROMO CODE
-   -------------------------------------------------------------------------- */
 
 .customer-promo-code {
     position: relative;
@@ -1847,11 +1675,6 @@ body {
         letter-spacing: 0.5px;
     }
 
-
-/* --------------------------------------------------------------------------
-   PROMO VALIDITY
-   -------------------------------------------------------------------------- */
-
 .customer-promo-validity {
     position: relative;
     z-index: 2;
@@ -1860,11 +1683,6 @@ body {
     font-size: 10px;
     line-height: 1.4;
 }
-
-
-/* --------------------------------------------------------------------------
-   EMPTY PROMO STATE
-   -------------------------------------------------------------------------- */
 
 .promo-empty-state {
     grid-column: 1 / -1;
@@ -1908,11 +1726,7 @@ body {
         line-height: 1.5;
     }
 
-
-/* ==========================================================================
-   32. SWEETALERT2
-   ========================================================================== */
-
+/* 32. SWEETALERT2 */
 .swal2-container {
     z-index: 9999 !important;
 }
@@ -1981,11 +1795,7 @@ body {
     background: transparent !important;
 }
 
-
-/* ==========================================================================
-   33. CHAT WIDGET — CAFÈRO THEME
-   ========================================================================== */
-
+/* 33. CHAT WIDGET — CAFÈRO THEME */
 .chat-widget {
     position: fixed;
     right: 25px;
@@ -2249,11 +2059,7 @@ body {
         box-shadow: 0 7px 18px rgba(201,168,76,0.18);
     }
 
-
-/* ==========================================================================
-   33B. DELIVERY ADDRESS FIELDS
-   ========================================================================== */
-
+/* 33B. DELIVERY ADDRESS FIELDS */
 .addr-field-group {
     display: flex;
     flex-direction: column;
@@ -2328,11 +2134,7 @@ body {
         cursor: pointer;
     }
 
-
-/* ==========================================================================
-   33C. PAYMENT PROOF (QR + REFERENCE NUMBER)
-   ========================================================================== */
-
+/* 33C. PAYMENT PROOF (QR + REFERENCE NUMBER) */
 .qr-payment-box {
     display: flex;
     flex-direction: column;
@@ -2393,22 +2195,13 @@ body {
     margin-top: 4px;
 }
 
-
-/* ==========================================================================
-   34. ANIMATION
-   ========================================================================== */
-
+/* 34. ANIMATION */
 .slide-up {
     animation: slideUp 0.3s ease-out;
 }
 
-
-/* ==========================================================================
-   35. LARGE DESKTOP
-   ========================================================================== */
-
+/* 35. LARGE DESKTOP */
 @media (min-width: 1600px) {
-
     :root {
         --sidebar-width: 260px;
     }
@@ -2450,13 +2243,8 @@ body {
     }
 }
 
-
-/* ==========================================================================
-   36. SMALL LAPTOP
-   ========================================================================== */
-
+/* 36. SMALL LAPTOP */
 @media (max-width: 1250px) {
-
     :root {
         --sidebar-width: 220px;
     }
@@ -2524,13 +2312,8 @@ body {
     }
 }
 
-
-/* ==========================================================================
-   37. TABLET LANDSCAPE
-   ========================================================================== */
-
+/* 37. TABLET LANDSCAPE */
 @media (max-width: 1000px) {
-
     :root {
         --sidebar-width: 205px;
     }
@@ -2612,11 +2395,7 @@ body {
         }
 }
 
-
-/* ==========================================================================
-   38. MOBILE — FIXED HAMBURGER + LEFT OFF-CANVAS SIDEBAR
-   ========================================================================== */
-
+/* 38. MOBILE — FIXED HAMBURGER + LEFT OFF-CANVAS SIDEBAR */
 .mobile-header {
     display: none;
 }
@@ -2625,20 +2404,13 @@ body {
     display: none;
 }
 
-
 @media (max-width: 760px) {
-
     .dashboard-container {
         display: flex;
         flex-direction: column;
         width: 100%;
         min-height: 100vh;
     }
-
-
-    /* ----------------------------------------------------------------------
-       MOBILE HEADER
-       ---------------------------------------------------------------------- */
 
     .mobile-header {
         position: fixed;
@@ -2661,11 +2433,6 @@ body {
         font-weight: 900;
         letter-spacing: -0.3px;
     }
-
-
-    /* ----------------------------------------------------------------------
-       HAMBURGER BUTTON
-       ---------------------------------------------------------------------- */
 
     .hamburger-btn {
         width: 42px;
@@ -2723,11 +2490,6 @@ body {
                 top: 14px;
             }
 
-
-    /* ----------------------------------------------------------------------
-       LEFT MOBILE SIDEBAR
-       ---------------------------------------------------------------------- */
-
     .sidebar {
         position: fixed !important;
         top: 0;
@@ -2752,11 +2514,6 @@ body {
             transform: translateX(0);
         }
 
-
-    /* ----------------------------------------------------------------------
-       SIDEBAR OVERLAY
-       ---------------------------------------------------------------------- */
-
     .sidebar-overlay {
         position: fixed;
         inset: 0;
@@ -2775,22 +2532,12 @@ body {
             pointer-events: auto;
         }
 
-
-    /* ----------------------------------------------------------------------
-       SIDEBAR TOP
-       ---------------------------------------------------------------------- */
-
     .sidebar-top {
         display: flex !important;
         flex-direction: column;
         gap: 15px;
         width: 100%;
     }
-
-
-    /* ----------------------------------------------------------------------
-       BRAND
-       ---------------------------------------------------------------------- */
 
     .logo-section {
         width: 100%;
@@ -2817,11 +2564,6 @@ body {
         letter-spacing: 0.9px;
     }
 
-
-    /* ----------------------------------------------------------------------
-       STORE STATUS
-       ---------------------------------------------------------------------- */
-
     .store-status-banner {
         width: 100%;
         height: auto;
@@ -2837,11 +2579,6 @@ body {
         height: 7px;
         flex: 0 0 7px;
     }
-
-
-    /* ----------------------------------------------------------------------
-       ORDER / MY ORDERS / PROMOS
-       ---------------------------------------------------------------------- */
 
     .sidebar-tabs {
         width: 100%;
@@ -2860,11 +2597,6 @@ body {
         font-weight: 800;
         letter-spacing: -0.1px;
     }
-
-
-    /* ----------------------------------------------------------------------
-       CATEGORY NAVIGATION
-       ---------------------------------------------------------------------- */
 
     #catNav {
         width: 100%;
@@ -2909,11 +2641,6 @@ body {
             font-weight: 900;
         }
 
-
-    /* ----------------------------------------------------------------------
-       LOYALTY
-       ---------------------------------------------------------------------- */
-
     .loyalty-box {
         width: 100%;
         padding: 12px;
@@ -2940,11 +2667,6 @@ body {
         line-height: 1.3;
     }
 
-
-    /* ----------------------------------------------------------------------
-       LOGOUT
-       ---------------------------------------------------------------------- */
-
     .logout-section {
         margin-top: auto;
         width: 100%;
@@ -2961,11 +2683,6 @@ body {
         text-align: left;
     }
 
-
-    /* ----------------------------------------------------------------------
-       MAIN CONTENT
-       ---------------------------------------------------------------------- */
-
     .main-content {
         width: 100%;
         min-width: 0;
@@ -2981,11 +2698,6 @@ body {
             max-width: none;
             padding: 70px 12px 30px;
         }
-
-
-    /* ----------------------------------------------------------------------
-       POS HEADER
-       ---------------------------------------------------------------------- */
 
     .pos-header {
         align-items: flex-start;
@@ -3004,11 +2716,6 @@ body {
             font-size: 11.5px;
             line-height: 1.4;
         }
-
-
-    /* ----------------------------------------------------------------------
-       HEADER ACTIONS
-       ---------------------------------------------------------------------- */
 
     .header-actions {
         width: 100%;
@@ -3033,11 +2740,6 @@ body {
         height: 40px;
         flex: 0 0 40px;
     }
-
-
-    /* ----------------------------------------------------------------------
-       PRODUCTS
-       ---------------------------------------------------------------------- */
 
     .product-container {
         width: 100%;
@@ -3098,11 +2800,6 @@ body {
         padding: 3px 6px;
     }
 
-
-    /* ----------------------------------------------------------------------
-       PROMOS
-       ---------------------------------------------------------------------- */
-
     #tabPromos .pos-header {
         margin-bottom: 20px;
     }
@@ -3146,19 +2843,9 @@ body {
         padding: 4px 9px;
     }
 
-
-    /* ----------------------------------------------------------------------
-       CART
-       ---------------------------------------------------------------------- */
-
     .cart-sidebar {
         width: min(400px,94vw);
     }
-
-
-    /* ----------------------------------------------------------------------
-       DELIVERY ADDRESS FIELDS — MOBILE
-       ---------------------------------------------------------------------- */
 
     .addr-field-row {
         grid-template-columns: 1fr;
@@ -3169,11 +2856,6 @@ body {
         font-size: 12px;
         padding: 9px 10px;
     }
-
-
-    /* ----------------------------------------------------------------------
-       CHAT
-       ---------------------------------------------------------------------- */
 
     .chat-widget {
         right: 12px;
@@ -3200,13 +2882,8 @@ body {
     }
 }
 
-
-/* ==========================================================================
-   39. SMALL PHONE
-   ========================================================================== */
-
+/* 39. SMALL PHONE */
 @media (max-width: 480px) {
-
     .mobile-header {
         height: 54px;
         padding: 0 10px;
@@ -3347,11 +3024,6 @@ body {
         font-size: 12px;
     }
 
-
-    /* ----------------------------------------------------------------------
-       PROMOS — SMALL PHONE
-       ---------------------------------------------------------------------- */
-
     #tabPromos .pos-header h1 {
         font-size: 20px;
     }
@@ -3386,11 +3058,6 @@ body {
         font-size: 9px;
     }
 
-
-    /* ----------------------------------------------------------------------
-       CHAT
-       ---------------------------------------------------------------------- */
-
     .chat-widget {
         right: 11px;
         bottom: 11px;
@@ -3409,13 +3076,8 @@ body {
     }
 }
 
-
-/* ==========================================================================
-   40. VERY SMALL PHONE
-   ========================================================================== */
-
+/* 40. VERY SMALL PHONE */
 @media (max-width: 360px) {
-
     .mobile-header {
         height: 52px;
     }
@@ -3493,11 +3155,6 @@ body {
         padding-right: 7px;
     }
 
-
-    /* ----------------------------------------------------------------------
-       PROMOS — VERY SMALL PHONE
-       ---------------------------------------------------------------------- */
-
     #tabPromos .pos-header h1 {
         font-size: 18px;
     }
@@ -3532,26 +3189,19 @@ body {
     }
 }
 
-
-/* ==========================================================================
-   41. REDUCED MOTION
-   ========================================================================== */
-
+/* 41. REDUCED MOTION */
 @media (prefers-reduced-motion: reduce) {
-
-    *,
-    *::before,
-    *::after {
+    *, *::before, *::after {
         scroll-behavior: auto !important;
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
     }
 }
+
 /* ==========================================================================
    27B. ADD-ONS (modal + cart editor)
    ========================================================================== */
-
 .addon-options {
     display: flex;
     flex-wrap: wrap;
@@ -3592,11 +3242,9 @@ body {
         color: var(--gold-light);
     }
 
-
 /* ==========================================================================
    27C. CART ITEM — INLINE EDITOR (Instructions / Add-ons)
    ========================================================================== */
-
 .cart-addons {
     color: var(--gold-light);
     font-size: 11px;
@@ -3687,4 +3335,639 @@ body {
     .btn-cart-edit-cancel:hover {
         border-color: var(--border);
         background: rgba(255,255,255,0.03);
+    }
+
+/* ==========================================================================
+   42. STYLES MOVED OUT OF CustomerOrdering.cshtml
+   --------------------------------------------------------------------------
+   APPEND THIS WHOLE FILE TO THE VERY END of CustomerOrdering.css.
+   It must stay last so it overrides the earlier rules of equal specificity.
+   Note: in a .css file use "@media" / "@supports" (single @), not "@@".
+   ========================================================================== */
+
+/* ---- UI fixes (formerly the <style> block in the page <head>) ---------- */
+
+.brand-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+}
+
+.brand-sub {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+/* Only 2 tabs now (Order / My Orders), so fill the row */
+.sidebar-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.search-icon {
+    display: flex;
+    align-items: center;
+}
+
+    .search-icon svg {
+        width: 15px;
+        height: 15px;
+    }
+
+.cart-icon-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+.chat-fab svg {
+    width: 26px;
+    height: 26px;
+}
+
+select.cart-select {
+    padding-right: 38px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23C9A84C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 12px 8px;
+}
+
+input[type="datetime-local"].cart-select {
+    color-scheme: dark;
+}
+
+.modal-card {
+    max-height: 92vh;
+    overflow-y: auto;
+}
+
+@supports (height: 100dvh) {
+    .sidebar,
+    .cart-sidebar {
+        height: 100dvh;
+    }
+
+    .dashboard-container,
+    .main-content {
+        min-height: 100dvh;
+    }
+}
+
+
+/* ---- Promo code (formerly inline) -------------------------------------- */
+
+.promo-row {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+}
+
+    .promo-row .cart-select {
+        flex: 1;
+        min-width: 0;
+        cursor: text;
+        text-transform: uppercase;
+    }
+
+        .promo-row .cart-select::placeholder {
+            text-transform: none;
+            color: var(--muted);
+            font-weight: 400;
+        }
+
+        .promo-row .cart-select:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+.btn-apply-promo {
+    flex-shrink: 0;
+    padding: 0 18px;
+    background: var(--gold);
+    color: var(--bg-base);
+    border: none;
+    border-radius: 10px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 900;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+    .btn-apply-promo:hover {
+        background: var(--gold-light);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(201,168,76,0.18);
+    }
+
+    .btn-apply-promo.applied {
+        background: transparent;
+        color: var(--cream);
+        border: 1px solid var(--border-sub);
+    }
+
+        .btn-apply-promo.applied:hover {
+            border-color: var(--danger);
+            color: var(--danger);
+            box-shadow: none;
+        }
+
+.promo-message {
+    display: none; /* JS shows it via style.display = 'block' */
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+    .promo-message.success {
+        color: var(--success);
+    }
+
+    .promo-message.error {
+        color: var(--danger);
+    }
+
+.promo-discount-row {
+    display: none; /* JS shows it via style.display = 'flex' */
+    justify-content: space-between;
+    align-items: center;
+    color: var(--success);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+
+/* ---- Order progress bar (formerly inline) ------------------------------ */
+
+.order-progress-bar-bg {
+    width: 100%;
+    height: 6px;
+    background: var(--bg-surface);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 12px;
+}
+
+.order-progress-bar-fill {
+    height: 100%;
+    background: var(--gold);
+    border-radius: 3px;
+    transition: width 0.4s ease;
+}
+
+.order-progress-label {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 8px;
+}
+
+
+/* ---- Elements that used style="display:none" / style="width:0%" -------- */
+/* JavaScript still toggles these with element.style.display, which wins
+   over these defaults, so no JS changes are needed for them.               */
+
+#tabOrders,
+#addressContainer,
+#pickupContainer,
+#paymentProofContainer {
+    display: none;
+}
+
+.cart-badge {
+    display: none;
+}
+
+.chat-badge-dot {
+    display: none;
+}
+
+.loyalty-bar-fill {
+    width: 0;
+}
+
+.pickup-label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--cream);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+
+/* ==========================================================================
+   43. LOGGED-IN CUSTOMER NAME
+   ========================================================================== */
+
+.user-card {
+    width: 100%;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-sub);
+    border-radius: 12px;
+}
+
+.user-avatar {
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--gold-glow);
+    border: 1px solid var(--border);
+    color: var(--gold-light);
+    font-size: 16px;
+    font-weight: 900;
+}
+
+.user-info {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.user-greeting {
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.user-name {
+    color: var(--cream);
+    font-size: 14px;
+    font-weight: 800;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.welcome-name {
+    color: var(--gold-light);
+    font-weight: 800;
+}
+
+
+/* ==========================================================================
+   44. MOBILE HEADER CART BUTTON (hidden on desktop)
+   ========================================================================== */
+
+.mobile-cart-btn {
+    display: none;
+}
+
+
+/* ==========================================================================
+   45. MOBILE / TABLET RESPONSIVE IMPROVEMENTS
+   ========================================================================== */
+
+/* Hover lifts feel "stuck" on touch screens */
+@media (hover: none) {
+    .product-card:hover,
+    .customer-promo-card:hover {
+        transform: none;
+    }
+
+        .product-card:hover .product-uploaded-img,
+        .product-card:hover .product-img-emoji {
+            transform: none;
+        }
+}
+
+
+@media (max-width: 760px) {
+
+    html,
+    body {
+        overflow-x: hidden;
+    }
+
+    /* ---- Layering: cart, modal and chat must sit above the fixed header -- */
+    .cart-overlay {
+        z-index: 6590;
+    }
+
+    .cart-sidebar {
+        z-index: 6600;
+    }
+
+    .modal-overlay {
+        z-index: 6700;
+    }
+
+    .chat-widget {
+        z-index: 6200;
+    }
+
+    /* ---- Mobile header: hamburger | brand | cart ------------------------ */
+    .mobile-brand {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .mobile-cart-btn {
+        position: relative;
+        width: 42px;
+        height: 42px;
+        flex: 0 0 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--gold);
+        color: var(--bg-base);
+        border: none;
+        border-radius: 9px;
+        cursor: pointer;
+        box-shadow: 0 5px 16px rgba(0,0,0,0.28);
+    }
+
+        .mobile-cart-btn:active {
+            transform: scale(0.96);
+        }
+
+        .mobile-cart-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+    /* The cart lives in the fixed header on phones, so drop the duplicate */
+    .header-actions .cart-icon-btn {
+        display: none;
+    }
+
+    /* ---- Sidebar drawer ------------------------------------------------- */
+    .sidebar {
+        width: min(300px, 86vw);
+        min-width: 0;
+        padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+        overscroll-behavior: contain;
+    }
+
+    .sidebar-tabs {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .user-card {
+        padding: 10px 11px;
+    }
+
+    /* ---- Page header ---------------------------------------------------- */
+    .pos-header {
+        margin-bottom: 16px;
+    }
+
+    .refresh-btn {
+        width: 100%;
+        min-height: 42px;
+    }
+
+    /* ---- Inputs: 16px stops iOS from zooming the page on focus --------- */
+    .cart-select,
+    .cart-textarea,
+    .notes-textarea,
+    #menuSearch,
+    #chatInput {
+        font-size: 16px;
+    }
+
+    .cart-select,
+    .cart-textarea {
+        min-height: 44px;
+    }
+
+    .btn-apply-promo,
+    .btn-checkout,
+    .btn-confirm-add,
+    .btn-use-location {
+        min-height: 44px;
+    }
+
+    /* ---- Cart drawer ---------------------------------------------------- */
+    .cart-sidebar {
+        width: min(420px, 100vw);
+        right: -105%;
+    }
+
+    .cart-header {
+        padding: 14px 16px;
+    }
+
+    .cart-items-container {
+        padding: 14px 16px;
+        min-height: 110px;
+    }
+
+    .cart-footer {
+        padding: 14px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+        max-height: 62vh;
+        overscroll-behavior: contain;
+    }
+
+    @supports (height: 100dvh) {
+        .cart-footer {
+            max-height: 62dvh;
+        }
+    }
+
+    .cart-qty-btn {
+        width: 30px;
+        height: 30px;
+    }
+
+    .cart-edit-btn {
+        padding: 7px 12px;
+    }
+
+    /* ---- Size / add-ons modal becomes a bottom sheet -------------------- */
+    .modal-overlay {
+        align-items: flex-end;
+    }
+
+    .modal-card {
+        width: 100%;
+        max-width: none;
+        max-height: 90vh;
+        padding: 20px 18px calc(20px + env(safe-area-inset-bottom, 0px));
+        border-radius: 20px 20px 0 0;
+        border-bottom: none;
+        animation: sheetUp 0.3s ease-out;
+    }
+
+    @supports (height: 100dvh) {
+        .modal-card {
+            max-height: 90dvh;
+        }
+    }
+
+    .addon-check {
+        padding: 9px 12px;
+        font-size: 13px;
+    }
+
+    .qty-btn {
+        width: 42px;
+        height: 42px;
+    }
+
+    /* ---- My Orders ------------------------------------------------------ */
+    .track-card {
+        padding: 16px;
+    }
+
+    .track-step {
+        flex: 0 0 auto;
+        width: 62px;
+        min-width: 0;
+        font-size: 10px;
+        text-align: center;
+        line-height: 1.2;
+    }
+
+    .track-line {
+        margin: 0 2px 26px;
+    }
+
+    .history-row {
+        gap: 12px;
+        padding: 14px;
+    }
+
+    .history-right {
+        flex-shrink: 0;
+    }
+
+    /* ---- Chat ----------------------------------------------------------- */
+    .chat-window {
+        height: calc(100vh - 150px);
+        max-height: 560px;
+    }
+
+    @supports (height: 100dvh) {
+        .chat-window {
+            height: calc(100dvh - 150px);
+        }
+    }
+}
+
+
+/* ---- Phones: keep a 2-column menu (less endless scrolling) ------------- */
+@media (max-width: 480px) {
+
+    .product-container {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .product-img-placeholder {
+        height: 112px;
+    }
+
+    .product-info {
+        padding: 10px;
+    }
+
+    /* Name on top, price underneath, so long names never get squeezed */
+    .info-top {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+        margin-bottom: 8px;
+    }
+
+        .info-top h3 {
+            font-size: 12.5px;
+            line-height: 1.3;
+        }
+
+    .price {
+        font-size: 12.5px;
+    }
+
+    /* "Freshly prepared X" repeats the title and wastes space on a small card */
+    .description {
+        display: none;
+    }
+
+    .btn-add-order {
+        min-height: 40px;
+        margin-top: auto;
+        font-size: 11px;
+    }
+
+    .fav-heart {
+        width: 30px;
+        height: 30px;
+        font-size: 14px;
+    }
+
+    /* Cart rows wrap instead of overflowing */
+    .cart-item-row {
+        flex-wrap: wrap;
+    }
+
+    .cart-item-info {
+        flex: 1 1 100%;
+    }
+
+    .cart-item-controls {
+        margin-right: auto;
+    }
+
+    .track-step span {
+        max-width: 62px;
+    }
+
+    .chat-fab {
+        width: 50px;
+        height: 50px;
+    }
+}
+
+
+/* ---- Very narrow phones (≤ 340px): fall back to one column ------------- */
+@media (max-width: 340px) {
+
+    .product-container {
+        grid-template-columns: 1fr;
+    }
+
+    .product-img-placeholder {
+        height: 150px;
+    }
+
+    .description {
+        display: block;
+    }
+}
+
+
+@keyframes sheetUp {
+    from {
+        transform: translateY(100%);
+    }
+
+    to {
+        transform: translateY(0);
+    }
+}
+
+
+/* ==========================================================================
+   46. FAVORITE HEART (text glyph instead of emoji)
+   ========================================================================== */
+.fav-heart {
+    color: var(--cream);
+}
+
+    .fav-heart.fav-active {
+        color: var(--danger);
     }
