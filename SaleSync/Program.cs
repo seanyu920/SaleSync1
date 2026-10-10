@@ -47,10 +47,10 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    app.UseHsts();
+    //app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 // MapStaticAssets() below only serves files that existed in wwwroot at build time
 // (it works off a compile-time manifest). Files added at runtime — like uploaded
