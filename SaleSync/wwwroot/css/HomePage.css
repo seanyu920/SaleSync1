@@ -2948,3 +2948,24 @@ textarea {
             font-size: 8px;
         }
 }
+
+    .nav-login-link {
+        display: none;
+    }
+
+    @media (max-width: 768px) {
+        .top-bar-right .login-btn {
+            display: none;
+        }
+
+        .nav-login-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 6px;
+            padding-top: 14px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            color: #C9A84C;
+            font-weight: 800;
+        }
+    }
