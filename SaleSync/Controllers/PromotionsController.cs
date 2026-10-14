@@ -101,15 +101,8 @@ namespace SaleSync.Controllers
                 }
 
                 // Calculate status dynamically based on current date/time.
-                DateTime now = DateTime.Now;
-
-                foreach (var promotion in promotions)
-                {
-                    if (promotion.EndDate < now)
-                    {
-                        promotion.IsActive = false;
-                    }
-                }
+                // Use the store's (Philippine) clock so it matches what the cashier checks.
+                DateTime now = SaleSync.Services.StoreSettingsService.GetStoreNow();
 
                 ViewBag.TotalPromotions = promotions.Count;
 
@@ -117,7 +110,7 @@ namespace SaleSync.Controllers
                     p.IsActive &&
                     p.StartDate <= now &&
                     p.EndDate >= now &&
-                    p.UsageCount < p.MaxUsage
+                    (p.MaxUsage == 0 || p.UsageCount < p.MaxUsage)
                 );
 
                 ViewBag.ExpiredPromotions = promotions.Count(p =>

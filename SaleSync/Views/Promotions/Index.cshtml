@@ -516,7 +516,7 @@ int expiredPromotions = ViewBag.ExpiredPromotions ?? 0;
                                                             title="Toggle Active"
                                                             data-action="toggle"
                                                             data-id="@promotion.Id"
-                                                            data-new-status="@(!promotion.IsActive).ToString().ToLower()">
+                                                            data-new-status="@((!promotion.IsActive).ToString().ToLower())">
 
                                                         @if (promotion.IsActive)
                                                         {
@@ -528,6 +528,8 @@ int expiredPromotions = ViewBag.ExpiredPromotions ?? 0;
                                                         }
 
                                                     </button>
+
+                                                    
 
                                                     <button type="button"
                                                             class="promo-action-btn"
