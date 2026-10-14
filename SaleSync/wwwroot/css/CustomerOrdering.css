@@ -3971,3 +3971,315 @@ input[type="datetime-local"].cart-select {
     .fav-heart.fav-active {
         color: var(--danger);
     }
+/* ==========================================================================
+   47. STICKY CUSTOMER HEADER (search, notifications, cart, account)
+   ========================================================================== */
+
+        :root {
+            --mh: 56px;
+        }
+
+        @media (max-width: 480px) {
+            :root {
+                --mh: 54px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            :root {
+                --mh: 52px;
+            }
+        }
+
+        /* overflow-x:hidden turns .main-content into a scroll box and breaks sticky.
+           "clip" hides overflow without creating one. */
+        .main-content {
+            overflow-x: clip;
+        }
+
+        .app-topbar {
+            position: sticky;
+            top: 0;
+            z-index: 1500;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            padding: 10px 34px;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-sub);
+        }
+
+            .app-topbar .search-container {
+                flex: 1;
+                width: auto;
+                max-width: 440px;
+            }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .topbar-dropdown-wrap {
+            position: relative;
+        }
+
+        .topbar-icon-btn {
+            position: relative;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-card);
+            border: 1px solid var(--border-sub);
+            border-radius: 10px;
+            color: var(--muted-2);
+            cursor: pointer;
+            transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+        }
+
+            .topbar-icon-btn:hover {
+                border-color: var(--border-strong);
+                color: var(--gold-light);
+                background: var(--bg-card-hover);
+            }
+
+            .topbar-icon-btn svg {
+                width: 20px;
+                height: 20px;
+            }
+
+        .topbar-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 4px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            background: var(--danger);
+            color: #fff;
+            border: 2px solid var(--bg-surface);
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        .account-btn {
+            height: 44px;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 0 12px 0 6px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-sub);
+            border-radius: 999px;
+            color: var(--cream);
+            font-family: 'Outfit', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+            .account-btn:hover {
+                border-color: var(--border-strong);
+            }
+
+        .account-avatar {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: var(--gold-glow);
+            border: 1px solid var(--border);
+            color: var(--gold-light);
+            font-weight: 900;
+        }
+
+        .account-name {
+            max-width: 130px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .notif-panel,
+        .account-menu {
+            position: absolute;
+            right: 0;
+            top: calc(100% + 10px);
+            display: none;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 16px 40px rgba(0,0,0,0.45);
+            z-index: 1600;
+        }
+
+            .notif-panel.open,
+            .account-menu.open {
+                display: block;
+            }
+
+        .notif-panel {
+            width: 340px;
+            overflow: hidden;
+        }
+
+        .account-menu {
+            min-width: 170px;
+            padding: 6px;
+        }
+
+            .account-menu button {
+                width: 100%;
+                padding: 10px 12px;
+                background: transparent;
+                border: none;
+                border-radius: 8px;
+                color: var(--muted-2);
+                font-family: 'Outfit', sans-serif;
+                font-size: 13px;
+                font-weight: 700;
+                text-align: left;
+                cursor: pointer;
+            }
+
+                .account-menu button:hover {
+                    background: rgba(255,255,255,0.05);
+                    color: var(--cream);
+                }
+
+                .account-menu button.danger:hover {
+                    color: var(--danger);
+                    background: rgba(224,85,85,0.08);
+                }
+
+        .notif-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border-sub);
+            color: var(--cream);
+            font-size: 13px;
+        }
+
+        .notif-clear {
+            background: none;
+            border: none;
+            color: var(--gold);
+            font-family: 'Outfit', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .notif-list {
+            max-height: 360px;
+            overflow-y: auto;
+        }
+
+        .notif-item {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border-sub);
+        }
+
+            .notif-item:last-child {
+                border-bottom: none;
+            }
+
+            .notif-item p {
+                color: var(--muted-2);
+                font-size: 13px;
+                line-height: 1.4;
+            }
+
+            .notif-item span {
+                color: var(--muted);
+                font-size: 11px;
+            }
+
+            .notif-item.unread {
+                background: var(--gold-glow);
+                border-left: 3px solid var(--gold);
+            }
+
+                .notif-item.unread p {
+                    color: var(--cream);
+                    font-weight: 600;
+                }
+
+        .notif-empty {
+            padding: 26px 16px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 12.5px;
+        }
+
+        /* The sidebar user card now lives in the header on desktop */
+        .drawer-only {
+            display: none;
+        }
+
+        
+
+        .notif-count {
+            margin-left: auto;
+            min-width: 20px;
+            height: 20px;
+            padding: 0 6px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            background: var(--danger);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        /* Phones: only the search bar stays in the header; the rest moves to the drawer */
+        @media (max-width: 760px) {
+            .drawer-only {
+                display: flex;
+            }
+
+            .app-topbar {
+                top: var(--mh);
+                margin-top: var(--mh);
+                padding: 8px 12px;
+            }
+
+                .app-topbar .search-container {
+                    max-width: none;
+                }
+
+                .topbar-icon-btn,
+                .account-btn,
+                .app-topbar .cart-icon-btn {
+                    display: none;
+                }
+
+            .notif-panel {
+                position: fixed;
+                top: calc(var(--mh) + 60px);
+                left: 10px;
+                right: 10px;
+                width: auto;
+                z-index: 6800;
+            }
+
+            /* the fixed mobile header no longer needs big spacer padding */
+            .main-content > #tabMenu,
+            .main-content > #tabOrders {
+                padding-top: 16px;
+            }
+        }    

@@ -188,6 +188,42 @@ namespace SaleSync.Controllers
                 }
             }
         }
+        [HttpGet]
+        public IActionResult GetMyOrders()
+        {
+            int currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+            var orders = new List<object>();
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+                const string sql = @"
+            SELECT sale_id, sale_date, total_amount, status, order_type
+            FROM sales
+            WHERE user_id = @userId
+            ORDER BY sale_date DESC";
+
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@userId", currentUserId);
+                    using (SqlDataReader r = cmd.ExecuteReader())
+                    {
+                        while (r.Read())
+                        {
+                            orders.Add(new
+                            {
+                                saleId = Convert.ToInt32(r["sale_id"]),
+                                saleDate = Convert.ToDateTime(r["sale_date"]).ToString("MMM dd, hh:mm tt"),
+                                totalAmount = Convert.ToDecimal(r["total_amount"]),
+                                status = r["status"]?.ToString() ?? "Pending",
+                                orderType = r["order_type"]?.ToString() ?? "Pick-up"
+                            });
+                        }
+                    }
+                }
+            }
+            return Json(orders);
+        }
     }
 
    
