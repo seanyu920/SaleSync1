@@ -1049,7 +1049,7 @@ namespace SaleSync.Controllers
 
         [Authorize(Roles = "Admin")]
         [HttpPost]
-        public IActionResult UpdateAccount(int UserId, string Username, int RoleId, string Email)
+        public IActionResult UpdateAccount(UserAccount model)
         {
             string currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             int currentUserId = string.IsNullOrEmpty(currentUserIdStr) ? 0 : int.Parse(currentUserIdStr);
@@ -1058,8 +1058,8 @@ namespace SaleSync.Controllers
             {
                 conn.Open();
 
-                // 1. Peer-Admin Protection Check (Skip if the Admin is updating their own profile details)
-                if (currentUserId != UserId)
+                // 1. Peer-Admin Protection Check (skip if the Admin is updating their own profile)
+                if (currentUserId != model.UserId)
                 {
                     string checkTargetAdminSql = @"
                 SELECT COUNT(*) 
@@ -1069,7 +1069,7 @@ namespace SaleSync.Controllers
 
                     using (SqlCommand adminCheckCmd = new SqlCommand(checkTargetAdminSql, conn))
                     {
-                        adminCheckCmd.Parameters.AddWithValue("@id", UserId);
+                        adminCheckCmd.Parameters.AddWithValue("@id", model.UserId);
                         int isTargetAdmin = (int)adminCheckCmd.ExecuteScalar();
 
                         if (isTargetAdmin > 0)
@@ -1080,18 +1080,59 @@ namespace SaleSync.Controllers
                     }
                 }
 
-                // 2. Perform Account Changes Modification
-                string sql = "UPDATE users SET username = @username, role_id = @roleId, email = @email WHERE user_id = @id";
+                // 2. Duplicate username/email check (ignoring the account being edited)
+                string dupSql = "SELECT COUNT(*) FROM users WHERE (username = @username OR email = @email) AND user_id <> @id";
+                using (SqlCommand dupCmd = new SqlCommand(dupSql, conn))
+                {
+                    dupCmd.Parameters.AddWithValue("@username", model.Username ?? "");
+                    dupCmd.Parameters.AddWithValue("@email", model.Email ?? "");
+                    dupCmd.Parameters.AddWithValue("@id", model.UserId);
+
+                    if ((int)dupCmd.ExecuteScalar() > 0)
+                    {
+                        TempData["ErrorMessage"] = "Another account already uses that Username or Email.";
+                        return RedirectToAction("ManageAccounts");
+                    }
+                }
+
+                // 3. Convert the role NAME from the form into a role_id
+                int roleId;
+                using (SqlCommand roleCmd = new SqlCommand("SELECT TOP 1 role_id FROM roles WHERE role_name = @role", conn))
+                {
+                    roleCmd.Parameters.AddWithValue("@role", model.Role ?? "");
+                    object result = roleCmd.ExecuteScalar();
+
+                    if (result == null)
+                    {
+                        TempData["ErrorMessage"] = "The selected role does not exist.";
+                        return RedirectToAction("ManageAccounts");
+                    }
+                    roleId = Convert.ToInt32(result);
+                }
+
+                // 4. Update the account (only touch the password if a new one was typed)
+                bool hasNewPassword = !string.IsNullOrWhiteSpace(model.Password);
+
+                string sql = @"UPDATE users 
+                       SET full_name = @fullName, username = @username, email = @email, role_id = @roleId"
+                             + (hasNewPassword ? ", password_hash = @password" : "")
+                             + " WHERE user_id = @id";
+
                 using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
-                    cmd.Parameters.AddWithValue("@username", Username);
-                    cmd.Parameters.AddWithValue("@roleId", RoleId);
-                    cmd.Parameters.AddWithValue("@email", Email);
-                    cmd.Parameters.AddWithValue("@id", UserId);
+                    cmd.Parameters.AddWithValue("@fullName", model.FullName ?? "");
+                    cmd.Parameters.AddWithValue("@username", model.Username ?? "");
+                    cmd.Parameters.AddWithValue("@email", model.Email ?? "");
+                    cmd.Parameters.AddWithValue("@roleId", roleId);
+                    cmd.Parameters.AddWithValue("@id", model.UserId);
+
+                    if (hasNewPassword)
+                        cmd.Parameters.AddWithValue("@password", PasswordHasher.Hash(model.Password));
+
                     cmd.ExecuteNonQuery();
                 }
 
-                LogActivity(currentUserId, "Account Updated", $"Modified User ID: {UserId}");
+                LogActivity(currentUserId, "Account Updated", $"Modified User ID: {model.UserId}");
             }
 
             TempData["SuccessMessage"] = "Account configuration updated successfully.";
