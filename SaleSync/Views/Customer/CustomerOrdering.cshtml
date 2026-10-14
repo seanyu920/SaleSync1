@@ -113,6 +113,9 @@
                 <div class="sidebar-tabs">
                     <button class="tab-btn active" onclick="switchTab('menu', this)">Order</button>
                     <button class="tab-btn" onclick="switchTab('orders', this)">My Orders</button>
+                    <button type="button" class="menu-btn drawer-only" onclick="openNotifFromDrawer()">
+                        Notifications <span class="notif-count" id="drawerNotifCount">0</span>
+                    </button>
                 </div>
 
                 <div id="catNav">
@@ -179,22 +182,42 @@
 
         <main class="main-content slide-up">
 
+            <div class="app-topbar" id="appTopbar">
+                <div class="search-container">
+                    <span class="search-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></svg></span>
+                    <input type="text" id="menuSearch" placeholder="Search menu items..." oninput="onSearchInput()" autocomplete="off">
+                </div>
+
+                <div class="topbar-actions">
+                    <div class="topbar-dropdown-wrap">
+                        <button type="button" class="topbar-icon-btn" onclick="toggleNotifPanel(event)" aria-label="Notifications">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.7 21a2 2 0 0 1-3.4 0" /></svg>
+                            <span class="topbar-badge" id="notifBadge">0</span>
+                        </button>
+
+                        <div class="notif-panel" id="notifPanel">
+                            <div class="notif-head">
+                                <strong>Notifications</strong>
+                                <button type="button" class="notif-clear" onclick="markAllNotifsRead()">Mark all read</button>
+                            </div>
+                            <div class="notif-list" id="notifList"></div>
+                        </div>
+                    </div>
+
+                    <button type="button" class="cart-icon-btn" onclick="toggleCart()" aria-label="Open cart">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4" /><circle cx="18" cy="20" r="1.4" /><path d="M2 3h3l2.6 12.2a1.5 1.5 0 0 0 1.5 1.2h8.6a1.5 1.5 0 0 0 1.5-1.1L21 8H6" /></svg>
+                        <span class="cart-badge">0</span>
+                    </button>
+                </div>
+            </div>
+
             <div id="tabMenu">
                 <header class="pos-header">
                     <div>
                         <h1>Place an Order</h1>
                         <p>Hi <span class="welcome-name">@displayName</span>, handcrafted beverages and meals made with love</p>
                     </div>
-                    <div class="header-actions">
-                        <div class="search-container">
-                            <span class="search-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></svg></span>
-                            <input type="text" id="menuSearch" placeholder="Search menu items..." onkeyup="filterMenu()">
-                        </div>
-                        <button class="cart-icon-btn" onclick="toggleCart()">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4" /><circle cx="18" cy="20" r="1.4" /><path d="M2 3h3l2.6 12.2a1.5 1.5 0 0 0 1.5 1.2h8.6a1.5 1.5 0 0 0 1.5-1.1L21 8H6" /></svg>
-                            <span class="cart-badge" id="cartBadge">0</span>
-                        </button>
-                    </div>
+
                 </header>
 
                 <div class="product-container" id="menuGrid" data-current-cat="all">
@@ -502,6 +525,9 @@
                     ✕
                 </button>
             </div>
+
+            <!-- Price for items that come in one size (sized items show prices in the size boxes) -->
+            <span class="price" id="modalItemPrice"></span>
 
             <div id="sizeSection">
                 <p class="modal-label">Select Size</p>
@@ -956,15 +982,15 @@
 
         @if (Model?.MenuItems != null)
             {
-                                                foreach (var item in Model.MenuItems)
-                    {
-                            @:allItems[@item.ProductId] = {
-                            @:id: @item.ProductId,
-                            @:name: @Html.Raw(Json.Serialize(item.ProductName)),
-                            @:price: @item.Price,
-                            @:cat: @Html.Raw(Json.Serialize((item.CategoryName ?? "").ToLower().Replace(" ", "")))
-                                @:};
-                }
+                                                    foreach (var item in Model.MenuItems)
+                        {
+                                    @:allItems[@item.ProductId] = {
+                                    @:id: @item.ProductId,
+                                    @:name: @Html.Raw(Json.Serialize(item.ProductName)),
+                                    @:price: @item.Price,
+                                    @:cat: @Html.Raw(Json.Serialize((item.CategoryName ?? "").ToLower().Replace(" ", "")))
+                                        @:};
+                    }
             }
 
             // ── STATE ──────────────────────────────────────────────────────────────────
@@ -1736,6 +1762,17 @@
                     ? '₱' +
                     activeLargePrice.toFixed(2)
                     : '';
+
+            const modalPriceEl =
+                document.getElementById('modalItemPrice');
+
+            if (modalPriceEl) {
+                modalPriceEl.innerText =
+                    '₱' + activeSmallPrice.toFixed(2);
+
+                modalPriceEl.style.display =
+                    hasSizes ? 'none' : 'block';
+            }
 
             document.getElementById(
                 'itemQty'
@@ -3215,6 +3252,165 @@
             }
         }
 
+        // ── HEADER: SEARCH / NOTIFICATIONS ───────────────────────────────────────
+
+        function onSearchInput() {
+            // Searching from My Orders jumps back to the menu first
+            if (document.getElementById('tabMenu').style.display === 'none') {
+                document.querySelectorAll('.tab-btn')[0].click();
+            }
+            filterMenu();
+        }
+
+        function closeTopbarMenus() {
+            document.getElementById('notifPanel')?.classList.remove('open');
+            document.getElementById('accountMenu')?.classList.remove('open');
+        }
+
+        function toggleNotifPanel(event) {
+            event.stopPropagation();
+            document.getElementById('notifPanel').classList.toggle('open');
+        }
+
+        function openNotifFromDrawer() {
+            closeSidebar();
+            document.getElementById('notifPanel').classList.add('open');
+        }
+
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('.topbar-dropdown-wrap') && !e.target.closest('.drawer-only')) {
+                closeTopbarMenus();
+            }
+        });
+
+        // Order-status notifications. Stored per account on this device and fed by
+        // polling /Customer/GetMyOrders; a notification is created whenever an
+        // order's status differs from the last one we saw.
+
+        function userKey(prefix) {
+            return prefix + ':' + currentUser;
+        }
+
+        function loadNotifs() {
+            try { return JSON.parse(localStorage.getItem(userKey('caferoNotifs')) || '[]'); }
+            catch (e) { return []; }
+        }
+
+        function saveNotifs(list) {
+            localStorage.setItem(userKey('caferoNotifs'), JSON.stringify(list.slice(0, 20)));
+        }
+
+        function statusMessage(o) {
+            const id = '#' + o.saleId;
+            const delivery = (o.orderType || '').toLowerCase() === 'delivery';
+
+            switch (o.status) {
+                case 'Pending': return `Order ${id} was received.`;
+                case 'Preparing':
+                case 'Processing': return `Order ${id} is now being prepared.`;
+                case 'Ready': return `Order ${id} is ready for pickup!`;
+                case 'Out for Delivery':
+                case 'On the Way': return `Order ${id} is out for delivery.`;
+                case 'Completed': return delivery
+                    ? `Order ${id} was delivered. Enjoy!`
+                    : `Order ${id} is ready. Enjoy!`;
+                case 'Delivered': return `Order ${id} was delivered. Enjoy!`;
+                case 'Voided': return `Order ${id} was cancelled.`;
+                default: return `Order ${id} is now ${o.status}.`;
+            }
+        }
+
+        function timeAgo(iso) {
+            const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+            if (mins < 1) return 'Just now';
+            if (mins < 60) return mins + ' min ago';
+            const hrs = Math.floor(mins / 60);
+            if (hrs < 24) return hrs + ' hr ago';
+            return Math.floor(hrs / 24) + ' d ago';
+        }
+
+        function renderNotifs() {
+            const list = loadNotifs();
+            const unread = list.filter(n => !n.read).length;
+
+            const listEl = document.getElementById('notifList');
+            if (listEl) {
+                listEl.innerHTML = list.length
+                    ? list.map(n => `
+                        <div class="notif-item ${n.read ? '' : 'unread'}">
+                            <p>${escapeHTML(n.text)}</p>
+                            <span>${timeAgo(n.time)}</span>
+                        </div>`).join('')
+                    : '<div class="notif-empty">No notifications yet. Order updates will show up here.</div>';
+            }
+
+            const badge = document.getElementById('notifBadge');
+            if (badge) {
+                badge.innerText = unread;
+                badge.style.display = unread > 0 ? 'flex' : 'none';
+            }
+
+            const drawerCount = document.getElementById('drawerNotifCount');
+            if (drawerCount) {
+                drawerCount.innerText = unread;
+                drawerCount.style.display = unread > 0 ? 'inline-flex' : 'none';
+            }
+        }
+
+        function markAllNotifsRead() {
+            const list = loadNotifs();
+            list.forEach(n => n.read = true);
+            saveNotifs(list);
+            renderNotifs();
+        }
+
+        async function pollOrderStatuses() {
+            try {
+                const res = await fetch('/Customer/GetMyOrders');
+                if (!res.ok) return;
+
+                const orders = await res.json();
+                const seenKey = userKey('caferoOrderStatuses');
+                const firstRun = localStorage.getItem(seenKey) === null;
+                const seen = JSON.parse(localStorage.getItem(seenKey) || '{}');
+                const list = loadNotifs();
+                let added = 0;
+
+                orders.forEach(o => {
+                    // First run only sets the baseline so old orders don't flood the bell
+                    if (!firstRun && seen[o.saleId] !== o.status) {
+                        list.unshift({
+                            id: Date.now() + '-' + o.saleId,
+                            text: statusMessage(o),
+                            time: new Date().toISOString(),
+                            read: false
+                        });
+                        added++;
+                    }
+                    seen[o.saleId] = o.status;
+                });
+
+                localStorage.setItem(seenKey, JSON.stringify(seen));
+
+                if (added > 0) {
+                    saveNotifs(list);
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'info',
+                        title: added === 1 ? list[0].text : `${added} order updates`,
+                        showConfirmButton: false,
+                        timer: 4000
+                    });
+                }
+
+                renderNotifs();
+            }
+            catch (err) {
+                console.error('Order status poll failed:', err);
+            }
+        }
+
         // ── INIT ──────────────────────────────────────────────────────────────────
 
         window.onload =
@@ -3227,6 +3423,9 @@
                 checkStoreStatus();
 
                 restoreFavHearts();
+                renderNotifs();
+                pollOrderStatuses();
+                setInterval(pollOrderStatuses, 15000);
 
                 try {
 
