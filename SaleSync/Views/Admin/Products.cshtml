@@ -269,6 +269,7 @@
 
             function openSubMenu(cat) {
                 currentCategory = cat;
+                sessionStorage.setItem('productsOpenCategory', cat);
                 const items = menuData[cat] || [];
                 const container = document.getElementById('subItemsContainer');
 
@@ -354,6 +355,7 @@
 
             function showCategories() {
                 currentCategory = "";
+                sessionStorage.removeItem('productsOpenCategory');
                 document.getElementById('pageTitle').innerText = "Menu Categories";
                 document.getElementById('pageSubtitle').innerText = "Manage high-level categories or drill down into items.";
 
@@ -793,6 +795,20 @@
                     }
                 }
             });
+            // Reopen the category you were in (after add item / edit price / archive reloads)
+            (function restoreOpenCategory() {
+                const saved = sessionStorage.getItem('productsOpenCategory');
+                if (!saved) return;
+
+                const stillExists = Array.from(document.querySelectorAll('#categoryContainer [data-category]'))
+                    .some(card => card.getAttribute('data-category') === saved);
+
+                if (stillExists) {
+                    openSubMenu(saved);
+                } else {
+                    sessionStorage.removeItem('productsOpenCategory');
+                }
+            })();
     </script>
 </body>
 </html>

@@ -4282,4 +4282,144 @@ input[type="datetime-local"].cart-select {
             .main-content > #tabOrders {
                 padding-top: 16px;
             }
-        }    
+        }
+
+/* ==========================================================================
+   PROFILE CARD (clickable) + PROFILE SETTINGS POP-UP
+   Append this to the END of CustomerOrdering.css.
+   ========================================================================== */
+
+.user-card-clickable {
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+    .user-card-clickable:hover {
+        border-color: var(--border-strong);
+        background: var(--bg-card-hover);
+    }
+
+    .user-card-clickable:focus-visible {
+        outline: 2px solid var(--gold);
+        outline-offset: 2px;
+    }
+
+.user-card-gear {
+    width: 18px;
+    height: 18px;
+    margin-left: auto;
+    flex-shrink: 0;
+    color: var(--muted);
+    transition: color 0.2s ease, transform 0.3s ease;
+}
+
+.user-card-clickable:hover .user-card-gear {
+    color: var(--gold-light);
+    transform: rotate(45deg);
+}
+
+/* Avatars show the uploaded picture when there is one */
+.user-avatar {
+    overflow: hidden;
+}
+
+    .user-avatar img,
+    .profile-photo-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+/* Pop-up */
+.profile-photo-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.profile-photo-preview {
+    width: 84px;
+    height: 84px;
+    flex: 0 0 84px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--gold-glow);
+    border: 2px solid var(--border);
+    color: var(--gold-light);
+    font-size: 32px;
+    font-weight: 900;
+}
+
+.profile-photo-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.profile-photo-btn,
+.profile-photo-remove {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 14px;
+    border-radius: 9px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.profile-photo-btn {
+    background: var(--gold);
+    color: var(--bg-base);
+    border: none;
+}
+
+    .profile-photo-btn:hover {
+        background: var(--gold-light);
+    }
+
+    .profile-photo-btn input {
+        display: none;
+    }
+
+.profile-photo-remove {
+    background: transparent;
+    color: var(--muted-2);
+    border: 1px solid var(--border-sub);
+}
+
+    .profile-photo-remove:hover {
+        color: var(--danger);
+        border-color: rgba(224, 85, 85, 0.3);
+    }
+/* Product picture at the top of the pop-up (JS shows it only when the item has a photo) */
+.modal-product-img {
+    display: none;
+    width: 100%;
+    height: 170px;
+    flex-shrink: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--bg-card-2);
+}
+
+    .modal-product-img img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+/* Sugar level uses the same chips as add-ons, but with round radio buttons */
+.addon-check input[type="radio"] {
+    width: 15px;
+    height: 15px;
+    accent-color: var(--gold);
+    cursor: pointer;
+}
