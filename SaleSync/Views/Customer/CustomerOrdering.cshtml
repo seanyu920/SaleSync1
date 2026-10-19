@@ -15,6 +15,7 @@
     var displayInitial = string.IsNullOrWhiteSpace(displayName)
         ? "C"
         : displayName.Trim().Substring(0, 1).ToUpper();
+    var profilePicture = ViewBag.ProfilePicture as string;
 
     // Merge "X - Small" / "X - Large" rows into a single card per drink,
     // keeping the real ProductId and Price for each size so checkout
@@ -88,12 +89,28 @@
                 </div>
 
                 <!-- Logged-in customer -->
-                <div class="user-card">
-                    <div class="user-avatar">@displayInitial</div>
+                <div class="user-card user-card-clickable"
+                     id="userCard"
+                     role="button"
+                     tabindex="0"
+                     aria-label="Open profile settings"
+                     onclick="openProfileModal()"
+                     onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openProfileModal(); }">
+                    <div class="user-avatar" id="sidebarAvatar">
+                        @if (!string.IsNullOrEmpty(profilePicture))
+                        {
+                            <img src="@profilePicture" alt="" />
+                        }
+                        else
+                        {
+                            @displayInitial
+                        }
+                    </div>
                     <div class="user-info">
                         <span class="user-greeting">Welcome back,</span>
                         <span class="user-name">@displayName</span>
                     </div>
+                    <svg class="user-card-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>
                 </div>
 
                 <div class="store-status-banner @(storeStatus != null && storeStatus.IsOpen ? "open" : "")" id="storeBanner">
@@ -242,6 +259,12 @@
 
                             bool hasLarge = largeProductId.HasValue;
 
+                            // Picture shown in the Add to Order pop-up (either size row may hold the photo).
+                            string modalImagePath =
+                                !string.IsNullOrEmpty(smallItem.ImagePath)
+                                    ? smallItem.ImagePath
+                                    : largeItem?.ImagePath;
+
                             string catRaw = (p.Category ?? "Uncategorized")
                                 .ToLower()
                                 .Replace(" ", "");
@@ -295,7 +318,8 @@
                                         @Html.Raw(Json.Serialize(p.BaseName)),
                                         @smallItem.Price,
                                         @(hasLarge ? largeProductPrice.Value.ToString() : "null"),
-                                        @Html.Raw(Json.Serialize(catRaw))
+                                        @Html.Raw(Json.Serialize(catRaw)),
+                                        @Html.Raw(Json.Serialize(modalImagePath ?? ""))
                                         )'>
 
                                         + Add to Order
@@ -517,6 +541,9 @@
     <div id="sizeModal" class="modal-overlay">
         <div class="modal-card">
 
+            <!-- Product picture (hidden when the item has no photo) -->
+            <div class="modal-product-img" id="modalItemImage"></div>
+
             <div class="modal-header">
                 <h2 id="modalItemName">Item Name</h2>
 
@@ -563,6 +590,17 @@
                         </div>
                     </label>
 
+                </div>
+            </div>
+
+            <!-- SUGAR LEVEL: pick one (shown for milk tea) -->
+            <div id="sugarSection">
+                <p class="modal-label">
+                    Sugar Level
+                    
+                </p>
+
+                <div id="sugarList" class="addon-options">
                 </div>
             </div>
 
@@ -615,6 +653,71 @@
             <button class="btn-confirm-add"
                     onclick="confirmAddToCart()">
                 Add to Cart
+            </button>
+
+        </div>
+    </div>
+
+    <!-- Profile settings -->
+    <div id="profileModal" class="modal-overlay">
+        <div class="modal-card">
+
+            <div class="modal-header">
+                <h2>Profile Settings</h2>
+
+                <button type="button"
+                        class="close-modal"
+                        onclick="closeProfileModal()">
+                    ✕
+                </button>
+            </div>
+
+            <div class="profile-photo-row">
+                <div class="profile-photo-preview" id="profilePhotoPreview"></div>
+
+                <div class="profile-photo-actions">
+                    <label class="profile-photo-btn">
+                        Upload photo
+                        <input type="file"
+                               id="profilePhotoInput"
+                               accept="image/png,image/jpeg,image/gif,image/webp"
+                               onchange="onProfilePhotoPicked(this)">
+                    </label>
+
+                    <button type="button"
+                            class="profile-photo-remove"
+                            id="profilePhotoRemove"
+                            onclick="removeProfilePhoto()">
+                        Remove photo
+                    </button>
+                </div>
+            </div>
+
+            <div class="addr-field-group">
+                <label class="addr-label" for="profileDisplayName">Display Name</label>
+                <input type="text"
+                       id="profileDisplayName"
+                       class="cart-select"
+                       maxlength="40"
+                       autocomplete="off" />
+            </div>
+
+            <div class="addr-field-group">
+                <label class="addr-label" for="profileContactNumber">Contact Number</label>
+                <input type="tel"
+                       id="profileContactNumber"
+                       class="cart-select"
+                       placeholder="09XX XXX XXXX"
+                       maxlength="20" />
+            </div>
+
+            <p class="promo-message" id="profileMessage"></p>
+
+            <button type="button"
+                    class="btn-confirm-add"
+                    id="profileSaveBtn"
+                    onclick="saveProfile()">
+                Save Changes
             </button>
 
         </div>
@@ -982,15 +1085,15 @@
 
         @if (Model?.MenuItems != null)
             {
-                                                    foreach (var item in Model.MenuItems)
-                        {
-                                    @:allItems[@item.ProductId] = {
-                                    @:id: @item.ProductId,
-                                    @:name: @Html.Raw(Json.Serialize(item.ProductName)),
-                                    @:price: @item.Price,
-                                    @:cat: @Html.Raw(Json.Serialize((item.CategoryName ?? "").ToLower().Replace(" ", "")))
-                                        @:};
-                    }
+                                                foreach (var item in Model.MenuItems)
+                    {
+                            @:allItems[@item.ProductId] = {
+                            @:id: @item.ProductId,
+                            @:name: @Html.Raw(Json.Serialize(item.ProductName)),
+                            @:price: @item.Price,
+                            @:cat: @Html.Raw(Json.Serialize((item.CategoryName ?? "").ToLower().Replace(" ", "")))
+                                @:};
+                }
             }
 
             // ── STATE ──────────────────────────────────────────────────────────────────
@@ -1661,16 +1764,73 @@
         // (lowercased, spaces stripped).
 
         const addonsByCategory = {
-            coffee: ['Extra Shot', 'Less Sugar', 'Less Ice', 'Oat Milk', 'Extra Ice'],
-            milktea: ['Less Sugar', 'Less Ice', 'Extra Pearls', 'Extra Ice'],
-            fruittea: ['Less Sugar', 'Less Ice', 'Extra Ice'],
-            ricemeal: ['Extra Rice', 'Less Spicy', 'No Onions', 'Extra Sauce'],
-            'snacks&pasta': ['Extra Rice', 'Less Spicy', 'No Onions', 'Extra Sauce', 'Extra Cheese'],
-            'bread&pastry': ['Warmed Up', 'Extra Butter', 'No Nuts']
+            coffee: ['Extra Sugar', 'Oat Milk', 'Extra Ice'],
+            milktea: ['Extra Pearls', 'Extra Ice'],
+            fruittea: ['Extra Sugar', 'Extra Ice'],
+            ricemeal: ['Extra Rice'],
+            'snacks&pasta': ['Extra Sauce', 'Extra Cheese'],
+            'bread&pastry': []
         };
+
+        // Add-ons for one specific product. If the product name contains the
+        // "match" text, this list is used instead of the category list.
+        const addonsByItem = [
+            { match: 'flavored fries', addons: ['Barbeque', 'Cheese', 'Sour Cream'] },
+            { match: 'siomai', addons: [] }
+        ];
+
+        // Add-ons that cannot be ticked together (per category).
+        const exclusiveAddonGroups = {
+            coffee: [['Extra Ice'], ['Extra Sugar']],
+            milktea: [['Extra Ice']],
+            fruittea: [['Extra Ice'], ['Extra Sugar']]
+        };
+
+        // Sugar level is a choice of its own (pick one), not an add-on.
+        const sugarLevelsByCategory = {
+            milktea: ['25%', '50%', '75%', '100%']
+        };
+
+        function getSugarLevelsForItem(category, itemName) {
+            return sugarLevelsByCategory[category] || [];
+        }
 
         function getAddonsForCategory(category) {
             return addonsByCategory[category] || [];
+        }
+
+        function getAddonsForItem(category, itemName) {
+
+            const name = (itemName || '').toLowerCase();
+
+            const override = addonsByItem.find(rule => name.includes(rule.match));
+
+            return override
+                ? override.addons
+                : getAddonsForCategory(category);
+        }
+
+        // When one add-on of an exclusive group is ticked, untick the others.
+        function onAddonToggle(input) {
+
+            if (!input.checked) return;
+
+            const groups = exclusiveAddonGroups[input.dataset.cat] || [];
+
+            const group = groups.find(g => g.includes(input.value));
+
+            if (!group) return;
+
+            const scope = input.closest('.addon-options');
+
+            if (!scope) return;
+
+            scope.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+
+                if (cb !== input && group.includes(cb.value)) {
+                    cb.checked = false;
+                }
+            });
         }
 
         // Combines the selected add-ons and free-text notes into a single
@@ -1679,6 +1839,10 @@
         function buildInstructionsText(item) {
 
             const parts = [];
+
+            if (item.sugarLevel) {
+                parts.push('Sugar Level: ' + item.sugarLevel);
+            }
 
             if (item.addons && item.addons.length > 0) {
                 parts.push('Add-ons: ' + item.addons.join(', '));
@@ -1699,7 +1863,8 @@
             itemName,
             smallPrice,
             largePrice,
-            category
+            category,
+            imagePath
         ) {
 
             activeSmallId =
@@ -1782,6 +1947,33 @@
                 'itemNotes'
             ).value = '';
 
+            const modalImageEl =
+                document.getElementById('modalItemImage');
+
+            if (modalImageEl) {
+
+                modalImageEl.innerHTML = '';
+
+                if (imagePath) {
+
+                    const img = document.createElement('img');
+
+                    img.src = imagePath;
+                    img.alt = itemName;
+
+                    img.onerror = () => {
+                        modalImageEl.style.display = 'none';
+                    };
+
+                    modalImageEl.appendChild(img);
+                    modalImageEl.style.display = 'block';
+                }
+                else {
+
+                    modalImageEl.style.display = 'none';
+                }
+            }
+
             const radios =
                 document.querySelectorAll(
                     'input[name="itemSize"]'
@@ -1797,7 +1989,7 @@
 
             // Populate the Add-ons checkboxes for this item's category.
             const addonOptions =
-                getAddonsForCategory(activeCategory);
+                getAddonsForItem(activeCategory, activeItemName);
 
             const addonsSection =
                 document.getElementById('addonsSection');
@@ -1812,7 +2004,7 @@
                 addonsList.innerHTML =
                     addonOptions.map(label => `
                         <label class="addon-check">
-                            <input type="checkbox" name="modalAddon" value="${label}">
+                            <input type="checkbox" name="modalAddon" value="${label}" data-cat="${escapeHTML(activeCategory)}" onchange="onAddonToggle(this)">
                             ${label}
                         </label>
                     `).join('');
@@ -1822,6 +2014,34 @@
 
                 addonsSection.style.display = 'none';
                 addonsList.innerHTML = '';
+            }
+
+            // Sugar level (pick one) for the categories that have it.
+            const sugarOptions =
+                getSugarLevelsForItem(activeCategory, activeItemName);
+
+            const sugarSection =
+                document.getElementById('sugarSection');
+
+            const sugarList =
+                document.getElementById('sugarList');
+
+            if (sugarOptions.length > 0) {
+
+                sugarSection.style.display = 'block';
+
+                sugarList.innerHTML =
+                    sugarOptions.map(label => `
+                        <label class="addon-check">
+                            <input type="radio" name="modalSugar" value="${label}">
+                            ${label}
+                        </label>
+                    `).join('');
+            }
+            else {
+
+                sugarSection.style.display = 'none';
+                sugarList.innerHTML = '';
             }
 
             document.getElementById(
@@ -1894,6 +2114,31 @@
                     document.querySelectorAll('input[name="modalAddon"]:checked')
                 ).map(cb => cb.value);
 
+            const sugarPicked =
+                document.querySelector('input[name="modalSugar"]:checked');
+
+            const sugarSection =
+                document.getElementById('sugarSection');
+
+            const sugarIsRequired =
+                sugarSection &&
+                sugarSection.style.display !== 'none' &&
+                document.querySelectorAll('input[name="modalSugar"]').length > 0;
+
+            if (sugarIsRequired && !sugarPicked) {
+                Swal.fire({
+                    title: 'Sugar Level Required',
+                    text: 'Please select a sugar level before adding this item to your cart.',
+                    icon: 'warning',
+                    confirmButtonText: 'OK'
+                });
+
+                return;
+            }
+
+            const sugarLevel =
+                sugarPicked ? sugarPicked.value : '';
+
             const useLarge =
                 hasSizes &&
                 size === 'Large';
@@ -1914,7 +2159,8 @@
                         i.id === productId &&
                         i.size === size &&
                         i.notes === notes &&
-                        JSON.stringify(i.addons || []) === JSON.stringify(selectedAddons)
+                        JSON.stringify(i.addons || []) === JSON.stringify(selectedAddons) &&
+                        (i.sugarLevel || '') === sugarLevel
                 );
 
             if (existingIdx > -1) {
@@ -1934,6 +2180,7 @@
                     price: price,
                     notes: notes,
                     addons: selectedAddons,
+                    sugarLevel: sugarLevel,
                     category: activeCategory
                 });
             }
@@ -2277,6 +2524,11 @@
                     ? `<div class="cart-addons">Add-ons: ${escapeHTML(item.addons.join(', '))}</div>`
                     : '';
 
+            const sugarHtml =
+                item.sugarLevel
+                    ? `<div class="cart-addons">Sugar Level: ${escapeHTML(item.sugarLevel)}</div>`
+                    : '';
+
             const notesHtml =
                 item.notes
                     ? `<div class="cart-notes-line"><em class="cart-notes">Note: ${escapeHTML(item.notes)}</em></div>`
@@ -2293,6 +2545,7 @@
                             · ₱${item.price.toFixed(2)}/ea
                         </p>
 
+                        ${sugarHtml}
                         ${addonsHtml}
                         ${notesHtml}
 
@@ -2337,7 +2590,7 @@
         function buildCartItemEditHtml(item, idx) {
 
             const addonOptions =
-                getAddonsForCategory(item.category || '');
+                getAddonsForItem(item.category || '', item.name);
 
             const currentAddons =
                 item.addons || [];
@@ -2352,12 +2605,30 @@
 
                     return `
                         <label class="addon-check">
-                            <input type="checkbox" class="cart-edit-addon" value="${label}" ${checked}>
+                            <input type="checkbox" class="cart-edit-addon" value="${label}" data-cat="${escapeHTML(item.category || '')}" onchange="onAddonToggle(this)" ${checked}>
                             ${label}
                         </label>
                     `;
 
                 }).join('');
+
+            const sugarOptions =
+                getSugarLevelsForItem(item.category || '', item.name);
+
+            const sugarEditHtml =
+                sugarOptions.length > 0
+                    ? `
+                        <p class="modal-label">Sugar Level</p>
+                        <div class="addon-options">
+                            ${sugarOptions.map(label => `
+                                <label class="addon-check">
+                                    <input type="radio" class="cart-edit-sugar" name="cartEditSugar" value="${label}" ${item.sugarLevel === label ? 'checked' : ''}>
+                                    ${label}
+                                </label>
+                            `).join('')}
+                        </div>
+                      `
+                    : '';
 
             return `
                 <div class="cart-item-row cart-item-editing">
@@ -2370,6 +2641,8 @@
                                 (${escapeHTML(item.size)})
                             </span>
                         </h4>
+
+                        ${sugarEditHtml}
 
                         ${
                             addonOptions.length > 0
@@ -2441,6 +2714,15 @@
 
             customerCart[idx].notes = notes;
             customerCart[idx].addons = addons;
+
+            if (getSugarLevelsForItem(customerCart[idx].category || '', customerCart[idx].name).length > 0) {
+
+                const sugarPicked =
+                    row.querySelector('.cart-edit-sugar:checked');
+
+                customerCart[idx].sugarLevel =
+                    sugarPicked ? sugarPicked.value : '';
+            }
 
             localStorage.setItem(
                 'caferoCustomerCart',
@@ -3411,6 +3693,295 @@
             }
         }
 
+        // ── PROFILE SETTINGS ──────────────────────────────────────────────────────
+        // Saved on the server through:
+        //   GET  /Customer/GetProfile          -> { displayName, contactNumber, profilePicture }
+        //   POST /Customer/UploadProfilePhoto  -> form field "profileImageFile", returns { imagePath }
+        //   POST /Customer/UpdateProfile       -> { DisplayName, ContactNumber, RemovePhoto }
+
+        let currentProfile = {
+            displayName: @Html.Raw(Json.Serialize(displayName)),
+            contactNumber: '',
+            profilePicture: @Html.Raw(Json.Serialize(profilePicture ?? ""))
+        };
+
+        let pendingPhotoFile = null;
+        let pendingRemovePhoto = false;
+
+        function profileInitial(name) {
+
+            const t = (name || '').trim();
+
+            return t ? t.charAt(0).toUpperCase() : 'C';
+        }
+
+        // Shows the picture if there is one, otherwise the first letter of the name.
+        function renderAvatar(el, name, picture) {
+
+            if (!el) return;
+
+            el.innerHTML = '';
+
+            if (picture) {
+
+                const img = document.createElement('img');
+
+                img.src = picture;
+                img.alt = '';
+
+                img.onerror = () => {
+                    el.textContent = profileInitial(name);
+                };
+
+                el.appendChild(img);
+            }
+            else {
+
+                el.textContent = profileInitial(name);
+            }
+        }
+
+        function applyProfile(p) {
+
+            currentProfile = {
+                displayName: p.displayName || currentProfile.displayName,
+                contactNumber: p.contactNumber || '',
+                profilePicture: p.profilePicture || ''
+            };
+
+            const name = currentProfile.displayName;
+
+            document
+                .querySelectorAll('.user-name, .welcome-name')
+                .forEach(el => {
+                    if (name) el.textContent = name;
+                });
+
+            renderAvatar(
+                document.getElementById('sidebarAvatar'),
+                name,
+                currentProfile.profilePicture
+            );
+        }
+
+        async function loadProfile() {
+
+            try {
+
+                const res = await fetch('/Customer/GetProfile');
+
+                if (!res.ok) return;
+
+                applyProfile(await res.json());
+            }
+            catch (err) {
+
+                console.error('Failed to load profile:', err);
+            }
+        }
+
+        function setProfileMessage(text, kind) {
+
+            const el = document.getElementById('profileMessage');
+
+            if (!el) return;
+
+            if (!text) {
+                el.style.display = 'none';
+                el.innerText = '';
+                return;
+            }
+
+            el.className = 'promo-message ' + kind;
+            el.innerText = text;
+            el.style.display = 'block';
+        }
+
+        function updateRemovePhotoButton() {
+
+            const btn = document.getElementById('profilePhotoRemove');
+
+            if (!btn) return;
+
+            const hasPhoto =
+                pendingPhotoFile ||
+                (currentProfile.profilePicture && !pendingRemovePhoto);
+
+            btn.style.display = hasPhoto ? 'inline-flex' : 'none';
+        }
+
+        function openProfileModal() {
+
+            pendingPhotoFile = null;
+            pendingRemovePhoto = false;
+
+            document.getElementById('profileDisplayName').value =
+                currentProfile.displayName || '';
+
+            document.getElementById('profileContactNumber').value =
+                currentProfile.contactNumber || '';
+
+            document.getElementById('profilePhotoInput').value = '';
+
+            setProfileMessage('', '');
+
+            renderAvatar(
+                document.getElementById('profilePhotoPreview'),
+                currentProfile.displayName,
+                currentProfile.profilePicture
+            );
+
+            updateRemovePhotoButton();
+
+            closeSidebarOnMobile();
+
+            document.getElementById('profileModal').style.display = 'flex';
+        }
+
+        function closeProfileModal() {
+
+            document.getElementById('profileModal').style.display = 'none';
+        }
+
+        function onProfilePhotoPicked(input) {
+
+            const file = input.files && input.files[0];
+
+            if (!file) return;
+
+            if (!file.type.startsWith('image/')) {
+
+                setProfileMessage('Please choose an image file (JPG, PNG, GIF or WEBP).', 'error');
+                input.value = '';
+                return;
+            }
+
+            if (file.size > 5 * 1024 * 1024) {
+
+                setProfileMessage('Please choose an image under 5 MB.', 'error');
+                input.value = '';
+                return;
+            }
+
+            setProfileMessage('', '');
+
+            pendingPhotoFile = file;
+            pendingRemovePhoto = false;
+
+            renderAvatar(
+                document.getElementById('profilePhotoPreview'),
+                document.getElementById('profileDisplayName').value,
+                URL.createObjectURL(file)
+            );
+
+            updateRemovePhotoButton();
+        }
+
+        function removeProfilePhoto() {
+
+            pendingPhotoFile = null;
+            pendingRemovePhoto = true;
+
+            document.getElementById('profilePhotoInput').value = '';
+
+            renderAvatar(
+                document.getElementById('profilePhotoPreview'),
+                document.getElementById('profileDisplayName').value,
+                ''
+            );
+
+            updateRemovePhotoButton();
+        }
+
+        async function saveProfile() {
+
+            const name =
+                document.getElementById('profileDisplayName').value.trim();
+
+            const phone =
+                document.getElementById('profileContactNumber').value.trim();
+
+            if (!name) {
+
+                setProfileMessage('Please enter a display name.', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('profileSaveBtn');
+
+            btn.disabled = true;
+            btn.innerText = 'Saving...';
+
+            try {
+
+                let picture = currentProfile.profilePicture;
+
+                const removePhoto = pendingRemovePhoto && !pendingPhotoFile;
+
+                if (pendingPhotoFile) {
+
+                    const formData = new FormData();
+
+                    formData.append('profileImageFile', pendingPhotoFile);
+
+                    const up = await fetch('/Customer/UploadProfilePhoto', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!up.ok) {
+
+                        const msg = await up.text().catch(() => '');
+
+                        throw new Error(msg || `Photo upload failed (${up.status})`);
+                    }
+
+                    picture = (await up.json()).imagePath;
+                }
+
+                const res = await fetch('/Customer/UpdateProfile', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        DisplayName: name,
+                        ContactNumber: phone,
+                        RemovePhoto: removePhoto
+                    })
+                });
+
+                if (!res.ok) {
+
+                    const data = await res.json().catch(() => ({}));
+
+                    throw new Error(data.message || `Could not save your profile (${res.status})`);
+                }
+
+                applyProfile({
+                    displayName: name,
+                    contactNumber: phone,
+                    profilePicture: removePhoto ? '' : picture
+                });
+
+                closeProfileModal();
+
+                Swal.fire({
+                    title: 'Profile updated',
+                    icon: 'success',
+                    timer: 1200,
+                    showConfirmButton: false
+                });
+            }
+            catch (err) {
+
+                setProfileMessage(err.message || 'Something went wrong.', 'error');
+            }
+            finally {
+
+                btn.disabled = false;
+                btn.innerText = 'Save Changes';
+            }
+        }
+
         // ── INIT ──────────────────────────────────────────────────────────────────
 
         window.onload =
@@ -3424,6 +3995,7 @@
 
                 restoreFavHearts();
                 renderNotifs();
+                loadProfile();
                 pollOrderStatuses();
                 setInterval(pollOrderStatuses, 15000);
 
@@ -3537,6 +4109,16 @@
                 ) {
 
                     closeModal();
+                }
+
+                if (
+                    e.target ===
+                    document.getElementById(
+                        'profileModal'
+                    )
+                ) {
+
+                    closeProfileModal();
                 }
             };
 
