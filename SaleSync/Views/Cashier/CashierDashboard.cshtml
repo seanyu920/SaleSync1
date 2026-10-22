@@ -1,3 +1,4 @@
+
 @model SaleSync.Models.CashierDashboardViewModel
 @{
     Layout = null;
@@ -10,25 +11,20 @@
 }
 
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Dashboard - Cafero</title>
-    <link rel="stylesheet" href="~/css/AdminDashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/CashierDashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link rel="icon" type="image/jpeg" href="~/images/CaferoLogo.jpg" asp-append-version="true" />
     <partial name="_ThemeStyles" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-    <!-- Real-Time Chat SignalR Client -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
-
 </head>
 <body>
-
 
     <!-- VOID MODAL -->
     <div id="voidModal" class="modal-overlay">
@@ -46,7 +42,7 @@
 
     <div class="dashboard-container">
 
-        <!-- ===== SIDEBAR ===== -->
+        <!-- SIDEBAR -->
         <aside class="sidebar">
             <div>
                 <div class="logo-section">
@@ -63,19 +59,15 @@
                 </div>
 
                 <nav class="sidebar-menu">
-                    <a href="/@homeController/Dashboard" class="menu-btn active">
-                        Dashboard
-                    </a>
-                    <a href="/Cashier/CashierMenu" class="menu-btn"> POS</a>
-                    <a href="/Admin/QueueOrder" class="menu-btn"> Queue </a>
+                    <a href="/@homeController/Dashboard" class="menu-btn active">Dashboard</a>
+                    <a href="/Cashier/CashierMenu" class="menu-btn">POS</a>
+                    <a href="/Admin/QueueOrder" class="menu-btn">Queue</a>
                 </nav>
             </div>
 
             <div class="logout-section">
                 <form method="post" action="/Home/Logout" id="logoutForm">
-                    <button type="button" class="menu-btn logout-btn" onclick="confirmLogout()">
-                        Log Out
-                    </button>
+                    <button type="button" class="menu-btn logout-btn" onclick="confirmLogout()">Log Out</button>
                 </form>
             </div>
         </aside>
@@ -87,7 +79,7 @@
             <div class="mobile-brand">Cafero</div>
         </div>
 
-        <!-- ===== MAIN CONTENT ===== -->
+        <!-- MAIN CONTENT -->
         <main class="main-content slide-up">
 
             <div class="top-navbar">
@@ -96,17 +88,25 @@
                     <input type="text" class="search-input" placeholder="Search transactions, products, or inventory..." oninput="globalSearch(this.value)" autocomplete="off" />
                     <div class="search-dropdown" id="searchDropdown"></div>
                 </div>
+
                 <div class="top-nav-controls">
                     <div class="datetime-display">
                         <div id="currentDate"></div>
                         <div id="currentTime"></div>
                     </div>
+
                     <div class="notification-bell" id="notifBell" onclick="toggleNotifDropdown(event)" title="View notifications">
                         <i class="fas fa-bell"></i>
                         <span class="bell-badge" id="bellBadge" style="display:none;"></span>
 
-                        <div class="notif-dropdown" id="notifDropdown">
-                            <div class="notif-dropdown-title">Live Notifications</div>
+                        <div class="notif-dropdown" id="notifDropdown" onclick="event.stopPropagation()">
+                            <div class="notif-dropdown-title">
+                                <span>Live Notifications</span>
+                                <span class="notif-header-actions">
+                                    <button type="button" class="notif-link-btn" id="notifMarkAll" onclick="markAllNotifsRead()">Mark all read</button>
+                                    <button type="button" class="notif-link-btn danger" id="notifClearAll" onclick="clearAllNotifs()">Clear all</button>
+                                </span>
+                            </div>
                             <div class="notification-list" id="notificationList">
                                 <div class="notification-item">
                                     <div class="notification-info">
@@ -116,6 +116,7 @@
                             </div>
                         </div>
                     </div>
+
                     <div class="nav-chat-icon" onclick="toggleChat()" id="chatTrigger" title="Open customer support inbox">
                         <i class="fas fa-comments"></i>
                         <span class="chat-badge" id="chatBadge" style="display: none;"></span>
@@ -128,6 +129,7 @@
                     <p class="header-label">Today's Net Sales</p>
                     <h1 class="header-sales-value">₱@Model.TodayTotalSales.ToString("N2")</h1>
                 </div>
+
                 <div class="header-status-group">
                     <div class="system-status-container">
                         <p class="status-label">System Status</p>
@@ -136,9 +138,11 @@
                             <span class="status-text">Online & Syncing</span>
                         </div>
                     </div>
+
                     @{
                         var storeStatus = ViewBag.StoreStatus as SaleSync.Models.StoreStatus;
                     }
+
                     @if (storeStatus != null)
                     {
                         <div class="system-status-container store-status-container">
@@ -149,9 +153,11 @@
                             </div>
                         </div>
                     }
+
                     @{
                         bool staffOnBreak = ViewBag.StaffOnBreak ?? false;
                     }
+
                     <div class="system-status-container store-status-container">
                         <p class="status-label">Staff Status</p>
                         <button type="button"
@@ -167,19 +173,11 @@
                             </span>
                         </button>
                     </div>
-
                 </div>
             </div>
 
+            <!-- SUMMARY CARDS: ALL TRANSACTIONS CARD REMOVED -->
             <div class="summary-dashboard">
-                <div class="summary-card action-card" onclick="location.href='/Admin/DailyReport'">
-                    <div class="card-icon-box icon-orange"><i class="fas fa-list"></i></div>
-                    <div>
-                        <div class="card-label">All Transactions</div>
-                        <div class="card-value">@(Model.RecentSales?.Count ?? 0)</div>
-                    </div>
-                </div>
-
                 <div class="summary-card action-card" onclick="location.href='/Admin/QueueOrder'">
                     <div class="card-icon-box icon-green"><i class="fas fa-hourglass-half"></i></div>
                     <div>
@@ -216,10 +214,9 @@
                 <div class="pos-card-wrapper">
                     <div class="pos-card-header">
                         <div class="pos-card-title"><i class="fas fa-history"></i> Recent Transactions</div>
-                        <a href="/Admin/DailyReport" class="view-all-link">View All &rarr;</a>
                     </div>
 
-                    <!-- DESKTOP VIEW: Table Structure -->
+                    <!-- DESKTOP VIEW -->
                     <div class="table-responsive desktop-only">
                         <table class="pos-table">
                             <thead>
@@ -291,7 +288,7 @@
                         </table>
                     </div>
 
-                    <!-- MOBILE VIEW: Expandable Mobile Cards -->
+                    <!-- MOBILE VIEW -->
                     <div class="mobile-tx-list mobile-only">
                         @if (Model.RecentSales != null && Model.RecentSales.Any())
                         {
@@ -458,9 +455,7 @@
                                 <tr>
                                     <td>Spanish Latte (Iced)</td>
                                     <td>
-                                        <div class="progress-info">
-                                            <span>142 units</span>
-                                        </div>
+                                        <div class="progress-info"><span>142 units</span></div>
                                         <div class="progress-container"><div class="progress-bar" style="width: 92%;"></div></div>
                                     </td>
                                     <td class="text-right revenue-val">₱22,720.00</td>
@@ -468,9 +463,7 @@
                                 <tr>
                                     <td>Café Americana (Hot)</td>
                                     <td>
-                                        <div class="progress-info">
-                                            <span>98 units</span>
-                                        </div>
+                                        <div class="progress-info"><span>98 units</span></div>
                                         <div class="progress-container"><div class="progress-bar" style="width: 68%;"></div></div>
                                     </td>
                                     <td class="text-right revenue-val">₱10,780.00</td>
@@ -478,9 +471,7 @@
                                 <tr>
                                     <td>Cream Cheese Ensaymada</td>
                                     <td>
-                                        <div class="progress-info">
-                                            <span>75 units</span>
-                                        </div>
+                                        <div class="progress-info"><span>75 units</span></div>
                                         <div class="progress-container"><div class="progress-bar" style="width: 51%;"></div></div>
                                     </td>
                                     <td class="text-right revenue-val">₱6,375.00</td>
@@ -488,9 +479,7 @@
                                 <tr>
                                     <td>Caramel Macchiato</td>
                                     <td>
-                                        <div class="progress-info">
-                                            <span>64 units</span>
-                                        </div>
+                                        <div class="progress-info"><span>64 units</span></div>
                                         <div class="progress-container"><div class="progress-bar" style="width: 43%;"></div></div>
                                     </td>
                                     <td class="text-right revenue-val">₱10,880.00</td>
@@ -503,93 +492,57 @@
                     <div class="mobile-only">
                         <div class="tx-card">
                             <div class="tx-card-summary">
-                                <div class="tx-main-info">
-                                    <span class="tx-customer">Spanish Latte (Iced)</span>
-                                </div>
+                                <div class="tx-main-info"><span class="tx-customer">Spanish Latte (Iced)</span></div>
                                 <button type="button" class="tx-view-btn" onclick="toggleCardDetails(this)">
-                                    <span>Details</span>
-                                    <i class="fas fa-chevron-down"></i>
+                                    <span>Details</span><i class="fas fa-chevron-down"></i>
                                 </button>
                             </div>
                             <div class="tx-card-details hidden">
-                                <div class="tx-detail-row">
-                                    <span class="tx-label">Units Sold:</span>
-                                    <span class="tx-value">142 units</span>
-                                </div>
+                                <div class="tx-detail-row"><span class="tx-label">Units Sold:</span><span class="tx-value">142 units</span></div>
                                 <div class="progress-container mb-2"><div class="progress-bar" style="width: 92%;"></div></div>
-                                <div class="tx-detail-row">
-                                    <span class="tx-label">Revenue Generated:</span>
-                                    <span class="tx-value revenue-val">₱22,720.00</span>
-                                </div>
+                                <div class="tx-detail-row"><span class="tx-label">Revenue Generated:</span><span class="tx-value revenue-val">₱22,720.00</span></div>
                             </div>
                         </div>
 
                         <div class="tx-card">
                             <div class="tx-card-summary">
-                                <div class="tx-main-info">
-                                    <span class="tx-customer">Café Americana (Hot)</span>
-                                </div>
+                                <div class="tx-main-info"><span class="tx-customer">Café Americana (Hot)</span></div>
                                 <button type="button" class="tx-view-btn" onclick="toggleCardDetails(this)">
-                                    <span>Details</span>
-                                    <i class="fas fa-chevron-down"></i>
+                                    <span>Details</span><i class="fas fa-chevron-down"></i>
                                 </button>
                             </div>
                             <div class="tx-card-details hidden">
-                                <div class="tx-detail-row">
-                                    <span class="tx-label">Units Sold:</span>
-                                    <span class="tx-value">98 units</span>
-                                </div>
+                                <div class="tx-detail-row"><span class="tx-label">Units Sold:</span><span class="tx-value">98 units</span></div>
                                 <div class="progress-container mb-2"><div class="progress-bar" style="width: 68%;"></div></div>
-                                <div class="tx-detail-row">
-                                    <span class="tx-label">Revenue Generated:</span>
-                                    <span class="tx-value revenue-val">₱10,780.00</span>
-                                </div>
+                                <div class="tx-detail-row"><span class="tx-label">Revenue Generated:</span><span class="tx-value revenue-val">₱10,780.00</span></div>
                             </div>
                         </div>
 
                         <div class="tx-card">
                             <div class="tx-card-summary">
-                                <div class="tx-main-info">
-                                    <span class="tx-customer">Cream Cheese Ensaymada</span>
-                                </div>
+                                <div class="tx-main-info"><span class="tx-customer">Cream Cheese Ensaymada</span></div>
                                 <button type="button" class="tx-view-btn" onclick="toggleCardDetails(this)">
-                                    <span>Details</span>
-                                    <i class="fas fa-chevron-down"></i>
+                                    <span>Details</span><i class="fas fa-chevron-down"></i>
                                 </button>
                             </div>
                             <div class="tx-card-details hidden">
-                                <div class="tx-detail-row">
-                                    <span class="tx-label">Units Sold:</span>
-                                    <span class="tx-value">75 units</span>
-                                </div>
+                                <div class="tx-detail-row"><span class="tx-label">Units Sold:</span><span class="tx-value">75 units</span></div>
                                 <div class="progress-container mb-2"><div class="progress-bar" style="width: 51%;"></div></div>
-                                <div class="tx-detail-row">
-                                    <span class="tx-label">Revenue Generated:</span>
-                                    <span class="tx-value revenue-val">₱6,375.00</span>
-                                </div>
+                                <div class="tx-detail-row"><span class="tx-label">Revenue Generated:</span><span class="tx-value revenue-val">₱6,375.00</span></div>
                             </div>
                         </div>
 
                         <div class="tx-card">
                             <div class="tx-card-summary">
-                                <div class="tx-main-info">
-                                    <span class="tx-customer">Caramel Macchiato</span>
-                                </div>
+                                <div class="tx-main-info"><span class="tx-customer">Caramel Macchiato</span></div>
                                 <button type="button" class="tx-view-btn" onclick="toggleCardDetails(this)">
-                                    <span>Details</span>
-                                    <i class="fas fa-chevron-down"></i>
+                                    <span>Details</span><i class="fas fa-chevron-down"></i>
                                 </button>
                             </div>
                             <div class="tx-card-details hidden">
-                                <div class="tx-detail-row">
-                                    <span class="tx-label">Units Sold:</span>
-                                    <span class="tx-value">64 units</span>
-                                </div>
+                                <div class="tx-detail-row"><span class="tx-label">Units Sold:</span><span class="tx-value">64 units</span></div>
                                 <div class="progress-container mb-2"><div class="progress-bar" style="width: 43%;"></div></div>
-                                <div class="tx-detail-row">
-                                    <span class="tx-label">Revenue Generated:</span>
-                                    <span class="tx-value revenue-val">₱10,880.00</span>
-                                </div>
+                                <div class="tx-detail-row"><span class="tx-label">Revenue Generated:</span><span class="tx-value revenue-val">₱10,880.00</span></div>
                             </div>
                         </div>
                     </div>
@@ -645,11 +598,8 @@
             });
         }
 
-        // =========================================================
-        // STAFF BREAK TOGGLE (customer-facing status)
-        // =========================================================
+        // STAFF BREAK TOGGLE
         async function toggleStaffBreak() {
-
             const toggleBtn = document.getElementById('staffBreakToggle');
             const currentlyOnBreak = toggleBtn.dataset.onBreak === 'true';
             const newStatus = !currentlyOnBreak;
@@ -676,21 +626,18 @@
                     text.classList.toggle('store-closed-text', data.onBreak);
                     text.classList.toggle('store-open-text', !data.onBreak);
                     text.innerText = data.onBreak ? 'On Break' : 'Available';
-                }
-                else {
+                } else {
                     Swal.fire('Unable to Update', data.message, 'error');
                 }
-            }
-            catch (error) {
+            } catch (error) {
                 console.error('Staff break toggle error:', error);
                 Swal.fire('Error', 'Something went wrong while updating staff status.', 'error');
-            }
-            finally {
+            } finally {
                 toggleBtn.disabled = false;
             }
         }
 
-        // ── Notification Bell Dropdown ──
+        // Notification Bell Dropdown
         function toggleNotifDropdown(event) {
             event.stopPropagation();
             document.getElementById('notifDropdown').classList.toggle('open');
@@ -704,7 +651,7 @@
             }
         });
 
-        // ── Support Inbox Popup Logic ──
+        // Support Inbox Popup
         let chatConn;
         let currentChatWith = null;
         const chatCurrentUser = "@(User.FindFirst("Username")?.Value ?? "")";
@@ -724,13 +671,17 @@
             if (popup.classList.contains("open") && !popup.contains(event.target) && !trigger.contains(event.target)) popup.classList.remove("open");
         });
 
-        function handleChatKey(event) { if (event.key === "Enter") sendChatMessage(); }
+        function handleChatKey(event) {
+            if (event.key === "Enter") sendChatMessage();
+        }
 
         function sendChatMessage() {
             const input = document.getElementById("chatInput");
             const message = input.value.trim();
             if (!message || !currentChatWith || !chatConn) return;
-            chatConn.invoke("SendMessage", currentChatWith, message).then(() => { input.value = ""; input.focus(); }).catch(console.error);
+            chatConn.invoke("SendMessage", currentChatWith, message)
+                .then(() => { input.value = ""; input.focus(); })
+                .catch(console.error);
         }
 
         async function loadChatContacts() {
@@ -740,18 +691,24 @@
                 if (!response.ok) return;
                 const contacts = await response.json();
                 list.innerHTML = "";
-                if (!contacts.length) { list.innerHTML = '<div class="system-message">No customer conversations yet.</div>'; return; }
+                if (!contacts.length) {
+                    list.innerHTML = '<div class="system-message">No customer conversations yet.</div>';
+                    return;
+                }
                 contacts.forEach(contact => {
                     const item = document.createElement("button");
                     item.type = "button";
                     item.className = "support-contact" + (contact.username === currentChatWith ? " active" : "");
-                    const unread = Number(contact.unreadCount || 0) > 0 && contact.username !== currentChatWith ? '<span class="support-unread-dot"></span>' : "";
+                    const unread = Number(contact.unreadCount || 0) > 0 && contact.username !== currentChatWith
+                        ? '<span class="support-unread-dot"></span>' : "";
                     item.innerHTML = `<span class="support-contact-top"><strong>${escapeHTML(contact.username)}</strong>${unread}</span><small>${escapeHTML(contact.role || "Customer")}</small><span>${escapeHTML(contact.preview || "No messages yet")}</span>`;
                     item.onclick = () => switchChatContact(contact.username, contact.role);
                     list.appendChild(item);
                 });
                 if (!currentChatWith) switchChatContact(contacts[0].username, contacts[0].role);
-            } catch (error) { console.error("Could not load conversations:", error); }
+            } catch (error) {
+                console.error("Could not load conversations:", error);
+            }
         }
 
         async function switchChatContact(username, role) {
@@ -768,22 +725,51 @@
                 if (!history.length) area.innerHTML = '<div class="system-message">No messages yet. Start the conversation.</div>';
                 history.forEach(message => renderChatMessage(message.sender, message.text, message.time));
                 loadChatContacts();
-            } catch (error) { console.error("Could not load messages:", error); }
+            } catch (error) {
+                console.error("Could not load messages:", error);
+            }
         }
 
         function renderChatMessage(sender, message, time) {
             const area = document.getElementById("chatMessages");
             const row = document.createElement("div");
             row.className = "chat-msg-row " + (sender === chatCurrentUser ? "staff" : "other");
-            const bubble = document.createElement("div"); bubble.className = "chat-bubble"; bubble.textContent = message;
-            const meta = document.createElement("span"); meta.className = "chat-meta"; meta.textContent = (sender === chatCurrentUser ? "You" : sender) + " · " + time;
-            row.append(bubble, meta); area.appendChild(row); area.scrollTop = area.scrollHeight;
+            const bubble = document.createElement("div");
+            bubble.className = "chat-bubble";
+            bubble.textContent = message;
+            const meta = document.createElement("span");
+            meta.className = "chat-meta";
+            meta.textContent = (sender === chatCurrentUser ? "You" : sender) + " · " + time;
+            row.append(bubble, meta);
+            area.appendChild(row);
+            area.scrollTop = area.scrollHeight;
         }
 
-        function escapeHTML(value) { return String(value).replace(/[&<>'"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[c])); }
+        function escapeHTML(value) {
+            return String(value).replace(/[&<>'"]/g, c => ({
+                "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;"
+            }[c]));
+        }
 
-        // ── Notification Bell Logic (pending online order alerts) ──
+        // Notification Bell Logic
+        const NOTIF_READ_KEY = 'cafero_notif_read';
+        const NOTIF_DELETED_KEY = 'cafero_notif_deleted';
         let lastKnownPendingCount = null;
+        let latestNotifOrders = [];
+
+        function loadIdSet(key) {
+            try {
+                return new Set(JSON.parse(localStorage.getItem(key) || '[]'));
+            } catch {
+                return new Set();
+            }
+        }
+
+        function saveIdSet(key, set) {
+            try {
+                localStorage.setItem(key, JSON.stringify([...set]));
+            } catch { }
+        }
 
         async function checkForNewOrders() {
             try {
@@ -794,16 +780,8 @@
                 const pendingCount = data.pendingCount || 0;
                 const recentOrders = data.recentOrders || [];
 
-                if (lastKnownPendingCount === null) {
-                    lastKnownPendingCount = pendingCount;
-                    updateBellBadge(pendingCount);
-                    renderNotificationList(recentOrders);
-                    return;
-                }
-
-                if (pendingCount > lastKnownPendingCount) {
+                if (lastKnownPendingCount !== null && pendingCount > lastKnownPendingCount) {
                     const newOrders = pendingCount - lastKnownPendingCount;
-
                     Swal.fire({
                         toast: true,
                         position: 'top-end',
@@ -818,52 +796,127 @@
                 }
 
                 lastKnownPendingCount = pendingCount;
-                updateBellBadge(pendingCount);
                 renderNotificationList(recentOrders);
-
             } catch (err) {
                 console.error('Failed to check for new orders:', err);
             }
         }
 
         function renderNotificationList(orders) {
+            latestNotifOrders = orders || [];
             const list = document.getElementById('notificationList');
             if (!list) return;
 
-            if (!orders || orders.length === 0) {
+            const read = loadIdSet(NOTIF_READ_KEY);
+            const deleted = loadIdSet(NOTIF_DELETED_KEY);
+
+            const currentIds = new Set(latestNotifOrders.map(o => String(o.saleId)));
+            saveIdSet(NOTIF_READ_KEY, new Set([...read].filter(id => currentIds.has(id))));
+            saveIdSet(NOTIF_DELETED_KEY, new Set([...deleted].filter(id => currentIds.has(id))));
+
+            const visible = latestNotifOrders.filter(o => !deleted.has(String(o.saleId)));
+            const unreadCount = visible.filter(o => !read.has(String(o.saleId))).length;
+
+            updateBellBadge(unreadCount);
+
+            const hasItems = visible.length > 0;
+            document.getElementById('notifMarkAll').style.display = unreadCount > 0 ? '' : 'none';
+            document.getElementById('notifClearAll').style.display = hasItems ? '' : 'none';
+
+            if (!hasItems) {
                 list.innerHTML = `
                     <div class="notification-item">
-                        <div class="notification-info">
-                            <p>No new orders right now.</p>
-                        </div>
+                        <div class="notification-info"><p>No new orders right now.</p></div>
                     </div>`;
                 return;
             }
 
-            list.innerHTML = orders.map(o => `
-            <div class="notification-item" style="cursor:pointer;" onclick="location.href='/Admin/QueueOrder?highlight=${o.saleId}'">
-                <div class="notification-info">
-                    <p>New ${escapeHTML(o.orderType)} order from ${escapeHTML(o.customerName)} (#ORD-${o.saleId}) — ₱${o.total.toFixed(2)}</p>
-                    <div class="notification-time">${escapeHTML(o.saleDate)}</div>
-                </div>
-            </div>
-        `).join('');
+            list.innerHTML = visible.map(o => {
+                const id = String(o.saleId);
+                const isUnread = !read.has(id);
+                return `
+                <div class="notification-item ${isUnread ? 'unread' : ''}">
+                    <div class="notification-info notif-open" data-action="open" data-id="${id}">
+                        <p>New ${escapeHTML(o.orderType || '')} order from ${escapeHTML(o.customerName || '')} (#ORD-${id}) — ₱${Number(o.total).toFixed(2)}</p>
+                        <div class="notification-time">${escapeHTML(o.saleDate || '')}</div>
+                    </div>
+                    <div class="notif-item-actions">
+                        ${isUnread ? `<button type="button" class="notif-icon-btn" data-action="read" data-id="${id}" title="Mark as read"><i class="fas fa-check"></i></button>` : ''}
+                        <button type="button" class="notif-icon-btn danger" data-action="delete" data-id="${id}" title="Delete notification"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>`;
+            }).join('');
         }
 
         function updateBellBadge(count) {
             const badge = document.getElementById('bellBadge');
             if (!badge) return;
-
-            badge.style.display = count > 0 ? 'block' : 'none';
+            if (count > 0) {
+                badge.textContent = count > 99 ? '99+' : count;
+                badge.style.display = 'block';
+            } else {
+                badge.style.display = 'none';
+            }
         }
+
+        function markNotifRead(id) {
+            const read = loadIdSet(NOTIF_READ_KEY);
+            read.add(String(id));
+            saveIdSet(NOTIF_READ_KEY, read);
+            renderNotificationList(latestNotifOrders);
+        }
+
+        function deleteNotif(id) {
+            const deleted = loadIdSet(NOTIF_DELETED_KEY);
+            deleted.add(String(id));
+            saveIdSet(NOTIF_DELETED_KEY, deleted);
+            renderNotificationList(latestNotifOrders);
+        }
+
+        function markAllNotifsRead() {
+            const deleted = loadIdSet(NOTIF_DELETED_KEY);
+            const read = loadIdSet(NOTIF_READ_KEY);
+            latestNotifOrders.forEach(o => {
+                if (!deleted.has(String(o.saleId))) read.add(String(o.saleId));
+            });
+            saveIdSet(NOTIF_READ_KEY, read);
+            renderNotificationList(latestNotifOrders);
+        }
+
+        function clearAllNotifs() {
+            const deleted = loadIdSet(NOTIF_DELETED_KEY);
+            latestNotifOrders.forEach(o => deleted.add(String(o.saleId)));
+            saveIdSet(NOTIF_DELETED_KEY, deleted);
+            renderNotificationList(latestNotifOrders);
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            document.getElementById('notificationList').addEventListener('click', function (e) {
+                const el = e.target.closest('[data-action]');
+                if (!el) return;
+                const id = el.dataset.id;
+
+                switch (el.dataset.action) {
+                    case 'read':
+                        markNotifRead(id);
+                        break;
+                    case 'delete':
+                        deleteNotif(id);
+                        break;
+                    case 'open':
+                        markNotifRead(id);
+                        location.href = '/Admin/QueueOrder?highlight=' + id;
+                        break;
+                }
+            });
+        });
 
         document.addEventListener("DOMContentLoaded", function() {
             function updateClock() {
                 const now = new Date();
                 const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
 
-                document.getElementById('currentDate').innerText =
-                    now.toLocaleDateString('en-US', options);
+                document.getElementById('currentDate').innerText = now.toLocaleDateString('en-US', options);
 
                 let hours = now.getHours();
                 let minutes = now.getMinutes();
@@ -873,15 +926,13 @@
                 hours = hours ? hours : 12;
                 minutes = minutes < 10 ? '0' + minutes : minutes;
 
-                document.getElementById('currentTime').innerText =
-                    hours + ':' + minutes + ' ' + ampm;
+                document.getElementById('currentTime').innerText = hours + ':' + minutes + ' ' + ampm;
             }
 
             setInterval(updateClock, 1000);
             updateClock();
 
             const rawTodaySales = parseFloat("@Model.TodayTotalSales") || 8500;
-
             const ctxWeekly = document.getElementById('weeklySalesChart').getContext('2d');
 
             new Chart(ctxWeekly, {
@@ -910,9 +961,7 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: {
-                            display: false
-                        }
+                        legend: { display: false }
                     }
                 }
             });
@@ -933,9 +982,7 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: {
-                            position: 'right'
-                        }
+                        legend: { position: 'right' }
                     },
                     cutout: '72%'
                 }
@@ -951,14 +998,15 @@
                 .catch(err => console.error("SignalR Startup Error:", err));
 
             chatConn.on("ReceiveMessage", function(sender, receiver, message, time) {
-                var belongs = currentChatWith && (sender === currentChatWith || receiver === currentChatWith);
+                const belongs = currentChatWith && (sender === currentChatWith || receiver === currentChatWith);
                 if (belongs) {
-                    var ph = document.getElementById("chatMessages").querySelector('.system-message');
+                    const ph = document.getElementById("chatMessages").querySelector('.system-message');
                     if (ph) ph.remove();
                     renderChatMessage(sender, message, time);
                 }
+
                 if (sender !== chatCurrentUser && !belongs) {
-                    var dd = document.getElementById("chatDropdown");
+                    const dd = document.getElementById("chatDropdown");
                     if (!dd.classList.contains("open")) {
                         document.getElementById("chatBadge").style.display = "block";
                     }
@@ -973,16 +1021,10 @@
             const sidebar = document.querySelector('.sidebar');
             const overlay = document.querySelector('.sidebar-overlay');
 
-            if (sidebar) {
-                sidebar.classList.toggle('mobile-open');
-            }
-
-            if (overlay) {
-                overlay.classList.toggle('mobile-open');
-            }
+            if (sidebar) sidebar.classList.toggle('mobile-open');
+            if (overlay) overlay.classList.toggle('mobile-open');
         }
 
-        // Close sidebar when clicking outside of it on mobile screens
         document.addEventListener('click', function(event) {
             const sidebar = document.querySelector('.sidebar');
             const hamburgerBtn = document.querySelector('.hamburger-btn');
@@ -990,27 +1032,17 @@
 
             if (!sidebar) return;
 
-            // Do not immediately close the sidebar when clicking the hamburger.
-            if (hamburgerBtn && hamburgerBtn.contains(event.target)) {
-                return;
-            }
+            if (hamburgerBtn && hamburgerBtn.contains(event.target)) return;
 
-            // Clicking the overlay should close the sidebar.
             if (overlay && overlay.classList.contains('mobile-open') && event.target === overlay) {
                 sidebar.classList.remove('mobile-open');
                 overlay.classList.remove('mobile-open');
                 return;
             }
 
-            // Close sidebar when clicking outside of it.
-            if (sidebar.classList.contains('mobile-open')) {
-                if (!sidebar.contains(event.target)) {
-                    sidebar.classList.remove('mobile-open');
-
-                    if (overlay) {
-                        overlay.classList.remove('mobile-open');
-                    }
-                }
+            if (sidebar.classList.contains('mobile-open') && !sidebar.contains(event.target)) {
+                sidebar.classList.remove('mobile-open');
+                if (overlay) overlay.classList.remove('mobile-open');
             }
         });
 
@@ -1034,7 +1066,6 @@
             searchTimeout = setTimeout(async () => {
                 try {
                     const res = await fetch("/Cashier/GlobalSearch?q=" + encodeURIComponent(query));
-
                     if (!res.ok) return;
 
                     const data = await res.json();
@@ -1042,7 +1073,6 @@
 
                     if (data.products.length) {
                         html += '<div class="search-group-label">Products</div>';
-
                         data.products.forEach(p => {
                             html += '<a class="search-result-item" href="' + p.url + '">' +
                                 '<i class="fas fa-coffee"></i>' +
@@ -1054,7 +1084,6 @@
 
                     if (data.inventory.length) {
                         html += '<div class="search-group-label">Inventory</div>';
-
                         data.inventory.forEach(i => {
                             html += '<a class="search-result-item" href="' + i.url + '">' +
                                 '<i class="fas fa-box"></i>' +
@@ -1066,7 +1095,6 @@
 
                     if (data.transactions.length) {
                         html += '<div class="search-group-label">Transactions</div>';
-
                         data.transactions.forEach(t => {
                             html += '<a class="search-result-item" href="' + t.url + '">' +
                                 '<i class="fas fa-receipt"></i>' +
@@ -1076,14 +1104,11 @@
                         });
                     }
 
-                    if (!html) {
-                        html = '<div class="search-empty">No results found</div>';
-                    }
+                    if (!html) html = '<div class="search-empty">No results found</div>';
 
                     dd.innerHTML = html;
                     dd.style.display = "block";
-                }
-                catch (e) {
+                } catch (e) {
                     console.error("Search error:", e);
                 }
             }, 300);
@@ -1120,6 +1145,7 @@
             const icon = button.querySelector('i');
 
             details.classList.toggle('hidden');
+
             if (details.classList.contains('hidden')) {
                 icon.style.transform = 'rotate(0deg)';
             } else {

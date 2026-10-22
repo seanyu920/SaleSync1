@@ -1,3 +1,4 @@
+
 /* ==========================================================================
    CAFÈRO DASHBOARD — Dark Theme (Aligned with HomePage)
    ========================================================================== */
@@ -39,6 +40,8 @@ body {
 .dashboard-container {
     display: flex;
     min-height: 100vh;
+    width: 100%;
+    min-width: 0;
 }
 
 .hidden-view {
@@ -53,10 +56,10 @@ body {
     color: var(--danger) !important;
 }
 
-
 /* ==========================================================================
-   SIDEBAR — Premium Typography & Interactive Layout
+   SIDEBAR
    ========================================================================== */
+
 .sidebar {
     width: 255px;
     background: var(--bg-surface);
@@ -70,11 +73,10 @@ body {
     flex-shrink: 0;
 }
 
-/* Logo block */
 .logo-section {
     margin-bottom: 24px;
     padding-bottom: 16px;
-    border-bottom: 1px dashed var(--border); /* Beautiful decorative accent split under main branding */
+    border-bottom: 1px dashed var(--border);
 }
 
 .sidebar .logo-title {
@@ -83,6 +85,7 @@ body {
     color: var(--cream);
     letter-spacing: -0.5px;
     line-height: 1.2;
+    overflow-wrap: anywhere;
 }
 
 .sidebar .logo-subtitle {
@@ -93,9 +96,9 @@ body {
     letter-spacing: 2px;
     margin-top: 4px;
     display: block;
+    overflow-wrap: anywhere;
 }
 
-/* Profile */
 .profile-section {
     display: flex;
     align-items: center;
@@ -133,7 +136,6 @@ body {
     margin-top: 1px;
 }
 
-/* Menu Layout */
 .sidebar-menu {
     display: flex;
     flex-direction: column;
@@ -153,7 +155,7 @@ body {
     border-radius: 12px;
     background: transparent;
     border: 1px solid transparent;
-    border-left: 3px solid transparent; /* Hidden left text anchor border built-in */
+    border-left: 3px solid transparent;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     font-family: 'Outfit', sans-serif;
@@ -164,7 +166,7 @@ body {
         color: var(--cream);
         background: rgba(255, 255, 255, 0.03);
         border-color: var(--border-sub);
-        border-left-color: rgba(201, 168, 76, 0.5); /* Elegant gold glowing side indicator on hover */
+        border-left-color: rgba(201, 168, 76, 0.5);
         transform: translateX(4px);
     }
 
@@ -173,7 +175,7 @@ body {
         color: var(--bg-base);
         font-weight: 700;
         border-color: transparent;
-        border-left-color: var(--cream); /* Striking contrast cream anchor line embedded in text block */
+        border-left-color: var(--cream);
         box-shadow: 0 4px 16px rgba(201, 168, 76, 0.25);
     }
 
@@ -189,7 +191,6 @@ body {
         opacity: 1;
     }
 
-/* Logout Option */
 .logout-section {
     margin-top: auto;
     padding-top: 20px;
@@ -206,16 +207,19 @@ body {
         color: var(--danger);
         background: rgba(224, 85, 85, 0.08);
         border-color: rgba(224, 85, 85, 0.15);
-        border-left-color: var(--danger); /* Threat indicator color bar directly on text element */
+        border-left-color: var(--danger);
         transform: translateX(4px);
     }
 
-
 /* ==========================================================================
-   MAIN CONTENT & ENGINE HEADER NAV
+   MAIN CONTENT & NAVIGATION
    ========================================================================== */
+
 .main-content {
-    flex: 1;
+    flex: 1 1 0%;
+    width: 0;
+    min-width: 0;
+    max-width: none;
     padding: 36px 40px;
     overflow-y: auto;
     background: var(--bg-base);
@@ -316,7 +320,8 @@ body {
         white-space: nowrap;
     }
 
-.search-price, .search-stock {
+.search-price,
+.search-stock {
     font-size: 11px;
     color: var(--muted);
     white-space: nowrap;
@@ -359,12 +364,18 @@ body {
 
 .bell-badge {
     position: absolute;
-    top: -2px;
-    right: -2px;
-    width: 6px;
-    height: 6px;
+    top: -8px;
+    right: -10px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 16px;
+    text-align: center;
+    color: #fff;
     background: var(--danger);
-    border-radius: 50%;
+    border-radius: 999px;
 }
 
 .user-dropdown {
@@ -380,7 +391,8 @@ body {
     margin-bottom: 30px;
 }
 
-/* Hero Banner */
+/* Dashboard hero banner */
+
 .dashboard-header-card {
     display: flex;
     justify-content: space-between;
@@ -392,6 +404,7 @@ body {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
     position: relative;
     overflow: hidden;
+    min-width: 0;
 }
 
     .dashboard-header-card::before {
@@ -460,10 +473,9 @@ body {
 
 .header-status-group {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
 }
 
-/* Store open/closed status badge, shown alongside System Status */
 .store-status-container {
     margin-left: 28px;
     padding-left: 28px;
@@ -486,18 +498,23 @@ body {
     color: #F44336;
 }
 
-
 /* ==========================================================================
    SUMMARY CARDS
    ========================================================================== */
+
 .summary-dashboard {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
     margin-bottom: 28px;
+    width: 100%;
+    max-width: none;
+    align-items: stretch;
 }
 
 .summary-card {
+    width: 100%;
+    min-width: 0;
     background: var(--bg-card);
     border-radius: 14px;
     padding: 22px 20px;
@@ -564,15 +581,18 @@ body {
     line-height: 1.2;
 }
 
-
 /* ==========================================================================
-   TABLES & WORKSPACE CARDS (POS Grid Alignment)
+   TABLES & WORKSPACE CARDS
    ========================================================================== */
+
 .pos-grid-container {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 24px;
     margin-bottom: 24px;
+    width: 100%;
+    max-width: none;
+    align-items: stretch;
 }
 
 .pos-card-wrapper {
@@ -581,7 +601,24 @@ body {
     padding: 24px;
     border: 1px solid var(--border-sub);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    min-width: 0;
 }
+
+.pos-grid-container > .pos-card-wrapper {
+    width: 100%;
+    min-width: 0;
+}
+
+.pos-grid-container.single-card-grid {
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+}
+
+    .pos-grid-container.single-card-grid > .pos-card-wrapper {
+        grid-column: 1 / -1;
+        width: 100%;
+        max-width: none;
+    }
 
 .pos-card-header {
     display: flex;
@@ -610,13 +647,15 @@ body {
     margin-top: 4px;
 }
 
-.rolling-label, .volume-label {
+.rolling-label,
+.volume-label {
     font-size: 11px;
     color: var(--muted);
     font-weight: 600;
 }
 
-.view-all-link, .manage-link {
+.view-all-link,
+.manage-link {
     background: transparent;
     color: var(--gold);
     text-decoration: none;
@@ -631,7 +670,8 @@ body {
     cursor: pointer;
 }
 
-    .view-all-link:hover, .manage-link:hover {
+    .view-all-link:hover,
+    .manage-link:hover {
         background: var(--gold-glow);
         border-color: var(--gold);
         color: var(--gold-light);
@@ -639,11 +679,14 @@ body {
 
 .table-responsive {
     width: 100%;
+    max-width: 100%;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .pos-table {
     width: 100%;
+    min-width: 560px;
     border-collapse: collapse;
 }
 
@@ -687,10 +730,10 @@ body {
     text-align: right !important;
 }
 
-
 /* ==========================================================================
    ANALYTICAL METRICS & STATUS BADGES
    ========================================================================== */
+
 .badge {
     font-size: 11px;
     font-weight: 700;
@@ -762,23 +805,25 @@ body {
         color: var(--bg-base);
     }
 
-/* Chart Canvas Nodes */
-.chart-container {
+.chart-container,
+.payment-chart-canvas-wrapper {
     position: relative;
-    height: 220px;
     width: 100%;
+    min-width: 0;
+}
+
+.chart-container {
+    height: 220px;
 }
 
 .payment-chart-canvas-wrapper {
-    position: relative;
     height: 160px;
-    width: 100%;
 }
-
 
 /* ==========================================================================
    LOWER UTILITY COLUMNS & ACTION CENTER
    ========================================================================== */
+
 .bottom-three-column-grid {
     display: grid;
     grid-template-columns: 1.2fr 1fr 1.2fr;
@@ -787,7 +832,7 @@ body {
 
 .action-button-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
 }
 
@@ -818,7 +863,6 @@ body {
         font-size: 16px;
     }
 
-/* Notifications Engine Frame */
 .notification-list {
     display: flex;
     flex-direction: column;
@@ -854,10 +898,10 @@ body {
     color: var(--success);
 }
 
-
 /* ==========================================================================
    MODALS & OVERLAYS
    ========================================================================== */
+
 .modal-overlay {
     display: none;
     position: fixed;
@@ -950,10 +994,10 @@ body {
         color: var(--cream);
     }
 
-
 /* ==========================================================================
    SWEETALERT2
    ========================================================================== */
+
 .swal2-popup {
     border-radius: 16px !important;
     background-color: var(--bg-card) !important;
@@ -1017,10 +1061,10 @@ body {
     color: var(--danger) !important;
 }
 
-
 /* ==========================================================================
    ANIMATIONS
    ========================================================================== */
+
 @keyframes pulse {
     0% {
         opacity: 0.6;
@@ -1055,94 +1099,10 @@ body {
     animation: slideUp 0.3s ease-out;
 }
 
-@media (max-width: 1024px) {
-    .dashboard-container {
-        display: block;
-    }
+/* ==========================================================================
+   CHAT DROPDOWN & SUPPORT INBOX
+   ========================================================================== */
 
-    .sidebar {
-        position: fixed;
-        left: -255px;
-        top: 0;
-        z-index: 1001;
-        transition: left 0.3s ease;
-        height: 100vh;
-        box-shadow: 10px 0 30px rgba(0,0,0,0.5);
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-
-        .sidebar.mobile-open {
-            left: 0;
-        }
-
-    .sidebar-overlay {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.7);
-        z-index: 1000;
-        backdrop-filter: blur(4px);
-    }
-
-        .sidebar-overlay.mobile-open {
-            display: block;
-        }
-
-    /* Mobile Header Panel */
-    .mobile-header {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        padding: 20px;
-        background: var(--bg-base);
-        border-bottom: 1px solid var(--border-sub);
-        margin-bottom: 20px;
-    }
-
-    /* Modern Hamburger */
-    .hamburger-btn {
-        background: var(--bg-surface);
-        border: 1px solid var(--border);
-        color: var(--gold);
-        width: 44px;
-        height: 44px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        font-size: 18px;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-    }
-
-        .hamburger-btn:hover {
-            background: var(--gold);
-            color: var(--bg-base);
-            border-color: var(--gold);
-            transform: translateY(-2px);
-        }
-
-    /* Brand Name */
-    .mobile-brand {
-        font-size: 20px;
-        font-weight: 800;
-        color: var(--cream);
-        letter-spacing: -0.5px;
-    }
-}
-
-@media (min-width: 1025px) {
-    .mobile-header, .sidebar-overlay {
-        display: none !important;
-    }
-}
-
-/* ── Chat Dropdown (Top Nav) ── */
 .nav-chat-icon {
     position: relative;
     cursor: pointer;
@@ -1168,14 +1128,14 @@ body {
 .chat-dropdown {
     display: none;
     position: fixed;
-    top: 60px;
-    right: 80px;
-    width: 380px;
-    height: 480px;
-    background: var(--bg-card);
+    top: 76px;
+    right: 28px;
+    width: min(760px, calc(100vw - 32px));
+    height: min(540px, calc(100vh - 110px));
+    background: var(--bg-base);
     border: 1px solid var(--border);
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    border-radius: 14px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, .5);
     flex-direction: column;
     z-index: 1090;
     overflow: hidden;
@@ -1195,6 +1155,14 @@ body {
     font-size: 14px;
     font-weight: 700;
     color: var(--cream);
+}
+
+.chat-status-dot {
+    width: 8px;
+    height: 8px;
+    background: #2ed573;
+    border-radius: 50%;
+    flex-shrink: 0;
 }
 
 .chat-dropdown-contact-bar {
@@ -1219,7 +1187,7 @@ body {
 
 .chat-dropdown-body {
     flex: 1;
-    padding: 14px;
+    padding: 16px;
     overflow-y: auto;
     background: var(--bg-base);
     display: flex;
@@ -1285,22 +1253,26 @@ body {
     border-top: 1px solid var(--border-sub);
     display: flex;
     gap: 8px;
+    background: var(--bg-card);
 }
 
-#chatInput {
-    flex: 1;
-    background: var(--bg-base);
-    border: 1px solid var(--border-sub);
-    border-radius: 6px;
-    padding: 8px 10px;
-    color: var(--cream);
-    outline: none;
-    font-size: 13px;
-}
-
-    #chatInput:focus {
-        border-color: var(--gold);
+    #chatInput,
+    .chat-dropdown-footer input {
+        flex: 1;
+        min-width: 0;
+        background: var(--bg-base);
+        border: 1px solid var(--border-sub);
+        border-radius: 6px;
+        padding: 8px 10px;
+        color: var(--cream);
+        outline: none;
+        font-size: 13px;
     }
+
+        #chatInput:focus,
+        .chat-dropdown-footer input:focus {
+            border-color: var(--gold);
+        }
 
 .chat-send-btn {
     background: var(--gold);
@@ -1312,60 +1284,228 @@ body {
     cursor: pointer;
     font-size: 13px;
     transition: background 0.2s;
+    flex-shrink: 0;
 }
 
     .chat-send-btn:hover {
         background: var(--gold-light);
     }
 
+.support-header {
+    min-height: 70px;
+    padding: 14px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-card);
+    color: var(--cream);
+    border-bottom: 1px solid var(--border);
+}
 
+    .support-header small,
+    .support-conversation-header small,
+    .support-contact small {
+        display: block;
+        margin-top: 3px;
+        color: var(--muted);
+        font-size: 11px;
+    }
 
-/* ==========================================================================
-   CASHIER DASHBOARD RESPONSIVE OVERRIDES
-   Keep existing colors and behavior; improve layout at laptop/tablet/mobile.
-   ========================================================================== */
-.main-content,
-.pos-grid-container,
-.pos-card-wrapper,
-.summary-card,
-.dashboard-header-card {
+.support-close {
+    border: 0;
+    background: transparent;
+    color: var(--gold);
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.support-inbox {
+    display: flex;
+    height: calc(100% - 70px);
     min-width: 0;
 }
 
-.main-content {
+.support-contacts {
+    width: 245px;
+    overflow-y: auto;
+    padding: 8px;
+    background: var(--bg-surface);
+    border-right: 1px solid var(--border-sub);
+}
+
+.support-contact {
     width: 100%;
-    max-width: 100%;
+    border: 0;
+    border-radius: 9px;
+    padding: 12px;
+    background: transparent;
+    color: var(--cream);
+    cursor: pointer;
+    text-align: left;
+    margin-bottom: 4px;
+    font-family: inherit;
 }
 
-.summary-dashboard {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.pos-grid-container {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: stretch;
-}
-
-    .pos-grid-container > .pos-card-wrapper {
-        min-width: 0;
+    .support-contact:hover,
+    .support-contact.active {
+        background: var(--bg-card-2);
     }
 
-    .pos-grid-container.single-card-grid {
-        grid-template-columns: minmax(0, 1fr);
+.support-contact-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.support-contact > span:last-child {
+    display: block;
+    margin-top: 6px;
+    color: var(--muted);
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.support-unread-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--danger);
+}
+
+.support-conversation {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-base);
+}
+
+.support-conversation-header {
+    padding: 14px 18px;
+    color: var(--cream);
+    border-bottom: 1px solid var(--border-sub);
+}
+
+/* ==========================================================================
+   NOTIFICATION BELL DROPDOWN
+   ========================================================================== */
+
+.notif-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    width: 340px;
+    max-height: 400px;
+    overflow-y: auto;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+    z-index: 1200;
+    padding: 14px;
+}
+
+    .notif-dropdown.open {
+        display: block;
     }
 
-        .pos-grid-container.single-card-grid > .pos-card-wrapper {
-            width: 100%;
+.notif-dropdown-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--cream);
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-sub);
+}
+
+.notif-header-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.notif-link-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: 'Outfit', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--gold);
+    cursor: pointer;
+}
+
+    .notif-link-btn:hover {
+        color: var(--gold-light);
+    }
+
+    .notif-link-btn.danger {
+        color: var(--muted);
+    }
+
+        .notif-link-btn.danger:hover {
+            color: var(--danger);
         }
 
-.pos-table {
-    min-width: 560px;
+.notification-item {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
 }
 
-.table-responsive {
-    max-width: 100%;
-    -webkit-overflow-scrolling: touch;
+    .notification-item.unread {
+        border-left: 3px solid var(--gold);
+        padding-left: 10px;
+    }
+
+    .notification-item:not(.unread) .notification-info p {
+        color: var(--muted);
+    }
+
+.notif-open {
+    flex: 1;
+    min-width: 0;
+    cursor: pointer;
 }
+
+.notif-item-actions {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.notif-icon-btn {
+    width: 26px;
+    height: 26px;
+    background: transparent;
+    border: 1px solid var(--border-sub);
+    border-radius: 6px;
+    color: var(--muted);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+    .notif-icon-btn:hover {
+        color: var(--gold);
+        border-color: var(--gold);
+    }
+
+    .notif-icon-btn.danger:hover {
+        color: var(--danger);
+        border-color: var(--danger);
+    }
+
+/* ==========================================================================
+   TRANSACTION CARDS & UTILITY STYLES
+   ========================================================================== */
 
 .mobile-only {
     display: none !important;
@@ -1394,10 +1534,57 @@ body {
     overflow-wrap: anywhere;
 }
 
-.chart-container,
-.payment-chart-canvas-wrapper {
-    min-width: 0;
+.tx-card-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
+
+.tx-card-details {
+    padding-top: 12px;
+    margin-top: 10px;
+    border-top: 1px solid var(--border-sub);
+}
+
+.tx-detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 5px 0;
+    font-size: 12px;
+}
+
+.tx-label {
+    color: var(--muted);
+}
+
+.tx-value {
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+.tx-customer {
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+
+.tx-view-btn {
+    flex: 0 0 auto;
+}
+
+.bottom-single-column {
+    margin-bottom: 16px;
+}
+
+.staff-break-toggle {
+    font-family: inherit;
+    color: inherit;
+    width: 100%;
+}
+
+/* ==========================================================================
+   RESPONSIVE LAYOUT — TABLET AND SMALL LAPTOP
+   ========================================================================== */
 
 @media (max-width: 1200px) {
     .main-content {
@@ -1434,6 +1621,99 @@ body {
 }
 
 @media (max-width: 1024px) {
+    .dashboard-container {
+        display: block;
+    }
+
+    .sidebar {
+        position: fixed;
+        left: -255px;
+        top: 0;
+        z-index: 1001;
+        transition: left 0.3s ease;
+        height: 100vh;
+        box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+        .sidebar.mobile-open {
+            left: 0;
+        }
+
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.7);
+        z-index: 1000;
+        backdrop-filter: blur(4px);
+    }
+
+        .sidebar-overlay.mobile-open {
+            display: block;
+        }
+
+    .mobile-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 20px;
+        background: var(--bg-base);
+        border-bottom: 1px solid var(--border-sub);
+        margin-bottom: 20px;
+    }
+
+    .hamburger-btn {
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        color: var(--gold);
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 18px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    }
+
+        .hamburger-btn:hover {
+            background: var(--gold);
+            color: var(--bg-base);
+            border-color: var(--gold);
+            transform: translateY(-2px);
+        }
+
+    .mobile-brand {
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--cream);
+        letter-spacing: -0.5px;
+    }
+
+    .notif-dropdown {
+        position: fixed !important;
+        top: 64px !important;
+        left: 12px !important;
+        right: 12px !important;
+        width: calc(100vw - 24px) !important;
+        max-width: calc(100vw - 24px) !important;
+        box-sizing: border-box !important;
+        z-index: 2001 !important;
+    }
+
+    .notification-info p {
+        word-break: break-word;
+        overflow-wrap: break-word;
+        white-space: normal;
+    }
+
     .main-content {
         padding: 22px;
         overflow-x: clip;
@@ -1454,10 +1734,11 @@ body {
     }
 
     .summary-dashboard {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .pos-grid-container {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 18px;
     }
 
@@ -1484,6 +1765,17 @@ body {
         flex-wrap: wrap;
     }
 }
+
+@media (min-width: 1025px) {
+    .mobile-header,
+    .sidebar-overlay {
+        display: none !important;
+    }
+}
+
+/* ==========================================================================
+   RESPONSIVE LAYOUT — MOBILE
+   ========================================================================== */
 
 @media (max-width: 760px) {
     .mobile-only {
@@ -1526,6 +1818,7 @@ body {
         }
 
     .main-content {
+        width: 100%;
         padding: 16px;
         overflow-x: clip;
     }
@@ -1767,6 +2060,7 @@ body {
     }
 
     .support-contacts {
+        width: 160px;
         max-width: 38%;
         min-width: 100px;
     }
@@ -1792,6 +2086,13 @@ body {
         width: calc(100% - 32px);
         max-width: 380px;
         padding: 26px 20px;
+    }
+}
+
+@media (max-width: 650px) {
+    .chat-dropdown {
+        right: 16px;
+        top: 64px;
     }
 }
 
@@ -1834,6 +2135,10 @@ body {
     }
 }
 
+/* ==========================================================================
+   ACCESSIBILITY
+   ========================================================================== */
+
 @media (prefers-reduced-motion: reduce) {
     .slide-up,
     .animate-pulse {
@@ -1848,11 +2153,11 @@ body {
     }
 }
 
-/* ================================================================
-   POSITIONING FIX — CASHIER DASHBOARD
-   Ensures summary cards and single-card sections use the full content
-   width instead of leaving an unused column on the right.
-   ================================================================ */
+/* ==========================================================================
+   FINAL CASHIER DASHBOARD POSITIONING FIX
+   Keep this section at the bottom so it overrides earlier layout rules.
+   ========================================================================== */
+
 .dashboard-container {
     width: 100%;
     min-width: 0;
@@ -1869,7 +2174,8 @@ body {
     display: grid !important;
     width: 100% !important;
     max-width: none !important;
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 16px;
     align-items: stretch;
 }
 
@@ -1883,6 +2189,7 @@ body {
     width: 100% !important;
     max-width: none !important;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
     align-items: stretch;
 }
 
@@ -1902,16 +2209,20 @@ body {
             max-width: none !important;
         }
 
+/* Tablet */
 @media (max-width: 1024px) and (min-width: 761px) {
     .summary-dashboard {
-        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 12px;
     }
 
     .pos-grid-container:not(.single-card-grid) {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
     }
 }
 
+/* Mobile */
 @media (max-width: 760px) {
     .main-content {
         width: 100%;
@@ -1920,10 +2231,12 @@ body {
 
     .summary-dashboard {
         grid-template-columns: minmax(0, 1fr) !important;
+        gap: 10px;
     }
 
     .pos-grid-container,
     .pos-grid-container.single-card-grid {
         grid-template-columns: minmax(0, 1fr) !important;
+        gap: 16px;
     }
 }
