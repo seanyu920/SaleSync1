@@ -457,6 +457,24 @@
                 </div>
 
 
+                <!-- PAYMENT METHOD (same options as the customer side) -->
+
+                <div style="margin-bottom:12px;">
+
+                    <select id="paymentMethod"
+                            class="customer-name-input"
+                            style="width:100%;">
+
+                        <option value="Cash">Pay at Counter (Cash)</option>
+                        <option value="GCash">GCash</option>
+                        <option value="Maya">Maya</option>
+                        <option value="Card">Card</option>
+
+                    </select>
+
+                </div>
+
+
                 <!-- AMOUNT PAID (always shown) -->
 
                 <div id="cashSection"
@@ -541,9 +559,22 @@
                     </div>
 
 
-                    <!-- ADD-ONS: category-specific checkboxes (e.g. a rice
-                         meal won't show "Oat Milk"). Hidden automatically
-                         when a category has no add-ons defined for it. -->
+                    <!-- SUGAR LEVEL: pick one (required for milk tea) -->
+                    <div id="sugarSection" class="notes-section" style="display:none;">
+
+                        <label class="notes-label">
+                            Sugar Level
+                        </label>
+
+                        <div id="sugarList" class="addon-options">
+                        </div>
+
+                    </div>
+
+
+                    <!-- ADD-ONS: category-specific checkboxes (same as the
+                         customer side). Hidden automatically when a category
+                         or product has no add-ons defined for it. -->
                     <div id="addonsSection" class="notes-section">
 
                         <label class="notes-label">
@@ -651,6 +682,11 @@
                 <p>
                     Type:
                     <strong id="receiptOrderType"></strong>
+                </p>
+
+                <p>
+                    Payment:
+                    <strong id="receiptPaymentMethod"></strong>
                 </p>
 
                 <p id="receiptCustomerRow"
@@ -888,7 +924,7 @@
 
 
         /* =====================================================
-           ADD-ONS
+           ADD-ONS (same as the customer side)
            Category-specific so a rice meal never shows drink
            add-ons like "Oat Milk", and a coffee never shows
            "Extra Rice". Keys must match currentCategory exactly
@@ -896,24 +932,86 @@
         ===================================================== */
 
         const addonsByCategory = {
-            "COFFEE": ["Extra Shot", "Less Sugar", "Less Ice", "Oat Milk", "Extra Ice"],
-            "MILKTEA": ["Less Sugar", "Less Ice", "Extra Pearls", "Extra Ice"],
-            "FRUIT TEA": ["Less Sugar", "Less Ice", "Extra Ice"],
-            "RICE MEAL": ["Extra Rice", "Less Spicy", "No Onions", "Extra Sauce"],
-            "SNACKS & PASTA": ["Extra Rice", "Less Spicy", "No Onions", "Extra Sauce", "Extra Cheese"],
-            "BREAD & PASTRY": ["Warmed Up", "Extra Butter", "No Nuts"]
+            "COFFEE": ["Extra Sugar", "Oat Milk", "Extra Ice"],
+            "MILKTEA": ["Extra Pearls", "Extra Ice"],
+            "FRUIT TEA": ["Extra Sugar", "Extra Ice"],
+            "RICE MEAL": ["Extra Rice"],
+            "SNACKS & PASTA": ["Extra Sauce", "Extra Cheese"],
+            "BREAD & PASTRY": []
         };
+
+        // Add-ons for one specific product. If the product name contains the
+        // "match" text, this list is used instead of the category list.
+        const addonsByItem = [
+            { match: 'flavored fries', addons: ['Barbeque', 'Cheese', 'Sour Cream'] },
+            { match: 'siomai', addons: [] }
+        ];
+
+        // Add-ons that cannot be ticked together (per category).
+        const exclusiveAddonGroups = {
+            "COFFEE": [['Extra Ice'], ['Extra Sugar']],
+            "MILKTEA": [['Extra Ice']],
+            "FRUIT TEA": [['Extra Ice'], ['Extra Sugar']]
+        };
+
+        // Sugar level is a choice of its own (pick one), not an add-on.
+        // It is REQUIRED for the categories listed here.
+        const sugarLevelsByCategory = {
+            "MILKTEA": ['25%', '50%', '75%', '100%']
+        };
+
+        function getSugarLevelsForItem(category, itemName) {
+            return sugarLevelsByCategory[category] || [];
+        }
 
         function getAddonsForCategory(category) {
             return addonsByCategory[category] || [];
         }
 
-        // Combines selected add-ons and the free-text note into a
-        // single string for the existing "notes" field sent to
+        function getAddonsForItem(category, itemName) {
+
+            const name = (itemName || '').toLowerCase();
+
+            const override = addonsByItem.find(rule => name.includes(rule.match));
+
+            return override
+                ? override.addons
+                : getAddonsForCategory(category);
+        }
+
+        // When one add-on of an exclusive group is ticked, untick the others.
+        function onAddonToggle(input) {
+
+            if (!input.checked) return;
+
+            const groups = exclusiveAddonGroups[input.dataset.cat] || [];
+
+            const group = groups.find(g => g.includes(input.value));
+
+            if (!group) return;
+
+            const scope = input.closest('.addon-options');
+
+            if (!scope) return;
+
+            scope.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+
+                if (cb !== input && group.includes(cb.value)) {
+                    cb.checked = false;
+                }
+            });
+        }
+
+        // Combines sugar level, selected add-ons and the free-text note into
+        // a single string for the existing "notes" field sent to
         // /Cashier/Checkout, so no backend changes are required.
         function buildOrderNotes(item) {
 
             const parts = [];
+
+            if (item.sugarLevel) {
+                parts.push('Sugar Level: ' + item.sugarLevel);
+            }
 
             if (item.addons && item.addons.length > 0) {
                 parts.push('Add-ons: ' + item.addons.join(', '));
@@ -941,10 +1039,9 @@
 
         let currentCategory = "";
 
-        // Payment selection was removed from the screen. Orders are
-        // paid with the amount entered in "Amount Paid", so the server
-        // still receives a payment method (it expects one).
-        const DEFAULT_PAYMENT_METHOD = "Cash";
+        // Payment method is chosen from the dropdown beside "Amount Paid".
+        // It is captured when checkout starts and sent with the order.
+        let pendingPaymentMethod = "Cash";
 
         let currentCartTotal = 0;
 
@@ -1191,9 +1288,9 @@
             }
 
 
-            // Populate the Add-ons checkboxes for this item's category.
+            // Populate the Add-ons checkboxes for this item.
             const addonOptions =
-                getAddonsForCategory(currentCategory);
+                getAddonsForItem(currentCategory, name);
 
             const addonsSection =
                 document.getElementById('addonsSection');
@@ -1208,7 +1305,7 @@
                 addonsList.innerHTML =
                     addonOptions.map(label => `
                         <label class="addon-check">
-                            <input type="checkbox" name="modalAddon" value="${label}">
+                            <input type="checkbox" name="modalAddon" value="${label}" data-cat="${escapeHtml(currentCategory)}" onchange="onAddonToggle(this)">
                             ${label}
                         </label>
                     `).join('');
@@ -1218,6 +1315,36 @@
 
                 addonsSection.style.display = 'none';
                 addonsList.innerHTML = '';
+            }
+
+
+            // Sugar level (pick one) for the categories that have it.
+            const sugarOptions =
+                getSugarLevelsForItem(currentCategory, name);
+
+            const sugarSection =
+                document.getElementById('sugarSection');
+
+            const sugarList =
+                document.getElementById('sugarList');
+
+            if (sugarOptions.length > 0) {
+
+                sugarSection.style.display = 'flex';
+
+                sugarList.innerHTML =
+                    sugarOptions.map(label => `
+                        <label class="addon-check">
+                            <input type="radio" name="modalSugar" value="${label}">
+                            ${label}
+                        </label>
+                    `).join('');
+
+            }
+            else {
+
+                sugarSection.style.display = 'none';
+                sugarList.innerHTML = '';
             }
 
 
@@ -1302,6 +1429,33 @@
                 ).map(cb => cb.value);
 
 
+            /*
+             * REQUIRED: a sugar level must be picked for items that
+             * have sugar levels (milk tea). Cannot be skipped.
+             */
+            const sugarPicked =
+                document.querySelector('input[name="modalSugar"]:checked');
+
+            const sugarIsRequired =
+                document.querySelectorAll('input[name="modalSugar"]').length > 0;
+
+            if (sugarIsRequired && !sugarPicked) {
+
+                Swal.fire({
+                    title: 'Sugar Level Required',
+                    text: 'Please select a sugar level before adding this item to the order.',
+                    icon: 'warning',
+                    confirmButtonText: 'OK'
+                });
+
+                return;
+
+            }
+
+            const sugarLevel =
+                sugarPicked ? sugarPicked.value : '';
+
+
             cart.push({
 
                 name: activeItemName,
@@ -1317,6 +1471,8 @@
                 notes: notes,
 
                 addons: selectedAddons,
+
+                sugarLevel: sugarLevel,
 
                 category: currentCategory
 
@@ -1517,6 +1673,11 @@
         // Normal (read-only) row for a cart/receipt item.
         function buildOrderItemViewHtml(item, index, sub, isSelected) {
 
+            const sugarHtml =
+                item.sugarLevel
+                    ? `<div class="order-item-addons">Sugar Level: ${escapeHtml(item.sugarLevel)}</div>`
+                    : '';
+
             const addonsHtml =
                 (item.addons && item.addons.length > 0)
                     ? `<div class="order-item-addons">Add-ons: ${escapeHtml(item.addons.join(', '))}</div>`
@@ -1550,6 +1711,7 @@
                             • ₱${item.price.toFixed(2)}/ea
                         </div>
 
+                        ${sugarHtml}
                         ${addonsHtml}
                         ${noteHtml}
 
@@ -1628,15 +1790,15 @@
         }
 
 
-        // Inline editor for a receipt item's Add-ons + Note. Only one
-        // row is ever in edit mode at a time (tracked via
+        // Inline editor for a receipt item's Sugar Level + Add-ons + Note.
+        // Only one row is ever in edit mode at a time (tracked via
         // editingIndex), so there's exactly one ".order-item-editing"
         // element in the DOM whenever this renders — saveReceiptItemEdit
         // relies on that.
         function buildOrderItemEditHtml(item, index) {
 
             const addonOptions =
-                getAddonsForCategory(item.category || '');
+                getAddonsForItem(item.category || '', item.name);
 
             const currentAddons =
                 item.addons || [];
@@ -1651,12 +1813,30 @@
 
                     return `
                         <label class="addon-check">
-                            <input type="checkbox" class="order-edit-addon" value="${label}" ${checked}>
+                            <input type="checkbox" class="order-edit-addon" value="${label}" data-cat="${escapeHtml(item.category || '')}" onchange="onAddonToggle(this)" ${checked}>
                             ${label}
                         </label>
                     `;
 
                 }).join('');
+
+            const sugarOptions =
+                getSugarLevelsForItem(item.category || '', item.name);
+
+            const sugarEditHtml =
+                sugarOptions.length > 0
+                    ? `
+                        <label class="notes-label">Sugar Level</label>
+                        <div class="addon-options">
+                            ${sugarOptions.map(label => `
+                                <label class="addon-check">
+                                    <input type="radio" class="order-edit-sugar" name="orderEditSugar" value="${label}" ${item.sugarLevel === label ? 'checked' : ''}>
+                                    ${label}
+                                </label>
+                            `).join('')}
+                        </div>
+                      `
+                    : '';
 
             return `
 
@@ -1671,6 +1851,8 @@
                                 (${escapeHtml(item.size)})
                             </span>
                         </div>
+
+                        ${sugarEditHtml}
 
                         ${
                             addonOptions.length > 0
@@ -1745,6 +1927,30 @@
                 Array.from(
                     row.querySelectorAll('.order-edit-addon:checked')
                 ).map(cb => cb.value);
+
+
+            // REQUIRED: sugar level cannot be left empty for milk tea.
+            if (getSugarLevelsForItem(cart[index].category || '', cart[index].name).length > 0) {
+
+                const sugarPicked =
+                    row.querySelector('.order-edit-sugar:checked');
+
+                if (!sugarPicked) {
+
+                    Swal.fire({
+                        title: 'Sugar Level Required',
+                        text: 'Please select a sugar level before saving.',
+                        icon: 'warning',
+                        confirmButtonText: 'OK'
+                    });
+
+                    return;
+
+                }
+
+                cart[index].sugarLevel = sugarPicked.value;
+
+            }
 
             cart[index].notes = notes;
             cart[index].addons = addons;
@@ -2134,6 +2340,29 @@
             }
 
 
+            /*
+             * REQUIRED: every item that needs a sugar level must have one.
+             * (Catches older items saved in the cart before this rule existed.)
+             */
+            const missingSugar =
+                cart.find(item =>
+                    getSugarLevelsForItem(item.category || '', item.name).length > 0 &&
+                    !item.sugarLevel
+                );
+
+            if (missingSugar) {
+
+                Swal.fire(
+                    "Sugar Level Required",
+                    `Please set a sugar level for "${missingSugar.name}" (tap Edit on the item).`,
+                    "warning"
+                );
+
+                return;
+
+            }
+
+
             const amountInput =
                 document.getElementById('amountTendered');
 
@@ -2173,6 +2402,9 @@
 
             pendingAmountPaid =
                 amountPaid;
+
+            pendingPaymentMethod =
+                document.getElementById('paymentMethod').value;
 
 
             currentCustomerName =
@@ -2222,6 +2454,9 @@
 
             document.getElementById("receiptOrderType").innerText =
                 currentOrderType;
+
+            document.getElementById("receiptPaymentMethod").innerText =
+                pendingPaymentMethod;
 
 
             const custRow =
@@ -2540,7 +2775,7 @@
                                 items: payload,
 
                                 paymentMethod:
-                                    DEFAULT_PAYMENT_METHOD,
+                                    pendingPaymentMethod,
 
                                 amountPaid:
                                     pendingAmountPaid,
@@ -2673,6 +2908,12 @@
 
             document.getElementById("promoCode").value =
                 "";
+
+            document.getElementById("paymentMethod").value =
+                "Cash";
+
+            pendingPaymentMethod =
+                "Cash";
 
             currentCustomerName =
                 "";

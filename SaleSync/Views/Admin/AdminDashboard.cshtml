@@ -99,16 +99,22 @@
                         <i class="fas fa-bell"></i>
                         <span class="bell-badge" id="bellBadge" style="display:none;"></span>
 
-                        <div class="notif-dropdown" id="notifDropdown">
-                            <div class="notif-dropdown-title">Live Notifications</div>
+                        <div class="notif-dropdown" id="notifDropdown" onclick="event.stopPropagation()">
+                            <div class="notif-dropdown-title">
+                                <span>Live Notifications</span>
+                                <span class="notif-header-actions">
+                                    <button type="button" class="notif-link-btn" id="notifMarkAll" onclick="markAllNotifsRead()">Mark all read</button>
+                                    <button type="button" class="notif-link-btn danger" id="notifClearAll" onclick="clearAllNotifs()">Clear all</button>
+                                </span>
+                            </div>
                             <div class="notification-list" id="notificationList">
-                            <div class="notification-item">
-                                <div class="notification-info">
-                                    <p>No new orders right now.</p>
+                                <div class="notification-item">
+                                    <div class="notification-info">
+                                        <p>No new orders right now.</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
                     </div>
                     <div class="nav-chat-icon" onclick="toggleChat()" id="chatTrigger" title="Open customer support inbox">
                         <i class="fas fa-comments"></i>
@@ -845,7 +851,18 @@
             function escapeHTML(value) { return String(value).replace(/[&<>'"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[c])); }
 
             // ── Notification Bell Logic (pending online order alerts) ──
+            const NOTIF_READ_KEY = 'cafero_notif_read';
+            const NOTIF_DELETED_KEY = 'cafero_notif_deleted';
             let lastKnownPendingCount = null;
+            let latestNotifOrders = [];
+
+            function loadIdSet(key) {
+                try { return new Set(JSON.parse(localStorage.getItem(key) || '[]')); }
+                catch { return new Set(); }
+            }
+            function saveIdSet(key, set) {
+                try { localStorage.setItem(key, JSON.stringify([...set])); } catch { }
+            }
 
             async function checkForNewOrders() {
                 try {
@@ -856,16 +873,8 @@
                     const pendingCount = data.pendingCount || 0;
                     const recentOrders = data.recentOrders || [];
 
-                    if (lastKnownPendingCount === null) {
-                        lastKnownPendingCount = pendingCount;
-                        updateBellBadge(pendingCount);
-                        renderNotificationList(recentOrders);
-                        return;
-                    }
-
-                    if (pendingCount > lastKnownPendingCount) {
+                    if (lastKnownPendingCount !== null && pendingCount > lastKnownPendingCount) {
                         const newOrders = pendingCount - lastKnownPendingCount;
-
                         Swal.fire({
                             toast: true,
                             position: 'top-end',
@@ -880,44 +889,110 @@
                     }
 
                     lastKnownPendingCount = pendingCount;
-                    updateBellBadge(pendingCount);
                     renderNotificationList(recentOrders);
-
                 } catch (err) {
                     console.error('Failed to check for new orders:', err);
                 }
             }
 
             function renderNotificationList(orders) {
+                latestNotifOrders = orders || [];
                 const list = document.getElementById('notificationList');
                 if (!list) return;
 
-                if (!orders || orders.length === 0) {
+                const read = loadIdSet(NOTIF_READ_KEY);
+                const deleted = loadIdSet(NOTIF_DELETED_KEY);
+
+                const currentIds = new Set(latestNotifOrders.map(o => String(o.saleId)));
+                saveIdSet(NOTIF_READ_KEY, new Set([...read].filter(id => currentIds.has(id))));
+                saveIdSet(NOTIF_DELETED_KEY, new Set([...deleted].filter(id => currentIds.has(id))));
+
+                const visible = latestNotifOrders.filter(o => !deleted.has(String(o.saleId)));
+                const unreadCount = visible.filter(o => !read.has(String(o.saleId))).length;
+
+                updateBellBadge(unreadCount);
+
+                const hasItems = visible.length > 0;
+                document.getElementById('notifMarkAll').style.display = unreadCount > 0 ? '' : 'none';
+                document.getElementById('notifClearAll').style.display = hasItems ? '' : 'none';
+
+                if (!hasItems) {
                     list.innerHTML = `
                         <div class="notification-item">
-                            <div class="notification-info">
-                                <p>No new orders right now.</p>
-                            </div>
+                            <div class="notification-info"><p>No new orders right now.</p></div>
                         </div>`;
                     return;
                 }
 
-                list.innerHTML = orders.map(o => `
-                <div class="notification-item" style="cursor:pointer;" onclick="location.href='/Admin/QueueOrder?highlight=${o.saleId}'">
-                    <div class="notification-info">
-                        <p>New ${escapeHTML(o.orderType)} order from ${escapeHTML(o.customerName)} (#ORD-${o.saleId}) — ₱${o.total.toFixed(2)}</p>
-                        <div class="notification-time">${escapeHTML(o.saleDate)}</div>
-                    </div>
-                </div>
-            `).join('');
+                list.innerHTML = visible.map(o => {
+                    const id = String(o.saleId);
+                    const isUnread = !read.has(id);
+                    return `
+                    <div class="notification-item ${isUnread ? 'unread' : ''}">
+                        <div class="notification-info notif-open" data-action="open" data-id="${id}">
+                            <p>New ${escapeHTML(o.orderType || '')} order from ${escapeHTML(o.customerName || '')} (#ORD-${id}) — ₱${Number(o.total).toFixed(2)}</p>
+                            <div class="notification-time">${escapeHTML(o.saleDate || '')}</div>
+                        </div>
+                        <div class="notif-item-actions">
+                            ${isUnread ? `<button type="button" class="notif-icon-btn" data-action="read" data-id="${id}" title="Mark as read"><i class="fas fa-check"></i></button>` : ''}
+                            <button type="button" class="notif-icon-btn danger" data-action="delete" data-id="${id}" title="Delete notification"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>`;
+                }).join('');
             }
 
             function updateBellBadge(count) {
                 const badge = document.getElementById('bellBadge');
                 if (!badge) return;
-
-                badge.style.display = count > 0 ? 'block' : 'none';
+                if (count > 0) {
+                    badge.textContent = count > 99 ? '99+' : count;
+                    badge.style.display = 'block';
+                } else {
+                    badge.style.display = 'none';
+                }
             }
+
+            function markNotifRead(id) {
+                const read = loadIdSet(NOTIF_READ_KEY);
+                read.add(String(id));
+                saveIdSet(NOTIF_READ_KEY, read);
+                renderNotificationList(latestNotifOrders);
+            }
+            function deleteNotif(id) {
+                const deleted = loadIdSet(NOTIF_DELETED_KEY);
+                deleted.add(String(id));
+                saveIdSet(NOTIF_DELETED_KEY, deleted);
+                renderNotificationList(latestNotifOrders);
+            }
+            function markAllNotifsRead() {
+                const deleted = loadIdSet(NOTIF_DELETED_KEY);
+                const read = loadIdSet(NOTIF_READ_KEY);
+                latestNotifOrders.forEach(o => { if (!deleted.has(String(o.saleId))) read.add(String(o.saleId)); });
+                saveIdSet(NOTIF_READ_KEY, read);
+                renderNotificationList(latestNotifOrders);
+            }
+            function clearAllNotifs() {
+                const deleted = loadIdSet(NOTIF_DELETED_KEY);
+                latestNotifOrders.forEach(o => deleted.add(String(o.saleId)));
+                saveIdSet(NOTIF_DELETED_KEY, deleted);
+                renderNotificationList(latestNotifOrders);
+            }
+
+            document.addEventListener('DOMContentLoaded', function () {
+                document.getElementById('notificationList').addEventListener('click', function (e) {
+                    const el = e.target.closest('[data-action]');
+                    if (!el) return;
+                    const id = el.dataset.id;
+                    switch (el.dataset.action) {
+                        case 'read': markNotifRead(id); break;
+                        case 'delete': deleteNotif(id); break;
+                        case 'open':
+                            markNotifRead(id);
+                            location.href = '/Admin/QueueOrder?highlight=' + id;
+                            break;
+                    }
+                });
+            });
 
             document.addEventListener("DOMContentLoaded", function() {
                 function updateClock() {

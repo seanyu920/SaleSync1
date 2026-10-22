@@ -183,10 +183,38 @@
                     }
 
 
+                    @* TERMS AND PRIVACY AGREEMENT *@
+                    <div class="terms-agreement">
+
+                        <label class="terms-checkbox-label">
+
+                            <input type="checkbox"
+                                   id="termsAgreement" />
+
+                            <span class="custom-checkbox"></span>
+
+                            <span class="terms-text">
+                                I agree to the
+                                <a href="#" id="openTerms">
+                                    Terms &amp; Conditions
+                                </a>
+                                and
+                                <a href="#" id="openPrivacy">
+                                    Privacy Policy
+                                </a>.
+                            </span>
+
+                        </label>
+
+                    </div>
+
+
                     <div class="form-actions" style="margin-top: 20px;">
 
                         <button type="submit"
-                                class="btn-login">
+                                class="btn-login"
+                                id="loginButton"
+                                disabled>
                             Log In
                         </button>
 
@@ -217,154 +245,681 @@
         </div>
 
     </div>
+
+
     <!-- Forgot Password Modal -->
+
     <div class="modal-overlay" id="forgotPasswordModal">
+
         <div class="modal-content-wrapper forgot-password-modal">
-            <button type="button" class="modal-close-btn" id="closeForgotPassword" aria-label="Close">✕</button>
+
+            <button type="button"
+                    class="modal-close-btn"
+                    id="closeForgotPassword"
+                    aria-label="Close">
+                ✕
+            </button>
 
             <div class="top-user-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+                <svg viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2"
+                     stroke-linecap="round"
+                     stroke-linejoin="round">
+
+                    <rect x="3"
+                          y="5"
+                          width="18"
+                          height="14"
+                          rx="2">
+                    </rect>
+
                     <path d="m3 7 9 6 9-6"></path>
+
                 </svg>
             </div>
 
             <div class="login-header">
+
                 <h2>Reset Password</h2>
-                <p>Enter your email and we'll send you a link to reset your password.</p>
+
+                <p>
+                    Enter your email and we'll send you a link to reset your password.
+                </p>
+
             </div>
 
-            <form id="forgotPasswordForm" asp-controller="Home" asp-action="ForgotPassword" method="post">
+            <form id="forgotPasswordForm"
+                  asp-controller="Home"
+                  asp-action="ForgotPassword"
+                  method="post">
+
                 <div class="input-group">
-                    <label for="resetEmail">Email Address</label>
+
+                    <label for="resetEmail">
+                        Email Address
+                    </label>
+
                     <div class="input-wrapper">
+
                         <span class="input-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+
+                            <svg viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="2"
+                                 stroke-linecap="round"
+                                 stroke-linejoin="round">
+
+                                <rect x="3"
+                                      y="5"
+                                      width="18"
+                                      height="14"
+                                      rx="2">
+                                </rect>
+
                                 <path d="m3 7 9 6 9-6"></path>
+
                             </svg>
+
                         </span>
-                        <input type="email" id="resetEmail" name="email" placeholder="you@example.com" required />
+
+                        <input type="email"
+                               id="resetEmail"
+                               name="email"
+                               placeholder="you@example.com"
+                               required />
+
                     </div>
+
                 </div>
 
-                <div id="forgotPasswordStatus" class="forgot-password-status" style="display:none;"></div>
+                <div id="forgotPasswordStatus"
+                     class="forgot-password-status"
+                     style="display:none;">
+                </div>
 
-                <div class="form-actions" style="margin-top: 16px;">
-                    <button type="submit" class="btn-login" id="forgotPasswordSubmitBtn">
+                <div class="form-actions"
+                     style="margin-top: 16px;">
+
+                    <button type="submit"
+                            class="btn-login"
+                            id="forgotPasswordSubmitBtn">
                         Send Reset Link
                     </button>
+
                 </div>
+
             </form>
+
         </div>
+
     </div>
 
+
+    <!-- Terms & Conditions Modal -->
+
+    <div class="modal-overlay" id="termsModal">
+
+        <div class="modal-content-wrapper policy-modal">
+
+            <button type="button"
+                    class="modal-close-btn"
+                    id="closeTerms"
+                    aria-label="Close">
+                ✕
+            </button>
+
+            <div class="policy-icon">
+
+                <svg viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2"
+                     stroke-linecap="round"
+                     stroke-linejoin="round">
+
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+
+                    <polyline points="14 2 14 8 20 8"></polyline>
+
+                    <line x1="8"
+                          y1="13"
+                          x2="16"
+                          y2="13">
+                    </line>
+
+                    <line x1="8"
+                          y1="17"
+                          x2="16"
+                          y2="17">
+                    </line>
+
+                    <line x1="8"
+                          y1="9"
+                          x2="10"
+                          y2="9">
+                    </line>
+
+                </svg>
+
+            </div>
+
+            <div class="policy-header">
+
+                <h2>Terms &amp; Conditions</h2>
+
+                <p>
+                    Please read these terms before using SaleSync.
+                </p>
+
+            </div>
+
+            <div class="policy-content">
+
+                <h3>1. Acceptance of Terms</h3>
+
+                <p>
+                    By accessing and using the SaleSync system, you agree to
+                    comply with these Terms &amp; Conditions. If you do not
+                    agree with these terms, please do not use the system.
+                </p>
+
+
+                <h3>2. Account Responsibility</h3>
+
+                <p>
+                    Users are responsible for keeping their account credentials
+                    secure and for all activities performed using their account.
+                </p>
+
+
+                <h3>3. System Usage</h3>
+
+                <p>
+                    The SaleSync system should only be used for its intended
+                    purposes, including account management, ordering,
+                    transactions, and other authorized cafe operations.
+                </p>
+
+
+                <h3>4. Accurate Information</h3>
+
+                <p>
+                    Users are expected to provide accurate and updated
+                    information when creating or using an account.
+                </p>
+
+
+                <h3>5. Changes to the Terms</h3>
+
+                <p>
+                    SaleSync may update these Terms &amp; Conditions when
+                    necessary. Users may be notified when important changes
+                    are made.
+                </p>
+
+
+                <h3>6. Agreement</h3>
+
+                <p>
+                    By checking the agreement box and logging in, you confirm
+                    that you have read and understood these Terms &amp; Conditions.
+                </p>
+
+            </div>
+
+            <button type="button"
+                    class="btn-login policy-close-button"
+                    id="termsDone">
+                I Understand
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- Privacy Policy Modal -->
+
+    <div class="modal-overlay" id="privacyModal">
+
+        <div class="modal-content-wrapper policy-modal">
+
+            <button type="button"
+                    class="modal-close-btn"
+                    id="closePrivacy"
+                    aria-label="Close">
+                ✕
+            </button>
+
+            <div class="policy-icon">
+
+                <svg viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2"
+                     stroke-linecap="round"
+                     stroke-linejoin="round">
+
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+
+                    <path d="M9 12l2 2 4-4"></path>
+
+                </svg>
+
+            </div>
+
+            <div class="policy-header">
+
+                <h2>Privacy Policy</h2>
+
+                <p>
+                    Learn how SaleSync handles your information.
+                </p>
+
+            </div>
+
+            <div class="policy-content">
+
+                <h3>1. Information We Collect</h3>
+
+                <p>
+                    SaleSync may collect information necessary to provide
+                    account, ordering, and transaction services, such as
+                    your name, email address, contact information, and
+                    order details.
+                </p>
+
+
+                <h3>2. How We Use Your Information</h3>
+
+                <p>
+                    Information may be used to manage your account,
+                    process orders, maintain transaction records, provide
+                    customer support, and improve the system.
+                </p>
+
+
+                <h3>3. Protection of Information</h3>
+
+                <p>
+                    Reasonable security measures are used to help protect
+                    user information from unauthorized access, alteration,
+                    disclosure, or misuse.
+                </p>
+
+
+                <h3>4. Sharing of Information</h3>
+
+                <p>
+                    User information will not be intentionally shared with
+                    unauthorized individuals. Information may only be
+                    accessed by authorized personnel when necessary for
+                    system operations.
+                </p>
+
+
+                <h3>5. Data Retention</h3>
+
+                <p>
+                    Information may be retained for as long as necessary
+                    to provide system services, maintain transaction
+                    records, or comply with applicable requirements.
+                </p>
+
+
+                <h3>6. Your Privacy</h3>
+
+                <p>
+                    By using SaleSync, you acknowledge that you have read
+                    and understood this Privacy Policy.
+                </p>
+
+            </div>
+
+            <button type="button"
+                    class="btn-login policy-close-button"
+                    id="privacyDone">
+                I Understand
+            </button>
+
+        </div>
+
+    </div>
+
+
     <!-- Password Visibility Script -->
+
     <script>
-            document.addEventListener("DOMContentLoaded", function() {
 
-                const togglePasswordBtn =
-                    document.getElementById('togglePassword');
+        document.addEventListener("DOMContentLoaded", function () {
 
-                const passwordInput =
-                    document.getElementById('password');
+            const togglePasswordBtn =
+                document.getElementById('togglePassword');
 
-                const eyeOpenIcon =
-                    togglePasswordBtn.querySelector('.eye-open');
+            const passwordInput =
+                document.getElementById('password');
 
-                const eyeClosedIcon =
-                    togglePasswordBtn.querySelector('.eye-closed');
+            const eyeOpenIcon =
+                togglePasswordBtn.querySelector('.eye-open');
 
-
-                togglePasswordBtn.addEventListener('click', function() {
-
-                    const type =
-                        passwordInput.getAttribute('type') === 'password'
-                            ? 'text'
-                            : 'password';
-
-                    passwordInput.setAttribute('type', type);
+            const eyeClosedIcon =
+                togglePasswordBtn.querySelector('.eye-closed');
 
 
-                    if (type === 'password') {
+            togglePasswordBtn.addEventListener('click', function () {
 
-                        eyeOpenIcon.style.display = 'block';
-                        eyeClosedIcon.style.display = 'none';
+                const type =
+                    passwordInput.getAttribute('type') === 'password'
+                        ? 'text'
+                        : 'password';
 
-                    } else {
+                passwordInput.setAttribute('type', type);
 
-                        eyeOpenIcon.style.display = 'none';
-                        eyeClosedIcon.style.display = 'block';
 
-                    }
+                if (type === 'password') {
 
-                });
+                    eyeOpenIcon.style.display = 'block';
+                    eyeClosedIcon.style.display = 'none';
 
-            });
-            // Forgot Password Modal
-            const forgotModal = document.getElementById('forgotPasswordModal');
-            const openForgotBtn = document.getElementById('openForgotPassword');
-            const closeForgotBtn = document.getElementById('closeForgotPassword');
-            const forgotForm = document.getElementById('forgotPasswordForm');
-            const forgotStatus = document.getElementById('forgotPasswordStatus');
-            const forgotSubmitBtn = document.getElementById('forgotPasswordSubmitBtn');
+                } else {
 
-            function openForgotModal() {
-                forgotModal.classList.add('open');
-                forgotStatus.style.display = 'none';
-                forgotForm.reset();
-            }
+                    eyeOpenIcon.style.display = 'none';
+                    eyeClosedIcon.style.display = 'block';
 
-            function closeForgotModal() {
-                forgotModal.classList.remove('open');
-            }
-
-            openForgotBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                openForgotModal();
-            });
-
-            closeForgotBtn.addEventListener('click', closeForgotModal);
-
-            forgotModal.addEventListener('click', function(e) {
-                if (e.target === forgotModal) closeForgotModal();
-            });
-
-            forgotForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-
-                forgotSubmitBtn.disabled = true;
-                forgotSubmitBtn.textContent = 'Sending...';
-
-                const email = document.getElementById('resetEmail').value.trim();
-
-                try {
-                    const response = await fetch(forgotForm.getAttribute('action') || '/Home/ForgotPassword', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        body: 'email=' + encodeURIComponent(email)
-                    });
-
-                    forgotStatus.style.display = 'block';
-
-                    if (response.ok) {
-                        forgotStatus.className = 'forgot-password-status success';
-                        forgotStatus.textContent = 'If that email is registered, a reset link has been sent.';
-                        forgotSubmitBtn.textContent = 'Link Sent';
-                    } else {
-                        forgotStatus.className = 'forgot-password-status error';
-                        forgotStatus.textContent = 'Something went wrong. Please try again later.';
-                        forgotSubmitBtn.disabled = false;
-                        forgotSubmitBtn.textContent = 'Send Reset Link';
-                    }
-                } catch (err) {
-                    forgotStatus.style.display = 'block';
-                    forgotStatus.className = 'forgot-password-status error';
-                    forgotStatus.textContent = 'Could not reach the server. Please try again.';
-                    forgotSubmitBtn.disabled = false;
-                    forgotSubmitBtn.textContent = 'Send Reset Link';
                 }
+
             });
+
+        });
+
+
+        // ============================================================
+        // Forgot Password Modal
+        // ============================================================
+
+        const forgotModal =
+            document.getElementById('forgotPasswordModal');
+
+        const openForgotBtn =
+            document.getElementById('openForgotPassword');
+
+        const closeForgotBtn =
+            document.getElementById('closeForgotPassword');
+
+        const forgotForm =
+            document.getElementById('forgotPasswordForm');
+
+        const forgotStatus =
+            document.getElementById('forgotPasswordStatus');
+
+        const forgotSubmitBtn =
+            document.getElementById('forgotPasswordSubmitBtn');
+
+
+        function openForgotModal() {
+
+            forgotModal.classList.add('open');
+
+            forgotStatus.style.display = 'none';
+
+            forgotForm.reset();
+
+        }
+
+
+        function closeForgotModal() {
+
+            forgotModal.classList.remove('open');
+
+        }
+
+
+        openForgotBtn.addEventListener('click', function (e) {
+
+            e.preventDefault();
+
+            openForgotModal();
+
+        });
+
+
+        closeForgotBtn.addEventListener(
+            'click',
+            closeForgotModal
+        );
+
+
+        forgotModal.addEventListener('click', function (e) {
+
+            if (e.target === forgotModal) {
+
+                closeForgotModal();
+
+            }
+
+        });
+
+
+        forgotForm.addEventListener('submit', async function (e) {
+
+            e.preventDefault();
+
+            forgotSubmitBtn.disabled = true;
+
+            forgotSubmitBtn.textContent = 'Sending...';
+
+            const email =
+                document.getElementById('resetEmail').value.trim();
+
+
+            try {
+
+                const response = await fetch(
+                    forgotForm.getAttribute('action') ||
+                    '/Home/ForgotPassword',
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type':
+                                'application/x-www-form-urlencoded'
+                        },
+                        body:
+                            'email=' +
+                            encodeURIComponent(email)
+                    }
+                );
+
+
+                forgotStatus.style.display = 'block';
+
+
+                if (response.ok) {
+
+                    forgotStatus.className =
+                        'forgot-password-status success';
+
+                    forgotStatus.textContent =
+                        'If that email is registered, a reset link has been sent.';
+
+                    forgotSubmitBtn.textContent =
+                        'Link Sent';
+
+                } else {
+
+                    forgotStatus.className =
+                        'forgot-password-status error';
+
+                    forgotStatus.textContent =
+                        'Something went wrong. Please try again later.';
+
+                    forgotSubmitBtn.disabled = false;
+
+                    forgotSubmitBtn.textContent =
+                        'Send Reset Link';
+
+                }
+
+            } catch (err) {
+
+                forgotStatus.style.display = 'block';
+
+                forgotStatus.className =
+                    'forgot-password-status error';
+
+                forgotStatus.textContent =
+                    'Could not reach the server. Please try again.';
+
+                forgotSubmitBtn.disabled = false;
+
+                forgotSubmitBtn.textContent =
+                    'Send Reset Link';
+
+            }
+
+        });
+
+
+        // ============================================================
+        // Terms & Conditions / Privacy Policy
+        // ============================================================
+
+        const termsAgreement =
+            document.getElementById('termsAgreement');
+
+        const loginButton =
+            document.getElementById('loginButton');
+
+        const termsModal =
+            document.getElementById('termsModal');
+
+        const privacyModal =
+            document.getElementById('privacyModal');
+
+        const openTerms =
+            document.getElementById('openTerms');
+
+        const openPrivacy =
+            document.getElementById('openPrivacy');
+
+        const closeTerms =
+            document.getElementById('closeTerms');
+
+        const closePrivacy =
+            document.getElementById('closePrivacy');
+
+        const termsDone =
+            document.getElementById('termsDone');
+
+        const privacyDone =
+            document.getElementById('privacyDone');
+
+
+        // Enable Login button only after agreement
+
+        termsAgreement.addEventListener('change', function () {
+
+            loginButton.disabled = !this.checked;
+
+        });
+
+
+        // Open Terms & Conditions
+
+        openTerms.addEventListener('click', function (e) {
+
+            e.preventDefault();
+
+            termsModal.classList.add('open');
+
+        });
+
+
+        // Open Privacy Policy
+
+        openPrivacy.addEventListener('click', function (e) {
+
+            e.preventDefault();
+
+            privacyModal.classList.add('open');
+
+        });
+
+
+        // Close Terms
+
+        closeTerms.addEventListener('click', function () {
+
+            termsModal.classList.remove('open');
+
+        });
+
+
+        termsDone.addEventListener('click', function () {
+
+            termsModal.classList.remove('open');
+
+        });
+
+
+        // Close Privacy
+
+        closePrivacy.addEventListener('click', function () {
+
+            privacyModal.classList.remove('open');
+
+        });
+
+
+        privacyDone.addEventListener('click', function () {
+
+            privacyModal.classList.remove('open');
+
+        });
+
+
+        // Close Terms when clicking outside
+
+        termsModal.addEventListener('click', function (e) {
+
+            if (e.target === termsModal) {
+
+                termsModal.classList.remove('open');
+
+            }
+
+        });
+
+
+        // Close Privacy when clicking outside
+
+        privacyModal.addEventListener('click', function (e) {
+
+            if (e.target === privacyModal) {
+
+                privacyModal.classList.remove('open');
+
+            }
+
+        });
+
+
+        // Close policy modals with Escape
+
+        document.addEventListener('keydown', function (e) {
+
+            if (e.key === 'Escape') {
+
+                termsModal.classList.remove('open');
+
+                privacyModal.classList.remove('open');
+
+            }
+
+        });
+
     </script>
 
 </body>
