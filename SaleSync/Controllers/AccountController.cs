@@ -27,11 +27,10 @@ namespace SaleSync.Controllers
             return View();
         }
 
-   
+
         [HttpPost]
         public async Task<IActionResult> Register(string fullName, string username, string email, string password, string confirmPassword)
         {
-ty
             if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(email) ||
                 string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(fullName))
             {
@@ -180,7 +179,7 @@ ty
                 message.To.Add(new MailAddress(targetEmail));
                 message.Subject = $"{otpCode} is your Cafero Verification Code";
 
-        e
+        
                 message.Body = $@"
                     <div style='font-family: sans-serif; padding: 20px; color: #4a2511; background-color: #fdfaf6; border-radius: 8px;'>
                         <h2>Welcome to Cafero!</h2>
