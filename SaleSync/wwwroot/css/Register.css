@@ -1,28 +1,25 @@
 ﻿/* ==========================================================================
    1. BRAND DESIGN SYSTEM & TOKENS
    ========================================================================== */
+
 :root {
-    /* Lifted up from deep pitch black to a premium, warm dark moss slate */
     --bg-main: #0d120f;
-    /* Elevated surface tone so cards and layout containers clearly pop */
     --bg-card: #18221c;
-    /* Higher illumination shift on active hover states */
     --bg-card-hover: #212e26;
-    /* Clean outline boundaries to prevent dark layout sections from bleeding */
     --border-color: rgba(223, 183, 86, 0.18);
     --border-subtle: rgba(255, 255, 255, 0.08);
-    /* Typography Contrasts */
     --text-pure: #ffffff;
-    --text-muted: #a0b2a7; /* Brightened mid-tone gray-sage for premium readability */
-    /* Cafèro Theme Branding Accents */
+    --text-muted: #a0b2a7;
     --accent-gold: #dfb756;
     --accent-gold-hover: #eed074;
     --gold-glow: rgba(223, 183, 86, 0.15);
 }
 
+
 /* ==========================================================================
    2. GLOBAL RESETS & BASE STYLES
    ========================================================================== */
+
 * {
     margin: 0;
     padding: 0;
@@ -36,9 +33,11 @@ body {
     transition: background-color 0.3s ease;
 }
 
+
 /* ==========================================================================
    3. FULL-SCREEN BACKGROUND REGISTRATION LAYOUT
    ========================================================================== */
+
 .register-split-container {
     position: relative;
     display: flex;
@@ -50,7 +49,6 @@ body {
     padding: 40px;
 }
 
-    /* Base layer: Full window background */
     .register-split-container::before {
         content: '';
         position: fixed;
@@ -64,7 +62,6 @@ body {
         transform: scale(1.02);
     }
 
-    /* Tint layer: Dual radial gradient for vignette & golden warm lighting */
     .register-split-container::after {
         content: '';
         position: fixed;
@@ -72,11 +69,15 @@ body {
         left: 0;
         width: 100%;
         height: 100%;
-        background: radial-gradient(circle at 50% 50%, rgba(223, 183, 86, 0.06) 0%, transparent 50%), radial-gradient(ellipse at center, rgba(13, 18, 15, 0.5) 0%, rgba(7, 10, 8, 0.92) 100%);
+        background: radial-gradient( circle at 50% 50%, rgba(223, 183, 86, 0.06) 0%, transparent 50% ), radial-gradient( ellipse at center, rgba(13, 18, 15, 0.5) 0%, rgba(7, 10, 8, 0.92) 100% );
         z-index: -1;
     }
 
-/* Branding layout placed above the card */
+
+/* ==========================================================================
+   4. BRANDING
+   ========================================================================== */
+
 .brand-content {
     text-align: center;
     margin-bottom: 36px;
@@ -113,7 +114,11 @@ body {
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
 }
 
-/* --- THE FLOATING CARD --- */
+
+/* ==========================================================================
+   5. FLOATING CARD
+   ========================================================================== */
+
 .register-right {
     width: 100%;
     max-width: 460px;
@@ -151,9 +156,11 @@ body {
         font-weight: 400;
     }
 
+
 /* ==========================================================================
-   4. FORM FIELDS & ENCLOSURES
+   6. FORM FIELDS & ENCLOSURES
    ========================================================================== */
+
 form {
     display: flex;
     flex-direction: column;
@@ -187,7 +194,11 @@ form {
         background-color: rgba(10, 14, 12, 0.85);
     }
 
-/* SVG Input Icon Formatting */
+
+/* ==========================================================================
+   7. SVG INPUT ICON
+   ========================================================================== */
+
 .input-icon {
     display: flex;
     align-items: center;
@@ -200,6 +211,11 @@ form {
         height: 18px;
         stroke: var(--accent-gold);
     }
+
+
+/* ==========================================================================
+   8. INPUT FIELDS
+   ========================================================================== */
 
 .input-wrapper input {
     width: 100%;
@@ -215,7 +231,11 @@ form {
         color: #55685d;
     }
 
-/* Password Toggle Controls */
+
+/* ==========================================================================
+   9. PASSWORD TOGGLE CONTROLS
+   ========================================================================== */
+
 .password-toggle-btn {
     position: absolute;
     right: 16px;
@@ -240,7 +260,11 @@ form {
     display: block;
 }
 
-/* SweetAlert Modern Toast Custom Configurations overrides */
+
+/* ==========================================================================
+   10. SWEETALERT
+   ========================================================================== */
+
 .modern-toast-popup {
     border-radius: 12px !important;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4) !important;
@@ -249,13 +273,98 @@ form {
     color: var(--text-pure) !important;
 }
 
+
 /* ==========================================================================
-   5. BUTTON & LINK ROUTING ACTIONS
+   11. TERMS & CONDITIONS AGREEMENT
    ========================================================================== */
+
+.terms-agreement {
+    width: 100%;
+    margin-top: 2px;
+    padding: 4px 2px;
+}
+
+.terms-checkbox-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+}
+
+    .terms-checkbox-label input[type="checkbox"] {
+        position: absolute;
+        opacity: 0;
+        width: 1px;
+        height: 1px;
+    }
+
+.custom-checkbox {
+    position: relative;
+    flex: 0 0 19px;
+    width: 19px;
+    height: 19px;
+    margin-top: 1px;
+    border: 1px solid rgba(223, 183, 86, 0.45);
+    border-radius: 5px;
+    background: rgba(10, 14, 12, 0.75);
+    transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.terms-checkbox-label:hover .custom-checkbox {
+    border-color: var(--accent-gold);
+}
+
+.terms-checkbox-label input[type="checkbox"]:checked + .custom-checkbox {
+    background: var(--accent-gold);
+    border-color: var(--accent-gold);
+    box-shadow: 0 0 12px rgba(223, 183, 86, 0.25);
+}
+
+    .terms-checkbox-label input[type="checkbox"]:checked + .custom-checkbox::after {
+        content: '';
+        position: absolute;
+        left: 5px;
+        top: 2px;
+        width: 5px;
+        height: 9px;
+        border: solid #0d120f;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+    }
+
+.terms-checkbox-label input[type="checkbox"]:focus-visible + .custom-checkbox {
+    outline: 2px solid var(--accent-gold);
+    outline-offset: 3px;
+}
+
+.terms-text {
+    color: var(--text-muted);
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+    .terms-text a {
+        color: var(--accent-gold);
+        font-weight: 700;
+        text-decoration: none;
+        transition: color 0.2s ease;
+    }
+
+        .terms-text a:hover {
+            color: var(--accent-gold-hover);
+            text-decoration: underline;
+        }
+
+
+/* ==========================================================================
+   12. BUTTON & LINK ROUTING ACTIONS
+   ========================================================================== */
+
 .btn-register {
     width: 100%;
     padding: 15px;
-    background: linear-gradient(135deg, var(--accent-gold-hover) 0%, var(--accent-gold) 100%);
+    background: linear-gradient( 135deg, var(--accent-gold-hover) 0%, var(--accent-gold) 100% );
     color: #0d120f;
     border: none;
     border-radius: 12px;
@@ -277,6 +386,11 @@ form {
     .btn-register:active {
         transform: translateY(0);
     }
+
+
+/* ==========================================================================
+   13. LOGIN PROMPT
+   ========================================================================== */
 
 .login-prompt {
     margin-top: 24px;
@@ -304,10 +418,216 @@ form {
         text-decoration: underline;
     }
 
+
 /* ==========================================================================
-   6. RESPONSIVE ADAPTABILITY VIEWPORTS
+   14. TERMS & PRIVACY MODALS
    ========================================================================== */
+
+.legal-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 5000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.78);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+    .legal-modal-overlay.open {
+        display: flex;
+    }
+
+.legal-modal {
+    position: relative;
+    width: 100%;
+    max-width: 560px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient( 145deg, rgba(24, 34, 28, 0.98), rgba(13, 19, 15, 0.98) );
+    border: 1px solid var(--border-subtle);
+    border-top: 2px solid var(--accent-gold);
+    border-radius: 20px;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.75), 0 0 35px rgba(223, 183, 86, 0.08);
+    animation: legalModalAppear 0.25s ease-out;
+    overflow: hidden;
+}
+
+@keyframes legalModalAppear {
+
+    from {
+        opacity: 0;
+        transform: translateY(15px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+
+/* ==========================================================================
+   15. LEGAL MODAL HEADER
+   ========================================================================== */
+
+.legal-modal-header {
+    text-align: center;
+    padding: 32px 35px 20px;
+    flex-shrink: 0;
+}
+
+.legal-icon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: var(--accent-gold);
+    font-size: 20px;
+    font-weight: 800;
+    background: rgba(223, 183, 86, 0.08);
+    border: 1px solid rgba(223, 183, 86, 0.35);
+    box-shadow: 0 0 20px rgba(223, 183, 86, 0.08), inset 0 0 15px rgba(223, 183, 86, 0.03);
+}
+
+.legal-modal-header h2 {
+    color: var(--text-pure);
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 6px;
+}
+
+.legal-modal-header p {
+    color: var(--text-muted);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+
+/* ==========================================================================
+   16. LEGAL MODAL BODY
+   ========================================================================== */
+
+.legal-modal-body {
+    padding: 0 35px 20px;
+    overflow-y: auto;
+    color: var(--text-muted);
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+    .legal-modal-body::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .legal-modal-body::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 10px;
+    }
+
+    .legal-modal-body::-webkit-scrollbar-thumb {
+        background: rgba(223, 183, 86, 0.35);
+        border-radius: 10px;
+    }
+
+        .legal-modal-body::-webkit-scrollbar-thumb:hover {
+            background: rgba(223, 183, 86, 0.55);
+        }
+
+    .legal-modal-body h3 {
+        color: var(--accent-gold);
+        font-size: 14px;
+        font-weight: 800;
+        margin-top: 18px;
+        margin-bottom: 5px;
+    }
+
+        .legal-modal-body h3:first-child {
+            margin-top: 0;
+        }
+
+    .legal-modal-body p {
+        color: var(--text-muted);
+        margin-bottom: 8px;
+    }
+
+
+/* ==========================================================================
+   17. LEGAL MODAL FOOTER
+   ========================================================================== */
+
+.legal-modal-footer {
+    padding: 18px 35px 28px;
+    border-top: 1px solid var(--border-subtle);
+    flex-shrink: 0;
+}
+
+.legal-close-button {
+    width: 100%;
+    padding: 12px 16px;
+    background: linear-gradient( 135deg, var(--accent-gold-hover), var(--accent-gold) );
+    color: #0d120f;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+    .legal-close-button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 18px rgba(223, 183, 86, 0.25);
+        filter: brightness(1.04);
+    }
+
+    .legal-close-button:active {
+        transform: translateY(0);
+    }
+
+
+/* ==========================================================================
+   18. LEGAL MODAL CLOSE X BUTTON
+   ========================================================================== */
+
+.legal-modal-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--border-subtle);
+    background: rgba(255, 255, 255, 0.025);
+    color: var(--text-muted);
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    z-index: 2;
+}
+
+    .legal-modal-close:hover {
+        color: var(--accent-gold);
+        border-color: rgba(223, 183, 86, 0.4);
+        background: rgba(223, 183, 86, 0.08);
+    }
+
+
+/* ==========================================================================
+   19. RESPONSIVE ADAPTABILITY
+   ========================================================================== */
+
 @media (max-width: 480px) {
+
     .register-card {
         padding: 32px 22px;
     }
@@ -315,15 +635,52 @@ form {
     .register-logo {
         font-size: 44px;
     }
+
+    .terms-text {
+        font-size: 11px;
+    }
+
+    .legal-modal-overlay {
+        padding: 14px;
+    }
+
+    .legal-modal {
+        max-height: 90vh;
+        border-radius: 17px;
+    }
+
+    .legal-modal-header {
+        padding: 28px 24px 18px;
+    }
+
+        .legal-modal-header h2 {
+            font-size: 21px;
+        }
+
+    .legal-modal-body {
+        padding: 0 24px 18px;
+        font-size: 12px;
+    }
+
+    .legal-modal-footer {
+        padding: 15px 24px 22px;
+    }
 }
+
+
+/* ==========================================================================
+   20. SLIDE UP
+   ========================================================================== */
 
 .slide-up {
     animation: slideUp 0.3s ease-out;
 }
 
+
 /* ==========================================================================
-   7. AUTOFILL OVERRIDES
+   21. AUTOFILL OVERRIDES
    ========================================================================== */
+
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,

@@ -2,16 +2,10 @@
    CAFÈRO — LOGIN PAGE
    Premium dark moss + gold design
    Inline login error — no SweetAlert
-   Copy and paste into:
-
-   wwwroot/css/LogInPage.css
    ========================================================================== */
-
-
 /* ==========================================================================
    1. BRAND DESIGN SYSTEM
    ========================================================================== */
-
 :root {
     --bg-main: #0a0f0b;
     --bg-main-soft: #0d140f;
@@ -31,8 +25,6 @@
     --accent-gold-bright: #f3d983;
     --gold-soft: rgba(223, 183, 86, 0.08);
     --gold-glow: rgba(223, 183, 86, 0.14);
-    /* Login Error */
-
     --error-main: #e48b8b;
     --error-light: #f0b2b2;
     --error-bg: rgba(185, 61, 61, 0.10);
@@ -88,7 +80,6 @@ body {
     color: var(--accent-gold-light);
 }
 
-
 .category-card {
     background-color: var(--bg-card-solid);
     border: 1px solid var(--border-subtle);
@@ -118,7 +109,6 @@ body {
         letter-spacing: 1px;
     }
 
-
 .modal-content-wrapper {
     background-color: #141c17;
     border: 1px solid var(--border-color);
@@ -130,7 +120,6 @@ body {
     border: 1px solid var(--border-subtle);
     border-radius: 12px;
 }
-
 
 .contact-info-card {
     display: flex;
@@ -430,7 +419,7 @@ body {
         width: 27px;
         height: 27px;
         stroke: var(--accent-gold-light);
-        filter: drop-shadow(0 0 5px rgba(223, 183, 86, 0.20));
+        filter: drop-shadow( 0 0 5px rgba(223, 183, 86, 0.20) );
     }
 
 
@@ -455,7 +444,7 @@ body {
 
 
 /* ==========================================================================
-   17. INLINE LOGIN ERROR (Compact Version - Positioned between Password & Button)
+   17. INLINE LOGIN ERROR
    ========================================================================== */
 
 .login-card .login-error,
@@ -470,7 +459,7 @@ body {
     padding: 11px 14px !important;
     border: 1px solid rgba(225, 100, 100, 0.35) !important;
     border-radius: 12px !important;
-    background: linear-gradient(135deg, rgba(185, 61, 61, 0.12), rgba(120, 35, 35, 0.08)) !important;
+    background: linear-gradient( 135deg, rgba(185, 61, 61, 0.12), rgba(120, 35, 35, 0.08) ) !important;
     color: var(--error-light, #f0b2b2) !important;
     font-size: 12px !important;
     font-weight: 600 !important;
@@ -484,7 +473,7 @@ body {
 
     .login-card .login-error .login-error-icon,
     .login-error .login-error-icon {
-        display: none !important; /* Hides icon as requested by the target visual layout style */
+        display: none !important;
     }
 
     .login-card .login-error svg,
@@ -502,6 +491,7 @@ body {
     }
 
 @keyframes loginErrorAppear {
+
     from {
         opacity: 0;
         transform: translateY(-5px);
@@ -766,6 +756,7 @@ input:-webkit-autofill:active {
 }
 
 @keyframes loginSlideUp {
+
     from {
         opacity: 0;
         transform: translateY(14px);
@@ -783,6 +774,7 @@ input:-webkit-autofill:active {
    ========================================================================== */
 
 @media (max-width: 1100px) {
+
     .login-split-container {
         max-width: 1100px;
         padding-left: 45px;
@@ -814,6 +806,7 @@ input:-webkit-autofill:active {
    ========================================================================== */
 
 @media (max-width: 900px) {
+
     .login-split-container {
         min-height: 100vh;
         flex-direction: column;
@@ -871,6 +864,7 @@ input:-webkit-autofill:active {
    ========================================================================== */
 
 @media (max-width: 650px) {
+
     .login-split-container {
         padding: 42px 18px 36px;
         gap: 30px;
@@ -927,6 +921,7 @@ input:-webkit-autofill:active {
    ========================================================================== */
 
 @media (max-width: 480px) {
+
     .login-split-container {
         padding: 32px 15px 28px;
         gap: 27px;
@@ -1050,6 +1045,7 @@ input:-webkit-autofill:active {
    ========================================================================== */
 
 @media (prefers-reduced-motion: reduce) {
+
     *,
     *::before,
     *::after {
@@ -1059,6 +1055,8 @@ input:-webkit-autofill:active {
         transition-duration: 0.01ms !important;
     }
 }
+
+
 /* ==========================================================================
    35. FORGOT PASSWORD MODAL
    ========================================================================== */
@@ -1084,7 +1082,7 @@ input:-webkit-autofill:active {
     position: relative;
     width: 100%;
     max-width: 400px;
-    background: linear-gradient(145deg, rgba(24, 33, 27, 0.96), rgba(13, 19, 15, 0.96));
+    background: linear-gradient( 145deg, rgba(24, 33, 27, 0.96), rgba(13, 19, 15, 0.96) );
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
     border: 1px solid rgba(255, 255, 255, 0.085);
@@ -1149,3 +1147,220 @@ input:-webkit-autofill:active {
         border: 1px solid var(--error-border);
         background: var(--error-bg);
     }
+
+
+/* ==========================================================================
+   36. TERMS & CONDITIONS AGREEMENT
+   ========================================================================== */
+
+.terms-agreement {
+    position: relative;
+    z-index: 1;
+    margin-top: -2px;
+}
+
+.terms-checkbox-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+}
+
+    .terms-checkbox-label input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+.custom-checkbox {
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    margin-top: 1px;
+    border: 1px solid rgba(223, 183, 86, 0.45);
+    border-radius: 5px;
+    background: rgba(8, 13, 10, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.terms-checkbox-label:hover .custom-checkbox {
+    border-color: var(--accent-gold);
+}
+
+.terms-checkbox-label input:checked + .custom-checkbox {
+    background: var(--accent-gold);
+    border-color: var(--accent-gold);
+}
+
+    .terms-checkbox-label input:checked + .custom-checkbox::after {
+        content: '✓';
+        color: #0b100c;
+        font-size: 12px;
+        font-weight: 900;
+    }
+
+.terms-text {
+    color: var(--text-muted);
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+    .terms-text a {
+        color: var(--accent-gold);
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+        .terms-text a:hover {
+            color: var(--accent-gold-light);
+            text-decoration: underline;
+        }
+
+
+/* ==========================================================================
+   37. DISABLED LOGIN BUTTON
+   ========================================================================== */
+
+.btn-login:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none;
+    filter: grayscale(0.25);
+}
+
+    .btn-login:disabled:hover {
+        transform: none;
+        box-shadow: none;
+        filter: grayscale(0.25);
+    }
+
+
+/* ==========================================================================
+   38. TERMS & PRIVACY POLICY MODALS
+   ========================================================================== */
+
+.policy-modal {
+    position: relative;
+    width: 100%;
+    max-width: 550px;
+    max-height: 85vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient( 145deg, rgba(24, 33, 27, 0.98), rgba(13, 19, 15, 0.98) );
+    border: 1px solid rgba(255, 255, 255, 0.085);
+    border-top: 2px solid var(--accent-gold);
+    border-radius: 22px;
+    padding: 34px;
+    box-shadow: 0 28px 70px rgba(0, 0, 0, 0.72), 0 0 45px rgba(223, 183, 86, 0.075);
+    animation: loginSlideUp 0.3s ease-out;
+}
+
+.policy-icon {
+    width: 54px;
+    height: 54px;
+    margin: 0 auto 14px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(223, 183, 86, 0.08);
+    border: 1px solid var(--border-gold);
+}
+
+    .policy-icon svg {
+        width: 25px;
+        height: 25px;
+        stroke: var(--accent-gold-light);
+    }
+
+.policy-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+    .policy-header h2 {
+        font-family: 'Merriweather', serif;
+        color: var(--text-pure);
+        font-size: 24px;
+        margin-bottom: 6px;
+    }
+
+    .policy-header p {
+        color: var(--text-muted);
+        font-size: 12px;
+    }
+
+.policy-content {
+    overflow-y: auto;
+    padding: 5px 8px 5px 2px;
+    margin-bottom: 18px;
+    text-align: left;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-gold) transparent;
+}
+
+    .policy-content h3 {
+        color: var(--accent-gold-light);
+        font-size: 13px;
+        font-weight: 800;
+        margin-top: 17px;
+        margin-bottom: 6px;
+    }
+
+        .policy-content h3:first-child {
+            margin-top: 0;
+        }
+
+    .policy-content p {
+        color: var(--text-muted-strong);
+        font-size: 12px;
+        line-height: 1.7;
+    }
+
+.policy-close-button {
+    margin-bottom: 0;
+    flex-shrink: 0;
+}
+
+
+/* ==========================================================================
+   39. POLICY MODAL MOBILE
+   ========================================================================== */
+
+@media (max-width: 650px) {
+
+    .terms-text {
+        font-size: 10px;
+    }
+
+    .policy-modal {
+        max-width: 100%;
+        max-height: 88vh;
+        padding: 30px 22px 24px;
+        border-radius: 18px;
+    }
+
+    .policy-header h2 {
+        font-size: 21px;
+    }
+
+    .policy-content {
+        padding-right: 5px;
+    }
+
+        .policy-content h3 {
+            font-size: 12px;
+        }
+
+        .policy-content p {
+            font-size: 11px;
+            line-height: 1.65;
+        }
+}
+
