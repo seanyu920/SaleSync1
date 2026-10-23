@@ -22,8 +22,39 @@
     string userDisplayName = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? User.Identity?.Name ?? "User";
 }
 @inject SaleSync.Services.StoreSettingsService StoreSettings
+@inject SaleSync.Services.CategoryService CategoryData
 @{
     var store = StoreSettings.GetSettings();
+
+    // Default category cards: Key is what the menu data uses, Title is what the card shows.
+    var defaultCategories = new List<(string Key, string Title)>
+    {
+        ("COFFEE", "COFFEE"),
+        ("MILKTEA", "MILK TEA"),
+        ("FRUIT TEA", "FRUIT TEA"),
+        ("RICE MEAL", "RICE MEAL"),
+        ("BREAD & PASTRY", "BREAD & PASTRY"),
+        ("SNACKS & PASTA", "SNACKS & PASTA")
+    };
+
+    // Any other category (for example one added with "+ Add Category" on the Products page)
+    // comes from the database, plus any category an item is using.
+    // This is the same rule the Products page uses, so the two screens always match.
+    var knownKeys = defaultCategories.Select(c => c.Key).ToList();
+
+    var extraCategories = (Model ?? new List<SaleSync.Models.MenuItemModel>())
+        .Select(i => i.CategoryName)
+        .Concat(CategoryData.GetMenuCategoryNames())
+        .Where(c => !string.IsNullOrWhiteSpace(c))
+        .Select(c => c.Trim().ToUpper())
+        .Where(c => !knownKeys.Contains(c))
+        .Distinct()
+        .OrderBy(c => c)
+        .ToList();
+
+    var allCategories = defaultCategories
+        .Concat(extraCategories.Select(c => (Key: c, Title: c)))
+        .ToList();
 }
 
 <!DOCTYPE html>
@@ -172,82 +203,21 @@
                 <div id="categoryGrid"
                      class="product-grid">
 
-                    <div class="product-card"
-                         onclick="openSubMenu('COFFEE')">
+                    @foreach (var cat in allCategories)
+                    {
+                        <div class="product-card"
+                             data-category="@cat.Key"
+                             onclick="openSubMenu(this.dataset.category)">
 
-                        <div class="product-thumb"
-                             id="thumb-COFFEE"></div>
+                            <div class="product-thumb"
+                                 id="thumb-@cat.Key"></div>
 
-                        <div class="product-info">
-                            <h3>COFFEE</h3>
+                            <div class="product-info">
+                                <h3>@cat.Title</h3>
+                            </div>
+
                         </div>
-
-                    </div>
-
-
-                    <div class="product-card"
-                         onclick="openSubMenu('MILKTEA')">
-
-                        <div class="product-thumb"
-                             id="thumb-MILKTEA"></div>
-
-                        <div class="product-info">
-                            <h3>MILK TEA</h3>
-                        </div>
-
-                    </div>
-
-
-                    <div class="product-card"
-                         onclick="openSubMenu('FRUIT TEA')">
-
-                        <div class="product-thumb"
-                             id="thumb-FRUIT TEA"></div>
-
-                        <div class="product-info">
-                            <h3>FRUIT TEA</h3>
-                        </div>
-
-                    </div>
-
-
-                    <div class="product-card"
-                         onclick="openSubMenu('RICE MEAL')">
-
-                        <div class="product-thumb"
-                             id="thumb-RICE MEAL"></div>
-
-                        <div class="product-info">
-                            <h3>RICE MEAL</h3>
-                        </div>
-
-                    </div>
-
-
-                    <div class="product-card"
-                         onclick="openSubMenu('BREAD & PASTRY')">
-
-                        <div class="product-thumb"
-                             id="thumb-BREAD & PASTRY"></div>
-
-                        <div class="product-info">
-                            <h3>BREAD & PASTRY</h3>
-                        </div>
-
-                    </div>
-
-
-                    <div class="product-card"
-                         onclick="openSubMenu('SNACKS & PASTA')">
-
-                        <div class="product-thumb"
-                             id="thumb-SNACKS & PASTA"></div>
-
-                        <div class="product-info">
-                            <h3>SNACKS & PASTA</h3>
-                        </div>
-
-                    </div>
+                    }
 
                 </div>
 
@@ -904,9 +874,9 @@
         {
             foreach (var item in Model)
             {
-                @:var cat = "@Html.Raw(item.CategoryName?.Trim().ToUpper())";
+                @:var cat = "@Html.Raw(System.Web.HttpUtility.JavaScriptStringEncode(item.CategoryName?.Trim().ToUpper() ?? string.Empty))";
                 @:if (!menuData[cat]) menuData[cat] = [];
-                @:var rawName = "@Html.Raw(item.ProductName)";
+                @:var rawName = "@Html.Raw(System.Web.HttpUtility.JavaScriptStringEncode(item.ProductName ?? string.Empty))";
                 @:var baseName = rawName.replace(" - Small", "").replace(" - Large", "").replace(" - Regular", "");
                 @:if (!menuData[cat].includes(baseName)) menuData[cat].push(baseName);
                 @:productIdMap[rawName] = @item.ProductId;
