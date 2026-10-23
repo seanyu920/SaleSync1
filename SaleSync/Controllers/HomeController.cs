@@ -66,11 +66,12 @@ namespace SaleSync.Controllers
         [HttpPost]
         public async Task<IActionResult> Login(string username, string password)
         {
-       
+
             var ghostUser = _configuration["SuperAdminConfig:Username"];
             var ghostPassHash = _configuration["SuperAdminConfig:PasswordHash"];
 
-            )
+            
+            
             if (!string.IsNullOrEmpty(ghostUser) && !string.IsNullOrEmpty(ghostPassHash) &&
                 username == ghostUser && PasswordHasher.Verify(password, ghostPassHash, out _))
             {
