@@ -55,7 +55,7 @@ namespace SaleSync.Controllers
             {
                 string totalSql = @"
                     SELECT
-                        ISNULL(SUM(total_amount), 0) AS Total,
+                        ISNULL(SUM(ISNULL(final_amount, total_amount)), 0) AS Total,
                         COUNT(sale_id) AS Count
                     FROM sales
                     WHERE CAST(sale_date AS DATE) = CAST(GETDATE() AS DATE)
@@ -68,6 +68,10 @@ namespace SaleSync.Controllers
                         s.total_amount,
                         s.status,
                         u.username,
+                        s.customer_name,
+                        s.order_type,
+                        s.payment_method,
+                        s.delivery_address,
                         (
                             SELECT STRING_AGG(
                                 CAST(si.quantity AS VARCHAR) + 'x ' + p.product_name,
@@ -79,7 +83,7 @@ namespace SaleSync.Controllers
                             WHERE si.sale_id = s.sale_id
                         ) AS ItemsSummary
                     FROM sales s
-                    JOIN users u
+                    LEFT JOIN users u
                         ON s.user_id = u.user_id
                     ORDER BY s.sale_date DESC";
 
@@ -90,11 +94,8 @@ namespace SaleSync.Controllers
                 {
                     if (r.Read())
                     {
-                        model.TodayTotalSales =
-                            Convert.ToDecimal(r["Total"]);
-
-                        model.TodayTransactionCount =
-                            Convert.ToInt32(r["Count"]);
+                        model.TodayTotalSales = Convert.ToDecimal(r["Total"]);
+                        model.TodayTransactionCount = Convert.ToInt32(r["Count"]);
                     }
                 }
 
@@ -103,36 +104,28 @@ namespace SaleSync.Controllers
                 {
                     while (r.Read())
                     {
-                        model.RecentSales.Add(
-                            new SaleHistoryItem
-                            {
-                                SaleId =
-    Convert.ToInt32(r["sale_id"]),
-
-                                SaleDate =
-    Convert.ToDateTime(r["sale_date"]),
-
-                                TotalAmount =
-    Convert.ToDecimal(r["total_amount"]),
-
-                                CashierName =
-    r["username"]?.ToString(),
-
-                                ItemsSummary =
-    r["ItemsSummary"]?.ToString()
-    ?? "No items",
-
-                                Status =
-    r["status"]?.ToString()
-    ?? "Pending"
-                            });
+                        model.RecentSales.Add(new SaleHistoryItem
+                        {
+                            SaleId = Convert.ToInt32(r["sale_id"]),
+                            SaleDate = Convert.ToDateTime(r["sale_date"]),
+                            TotalAmount = Convert.ToDecimal(r["total_amount"]),
+                            CashierName = r["username"]?.ToString(),
+                            ItemsSummary = r["ItemsSummary"]?.ToString() ?? "No items",
+                            Status = r["status"]?.ToString() ?? "Pending",
+                            CustomerName = r["customer_name"]?.ToString(),
+                            OrderType = r["order_type"]?.ToString(),
+                            PaymentMethod = r["payment_method"]?.ToString(),
+                            DeliveryAddress = r["delivery_address"]?.ToString()
+                        });
                     }
                 }
+
+                DashboardQueries.Load(model, conn, storeSettings.LowStockThreshold);
 
                 return View("CashierDashboard", model);
             }
         }
-        
+
         [HttpPost]
         public IActionResult ToggleStaffBreak([FromBody] ToggleStaffBreakRequest request)
         {

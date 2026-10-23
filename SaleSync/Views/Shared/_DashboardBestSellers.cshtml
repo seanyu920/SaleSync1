@@ -1,0 +1,60 @@
+@model List<SaleSync.Models.DashboardBestSeller>
+@{
+    int maxUnits = Model != null && Model.Any() ? Model.Max(b => b.UnitsSold) : 0;
+    Func<int, int> barWidth = units => maxUnits > 0 ? (int)Math.Round(units * 100.0 / maxUnits) : 0;
+}
+
+@if (Model == null || !Model.Any())
+{
+    <div class="table-responsive">
+        <p class="text-muted" style="padding: 16px 4px;">No completed sales in the past 7 days yet.</p>
+    </div>
+}
+else
+{
+    <!-- DESKTOP VIEW -->
+    <div class="table-responsive desktop-only">
+        <table class="pos-table">
+            <thead>
+                <tr>
+                    <th>Product Name</th>
+                    <th>Units Sold</th>
+                    <th class="text-right">Revenue Generated</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.ProductName</td>
+                        <td>
+                            <div class="progress-info"><span>@item.UnitsSold @(item.UnitsSold == 1 ? "unit" : "units")</span></div>
+                            <div class="progress-container"><div class="progress-bar" style="width: @(barWidth(item.UnitsSold))%;"></div></div>
+                        </td>
+                        <td class="text-right revenue-val">₱@item.Revenue.ToString("N2")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- MOBILE VIEW -->
+    <div class="mobile-only">
+        @foreach (var item in Model)
+        {
+            <div class="tx-card">
+                <div class="tx-card-summary">
+                    <div class="tx-main-info"><span class="tx-customer">@item.ProductName</span></div>
+                    <button type="button" class="tx-view-btn" onclick="toggleCardDetails(this)">
+                        <span>Details</span><i class="fas fa-chevron-down"></i>
+                    </button>
+                </div>
+                <div class="tx-card-details hidden">
+                    <div class="tx-detail-row"><span class="tx-label">Units Sold:</span><span class="tx-value">@item.UnitsSold @(item.UnitsSold == 1 ? "unit" : "units")</span></div>
+                    <div class="progress-container mb-2"><div class="progress-bar" style="width: @(barWidth(item.UnitsSold))%;"></div></div>
+                    <div class="tx-detail-row"><span class="tx-label">Revenue Generated:</span><span class="tx-value revenue-val">₱@item.Revenue.ToString("N2")</span></div>
+                </div>
+            </div>
+        }
+    </div>
+}

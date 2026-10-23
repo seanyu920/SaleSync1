@@ -72,10 +72,16 @@ namespace SaleSync.Controllers
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                string totalSql = @"SELECT ISNULL(SUM(total_amount), 0) as Total, COUNT(sale_id) as Count              FROM sales WHERE CAST(sale_date AS DATE) = CAST(GETDATE() AS DATE)              AND status = 'Completed'";
+                string totalSql = @"SELECT ISNULL(SUM(ISNULL(final_amount, total_amount)), 0) as Total, COUNT(sale_id) as Count FROM sales WHERE CAST(sale_date AS DATE) = CAST(GETDATE() AS DATE) AND status = 'Completed'";
 
-  
-                string historySql = @"             SELECT TOP 10 s.sale_id, s.sale_date, s.total_amount, s.status, u.username,             s.customer_name, s.order_type, s.payment_method, s.delivery_address,             (SELECT STRING_AGG(CAST(si.quantity AS VARCHAR) + 'x ' + p.product_name, ', ')               FROM sale_items si JOIN products p ON si.product_id = p.product_id               WHERE si.sale_id = s.sale_id) as ItemsSummary             FROM sales s LEFT JOIN users u ON s.user_id = u.user_id             ORDER BY s.sale_date DESC";
+                string historySql = @"
+                    SELECT TOP 10 s.sale_id, s.sale_date, s.total_amount, s.status, u.username,
+                    s.customer_name, s.order_type, s.payment_method, s.delivery_address,
+                    (SELECT STRING_AGG(CAST(si.quantity AS VARCHAR) + 'x ' + p.product_name, ', ')
+                     FROM sale_items si JOIN products p ON si.product_id = p.product_id
+                     WHERE si.sale_id = s.sale_id) as ItemsSummary
+                    FROM sales s LEFT JOIN users u ON s.user_id = u.user_id
+                    ORDER BY s.sale_date DESC";
 
                 conn.Open();
                 using (SqlCommand cmd = new SqlCommand(totalSql, conn))
@@ -101,8 +107,6 @@ namespace SaleSync.Controllers
                             CashierName = r["username"]?.ToString() ?? "Online",
                             ItemsSummary = r["ItemsSummary"]?.ToString() ?? "No items",
                             Status = r["status"]?.ToString() ?? "Pending",
-
-
                             CustomerName = r["customer_name"]?.ToString(),
                             OrderType = r["order_type"]?.ToString(),
                             PaymentMethod = r["payment_method"]?.ToString(),
@@ -110,6 +114,8 @@ namespace SaleSync.Controllers
                         });
                     }
                 }
+
+                DashboardQueries.Load(model, conn, storeSettings.LowStockThreshold);
             }
             return View("AdminDashboard", model);
         }

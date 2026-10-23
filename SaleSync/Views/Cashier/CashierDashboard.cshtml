@@ -134,8 +134,8 @@
                     <div class="system-status-container">
                         <p class="status-label">System Status</p>
                         <div class="status-indicator-flex">
-                            <span class="status-dot animate-pulse"></span>
-                            <span class="status-text">Online & Syncing</span>
+                            <span class="status-dot animate-pulse" id="systemStatusDot"></span>
+                            <span class="status-text" id="systemStatusText">Online & Syncing</span>
                         </div>
                     </div>
 
@@ -182,7 +182,7 @@
                     <div class="card-icon-box icon-green"><i class="fas fa-hourglass-half"></i></div>
                     <div>
                         <div class="card-label">Pending Orders</div>
-                        <div class="card-value">@(Model.RecentSales?.Count(s => s.Status == "Pending" || string.IsNullOrEmpty(s.Status)) ?? 0)</div>
+                        <div class="card-value">@Model.PendingOrderCount</div>
                     </div>
                 </div>
 
@@ -201,7 +201,7 @@
                         <div>
                             <div class="pos-card-title"><i class="fas fa-chart-line"></i> Sales This Week</div>
                             <div class="weekly-sales-value">
-                                ₱@((Model.TodayTotalSales * 5.8m).ToString("N2"))
+                                ₱@Model.WeeklySalesTotal.ToString("N2")
                             </div>
                         </div>
                         <span class="rolling-label">Past 7 Days Rolling</span>
@@ -260,28 +260,7 @@
                                 else
                                 {
                                     <tr>
-                                        <td class="sale-id">#8036</td>
-                                        <td>Walk-in</td>
-                                        <td>₱79.00</td>
-                                        <td>Cash</td>
-                                        <td><span class="badge badge-warning">Pending</span></td>
-                                        <td class="text-muted">07:34 PM</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="sale-id">#8035</td>
-                                        <td>Walk-in</td>
-                                        <td>₱158.00</td>
-                                        <td>GCash</td>
-                                        <td><span class="badge badge-success">Completed</span></td>
-                                        <td class="text-muted">07:12 PM</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="sale-id">#7036</td>
-                                        <td>Juan Dela Cruz</td>
-                                        <td>₱89.00</td>
-                                        <td>Card</td>
-                                        <td><span class="badge badge-success">Completed</span></td>
-                                        <td class="text-muted">03:46 PM</td>
+                                        <td colspan="6" class="text-muted" style="text-align:center; padding: 16px;">No transactions yet.</td>
                                     </tr>
                                 }
                             </tbody>
@@ -340,95 +319,7 @@
                         }
                         else
                         {
-                            <div class="tx-card">
-                                <div class="tx-card-summary">
-                                    <div class="tx-main-info">
-                                        <span class="sale-id">#8036</span>
-                                        <span class="tx-customer">Walk-in</span>
-                                    </div>
-                                    <button type="button" class="tx-view-btn" onclick="toggleTxDetails(this)">
-                                        View <i class="fas fa-chevron-down"></i>
-                                    </button>
-                                </div>
-                                <div class="tx-card-details hidden">
-                                    <div class="tx-detail-row">
-                                        <span class="tx-label">Total:</span>
-                                        <span class="tx-value">₱79.00</span>
-                                    </div>
-                                    <div class="tx-detail-row">
-                                        <span class="tx-label">Method:</span>
-                                        <span class="tx-value">Cash</span>
-                                    </div>
-                                    <div class="tx-detail-row">
-                                        <span class="tx-label">Status:</span>
-                                        <span class="tx-value"><span class="badge badge-warning">Pending</span></span>
-                                    </div>
-                                    <div class="tx-detail-row">
-                                        <span class="tx-label">Time:</span>
-                                        <span class="tx-value text-muted">07:34 PM</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="tx-card">
-                                <div class="tx-card-summary">
-                                    <div class="tx-main-info">
-                                        <span class="sale-id">#8035</span>
-                                        <span class="tx-customer">Walk-in</span>
-                                    </div>
-                                    <button type="button" class="tx-view-btn" onclick="toggleTxDetails(this)">
-                                        View <i class="fas fa-chevron-down"></i>
-                                    </button>
-                                </div>
-                                <div class="tx-card-details hidden">
-                                    <div class="tx-detail-row">
-                                        <span class="tx-label">Total:</span>
-                                        <span class="tx-value">₱158.00</span>
-                                    </div>
-                                    <div class="tx-detail-row">
-                                        <span class="tx-label">Method:</span>
-                                        <span class="tx-value">GCash</span>
-                                    </div>
-                                    <div class="tx-detail-row">
-                                        <span class="tx-label">Status:</span>
-                                        <span class="tx-value"><span class="badge badge-success">Completed</span></span>
-                                    </div>
-                                    <div class="tx-detail-row">
-                                        <span class="tx-label">Time:</span>
-                                        <span class="tx-value text-muted">07:12 PM</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="tx-card">
-                                <div class="tx-card-summary">
-                                    <div class="tx-main-info">
-                                        <span class="sale-id">#7036</span>
-                                        <span class="tx-customer">Juan Dela Cruz</span>
-                                    </div>
-                                    <button type="button" class="tx-view-btn" onclick="toggleTxDetails(this)">
-                                        View <i class="fas fa-chevron-down"></i>
-                                    </button>
-                                </div>
-                                <div class="tx-card-details hidden">
-                                    <div class="tx-detail-row">
-                                        <span class="tx-label">Total:</span>
-                                        <span class="tx-value">₱89.00</span>
-                                    </div>
-                                    <div class="tx-detail-row">
-                                        <span class="tx-label">Method:</span>
-                                        <span class="tx-value">Card</span>
-                                    </div>
-                                    <div class="tx-detail-row">
-                                        <span class="tx-label">Status:</span>
-                                        <span class="tx-value"><span class="badge badge-success">Completed</span></span>
-                                    </div>
-                                    <div class="tx-detail-row">
-                                        <span class="tx-label">Time:</span>
-                                        <span class="tx-value text-muted">03:46 PM</span>
-                                    </div>
-                                </div>
-                            </div>
+                            <p class="text-muted" style="padding: 16px 4px;">No transactions yet.</p>
                         }
                     </div>
                 </div>
@@ -438,114 +329,10 @@
                 <div class="pos-card-wrapper">
                     <div class="pos-card-header">
                         <div class="pos-card-title"><i class="fas fa-crown"></i> Best Selling Products</div>
-                        <span class="volume-label">By Volume</span>
+                        <span class="volume-label">By Volume · Past 7 Days</span>
                     </div>
 
-                    <!-- DESKTOP VIEW -->
-                    <div class="table-responsive desktop-only">
-                        <table class="pos-table">
-                            <thead>
-                                <tr>
-                                    <th>Product Name</th>
-                                    <th>Units Sold</th>
-                                    <th class="text-right">Revenue Generated</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Spanish Latte (Iced)</td>
-                                    <td>
-                                        <div class="progress-info"><span>142 units</span></div>
-                                        <div class="progress-container"><div class="progress-bar" style="width: 92%;"></div></div>
-                                    </td>
-                                    <td class="text-right revenue-val">₱22,720.00</td>
-                                </tr>
-                                <tr>
-                                    <td>Café Americana (Hot)</td>
-                                    <td>
-                                        <div class="progress-info"><span>98 units</span></div>
-                                        <div class="progress-container"><div class="progress-bar" style="width: 68%;"></div></div>
-                                    </td>
-                                    <td class="text-right revenue-val">₱10,780.00</td>
-                                </tr>
-                                <tr>
-                                    <td>Cream Cheese Ensaymada</td>
-                                    <td>
-                                        <div class="progress-info"><span>75 units</span></div>
-                                        <div class="progress-container"><div class="progress-bar" style="width: 51%;"></div></div>
-                                    </td>
-                                    <td class="text-right revenue-val">₱6,375.00</td>
-                                </tr>
-                                <tr>
-                                    <td>Caramel Macchiato</td>
-                                    <td>
-                                        <div class="progress-info"><span>64 units</span></div>
-                                        <div class="progress-container"><div class="progress-bar" style="width: 43%;"></div></div>
-                                    </td>
-                                    <td class="text-right revenue-val">₱10,880.00</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- MOBILE VIEW -->
-                    <div class="mobile-only">
-                        <div class="tx-card">
-                            <div class="tx-card-summary">
-                                <div class="tx-main-info"><span class="tx-customer">Spanish Latte (Iced)</span></div>
-                                <button type="button" class="tx-view-btn" onclick="toggleCardDetails(this)">
-                                    <span>Details</span><i class="fas fa-chevron-down"></i>
-                                </button>
-                            </div>
-                            <div class="tx-card-details hidden">
-                                <div class="tx-detail-row"><span class="tx-label">Units Sold:</span><span class="tx-value">142 units</span></div>
-                                <div class="progress-container mb-2"><div class="progress-bar" style="width: 92%;"></div></div>
-                                <div class="tx-detail-row"><span class="tx-label">Revenue Generated:</span><span class="tx-value revenue-val">₱22,720.00</span></div>
-                            </div>
-                        </div>
-
-                        <div class="tx-card">
-                            <div class="tx-card-summary">
-                                <div class="tx-main-info"><span class="tx-customer">Café Americana (Hot)</span></div>
-                                <button type="button" class="tx-view-btn" onclick="toggleCardDetails(this)">
-                                    <span>Details</span><i class="fas fa-chevron-down"></i>
-                                </button>
-                            </div>
-                            <div class="tx-card-details hidden">
-                                <div class="tx-detail-row"><span class="tx-label">Units Sold:</span><span class="tx-value">98 units</span></div>
-                                <div class="progress-container mb-2"><div class="progress-bar" style="width: 68%;"></div></div>
-                                <div class="tx-detail-row"><span class="tx-label">Revenue Generated:</span><span class="tx-value revenue-val">₱10,780.00</span></div>
-                            </div>
-                        </div>
-
-                        <div class="tx-card">
-                            <div class="tx-card-summary">
-                                <div class="tx-main-info"><span class="tx-customer">Cream Cheese Ensaymada</span></div>
-                                <button type="button" class="tx-view-btn" onclick="toggleCardDetails(this)">
-                                    <span>Details</span><i class="fas fa-chevron-down"></i>
-                                </button>
-                            </div>
-                            <div class="tx-card-details hidden">
-                                <div class="tx-detail-row"><span class="tx-label">Units Sold:</span><span class="tx-value">75 units</span></div>
-                                <div class="progress-container mb-2"><div class="progress-bar" style="width: 51%;"></div></div>
-                                <div class="tx-detail-row"><span class="tx-label">Revenue Generated:</span><span class="tx-value revenue-val">₱6,375.00</span></div>
-                            </div>
-                        </div>
-
-                        <div class="tx-card">
-                            <div class="tx-card-summary">
-                                <div class="tx-main-info"><span class="tx-customer">Caramel Macchiato</span></div>
-                                <button type="button" class="tx-view-btn" onclick="toggleCardDetails(this)">
-                                    <span>Details</span><i class="fas fa-chevron-down"></i>
-                                </button>
-                            </div>
-                            <div class="tx-card-details hidden">
-                                <div class="tx-detail-row"><span class="tx-label">Units Sold:</span><span class="tx-value">64 units</span></div>
-                                <div class="progress-container mb-2"><div class="progress-bar" style="width: 43%;"></div></div>
-                                <div class="tx-detail-row"><span class="tx-label">Revenue Generated:</span><span class="tx-value revenue-val">₱10,880.00</span></div>
-                            </div>
-                        </div>
-                    </div>
+                    <partial name="_DashboardBestSellers" model="Model.BestSellers" />
                 </div>
             </div>
 
@@ -932,61 +719,74 @@
             setInterval(updateClock, 1000);
             updateClock();
 
-            const rawTodaySales = parseFloat("@Model.TodayTotalSales") || 8500;
-            const ctxWeekly = document.getElementById('weeklySalesChart').getContext('2d');
-
-            new Chart(ctxWeekly, {
-                type: 'line',
-                data: {
-                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                    datasets: [{
-                        label: 'Sales (₱)',
-                        data: [
-                            rawTodaySales * 0.85,
-                            rawTodaySales * 0.95,
-                            rawTodaySales * 1.1,
-                            rawTodaySales,
-                            rawTodaySales * 1.25,
-                            rawTodaySales * 1.4,
-                            rawTodaySales * 1.3
-                        ],
-                        borderColor: '#D4AF37',
-                        backgroundColor: 'rgba(212, 175, 55, 0.05)',
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.35
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    }
-                }
-            });
-
-            const ctxPayment = document.getElementById('paymentMethodsChart').getContext('2d');
-
-            new Chart(ctxPayment, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Cash', 'GCash', 'Card'],
-                    datasets: [{
-                        data: [55, 30, 15],
-                        backgroundColor: ['#D4AF37', '#2ECC71', '#F39C12'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'right' }
+            const weeklyLabels = @Html.Raw(Json.Serialize(Model.WeeklyLabels));
+                const weeklyValues = @Html.Raw(Json.Serialize(Model.WeeklyValues));
+                const ctxWeekly = document.getElementById('weeklySalesChart').getContext('2d');
+                new Chart(ctxWeekly, {
+                    type: 'line',
+                    data: {
+                        labels: weeklyLabels,
+                        datasets: [{
+                            label: 'Sales (₱)',
+                            data: weeklyValues,
+                            borderColor: '#D4AF37',
+                            backgroundColor: 'rgba(212, 175, 55, 0.05)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.35
+                        }]
                     },
-                    cutout: '72%'
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true } }
+                    }
+                });
+
+                let paymentLabels = @Html.Raw(Json.Serialize(Model.PaymentLabels));
+                let paymentValues = @Html.Raw(Json.Serialize(Model.PaymentValues));
+                const paymentPalette = ['#D4AF37', '#2ECC71', '#F39C12', '#3498DB', '#9B59B6', '#E74C3C'];
+                let paymentColors = paymentLabels.map((_, i) => paymentPalette[i % paymentPalette.length]);
+                if (!paymentValues.length) {
+                    // No completed sales in the past 7 days: draw one neutral ring instead of fake data.
+                    paymentLabels = ['No sales yet'];
+                    paymentValues = [1];
+                    paymentColors = ['#555555'];
                 }
-            });
+
+                const ctxPayment = document.getElementById('paymentMethodsChart').getContext('2d');
+                new Chart(ctxPayment, {
+                    type: 'doughnut',
+                    data: {
+                        labels: paymentLabels,
+                        datasets: [{
+                            data: paymentValues,
+                            backgroundColor: paymentColors,
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'right' } },
+                        cutout: '72%'
+                    }
+                });
+
+                // System status: reflects whether this browser can reach the server.
+                function updateSystemStatus() {
+                    const text = document.getElementById('systemStatusText');
+                    const dot = document.getElementById('systemStatusDot');
+                    if (!text || !dot) return;
+                    const online = navigator.onLine;
+                    text.innerText = online ? 'Online & Syncing' : 'Offline';
+                    dot.classList.toggle('animate-pulse', online);
+                    dot.classList.toggle('store-closed-dot', !online);
+                }
+                window.addEventListener('online', updateSystemStatus);
+                window.addEventListener('offline', updateSystemStatus);
+                updateSystemStatus();
 
             // Real-time chat connection
             chatConn = new signalR.HubConnectionBuilder()
