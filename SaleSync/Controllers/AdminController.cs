@@ -15,10 +15,7 @@ using static SaleSync.Models.MenuItemModel;
 namespace SaleSync.Controllers
 
 {
-    // ⭐ WIDENED: Cashier added so it can reach the shared Queue actions below.
-    // Every action that should stay Admin/Manager-only now carries its own
-    // explicit [Authorize(Roles = "Admin,Manager")] attribute so widening this
-    // class attribute doesn't accidentally open those up to Cashier too.
+
     [Authorize(Roles = "Admin,Manager,Cashier")]
     public class AdminController : Controller
     {
@@ -26,7 +23,7 @@ namespace SaleSync.Controllers
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly StoreSettingsService _storeSettingsService;
         private readonly InventoryDeductionService _inventoryDeductionService;
-        private readonly string connectionString; // Remove the hardcoded string here!
+        private readonly string connectionString; 
 
         public AdminController(IConfiguration configuration, IWebHostEnvironment webHostEnvironment, StoreSettingsService storeSettingsService, InventoryDeductionService inventoryDeductionService)
         {
@@ -34,12 +31,12 @@ namespace SaleSync.Controllers
             _webHostEnvironment = webHostEnvironment;
             _storeSettingsService = storeSettingsService;
             _inventoryDeductionService = inventoryDeductionService;
-            connectionString = _configuration.GetConnectionString("DefaultConnection"); // Reads from appsettings
+            connectionString = _configuration.GetConnectionString("DefaultConnection");
         }
 
-        // ==========================================
-        // ⭐ THE ENTERPRISE LOGGER HELPER
-        // ==========================================
+
+        // LOGGER HELPER
+
         private void LogActivity(int userId, string action, string details, object oldData = null, object newData = null)
         {
             using (SqlConnection conn = new SqlConnection(connectionString))
@@ -75,7 +72,7 @@ namespace SaleSync.Controllers
             {
                 string totalSql = @"SELECT ISNULL(SUM(total_amount), 0) as Total, COUNT(sale_id) as Count              FROM sales WHERE CAST(sale_date AS DATE) = CAST(GETDATE() AS DATE)              AND status = 'Completed'";
 
-                // ⭐ UPDATE: Grabbing the new columns and changed to LEFT JOIN just in case an online order has no user_id
+  
                 string historySql = @"             SELECT TOP 10 s.sale_id, s.sale_date, s.total_amount, s.status, u.username,             s.customer_name, s.order_type, s.payment_method, s.delivery_address,             (SELECT STRING_AGG(CAST(si.quantity AS VARCHAR) + 'x ' + p.product_name, ', ')               FROM sale_items si JOIN products p ON si.product_id = p.product_id               WHERE si.sale_id = s.sale_id) as ItemsSummary             FROM sales s LEFT JOIN users u ON s.user_id = u.user_id             ORDER BY s.sale_date DESC";
 
                 conn.Open();
@@ -103,7 +100,7 @@ namespace SaleSync.Controllers
                             ItemsSummary = r["ItemsSummary"]?.ToString() ?? "No items",
                             Status = r["status"]?.ToString() ?? "Pending",
 
-                            // ⭐ NEW: Mapping the online order data to your model
+
                             CustomerName = r["customer_name"]?.ToString(),
                             OrderType = r["order_type"]?.ToString(),
                             PaymentMethod = r["payment_method"]?.ToString(),
@@ -115,11 +112,7 @@ namespace SaleSync.Controllers
             return View("AdminDashboard", model);
         }
 
-        // ==========================================
-        // ☕ Dedicated Workstation Live Queue System
-        // ⭐ Cashier-accessible: no extra [Authorize] here, so it inherits the
-        // class-level "Admin,Manager,Cashier" attribute.
-        // ==========================================
+
         [HttpGet]
         public IActionResult QueueOrder()
         {
@@ -127,7 +120,7 @@ namespace SaleSync.Controllers
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                // Pulls active orders. Sorted ASC so oldest orders sit at the front of the line.
+
                 string queueSql = @"
              SELECT s.sale_id, s.sale_date, s.total_amount, s.status, u.username,
                     s.customer_name, s.order_type, s.payment_method, s.delivery_address, s.pickup_datetime,
@@ -168,7 +161,7 @@ namespace SaleSync.Controllers
             return View(queueItems);
         }
 
-        // ⭐ Cashier-accessible: no extra [Authorize] here.
+
         [HttpPost]
         public IActionResult UpdateSaleStatus([FromBody] StatusUpdateModel request)
         {
@@ -229,7 +222,7 @@ namespace SaleSync.Controllers
             return Ok();
         }
 
-        // ⭐ Cashier-accessible: no extra [Authorize] here.
+
         [HttpGet]
         public IActionResult GetOrderDetails(int saleId)
         {
@@ -263,10 +256,7 @@ namespace SaleSync.Controllers
             return Json(result);
         }
 
-        // ⭐ Cashier-accessible: no extra [Authorize] here. The Queue view shows
-        // the Void button to every role, and this action re-verifies an
-        // Admin/Manager password internally before actually voiding anything,
-        // so it's safe to leave open at the role level.
+
         [HttpPost]
         public IActionResult VerifyAndVoid([FromBody] AdminVoidRequest request)
         {
@@ -276,10 +266,7 @@ namespace SaleSync.Controllers
             {
                 conn.Open();
 
-                // An Admin/Manager override PIN can belong to any Admin or Manager
-                // account, not just the currently logged-in user — fetch the
-                // candidates and verify the hash in code rather than comparing
-                // plaintext in SQL.
+      
                 string checkAuth = @"SELECT u.user_id, u.password_hash FROM users u
                                       JOIN roles r ON u.role_id = r.role_id
                                       WHERE (r.role_name = 'Admin' OR r.role_name = 'Manager')";
@@ -336,7 +323,7 @@ namespace SaleSync.Controllers
         {
             var model = new AnalyticsViewModel { SelectedTimeframe = timeframe.ToLower() };
 
-            // Define T-SQL filtering criteria based on your exact column parameters
+
             string dateCondition = "CAST(s.sale_date AS DATE) = CAST(GETDATE() AS DATE)";
             string salesGroupQuery = "";
 
@@ -389,7 +376,7 @@ namespace SaleSync.Controllers
             {
                 conn.Open();
 
-                // 💳 1. Top-Level KPI Summary Card Metrics
+
                 string summarySql = $@"
             SELECT 
                 ISNULL(SUM(final_amount), 0) AS TotalRev, 
@@ -409,7 +396,6 @@ namespace SaleSync.Controllers
                     }
                 }
 
-                // 📊 2. Gross Revenue Trend Line/Bar Data
                 using (SqlCommand cmd = new SqlCommand(salesGroupQuery, conn))
                 using (SqlDataReader reader = cmd.ExecuteReader())
                 {
@@ -420,7 +406,6 @@ namespace SaleSync.Controllers
                     }
                 }
 
-                // ⏰ 3. Peak Business Hours Traffic Trend
                 string peakHoursSql = $@"
             SELECT 
                 DATEPART(HOUR, s.sale_date) AS RawHour,
@@ -441,7 +426,7 @@ namespace SaleSync.Controllers
                     }
                 }
 
-                // ☕ 4. Best Sellers List (Linked via sale_items cross-reference)
+
                 string bestSellersSql = $@"
             SELECT TOP 5 p.product_name, SUM(si.quantity) AS TotalQty 
             FROM dbo.sale_items si
@@ -464,7 +449,7 @@ namespace SaleSync.Controllers
                     }
                 }
 
-                // 💳 5. Payment Option Distribution Check
+  
                 string paymentSql = $@"
             SELECT s.payment_method, COUNT(*) AS DistributionCount 
             FROM dbo.sales s 
@@ -526,7 +511,7 @@ namespace SaleSync.Controllers
             return View(logs);
         }
 
-        // ⭐ UPDATE: Added Archive Filter to Products
+
         [Authorize(Roles = "Admin,Manager")]
         [HttpGet]
         public IActionResult Products()
@@ -846,7 +831,7 @@ namespace SaleSync.Controllers
                 {
                     string itemName = "Unknown Ingredient";
 
-                    // 1. Fetch the ingredient details first for your activity log snapshot
+
                     string getOldSql = @"
                 SELECT product_name 
                 FROM products 
@@ -864,7 +849,7 @@ namespace SaleSync.Controllers
                         }
                     }
 
-                    // 2. Soft-delete the ingredient by flipping the archive switch
+ 
                     string archiveSql = "UPDATE products SET is_archived = 1 WHERE product_id = @id AND is_ingredient = 1";
                     using (SqlCommand cmd = new SqlCommand(archiveSql, conn))
                     {
@@ -872,7 +857,7 @@ namespace SaleSync.Controllers
                         cmd.ExecuteNonQuery();
                     }
 
-                    // 3. Log the activity specifically as an inventory action
+ 
                     LogActivity(
                         userId: currentUserId,
                         action: "Inventory Archived",
@@ -880,7 +865,6 @@ namespace SaleSync.Controllers
                         newData: null
                     );
 
-                    // 4. Pass the success message to trigger your view's SweetAlert
                     TempData["SuccessMessage"] = $"'{itemName}' has been archived successfully!";
 
                     return RedirectToAction("Inventory");
@@ -905,7 +889,7 @@ namespace SaleSync.Controllers
                 {
                     string itemName = "Unknown Ingredient";
 
-                    // 1. Fetch the ingredient details first for your activity tracking data trail
+
                     string getNameSql = "SELECT product_name FROM products WHERE product_id = @id AND is_ingredient = 1";
                     using (SqlCommand checkCmd = new SqlCommand(getNameSql, conn))
                     {
@@ -919,7 +903,7 @@ namespace SaleSync.Controllers
                         }
                     }
 
-                    // 2. Bring the row layer back by flipping the archive flag off (0)
+  
                     string restoreSql = "UPDATE products SET is_archived = 0 WHERE product_id = @id AND is_ingredient = 1";
                     using (SqlCommand cmd = new SqlCommand(restoreSql, conn))
                     {
@@ -927,7 +911,6 @@ namespace SaleSync.Controllers
                         cmd.ExecuteNonQuery();
                     }
 
-                    // 3. Log the action into your system activity tracking table
                     LogActivity(
                         userId: currentUserId,
                         action: "Inventory Restored",
@@ -935,21 +918,20 @@ namespace SaleSync.Controllers
                         newData: null
                     );
 
-                    // 4. Return standard HTTP 200 to let SweetAlert reload the view context
                     return Ok();
                 }
                 catch (Exception ex)
                 {
-                    // If the query crashes, pass an explicit JSON message back to the client console
+
                     return BadRequest(new { message = $"Failed to restore ingredient: {ex.Message}" });
                 }
             }
         }
 
-        // ⭐ UPDATE: Soft Delete (Archive) with Enterprise Logging Support
+
         [Authorize(Roles = "Admin,Manager")]
         [HttpPost]
-        public IActionResult ArchiveProduct([FromBody] int productId) // 👈 Renamed from DeleteMenuItem
+        public IActionResult ArchiveProduct([FromBody] int productId) 
         {
             int currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
 
@@ -961,7 +943,7 @@ namespace SaleSync.Controllers
                     string productName = "Unknown Product";
                     MenuItemModel oldProductData = null;
 
-                    // 1. Fetch the product details first for the activity log
+ 
                     string getOldSql = @"                 SELECT p.product_name, c.category_name, p.selling_price                  FROM products p                 LEFT JOIN categories c ON p.category_id = c.category_id                 WHERE p.product_id = @id";
 
                     using (SqlCommand checkCmd = new SqlCommand(getOldSql, conn))
@@ -983,7 +965,7 @@ namespace SaleSync.Controllers
                         }
                     }
 
-                    // 2. Flip the archive switch
+                
                     string archiveSql = "UPDATE products SET is_archived = 1 WHERE product_id = @id";
                     using (SqlCommand cmd = new SqlCommand(archiveSql, conn))
                     {
@@ -991,7 +973,6 @@ namespace SaleSync.Controllers
                         cmd.ExecuteNonQuery();
                     }
 
-                    // 3. Log the activity with the complete historical snapshot
                     LogActivity(
                         userId: currentUserId,
                         action: "Product Archived",
@@ -1058,7 +1039,7 @@ namespace SaleSync.Controllers
             {
                 conn.Open();
 
-                // 1. Peer-Admin Protection Check (skip if the Admin is updating their own profile)
+   
                 if (currentUserId != model.UserId)
                 {
                     string checkTargetAdminSql = @"
@@ -1080,7 +1061,6 @@ namespace SaleSync.Controllers
                     }
                 }
 
-                // 2. Duplicate username/email check (ignoring the account being edited)
                 string dupSql = "SELECT COUNT(*) FROM users WHERE (username = @username OR email = @email) AND user_id <> @id";
                 using (SqlCommand dupCmd = new SqlCommand(dupSql, conn))
                 {
@@ -1095,7 +1075,7 @@ namespace SaleSync.Controllers
                     }
                 }
 
-                // 3. Convert the role NAME from the form into a role_id
+
                 int roleId;
                 using (SqlCommand roleCmd = new SqlCommand("SELECT TOP 1 role_id FROM roles WHERE role_name = @role", conn))
                 {
@@ -1110,7 +1090,7 @@ namespace SaleSync.Controllers
                     roleId = Convert.ToInt32(result);
                 }
 
-                // 4. Update the account (only touch the password if a new one was typed)
+
                 bool hasNewPassword = !string.IsNullOrWhiteSpace(model.Password);
 
                 string sql = @"UPDATE users 
@@ -1190,7 +1170,7 @@ namespace SaleSync.Controllers
             string currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             int currentUserId = string.IsNullOrEmpty(currentUserIdStr) ? 0 : int.Parse(currentUserIdStr);
 
-            // 1. Prevent self-deactivation
+
             if (currentUserId == UserId)
             {
                 TempData["ErrorMessage"] = "Self-deactivation is not allowed for security reasons.";
@@ -1201,10 +1181,7 @@ namespace SaleSync.Controllers
             {
                 conn.Open();
 
-                // 2. Peer-Admin Protection Check
-                // NOTE: This assumes you have a 'roles' table joined by 'role_id'. 
-                // If your database uses a hardcoded integer for Admin (e.g., 1), change this to:
-                // "SELECT COUNT(*) FROM users WHERE user_id = @id AND role_id = 1"
+
                 string checkTargetAdminSql = @"
             SELECT COUNT(*) 
             FROM users u
@@ -1223,7 +1200,7 @@ namespace SaleSync.Controllers
                     }
                 }
 
-                // 3. Prevent deactivating the last active member of a role
+
                 string checkLastRoleSql = @"
             SELECT COUNT(*)      
             FROM users      
@@ -1242,7 +1219,7 @@ namespace SaleSync.Controllers
                     }
                 }
 
-                // 4. Perform Deactivation
+
                 string sql = "UPDATE users SET is_active = 0 WHERE user_id = @id";
                 using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
@@ -1502,7 +1479,7 @@ namespace SaleSync.Controllers
             return View(report);
         }
 
-        // ⭐ UPDATE: Added Archive Filter to POS View
+
         [Authorize(Roles = "Admin,Manager")]
         [HttpGet]
         public IActionResult PointOfSale()
@@ -1597,14 +1574,13 @@ namespace SaleSync.Controllers
                 return BadRequest("No file was received.");
             }
 
-            // Basic size guard (5 MB) so a huge file can't hang the request.
+  
             const long maxFileSizeBytes = 5 * 1024 * 1024;
             if (productImageFile.Length > maxFileSizeBytes)
             {
                 return BadRequest("Image is too large. Please choose a file under 5 MB.");
             }
 
-            // Only allow actual image types.
             string[] allowedExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
             string extension = Path.GetExtension(productImageFile.FileName).ToLowerInvariant();
             if (string.IsNullOrEmpty(extension) || !allowedExtensions.Contains(extension))
@@ -1635,7 +1611,6 @@ namespace SaleSync.Controllers
                 {
                     conn.Open();
 
-                    // Grab the old image path first so we can clean it up after a successful update.
                     using (SqlCommand getCmd = new SqlCommand("SELECT image_path FROM products WHERE product_id = @id", conn))
                     {
                         getCmd.Parameters.AddWithValue("@id", productId);
@@ -1651,14 +1626,15 @@ namespace SaleSync.Controllers
                         int rowsAffected = updateCmd.ExecuteNonQuery();
                         if (rowsAffected == 0)
                         {
-                            // No product matched this id — remove the file we just saved so it doesn't orphan on disk.
+                        
+
                             System.IO.File.Delete(filePath);
                             return NotFound($"No product found with id {productId}.");
                         }
                     }
                 }
 
-                // Clean up the old image file now that the DB points at the new one.
+
                 if (!string.IsNullOrEmpty(previousImagePath))
                 {
                     string previousFullPath = Path.Combine(_webHostEnvironment.WebRootPath, previousImagePath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
@@ -1676,9 +1652,7 @@ namespace SaleSync.Controllers
                 return StatusCode(500, $"Upload failed: {ex.Message}");
             }
         }
-        // ==========================================
-        // ⭐ THE ARCHIVE ROOM
-        // ==========================================
+
         [Authorize(Roles = "Admin,Manager")]
         [HttpGet]
         public IActionResult ArchivedProducts()
@@ -1710,7 +1684,7 @@ namespace SaleSync.Controllers
                     }
                 }
 
-                // 📦 Query 2: Fetch Archived Raw Ingredients (Inventory)
+
                 string ingredientSql = @"
             SELECT product_id, product_name, stock_quantity, cost_price, unit, recipe_unit, conversion_factor 
             FROM products 
@@ -1725,7 +1699,7 @@ namespace SaleSync.Controllers
                         {
                             ProductId = Convert.ToInt32(r["product_id"]),
                             ItemName = r["product_name"].ToString(),
-                            ItemCategory = "Ingredients", // Hardcoded display category since category_id = 99
+                            ItemCategory = "Ingredients", 
                             Quantity = r["stock_quantity"] != DBNull.Value ? Convert.ToDouble(r["stock_quantity"]) : 0,
                             PurchasePrice = r["cost_price"] != DBNull.Value ? Convert.ToDecimal(r["cost_price"]) : 0,
                             Unit = r["unit"]?.ToString() ?? "pcs",
@@ -1750,7 +1724,7 @@ namespace SaleSync.Controllers
                 conn.Open();
                 try
                 {
-                    // Flip the switch back to 0 (Active)
+   
                     string restoreSql = "UPDATE products SET is_archived = 0 WHERE product_id = @id";
                     using (SqlCommand cmd = new SqlCommand(restoreSql, conn))
                     {
@@ -1768,7 +1742,6 @@ namespace SaleSync.Controllers
             }
         }
 
-        // ⭐ NEW: REAL-TIME NOTIFICATION ENDPOINT ⭐
         [Authorize(Roles = "Admin,Manager")]
         [HttpGet]
         public IActionResult CheckNewOrders()
@@ -1834,13 +1807,13 @@ namespace SaleSync.Controllers
 
             try
             {
-                // Keep the existing logo unless a new one was uploaded.
+             
                 var existing = _storeSettingsService.GetSettings();
                 model.LogoPath = existing.LogoPath;
 
                 if (StoreLogo != null && StoreLogo.Length > 0)
                 {
-                    const long maxLogoSizeBytes = 2 * 1024 * 1024; // 2 MB
+                    const long maxLogoSizeBytes = 2 * 1024 * 1024; 
                     string[] allowedExtensions = { ".jpg", ".jpeg", ".png", ".webp", ".svg" };
                     string extension = Path.GetExtension(StoreLogo.FileName).ToLowerInvariant();
 
@@ -1885,9 +1858,7 @@ namespace SaleSync.Controllers
             return RedirectToAction("WebCustomization");
         }
 
-        // ==========================================
-        // GLOBAL SEARCH ENDPOINT
-        // ==========================================
+      
         [Authorize(Roles = "Admin,Manager")]
         [HttpGet]
         public IActionResult GlobalSearch(string q)
@@ -1903,7 +1874,7 @@ namespace SaleSync.Controllers
             {
                 conn.Open();
 
-                // Search products (menu items + inventory) — match Products page query
+            
                 string prodSql = @"SELECT TOP 10 p.product_id, p.product_name, p.selling_price, p.sku, p.is_ingredient
                     FROM products p
                     WHERE (p.is_archived = 0 OR p.is_archived IS NULL)
@@ -1927,7 +1898,6 @@ namespace SaleSync.Controllers
                     }
                 }
 
-                // Search inventory (ingredient items)
                 string invSql = @"SELECT TOP 8 product_id, product_name, stock_quantity, cost_price, unit
                     FROM products WHERE (is_archived = 0 OR is_archived IS NULL) AND is_ingredient = 1
                     AND product_name LIKE @q ORDER BY product_name";
@@ -1949,7 +1919,7 @@ namespace SaleSync.Controllers
                     }
                 }
 
-                // Search recent transactions
+              
                 string transSql = @"SELECT TOP 8 s.sale_id, s.customer_name, s.total_amount, s.status, s.payment_method, s.sale_date
                     FROM sales s
                     WHERE s.customer_name LIKE @q OR CAST(s.sale_id AS VARCHAR) LIKE @q

@@ -134,9 +134,9 @@ namespace SaleSync.Controllers
             }
         }
 
-        // =========================================================
-        // POST: /Promotions/CreatePromotion
-        // =========================================================
+ 
+
+
         [HttpPost]
         public IActionResult CreatePromotion([FromBody] Promotion promotion)
         {
@@ -151,14 +151,10 @@ namespace SaleSync.Controllers
                     });
                 }
 
-                // Clean input
                 promotion.Name = promotion.Name?.Trim() ?? string.Empty;
                 promotion.Code = promotion.Code?.Trim().ToUpper() ?? string.Empty;
                 promotion.Description = promotion.Description?.Trim() ?? string.Empty;
 
-                // -------------------------------------------------
-                // Validation
-                // -------------------------------------------------
 
                 if (string.IsNullOrWhiteSpace(promotion.Name))
                 {
@@ -239,10 +235,8 @@ namespace SaleSync.Controllers
 
                 connection.Open();
 
-                // -------------------------------------------------
-                // Check duplicate promo code
-                // -------------------------------------------------
 
+                // Check duplicate promo code
                 const string checkQuery = @"
                     SELECT COUNT(*)
                     FROM promotions
@@ -269,10 +263,7 @@ namespace SaleSync.Controllers
                     }
                 }
 
-                // -------------------------------------------------
                 // Insert promotion
-                // -------------------------------------------------
-
                 const string insertQuery = @"
                     INSERT INTO promotions
                     (
@@ -377,9 +368,7 @@ namespace SaleSync.Controllers
             }
         }
 
-        // =========================================================
-        // POST: /Promotions/UpdatePromotion
-        // =========================================================
+
         [HttpPost]
         public IActionResult UpdatePromotion([FromBody] Promotion promotion)
         {
@@ -398,9 +387,6 @@ namespace SaleSync.Controllers
                 promotion.Code = promotion.Code?.Trim().ToUpper() ?? "";
                 promotion.Description = promotion.Description?.Trim() ?? "";
 
-                // -------------------------------------------------
-                // Validation
-                // -------------------------------------------------
 
                 if (string.IsNullOrWhiteSpace(promotion.Name))
                 {
@@ -471,9 +457,7 @@ namespace SaleSync.Controllers
 
                 connection.Open();
 
-                // -------------------------------------------------
                 // Check duplicate promo code
-                // -------------------------------------------------
 
                 const string duplicateQuery = @"
                     SELECT COUNT(*)
@@ -509,9 +493,7 @@ namespace SaleSync.Controllers
                     }
                 }
 
-                // -------------------------------------------------
-                // Update
-                // -------------------------------------------------
+
 
                 const string updateQuery = @"
                     UPDATE promotions
@@ -613,9 +595,6 @@ namespace SaleSync.Controllers
             }
         }
 
-        // =========================================================
-        // POST: /Promotions/DeletePromotion
-        // =========================================================
         [HttpPost]
         public IActionResult DeletePromotion([FromBody] DeletePromotionRequest request)
         {
@@ -678,9 +657,6 @@ namespace SaleSync.Controllers
             }
         }
 
-        // =========================================================
-        // POST: /Promotions/TogglePromotion
-        // =========================================================
         [HttpPost]
         public IActionResult TogglePromotion([FromBody] TogglePromotionRequest request)
         {
@@ -751,9 +727,7 @@ namespace SaleSync.Controllers
             }
         }
 
-        // =========================================================
-        // Request Models
-        // =========================================================
+
 
         public class DeletePromotionRequest
         {
