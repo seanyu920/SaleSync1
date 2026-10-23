@@ -3,8 +3,8 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
-using System.Net;        // Added for NetworkCredential
-using System.Net.Mail;   // Added for MailMessage and SmtpClient
+using System.Net;       
+using System.Net.Mail;   
 using SaleSync.Services;
 
 namespace SaleSync.Controllers
@@ -20,18 +20,18 @@ namespace SaleSync.Controllers
             connectionString = _configuration.GetConnectionString("DefaultConnection");
         }
 
-        // 1. Displays the empty Registration Page
+  
         [HttpGet]
         public IActionResult Register()
         {
             return View();
         }
 
-        // 2. Handles the form submission
+   
         [HttpPost]
         public async Task<IActionResult> Register(string fullName, string username, string email, string password, string confirmPassword)
         {
-            // Validation: Ensure no fields are empty
+ty
             if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(email) ||
                 string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(fullName))
             {
@@ -48,7 +48,7 @@ namespace SaleSync.Controllers
 
             bool accountExists = false;
 
-            // ─── CHECK IF USERNAME OR EMAIL EXISTS ──────────────────────────
+            //CHECK IF USERNAME OR EMAIL EXISTS
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 string checkQuery = "SELECT COUNT(1) FROM users WHERE username = @Username OR email = @Email";
@@ -72,14 +72,14 @@ namespace SaleSync.Controllers
                 return View();
             }
 
-            // ─── GENERATE OTP LOGIC ─────────────────────────────────────────────
+            //  GENERATE OTP LOGIC 
             string generatedOtp = Random.Shared.Next(100000, 999999).ToString();
             DateTime expiryTime = DateTime.Now.AddMinutes(10);
 
-            // ─── SAVE USER TO DATABASE (RAW SQL INSERT) ─────────────────────────
+            //  SAVE USER TO DATABASE (RAW SQL INSERT)
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                // UPDATED: 'pending' changed to 'Pending' to pass database constraints
+                
                 string insertQuery = @"
                     INSERT INTO users (full_name, username, email, password_hash, role_id, status, is_active, OtpCode, OtpExpiry, IsEmailConfirmed) 
                     VALUES (@FullName, @Username, @Email, @Password, 
@@ -100,16 +100,16 @@ namespace SaleSync.Controllers
                 }
             }
 
-            // ─── ⭐ LIVE EMAIL ACTIVATION ROUTINE ⭐ ──────────────────────────
+            
             await SendOtpEmailNativeAsync(email, generatedOtp);
 
             TempData["SuccessMessage"] = "Account created! An OTP verification code has been sent to your email.";
 
-            // Redirect to the verification screen inside this same controller
+            
             return RedirectToAction("VerifyOtp", new { email = email });
         }
 
-        // ─── OTP VERIFICATION ACTIONS ────────────────────────────────────────
+        // OTP VERIFICATION ACTIONS 
         [HttpGet]
         public IActionResult VerifyOtp(string email)
         {
@@ -165,7 +165,7 @@ namespace SaleSync.Controllers
             return View();
         }
 
-        // ─── ⭐ PRIVATE NATIVE EMAIL SENDER HELPER ⭐ ────────────────────────
+        //   PRIVATE NATIVE EMAIL SENDER HELPER  
         private async Task SendOtpEmailNativeAsync(string targetEmail, string otpCode)
         {
             var smtpServer = _configuration["EmailSettings:SmtpServer"];
@@ -180,7 +180,7 @@ namespace SaleSync.Controllers
                 message.To.Add(new MailAddress(targetEmail));
                 message.Subject = $"{otpCode} is your Cafero Verification Code";
 
-                // Custom styled HTML body matching your coffee theme
+        e
                 message.Body = $@"
                     <div style='font-family: sans-serif; padding: 20px; color: #4a2511; background-color: #fdfaf6; border-radius: 8px;'>
                         <h2>Welcome to Cafero!</h2>
@@ -195,7 +195,7 @@ namespace SaleSync.Controllers
                 using (var client = new SmtpClient(smtpServer, port))
                 {
                     client.Credentials = new NetworkCredential(senderEmail, password);
-                    client.EnableSsl = true; // Essential for Gmail SMTP authorization
+                    client.EnableSsl = true;
                     await client.SendMailAsync(message);
                 }
             }

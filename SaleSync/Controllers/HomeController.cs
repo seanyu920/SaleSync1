@@ -20,7 +20,7 @@ namespace SaleSync.Controllers
     public class HomeController : Controller
     {
         private readonly IConfiguration _configuration;
-        private readonly string connectionString; // Remove the hardcoded string here!
+        private readonly string connectionString; 
 
         public HomeController(IConfiguration configuration)
         {
@@ -45,9 +45,7 @@ namespace SaleSync.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
-        // ==========================================
-        // ⭐ THE ENTERPRISE LOGGER HELPER
-        // ==========================================
+  
         private void LogActivity(int userId, string action, string details)
         {
             using (SqlConnection conn = new SqlConnection(connectionString))
@@ -64,18 +62,15 @@ namespace SaleSync.Controllers
             }
         }
 
-        // ⭐ 1. THE ASYNC LOGIN FIX ⭐
+
         [HttpPost]
         public async Task<IActionResult> Login(string username, string password)
         {
-            // 1. Read the secret "Ghost" credentials from configuration.
-            // These must come from user-secrets/environment variables in every
-            // environment — see appsettings.json for setup notes. The password
-            // is stored as a bcrypt hash, never in plaintext.
+       
             var ghostUser = _configuration["SuperAdminConfig:Username"];
             var ghostPassHash = _configuration["SuperAdminConfig:PasswordHash"];
 
-            // 2. The Ghost Check (Invisible to the Database)
+            )
             if (!string.IsNullOrEmpty(ghostUser) && !string.IsNullOrEmpty(ghostPassHash) &&
                 username == ghostUser && PasswordHasher.Verify(password, ghostPassHash, out _))
             {
@@ -84,8 +79,7 @@ namespace SaleSync.Controllers
                     new Claim(ClaimTypes.Name, "SuperAdmin"),
                     new Claim(ClaimTypes.NameIdentifier, "0"),
                     new Claim(ClaimTypes.Role, "Admin"),
-                    // Chat (and anything else keyed off the DB "username" column) needs a
-                    // stable username claim distinct from the display name below.
+            
                     new Claim("Username", ghostUser)
                 };
 
@@ -109,7 +103,7 @@ namespace SaleSync.Controllers
                     FROM users u
                     INNER JOIN roles r ON u.role_id = r.role_id
                     WHERE (u.username = @Username OR u.email = @Username)
-                      AND u.is_active = 1"; // Keeps unverified (is_active = 0) users locked out!
+                      AND u.is_active = 1"; 
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
@@ -153,8 +147,7 @@ namespace SaleSync.Controllers
                                 new Claim(ClaimTypes.NameIdentifier, userId),
                                 new Claim(ClaimTypes.Name, fullName),
                                 new Claim(ClaimTypes.Role, role),
-                                // ClaimTypes.Name holds the display (full) name used throughout the
-                                // UI. Chat needs the actual users.username value, so keep it separate.
+                                
                                 new Claim("Username", dbUsername)
                             };
 
@@ -185,8 +178,7 @@ namespace SaleSync.Controllers
             return View("LogIn");
         }
 
-        // ⭐ 2. FORGOT PASSWORD FLOW ⭐
-        // Step 1: customer submits their email from the modal on the login page.
+   
         [HttpPost]
         public async Task<IActionResult> ForgotPassword(string email)
         {
@@ -207,9 +199,7 @@ namespace SaleSync.Controllers
                     if (result != null) userId = Convert.ToInt32(result);
                 }
 
-                // Only generate/send a token if the account actually exists — but
-                // we still return Ok() either way below so the response never
-                // reveals whether an email is registered.
+                
                 if (userId != 0)
                 {
                     string token = GenerateResetToken();
@@ -237,9 +227,7 @@ namespace SaleSync.Controllers
                     }
                     catch (Exception ex)
                     {
-                        // Don't let an SMTP failure turn into a 500 — that would leak
-                        // "this email exists but the send failed" to the caller.
-                        // Log it instead so it's still visible to staff.
+                        
                         LogActivity(userId, "Password Reset Email Failed", ex.Message);
                     }
                 }
@@ -248,7 +236,7 @@ namespace SaleSync.Controllers
             return Ok();
         }
 
-        // Step 2 (GET): customer clicks the link in the email.
+       
         [HttpGet]
         public async Task<IActionResult> ResetPassword(string email, string token)
         {
@@ -264,7 +252,7 @@ namespace SaleSync.Controllers
             return View();
         }
 
-        // Step 3 (POST): customer submits their new password.
+        
         [HttpPost]
         public async Task<IActionResult> ResetPassword(string email, string token, string password, string confirmPassword)
         {
@@ -340,7 +328,7 @@ namespace SaleSync.Controllers
         {
             byte[] tokenBytes = RandomNumberGenerator.GetBytes(32);
 
-            // URL-safe base64 — this value rides in a query string.
+
             return Convert.ToBase64String(tokenBytes)
                 .Replace("+", "-")
                 .Replace("/", "_")
@@ -381,7 +369,7 @@ namespace SaleSync.Controllers
             }
         }
 
-        // ⭐ 3. THE ASYNC LOGOUT FIX WITH AUDIT LOGGING ⭐
+
         public async Task<IActionResult> Logout()
         {
             string userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

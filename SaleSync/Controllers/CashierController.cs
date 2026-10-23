@@ -34,9 +34,9 @@ namespace SaleSync.Controllers
                     "Connection string 'DefaultConnection' was not found.");
         }
 
-        // =========================================================
+
         // DASHBOARD
-        // =========================================================
+
 
         public IActionResult Dashboard()
         {
@@ -563,9 +563,9 @@ namespace SaleSync.Controllers
                     });
                 }
 
-                // -------------------------------------------------
+
                 // SAFELY READ DATABASE VALUES
-                // -------------------------------------------------
+
 
                 int promotionId = 0;
 
@@ -657,7 +657,7 @@ namespace SaleSync.Controllers
                         reader["is_active"].ToString(),
                         out isActive);
 
-                    // Handles databases storing 0 / 1.
+
                     if (!isActive)
                     {
                         int activeInt;
@@ -671,9 +671,8 @@ namespace SaleSync.Controllers
                     }
                 }
 
-                // -------------------------------------------------
                 // VALIDATE PROMOTION
-                // -------------------------------------------------
+
 
                 if (!isActive)
                 {
@@ -738,9 +737,9 @@ namespace SaleSync.Controllers
                     });
                 }
 
-                // -------------------------------------------------
+
                 // NORMALIZE DISCOUNT TYPE
-                // -------------------------------------------------
+
 
                 bool isPercentage =
                     discountType == "0" ||
@@ -755,16 +754,15 @@ namespace SaleSync.Controllers
                     discountType == "fixed amount" ||
                     discountType == "fixed discount";
 
-                // -------------------------------------------------
+
                 // CALCULATE DISCOUNT
-                // -------------------------------------------------
+
 
                 decimal discountAmount = 0m;
 
                 if (isPercentage)
                 {
-                    // Prevent invalid percentages from producing
-                    // unexpected results.
+                    
 
                     if (discountValue > 100m)
                     {
@@ -790,13 +788,13 @@ namespace SaleSync.Controllers
                     });
                 }
 
-                // Never discount below zero.
+                
                 if (discountAmount < 0m)
                 {
                     discountAmount = 0m;
                 }
 
-                // Never discount more than the order total.
+                
                 if (discountAmount > orderTotal)
                 {
                     discountAmount = orderTotal;
@@ -822,9 +820,9 @@ namespace SaleSync.Controllers
                         2,
                         MidpointRounding.AwayFromZero);
 
-                // -------------------------------------------------
+               
                 // SUCCESS
-                // -------------------------------------------------
+
 
                 return Ok(new
                 {
@@ -897,9 +895,9 @@ namespace SaleSync.Controllers
             }
         }
 
-        // =========================================================
+      
         // STATUS UPDATES & INVENTORY DEDUCTION
-        // =========================================================
+
 
         [HttpPost]
         public IActionResult UpdateSaleStatus(
@@ -975,8 +973,7 @@ namespace SaleSync.Controllers
                     cmd.ExecuteNonQuery();
                 }
 
-                // Deduct ingredients only when the order
-                // changes INTO Completed.
+       
                 if (request.Status == "Completed" &&
                     currentStatus != "Completed")
                 {
@@ -1053,9 +1050,9 @@ namespace SaleSync.Controllers
             });
         }
 
-        // =========================================================
+
         // WEB CUSTOMIZATION
-        // =========================================================
+
 
         public IActionResult WebCustomization()
         {
@@ -1067,9 +1064,8 @@ namespace SaleSync.Controllers
                 settings);
         }
 
-        // =========================================================
         // VERIFY AND VOID
-        // =========================================================
+ 
 
         [HttpPost]
         public IActionResult VerifyAndVoid(
@@ -1188,9 +1184,9 @@ namespace SaleSync.Controllers
             });
         }
 
-        // =========================================================
+
         // ORDER DETAILS
-        // =========================================================
+ 
 
         [HttpGet]
         public IActionResult GetOrderDetails(
@@ -1296,9 +1292,9 @@ namespace SaleSync.Controllers
                 });
         }
 
-        // =========================================================
+
         // GLOBAL SEARCH
-        // =========================================================
+
 
         [HttpGet]
         public IActionResult GlobalSearch(
@@ -1330,9 +1326,9 @@ namespace SaleSync.Controllers
 
             conn.Open();
 
-            // -------------------------------------------------
+
             // PRODUCTS
-            // -------------------------------------------------
+
 
             string prodSql = @"
                 SELECT TOP 8
@@ -1403,9 +1399,8 @@ namespace SaleSync.Controllers
                 }
             }
 
-            // -------------------------------------------------
             // CASHIER'S TRANSACTIONS
-            // -------------------------------------------------
+
 
             string transSql = @"
                 SELECT TOP 8
@@ -1507,9 +1502,9 @@ namespace SaleSync.Controllers
                 });
         }
 
-        // =========================================================
+
         // REQUEST MODELS
-        // =========================================================
+
 
         public class PromoValidationRequest
         {

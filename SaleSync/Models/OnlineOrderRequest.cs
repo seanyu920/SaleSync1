@@ -3,11 +3,7 @@ using System.Collections.Generic;
 
 namespace SaleSync.Models
 {
-    // ==========================================
-    // MODELS FOR PLACING ORDERS (Frontend -> Backend)
-    // ==========================================
 
-    // This acts as a blueprint for the incoming JSON from the checkout cart
     public class OnlineOrderRequest
     {
         public string OrderType { get; set; }
@@ -24,17 +20,13 @@ namespace SaleSync.Models
         public decimal Price { get; set; }
     }
 
-    // ==========================================
-    // MODEL FOR VIEWING ORDERS (Backend -> Frontend)
-    // ==========================================
 
-    // This acts as a blueprint for displaying order history back to the customer
     public class CustomerOrderModel
     {
         public int SaleId { get; set; }
         public DateTime SaleDate { get; set; }
         public decimal TotalAmount { get; set; }
-        public string Status { get; set; } // e.g., Pending, Preparing, Completed
-        public string OrderType { get; set; } // Pick-up or Delivery
+        public string Status { get; set; } 
+        public string OrderType { get; set; } 
     }
 }

@@ -10,10 +10,7 @@ using System.Collections.Generic;
 
 namespace SaleSync.Controllers
 {
-    // Baseline: must be logged in as Admin, Manager, or Cashier to reach
-    // anything in this controller (this used to be wide open — PointOfSale
-    // had no check at all). IsManager() below adds a stricter check on top
-    // for actions that only Admin/Manager should use.
+
     [Authorize(Roles = "Admin,Manager,Cashier")]
     public class ManagerController : Controller
     {
@@ -30,15 +27,12 @@ namespace SaleSync.Controllers
             connectionString = _configuration.GetConnectionString("DefaultConnection");
         }
 
-        // ⭐ 1. THE SECURITY BOUNCER
         private bool IsManager()
         {
             return User.IsInRole("Manager") || User.IsInRole("Admin");
         }
 
-        // ==========================================
-        // ⭐ 2. MANAGER DASHBOARD DATA
-        // ==========================================
+   
         public IActionResult Dashboard()
         {
             if (!IsManager()) return RedirectToAction("Index", "Home");
@@ -93,9 +87,7 @@ namespace SaleSync.Controllers
             return View("ManagerDashboard", model);
         }
 
-        // ==========================================
-        // ⭐ 3. FIXED: SECURE VOID ORDER LOGIC
-        // ==========================================
+
         [HttpPost]
         public IActionResult VerifyAndVoid([FromBody] VoidRequest request)
         {
@@ -137,7 +129,7 @@ namespace SaleSync.Controllers
                     }
                 }
 
-                // FIX: Renamed SQL variable to @id to match the C# parameter
+
                 string updateSql = "UPDATE sales SET status = 'Voided' WHERE sale_id = @id AND status != 'Completed'";
                 using (SqlCommand cmd = new SqlCommand(updateSql, conn))
                 {
@@ -149,9 +141,7 @@ namespace SaleSync.Controllers
             return Ok();
         }
 
-        // ==========================================
-        // ⭐ 4. FIXED: GET DROPDOWN ORDER DETAILS
-        // ==========================================
+
         [HttpGet]
         public IActionResult GetOrderDetails(int saleId)
         {
@@ -163,7 +153,7 @@ namespace SaleSync.Controllers
             {
                 conn.Open();
 
-                // FIX: Added cmd.Parameters to provide the @id value
+
                 string itemSql = @"
                     SELECT si.quantity, p.product_name 
                     FROM sale_items si 
@@ -179,7 +169,7 @@ namespace SaleSync.Controllers
                     }
                 }
 
-                // FIX: Added cmd.Parameters to provide the @id value
+
                 string ingSql = @"
                     SELECT (pi.quantity_required * si.quantity) as total_req, p.product_name, ISNULL(p.recipe_unit, p.unit) as unit
                     FROM sale_items si
@@ -200,13 +190,11 @@ namespace SaleSync.Controllers
         }
         public IActionResult QueueOrder()
         {
-            // Your logic here (e.g., fetching pending orders)
+
             return View();
         }
 
-        // ==========================================
-        // ⭐ WEB CUSTOMIZATION (shared view, Admin/Manager can edit)
-        // ==========================================
+
         [HttpGet]
         public IActionResult WebCustomization()
         {
@@ -215,9 +203,7 @@ namespace SaleSync.Controllers
         }
         
 
-        // ==========================================
-        // ⭐ 5. MARK ORDER COMPLETED & DEDUCT STOCK
-        // ==========================================
+
         [HttpPost]
         public IActionResult UpdateSaleStatus([FromBody] StatusUpdateModel request)
         {
@@ -281,9 +267,7 @@ namespace SaleSync.Controllers
             return Ok();
         }
 
-        // ==========================================
-        // ⭐ 6. SHARED POS ACCESS
-        // ==========================================
+
         [HttpGet]
         public IActionResult PointOfSale()
         {
@@ -321,9 +305,7 @@ namespace SaleSync.Controllers
     }
     
 
-    // ==========================================
-    // ⭐ REQUEST MODELS
-    // ==========================================
+
     public class StatusUpdateModel
     {
         public int SaleId { get; set; }
