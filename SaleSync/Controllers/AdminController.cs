@@ -23,14 +23,16 @@ namespace SaleSync.Controllers
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly StoreSettingsService _storeSettingsService;
         private readonly InventoryDeductionService _inventoryDeductionService;
-        private readonly string connectionString; 
+        private readonly CategoryService _categoryService;
+        private readonly string connectionString;
 
-        public AdminController(IConfiguration configuration, IWebHostEnvironment webHostEnvironment, StoreSettingsService storeSettingsService, InventoryDeductionService inventoryDeductionService)
+        public AdminController(IConfiguration configuration, IWebHostEnvironment webHostEnvironment, StoreSettingsService storeSettingsService, InventoryDeductionService inventoryDeductionService, CategoryService categoryService)
         {
             _configuration = configuration;
             _webHostEnvironment = webHostEnvironment;
             _storeSettingsService = storeSettingsService;
             _inventoryDeductionService = inventoryDeductionService;
+            _categoryService = categoryService;
             connectionString = _configuration.GetConnectionString("DefaultConnection");
         }
 
@@ -546,7 +548,39 @@ namespace SaleSync.Controllers
                     }
                 }
             }
+
+            // Lets a brand-new category (one with no items yet) show up as a card.
+            ViewBag.Categories = _categoryService.GetMenuCategoryNames();
+
             return View(menuList);
+        }
+
+        [Authorize(Roles = "Admin,Manager")]
+        [HttpPost]
+        public IActionResult AddCategory([FromBody] AddCategoryRequest model)
+        {
+            var name = model?.CategoryName?.Trim();
+
+            if (string.IsNullOrWhiteSpace(name))
+                return BadRequest("Category name is required.");
+
+            if (name.Length > CategoryService.MaxNameLength)
+                return BadRequest($"Category name is too long (max {CategoryService.MaxNameLength} characters).");
+
+            try
+            {
+                var result = _categoryService.AddMenuCategory(name);
+
+                if (result == CategoryAddResult.AlreadyExists)
+                    return Conflict("That category already exists.");
+
+                return Ok(new { success = true, categoryName = name });
+            }
+            catch (SqlException ex)
+            {
+                // Admin/Manager only, so returning the real database message is fine and makes problems easy to spot.
+                return StatusCode(500, "Database error while adding the category: " + ex.Message);
+            }
         }
 
         [Authorize(Roles = "Admin,Manager")]
