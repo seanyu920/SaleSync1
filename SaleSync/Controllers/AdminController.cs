@@ -1545,40 +1545,142 @@ namespace SaleSync.Controllers
         }
         [Authorize(Roles = "Admin,Manager")]
         [HttpGet]
-        public IActionResult DailyReport()
+        public IActionResult DailyReport(DateTime? date)
         {
-            var report = new DailyReportViewModel();
+            // Default to today; never allow a future date
+            DateTime day = (date ?? DateTime.Today).Date;
+            if (day > DateTime.Today) day = DateTime.Today;
+
+            DateTime start = day;
+            DateTime end = day.AddDays(1);
+            DateTime prevStart = day.AddDays(-1);
+
+            var report = new DailyReportViewModel { ReportDate = day };
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
-                string salesSql = "SELECT ISNULL(SUM(total_amount), 0) as TotalSales, COUNT(sale_id) as TxCount FROM sales WHERE CAST(sale_date AS DATE) = CAST(GETDATE() AS DATE) AND status = 'Completed'";
-                using (SqlCommand cmd = new SqlCommand(salesSql, conn))
-                using (SqlDataReader r = cmd.ExecuteReader())
+
+                // Small helper: every query below uses a date RANGE (index-friendly)
+                // instead of CAST(column AS DATE), and the dates are real parameters.
+                SqlCommand Cmd(string sql)
                 {
-                    if (r.Read()) { report.TotalSales = Convert.ToDecimal(r["TotalSales"]); report.TransactionCount = Convert.ToInt32(r["TxCount"]); }
+                    var c = new SqlCommand(sql, conn);
+                    c.Parameters.AddWithValue("@start", start);
+                    c.Parameters.AddWithValue("@end", end);
+                    c.Parameters.AddWithValue("@prevStart", prevStart);
+                    return c;
                 }
 
-                string costSql = "SELECT ISNULL(SUM(si.quantity * pi.quantity_required * ing.cost_price), 0) FROM sale_items si JOIN sales s ON si.sale_id = s.sale_id JOIN product_ingredients pi ON si.product_id = pi.product_id JOIN products ing ON pi.ingredient_id = ing.product_id WHERE CAST(s.sale_date AS DATE) = CAST(GETDATE() AS DATE) AND s.status = 'Completed'";
-                using (SqlCommand cmd = new SqlCommand(costSql, conn)) report.TotalCost = Convert.ToDecimal(cmd.ExecuteScalar());
-
-                string productsSql = "SELECT p.product_name, SUM(si.quantity) as QtySold, SUM(si.subtotal) as TotalRevenue FROM sale_items si JOIN sales s ON si.sale_id = s.sale_id JOIN products p ON si.product_id = p.product_id WHERE CAST(s.sale_date AS DATE) = CAST(GETDATE() AS DATE) AND s.status = 'Completed' GROUP BY p.product_name ORDER BY QtySold DESC";
-                using (SqlCommand cmd = new SqlCommand(productsSql, conn))
-                using (SqlDataReader r = cmd.ExecuteReader())
+                // 1) Sales total + transaction count
+                using (var cmd = Cmd(@"
+                    SELECT ISNULL(SUM(total_amount), 0) AS TotalSales, COUNT(sale_id) AS TxCount
+                    FROM sales
+                    WHERE sale_date >= @start AND sale_date < @end AND status = 'Completed'"))
+                using (var r = cmd.ExecuteReader())
                 {
-                    while (r.Read()) report.ProductsSold.Add(new ProductSalesItem { ProductName = r["product_name"].ToString(), QuantitySold = Convert.ToInt32(r["QtySold"]), TotalRevenue = Convert.ToDecimal(r["TotalRevenue"]) });
+                    if (r.Read())
+                    {
+                        report.TotalSales = Convert.ToDecimal(r["TotalSales"]);
+                        report.TransactionCount = Convert.ToInt32(r["TxCount"]);
+                    }
                 }
 
-                string boughtSql = "SELECT item_name, SUM(quantity_bought) as QtyBought, SUM(total_cost) as TotalCost FROM inventory_purchases WHERE CAST(purchase_date AS DATE) = CAST(GETDATE() AS DATE) GROUP BY item_name ORDER BY TotalCost DESC";
-                using (SqlCommand cmd = new SqlCommand(boughtSql, conn))
-                using (SqlDataReader r = cmd.ExecuteReader())
+                // 2) Previous day sales (for the "vs previous day" badge)
+                using (var cmd = Cmd(@"
+                    SELECT ISNULL(SUM(total_amount), 0)
+                    FROM sales
+                    WHERE sale_date >= @prevStart AND sale_date < @start AND status = 'Completed'"))
                 {
-                    while (r.Read()) report.IngredientsBought.Add(new InventoryPurchaseItem { ItemName = r["item_name"].ToString(), QuantityBought = Convert.ToInt32(r["QtyBought"]), TotalCost = Convert.ToDecimal(r["TotalCost"]) });
+                    report.PreviousDaySales = Convert.ToDecimal(cmd.ExecuteScalar());
                 }
 
-                string spendSql = "SELECT ISNULL(SUM(total_cost), 0) FROM inventory_purchases WHERE CAST(purchase_date AS DATE) = CAST(GETDATE() AS DATE)";
-                using (SqlCommand cmd = new SqlCommand(spendSql, conn)) report.TotalInventorySpend = Convert.ToDecimal(cmd.ExecuteScalar());
+                // 3) Cost of goods sold (ingredient cost of everything sold)
+                using (var cmd = Cmd(@"
+                    SELECT ISNULL(SUM(si.quantity * pi.quantity_required * ing.cost_price), 0)
+                    FROM sale_items si
+                    JOIN sales s ON si.sale_id = s.sale_id
+                    JOIN product_ingredients pi ON si.product_id = pi.product_id
+                    JOIN products ing ON pi.ingredient_id = ing.product_id
+                    WHERE s.sale_date >= @start AND s.sale_date < @end AND s.status = 'Completed'"))
+                {
+                    report.TotalCost = Convert.ToDecimal(cmd.ExecuteScalar());
+                }
+
+                // 4) Products sold
+                using (var cmd = Cmd(@"
+                    SELECT p.product_name, SUM(si.quantity) AS QtySold, SUM(si.subtotal) AS TotalRevenue
+                    FROM sale_items si
+                    JOIN sales s ON si.sale_id = s.sale_id
+                    JOIN products p ON si.product_id = p.product_id
+                    WHERE s.sale_date >= @start AND s.sale_date < @end AND s.status = 'Completed'
+                    GROUP BY p.product_name
+                    ORDER BY QtySold DESC, TotalRevenue DESC"))
+                using (var r = cmd.ExecuteReader())
+                {
+                    while (r.Read())
+                    {
+                        report.ProductsSold.Add(new ProductSalesItem
+                        {
+                            ProductName = r["product_name"].ToString(),
+                            QuantitySold = Convert.ToInt32(r["QtySold"]),
+                            TotalRevenue = Convert.ToDecimal(r["TotalRevenue"])
+                        });
+                    }
+                }
+
+                // 5) Payment method breakdown
+                using (var cmd = Cmd(@"
+                    SELECT ISNULL(NULLIF(LTRIM(RTRIM(payment_method)), ''), 'Unspecified') AS Method,
+                           COUNT(*) AS Tx,
+                           SUM(total_amount) AS Total
+                    FROM sales
+                    WHERE sale_date >= @start AND sale_date < @end AND status = 'Completed'
+                    GROUP BY ISNULL(NULLIF(LTRIM(RTRIM(payment_method)), ''), 'Unspecified')
+                    ORDER BY Total DESC"))
+                using (var r = cmd.ExecuteReader())
+                {
+                    while (r.Read())
+                    {
+                        report.PaymentBreakdown.Add(new PaymentBreakdownItem
+                        {
+                            Method = r["Method"].ToString(),
+                            TransactionCount = Convert.ToInt32(r["Tx"]),
+                            Total = Convert.ToDecimal(r["Total"])
+                        });
+                    }
+                }
+
+                // 6) Inventory purchased
+                using (var cmd = Cmd(@"
+                    SELECT item_name, SUM(quantity_bought) AS QtyBought, SUM(total_cost) AS TotalCost
+                    FROM inventory_purchases
+                    WHERE purchase_date >= @start AND purchase_date < @end
+                    GROUP BY item_name
+                    ORDER BY TotalCost DESC"))
+                using (var r = cmd.ExecuteReader())
+                {
+                    while (r.Read())
+                    {
+                        report.IngredientsBought.Add(new InventoryPurchaseItem
+                        {
+                            ItemName = r["item_name"].ToString(),
+                            QuantityBought = Convert.ToDecimal(r["QtyBought"]),
+                            TotalCost = Convert.ToDecimal(r["TotalCost"])
+                        });
+                    }
+                }
+
+                // 7) Total inventory spend
+                using (var cmd = Cmd(@"
+                    SELECT ISNULL(SUM(total_cost), 0)
+                    FROM inventory_purchases
+                    WHERE purchase_date >= @start AND purchase_date < @end"))
+                {
+                    report.TotalInventorySpend = Convert.ToDecimal(cmd.ExecuteScalar());
+                }
             }
+
             return View(report);
         }
 

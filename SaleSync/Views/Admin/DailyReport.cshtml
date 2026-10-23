@@ -1,21 +1,24 @@
-﻿@model SaleSync.Models.DailyReportViewModel
+@using System.Globalization
+@model SaleSync.Models.DailyReportViewModel
 @{
     Layout = null;
     bool isManager = User.IsInRole("Manager");
     string homeController = isManager ? "Manager" : "Admin";
-    string displayRole = isManager ? "Manager" : "Admin";
     string currentAction = ViewContext.RouteData.Values["action"]?.ToString();
 }
 @inject SaleSync.Services.StoreSettingsService StoreSettings
 @{
     var store = StoreSettings.GetSettings();
+    string prevDate = Model.ReportDate.AddDays(-1).ToString("yyyy-MM-dd");
+    string nextDate = Model.ReportDate.AddDays(1).ToString("yyyy-MM-dd");
+    string todayDate = DateTime.Today.ToString("yyyy-MM-dd");
 }
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Daily Report - SyncScale</title>
+    <title>End of Day Report - @store.StoreName</title>
     <link rel="stylesheet" href="~/css/AdminDashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/DailyReport.css" asp-append-version="true" />
     <partial name="_ThemeStyles" />
@@ -77,47 +80,117 @@
         <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
 
         <div class="mobile-header">
-            <button class="hamburger-btn" onclick="toggleSidebar()">
+            <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Open menu">
                 <i class="fas fa-bars"></i>
             </button>
-            <div class="mobile-brand">Cafero</div>
+            <div class="mobile-brand">@store.StoreName</div>
         </div>
 
         <main class="main-content slide-up">
-            <div class="page-header">
-                <h1 class="greeting-title">End of Day Report</h1>
-                <p class="greeting-subtitle">Sales and Profit analysis for @DateTime.Now.ToString("MMMM dd, yyyy")</p>
+
+            <!-- ===== Header + date controls ===== -->
+            <div class="report-toolbar">
+                <div class="page-header">
+                    <h1 class="greeting-title">End of Day Report</h1>
+                    <p class="greeting-subtitle">
+                        Sales and profit analysis for @Model.ReportDate.ToString("dddd, MMMM dd, yyyy")
+                        @if (Model.IsToday)
+                        {
+                            <span class="live-pill">As of @DateTime.Now.ToString("h:mm tt")</span>
+                        }
+                    </p>
+                </div>
+
+                <div class="date-nav no-print">
+                    <a class="nav-pill" href="/Admin/DailyReport?date=@prevDate" title="Previous day">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+
+                    <form method="get" action="/Admin/DailyReport">
+                        <input type="date" name="date" class="date-input"
+                               value="@Model.ReportDate.ToString("yyyy-MM-dd")"
+                               max="@todayDate"
+                               onchange="this.form.submit()" aria-label="Report date" />
+                    </form>
+
+                    @if (!Model.IsToday)
+                    {
+                        <a class="nav-pill" href="/Admin/DailyReport?date=@nextDate" title="Next day">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                        <a class="nav-pill nav-pill-text" href="/Admin/DailyReport">Today</a>
+                    }
+
+                    <button type="button" class="nav-pill nav-pill-text print-btn" onclick="window.print()">
+                        <i class="fas fa-print"></i> Print
+                    </button>
+                </div>
             </div>
 
+            <!-- ===== Headline cards ===== -->
             <div class="summary-dashboard">
-                <!-- Gross Sales Card -->
+
                 <div class="summary-card gross-card">
-                    <div class="card-label">Gross Sales</div>
-                    <div class="card-value">₱@Model.TotalSales.ToString("N2")</div>
-                    <span class="trend-badge">Money taken in today</span>
+                    <div class="card-body">
+                        <div class="card-label">Gross Sales</div>
+                        <div class="card-value">₱@Model.TotalSales.ToString("N2")</div>
+                    </div>
+                    @if (Model.SalesChangePercent.HasValue)
+                    {
+                        var change = Model.SalesChangePercent.Value;
+                        <span class="trend-badge @(change >= 0 ? "trend-up" : "trend-down")">
+                            @(change >= 0 ? "▲" : "▼") @Math.Abs(change).ToString("0.#")% vs previous day
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="trend-badge">Money taken in</span>
+                    }
                 </div>
 
-                <!-- COGS Card -->
                 <div class="summary-card cogs-card">
-                    <div class="card-label">Cost of Goods (COGS)</div>
-                    <div class="card-value negative-value">- ₱@Model.TotalCost.ToString("N2")</div>
-                    <span class="trend-badge">Total cost of ingredients used</span>
+                    <div class="card-body">
+                        <div class="card-label">Cost of Goods (COGS)</div>
+                        <div class="card-value negative-value">- ₱@Model.TotalCost.ToString("N2")</div>
+                    </div>
+                    <span class="trend-badge">Ingredient cost of items sold</span>
                 </div>
 
-                <!-- Net Profit Card -->
                 <div class="summary-card profit-card">
-                    <div class="card-label profit-label">Net Profit</div>
-                    <div class="card-value profit-value">₱@Model.NetProfit.ToString("N2")</div>
-                    <span class="trend-badge profit-trend">Actual money earned</span>
+                    <div class="card-body">
+                        <div class="card-label profit-label">Gross Profit</div>
+                        <div class="card-value profit-value">₱@Model.GrossProfit.ToString("N2")</div>
+                    </div>
+                    <span class="trend-badge profit-trend">@Model.ProfitMarginPercent.ToString("0.#")% margin</span>
                 </div>
             </div>
 
-            <!-- Products Sold Table Card -->
-            <div class="recent-sales-card products-sold-card">
+            <!-- ===== Quick stats ===== -->
+            <div class="kpi-row">
+                <div class="kpi-tile">
+                    <div class="kpi-label">Transactions</div>
+                    <div class="kpi-value">@Model.TransactionCount.ToString("N0")</div>
+                </div>
+                <div class="kpi-tile">
+                    <div class="kpi-label">Average Sale</div>
+                    <div class="kpi-value">₱@Model.AverageSale.ToString("N2")</div>
+                </div>
+                <div class="kpi-tile">
+                    <div class="kpi-label">Units Sold</div>
+                    <div class="kpi-value">@Model.TotalUnitsSold.ToString("N0")</div>
+                </div>
+                <div class="kpi-tile">
+                    <div class="kpi-label">Restocking Spend</div>
+                    <div class="kpi-value kpi-negative">₱@Model.TotalInventorySpend.ToString("N2")</div>
+                </div>
+            </div>
+
+            <!-- ===== Payment methods ===== -->
+            <div class="recent-sales-card">
                 <div class="card-header-flex">
                     <div>
-                        <h2 class="widget-title">Products Sold Today</h2>
-                        <p class="widget-subtitle">Total Transactions: @Model.TransactionCount</p>
+                        <h2 class="widget-title">Sales by Payment Method</h2>
+                        <p class="widget-subtitle">How customers paid</p>
                     </div>
                 </div>
 
@@ -125,31 +198,33 @@
                     <table class="recent-sales-table">
                         <thead>
                             <tr>
-                                <th>Product Name</th>
-                                <th class="th-center">Quantity Sold</th>
-                                <th class="th-right">Total Revenue</th>
+                                <th scope="col">Method</th>
+                                <th scope="col" class="th-center">Transactions</th>
+                                <th scope="col" class="th-right">Total</th>
+                                <th scope="col" class="th-share">Share</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @if (Model.ProductsSold != null && Model.ProductsSold.Any())
+                            @if (Model.PaymentBreakdown.Any())
                             {
-                                foreach (var item in Model.ProductsSold)
+                                foreach (var pay in Model.PaymentBreakdown)
                                 {
+                                    var payPct = Model.TotalSales > 0 ? pay.Total / Model.TotalSales * 100m : 0m;
                                     <tr>
-                                        <td class="td-bold">@item.ProductName</td>
-                                        <td class="td-center">
-                                            <span class="qty-badge-sold">
-                                                @item.QuantitySold
-                                            </span>
-                                        </td>
-                                        <td class="td-price td-right">₱@item.TotalRevenue.ToString("N2")</td>
+                                        <td class="td-bold">@pay.Method</td>
+                                        <td class="td-center">@pay.TransactionCount</td>
+                                        <td class="td-price td-right">₱@pay.Total.ToString("N2")</td>
+                                        <td><div class="share-cell">
+                                            <div class="share-bar"><div class="share-fill" style="width:@payPct.ToString("0.#", CultureInfo.InvariantCulture)%"></div></div>
+                                            <span class="share-text">@payPct.ToString("0.#")%</span>
+                                        </div></td>
                                     </tr>
                                 }
                             }
                             else
                             {
                                 <tr>
-                                    <td colspan="3" class="no-data-cell">No products sold yet today.</td>
+                                    <td colspan="4" class="no-data-cell">No completed sales for this day.</td>
                                 </tr>
                             }
                         </tbody>
@@ -157,12 +232,12 @@
                 </div>
             </div>
 
-            <!-- Inventory Spend Table Card -->
-            <div class="recent-sales-card inventory-spend-card">
+            <!-- ===== Products sold ===== -->
+            <div class="recent-sales-card products-sold-card">
                 <div class="card-header-flex">
                     <div>
-                        <h2 class="widget-title">Inventory Purchased Today</h2>
-                        <p class="widget-subtitle">Total Cash Spent on Supplies: <strong class="total-spend-highlight">₱@Model.TotalInventorySpend.ToString("N2")</strong></p>
+                        <h2 class="widget-title">Products Sold</h2>
+                        <p class="widget-subtitle">Ranked by quantity · @Model.ProductsSold.Count product@(Model.ProductsSold.Count == 1 ? "" : "s") sold</p>
                     </div>
                 </div>
 
@@ -170,23 +245,85 @@
                     <table class="recent-sales-table">
                         <thead>
                             <tr>
-                                <th>Ingredient Name</th>
-                                <th class="th-center">Quantity Added</th>
-                                <th class="th-right">Total Cost</th>
+                                <th scope="col" class="th-rank">#</th>
+                                <th scope="col">Product Name</th>
+                                <th scope="col" class="th-center">Quantity Sold</th>
+                                <th scope="col" class="th-right">Total Revenue</th>
+                                <th scope="col" class="th-share">% of Sales</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @if (Model.IngredientsBought != null && Model.IngredientsBought.Any())
+                            @if (Model.ProductsSold.Any())
+                            {
+                                int rank = 0;
+                                foreach (var item in Model.ProductsSold)
+                                {
+                                    rank++;
+                                    var pct = Model.TotalSales > 0 ? item.TotalRevenue / Model.TotalSales * 100m : 0m;
+                                    <tr>
+                                        <td class="td-rank">@rank</td>
+                                        <td class="td-bold">@item.ProductName</td>
+                                        <td class="td-center"><span class="qty-badge-sold">@item.QuantitySold</span></td>
+                                        <td class="td-price td-right">₱@item.TotalRevenue.ToString("N2")</td>
+                                        <td><div class="share-cell">
+                                            <div class="share-bar"><div class="share-fill" style="width:@pct.ToString("0.#", CultureInfo.InvariantCulture)%"></div></div>
+                                            <span class="share-text">@pct.ToString("0.#")%</span>
+                                        </div></td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="5" class="no-data-cell">No products sold @(Model.IsToday ? "yet today" : "on this day").</td>
+                                </tr>
+                            }
+                        </tbody>
+                        @if (Model.ProductsSold.Any())
+                        {
+                            <tfoot>
+                                <tr class="total-row">
+                                    <td></td>
+                                    <td>Total</td>
+                                    <td class="td-center">@Model.TotalUnitsSold.ToString("N0")</td>
+                                    <td class="td-right">₱@Model.ProductsSold.Sum(p => p.TotalRevenue).ToString("N2")</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        }
+                    </table>
+                </div>
+            </div>
+
+            <!-- ===== Inventory purchased ===== -->
+            <div class="recent-sales-card inventory-spend-card">
+                <div class="card-header-flex">
+                    <div>
+                        <h2 class="widget-title">Inventory Purchased</h2>
+                        <p class="widget-subtitle">
+                            Cash spent on supplies: <strong class="total-spend-highlight">₱@Model.TotalInventorySpend.ToString("N2")</strong>
+                            · Sales less restocking: <strong class="@(Model.SalesLessRestocking >= 0 ? "positive-highlight" : "total-spend-highlight")">₱@Model.SalesLessRestocking.ToString("N2")</strong>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="recent-sales-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Ingredient Name</th>
+                                <th scope="col" class="th-center">Quantity Added</th>
+                                <th scope="col" class="th-right">Total Cost</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.IngredientsBought.Any())
                             {
                                 foreach (var item in Model.IngredientsBought)
                                 {
                                     <tr class="row-alternate">
                                         <td class="td-bold ingredient-name">@item.ItemName</td>
-                                        <td class="td-center">
-                                            <span class="qty-badge-bought">
-                                                +@item.QuantityBought
-                                            </span>
-                                        </td>
+                                        <td class="td-center"><span class="qty-badge-bought">+@item.QuantityBought.ToString("0.##")</span></td>
                                         <td class="td-price td-right cost-value">₱@item.TotalCost.ToString("N2")</td>
                                     </tr>
                                 }
@@ -194,68 +331,77 @@
                             else
                             {
                                 <tr>
-                                    <td colspan="3" class="no-data-cell">No inventory was purchased today.</td>
+                                    <td colspan="3" class="no-data-cell">No inventory was purchased @(Model.IsToday ? "today" : "on this day").</td>
                                 </tr>
                             }
                         </tbody>
+                        @if (Model.IngredientsBought.Any())
+                        {
+                            <tfoot>
+                                <tr class="total-row">
+                                    <td>Total</td>
+                                    <td></td>
+                                    <td class="td-right">₱@Model.TotalInventorySpend.ToString("N2")</td>
+                                </tr>
+                            </tfoot>
+                        }
                     </table>
                 </div>
             </div>
 
+            <p class="report-footnote">
+                Gross profit = sales minus the ingredient cost of what was sold (recipe quantity × current ingredient cost).
+                Restocking is cash spent on supplies and is shown separately, so it is not deducted from gross profit.
+            </p>
         </main>
 
     </div>
 
     <script>
         function confirmLogout() {
-        if (typeof Swal !== 'undefined') {
-        Swal.fire({
-        title: 'Are you sure?',
-        text: "You will be logged out of your session.",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Yes, log out',
-        cancelButtonText: 'Cancel'
-        }).then((result) => {
-        if (result.isConfirmed) {
-        document.getElementById('logoutForm').submit();
-        }
-        });
-        } else {
-        if (confirm("Are you sure you want to log out?")) {
-        document.getElementById('logoutForm').submit();
-        }
-        }
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You will be logged out of your session.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, log out',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        document.getElementById('logoutForm').submit();
+                    }
+                });
+            } else {
+                if (confirm("Are you sure you want to log out?")) {
+                    document.getElementById('logoutForm').submit();
+                }
+            }
         }
 
-        // Safe toggle logic for mobile sidebar
+        // Mobile sidebar toggle
         function toggleSidebar() {
-        const sidebar = document.querySelector('.sidebar');
-        const overlay = document.querySelector('.sidebar-overlay');
-
-        if (sidebar) {
-        sidebar.classList.toggle('mobile-open');
-        }
-        if (overlay) {
-        overlay.classList.toggle('mobile-open');
-        }
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            if (sidebar) sidebar.classList.toggle('mobile-open');
+            if (overlay) overlay.classList.toggle('mobile-open');
         }
 
-        // Close sidebar when clicking outside on mobile screen
+        // Close sidebar when tapping outside it on mobile
         document.addEventListener('click', function (event) {
-        const sidebar = document.querySelector('.sidebar');
-        const hamburger = document.querySelector('.hamburger-btn');
+            const sidebar = document.querySelector('.sidebar');
+            const hamburger = document.querySelector('.hamburger-btn');
+            const overlay = document.querySelector('.sidebar-overlay');
 
-        if (sidebar && hamburger) {
-        if (sidebar.classList.contains('mobile-open') &&
-        !sidebar.contains(event.target) &&
-        !hamburger.contains(event.target)) {
-
-        sidebar.classList.remove('mobile-open');
-        }
-        }
+            if (sidebar && hamburger &&
+                sidebar.classList.contains('mobile-open') &&
+                !sidebar.contains(event.target) &&
+                !hamburger.contains(event.target)) {
+                sidebar.classList.remove('mobile-open');
+                if (overlay) overlay.classList.remove('mobile-open');
+            }
         });
     </script>
 </body>
