@@ -23,9 +23,7 @@ namespace SaleSync.Controllers
         private readonly IWebHostEnvironment _env;
         private readonly string connectionString;
 
-        // ── PROFILE STORAGE (no database needed) ───────────────────────────────
-        // Profile details are kept in  <project>/App_Data/profiles.json  (one entry per
-        // customer id) and profile pictures in  <project>/wwwroot/images/profiles/ .
+        
         private const string ProfilePictureFolder = "images/profiles";
         private const long MaxProfilePictureBytes = 5 * 1024 * 1024;
 
@@ -118,7 +116,7 @@ namespace SaleSync.Controllers
                 }
             }
 
-            // Saved profile (display name + picture) so the page shows them on first load.
+            
             if (currentUserId != 0)
             {
                 try
@@ -133,7 +131,6 @@ namespace SaleSync.Controllers
                 }
                 catch (Exception)
                 {
-                    // If the profile file can't be read, fall back to the login username.
                 }
             }
 
@@ -265,10 +262,7 @@ namespace SaleSync.Controllers
             return Json(orders);
         }
 
-        // ══════════════════════════════════════════════════════════════════════
-        //  PROFILE SETTINGS (display name, contact number, profile picture)
-        //  Saved in App_Data/profiles.json, so no database changes are needed.
-        // ══════════════════════════════════════════════════════════════════════
+
 
         private int GetCurrentUserId()
         {
@@ -296,7 +290,7 @@ namespace SaleSync.Controllers
         {
             Directory.CreateDirectory(Path.GetDirectoryName(ProfileFilePath));
 
-            // Write to a temp file first so a crash can never leave a half-written profiles.json.
+
             string tempPath = ProfileFilePath + ".tmp";
 
             System.IO.File.WriteAllText(tempPath, JsonSerializer.Serialize(all, ProfileJsonOptions));
@@ -335,7 +329,7 @@ namespace SaleSync.Controllers
             }
         }
 
-        // GET /Customer/GetProfile
+
         [HttpGet]
         public IActionResult GetProfile()
         {
@@ -365,7 +359,7 @@ namespace SaleSync.Controllers
             });
         }
 
-        // POST /Customer/UploadProfilePhoto   (multipart form, field name: profileImageFile)
+ 
         [HttpPost]
         public async Task<IActionResult> UploadProfilePhoto(IFormFile profileImageFile)
         {
@@ -391,7 +385,6 @@ namespace SaleSync.Controllers
             if (!allowedTypes.TryGetValue(profileImageFile.ContentType ?? "", out string extension))
                 return BadRequest("Only JPG, PNG, GIF or WEBP images are allowed.");
 
-            // The content type comes from the browser, so also check the real file header.
             byte[] header = new byte[12];
 
             using (var peek = profileImageFile.OpenReadStream())
@@ -427,7 +420,7 @@ namespace SaleSync.Controllers
             }
             catch (Exception ex)
             {
-                // Don't leave an orphaned file behind if saving failed.
+
                 TryDeleteProfileFile(publicPath);
 
                 return BadRequest("Could not save your photo: " + ex.Message);
@@ -438,7 +431,7 @@ namespace SaleSync.Controllers
             return Json(new { imagePath = publicPath });
         }
 
-        // POST /Customer/UpdateProfile   (JSON: { DisplayName, ContactNumber, RemovePhoto })
+
         [HttpPost]
         public IActionResult UpdateProfile([FromBody] ProfileUpdateRequest request)
         {
@@ -492,7 +485,7 @@ namespace SaleSync.Controllers
             return Ok(new { message = "Profile updated." });
         }
 
-        // Real image files start with known bytes, whatever the browser says they are.
+
         private static bool LooksLikeImage(byte[] h)
         {
             bool jpeg = h[0] == 0xFF && h[1] == 0xD8 && h[2] == 0xFF;
@@ -504,7 +497,6 @@ namespace SaleSync.Controllers
             return jpeg || png || gif || webp;
         }
 
-        // Only ever deletes files inside the profile-pictures folder.
         private void TryDeleteProfileFile(string publicPath)
         {
             try
@@ -529,7 +521,7 @@ namespace SaleSync.Controllers
             }
             catch
             {
-                // A leftover file is harmless; never fail the request over it.
+
             }
         }
     }
@@ -560,7 +552,6 @@ namespace SaleSync.Controllers
         public bool RemovePhoto { get; set; }
     }
 
-    // What is saved for one customer in App_Data/profiles.json
     public class StoredProfile
     {
         public string DisplayName { get; set; }

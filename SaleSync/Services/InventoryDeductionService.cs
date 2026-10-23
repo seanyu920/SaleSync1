@@ -4,25 +4,10 @@ using System.Collections.Generic;
 
 namespace SaleSync.Services
 {
-    /// <summary>
-    /// Deducts ingredient stock when a sale is completed, based on each product's
-    /// recipe (product_ingredients) and each ingredient's conversion_factor
-    /// (recipes can be written in a different unit than the ingredient is
-    /// stocked in, e.g. recipe in ml, inventory tracked in gallons).
-    ///
-    /// This used to be copy-pasted separately into AdminController, CashierController,
-    /// and ManagerController. ManagerController's copy had drifted out of date (double
-    /// math, no conversion_factor), so sales completed through the Manager POS were
-    /// deducting stock incorrectly. Consolidating here fixes that and makes sure any
-    /// future fix to this logic only needs to happen once.
-    /// </summary>
+
     public class InventoryDeductionService
     {
-        /// <summary>
-        /// Deducts stock for one sold product line within an existing connection/transaction.
-        /// Throws if any ingredient doesn't have enough stock, so the caller's transaction
-        /// can be rolled back.
-        /// </summary>
+     
         public void DeductIngredients(SqlConnection conn, SqlTransaction transaction, int productId, int qty)
         {
             string recipeQuery = @"
@@ -50,8 +35,7 @@ namespace SaleSync.Services
 
             foreach (var ing in ingredients)
             {
-                // Fixed-point decimal math to avoid floating-point precision mismatches
-                // against the database's decimal columns.
+                
                 decimal totalDeduct = (ing.qtyReq * qty) / ing.conv;
 
                 string updateQuery = @"
@@ -67,7 +51,7 @@ namespace SaleSync.Services
                 int rows = updateCmd.ExecuteNonQuery();
                 if (rows == 0)
                 {
-                    // Explicit error string the SweetAlert on the front end can display.
+             
                     throw new Exception($"Stock Shortage: Ingredient ID {ing.id} has insufficient stock to fulfill this order (Required deduction: {totalDeduct}).");
                 }
             }

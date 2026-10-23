@@ -45,7 +45,7 @@ namespace SaleSync.Hubs
 
             if (!await IsAllowedConversationAsync(conn, sender, receiver))
             {
-                return; // Blocks Admin↔Manager, Cashier↔Admin, and Customer↔Customer chats.
+                return; 
             }
 
             DateTime timestamp = DateTime.Now;

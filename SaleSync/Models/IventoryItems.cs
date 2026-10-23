@@ -15,7 +15,6 @@
         public decimal PurchasePrice { get; set; }
         public string ItemCategory { get; set; }
 
-        // ⭐ THE FIX: Added the missing properties the HTML is looking for!
         public string StockSupplier { get; set; }
         public string DateAcquired { get; set; }
         public string ExpirationDate { get; set; }
