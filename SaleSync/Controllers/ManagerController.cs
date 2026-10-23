@@ -279,7 +279,8 @@ namespace SaleSync.Controllers
                     SELECT p.product_id, p.product_name, c.category_name, p.selling_price
                     FROM products p
                     LEFT JOIN categories c ON p.category_id = c.category_id
-                    WHERE p.is_ingredient = 0 OR p.is_ingredient IS NULL";
+                    WHERE (p.is_ingredient = 0 OR p.is_ingredient IS NULL)
+                      AND (p.is_archived = 0 OR p.is_archived IS NULL)";
 
                 using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {

@@ -35,7 +35,14 @@
         .OrderBy(c => c)
         .ToList();
 
+    // Archived categories are hidden, including the built-in default cards above.
+    var archivedKeys = ((ViewBag.ArchivedCategories as IEnumerable<string>) ?? Enumerable.Empty<string>())
+        .Where(n => !string.IsNullOrWhiteSpace(n))
+        .Select(n => n.Trim().ToUpper())
+        .ToList();
+
     var allCategories = defaultCategories
+        .Where(c => !archivedKeys.Contains(c.Key))
         .Concat(extraCategories.Select(c => (Key: c, Title: c)))
         .ToList();
 
@@ -195,6 +202,13 @@
                         <div class="item-details">
                             <div class="item-category">Category</div>
                             <div class="item-title" style="margin-bottom: 0;">@cat.Title</div>
+
+                            <!-- Soft delete: archives the category (and its items). It can be restored from the Archived page. -->
+                            <button type="button"
+                                    style="width: 100%; margin-top: 12px; padding: 8px; font-size: 12px; border-radius: 6px; text-align: center; justify-content: center; background: rgba(220, 53, 69, 0.15); color: #ff6b6b; border: 1px solid rgba(220, 53, 69, 0.3); cursor: pointer; font-family: 'Outfit', sans-serif;"
+                                    onclick="event.stopPropagation(); archiveCategory(this);">
+                                Archive
+                            </button>
                         </div>
                     </div>
                 }
@@ -765,6 +779,64 @@
                         .catch(err => {
                             Swal.fire('Network Fault', 'Unable to reach system server architecture.', 'error');
                         });
+                }
+            }
+
+            // ── ARCHIVE CATEGORY (soft delete) ────────────────────────────────────────
+            // Nothing is deleted. The category and the menu items inside it are archived,
+            // and both can be restored from the Archived page.
+            async function archiveCategory(btn) {
+                const card = btn.closest('[data-category]');
+                const categoryName = card ? card.getAttribute('data-category') : '';
+                const titleEl = card ? card.querySelector('.item-title') : null;
+                const displayName = titleEl ? titleEl.textContent.trim() : categoryName;
+
+                if (!categoryName) {
+                    Swal.fire('Archive Failed', 'Could not tell which category this is.', 'error');
+                    return;
+                }
+
+                const confirm = await Swal.fire({
+                    title: 'Archive Category?',
+                    html: 'This removes <strong></strong> from the Products page and the POS. All menu items inside it are archived too. Nothing is deleted, and you can restore it from the Archived page.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#bd2130',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Confirm Archive',
+                    didOpen: () => {
+                        // textContent keeps odd category names from being treated as HTML
+                        Swal.getHtmlContainer().querySelector('strong').textContent = displayName;
+                    }
+                });
+
+                if (!confirm.isConfirmed) return;
+
+                try {
+                    const res = await fetch('/Admin/ArchiveCategory', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ CategoryName: categoryName })
+                    });
+
+                    if (!res.ok) {
+                        const message = await res.text().catch(() => '');
+                        throw new Error(message || `Server returned ${res.status}`);
+                    }
+
+                    await Swal.fire({
+                        title: 'Archived!',
+                        text: 'The category was moved to the Archived page.',
+                        icon: 'success',
+                        timer: 1200,
+                        showConfirmButton: false
+                    });
+
+                    location.reload();
+                }
+                catch (err) {
+                    console.error('Archive category failed:', err);
+                    Swal.fire('Could not archive category', err.message || 'Something went wrong.', 'error');
                 }
             }
 
