@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
+using SaleSync.Services;
 using System;
 using System.Threading.Tasks;
 
@@ -45,10 +46,11 @@ namespace SaleSync.Hubs
 
             if (!await IsAllowedConversationAsync(conn, sender, receiver))
             {
-                return; 
+                return;
             }
 
-            DateTime timestamp = DateTime.Now;
+            // Philippine time (Asia/Manila), no matter what timezone the server runs in
+            DateTime timestamp = StoreSettingsService.GetStoreNow();
 
             const string insertQuery = @"
                 INSERT INTO chat_messages
