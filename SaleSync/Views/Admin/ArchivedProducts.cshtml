@@ -113,6 +113,54 @@
                 </div>
             </div>
 
+            <h2 class="section-divider-title">Archived Categories</h2>
+            <div class="table-card">
+                <div class="table-responsive">
+                    <table class="item-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 80px;">ID</th>
+                                <th>Category</th>
+                                <th>Items Archived With It</th>
+                                <th>System State</th>
+                                <th style="text-align: center; width: 140px;">Action Lifecycle</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.ArchivedCategories != null && Model.ArchivedCategories.Any())
+                            {
+                                foreach (var cat in Model.ArchivedCategories)
+                                {
+                                    var safeCategoryName = System.Web.HttpUtility.JavaScriptStringEncode(cat.CategoryName);
+
+                                    <tr>
+                                        <td><strong style="color: var(--gold, #C9A84C); font-family: 'Outfit';">#@cat.CategoryId</strong></td>
+                                        <td><span style="font-size: 11px; text-transform: uppercase; background: var(--border-sub, rgba(255, 255, 255, 0.06)); padding: 4px 8px; border-radius: 4px; font-weight: 600;">@cat.CategoryName</span></td>
+                                        <td style="font-weight: 600;">@cat.ItemCount @(cat.ItemCount == 1 ? "item" : "items")</td>
+                                        <td>
+                                            <span class="status-badge-archived">Archived</span>
+                                        </td>
+                                        <td style="text-align: center;">
+                                            <button type="button" class="restore-btn" onclick="restoreCategory(@cat.CategoryId, '@safeCategoryName')">
+                                                Restore
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="5" style="text-align:center; padding: 48px; color: var(--muted, rgba(242, 237, 228, 0.5)); font-size: 14px;">
+                                        No archived categories.
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
             <h2 class="section-divider-title">Archived Menu Items</h2>
             <div class="table-card">
                 <div class="table-responsive">
@@ -231,6 +279,41 @@
             });
         }
 
+        function restoreCategory(id, name) {
+            Swal.fire({
+                title: 'Restore Category?',
+                text: `"${name}" will return to the Products page and the POS, together with the menu items that were archived with it.`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#0b8a53',
+                cancelButtonColor: '#4a2511',
+                confirmButtonText: 'Yes, restore category'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('/Admin/RestoreCategory', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(id)
+                    }).then(async res => {
+                        if (res.ok) {
+                            Swal.fire({
+                                title: 'Category Restored',
+                                text: `${name} is back on the Products page and the POS.`,
+                                icon: 'success',
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => location.reload());
+                        } else {
+                            const message = await res.text().catch(() => '');
+                            Swal.fire('Cannot Restore Category', message || 'Something went wrong.', 'error');
+                        }
+                    }).catch(() => {
+                        Swal.fire('Network Fault', 'Unable to reach the server.', 'error');
+                    });
+                }
+            });
+        }
+
         function restoreProduct(id, name) {
             Swal.fire({
                 title: 'Restore Product Layer?',
@@ -246,7 +329,7 @@
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(id)
-                    }).then(res => {
+                    }).then(async res => {
                         if(res.ok) {
                             Swal.fire({
                                 title: 'Database Restored',
@@ -256,7 +339,13 @@
                                 showConfirmButton: false
                             }).then(() => location.reload());
                         } else {
-                            Swal.fire('Database Drop Error', 'The remote instance dropped the operation update payload.', 'error');
+                            // The server explains why (for example: its category is still archived).
+                            let message = 'The remote instance dropped the operation update payload.';
+                            try {
+                                const data = await res.json();
+                                if (data && data.message) message = data.message;
+                            } catch (e) { }
+                            Swal.fire('Cannot Restore Item', message, 'error');
                         }
                     });
                 }

@@ -52,7 +52,13 @@
         .OrderBy(c => c)
         .ToList();
 
+    // Archived categories are hidden, including the built-in default cards above.
+    var archivedKeys = CategoryData.GetArchivedCategoryNames()
+        .Select(n => n.Trim().ToUpper())
+        .ToList();
+
     var allCategories = defaultCategories
+        .Where(c => !archivedKeys.Contains(c.Key))
         .Concat(extraCategories.Select(c => (Key: c, Title: c)))
         .ToList();
 }
