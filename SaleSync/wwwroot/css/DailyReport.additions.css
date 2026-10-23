@@ -1,0 +1,282 @@
+/* ==========================================================================
+   END OF DAY REPORT — ADDITIONS
+   Paste this whole block at the very BOTTOM of wwwroot/css/DailyReport.css
+   ========================================================================== */
+
+/* --- Toolbar: title on the left, date controls on the right --- */
+.report-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 26px;
+}
+
+    .report-toolbar .page-header {
+        margin-bottom: 0;
+    }
+
+.live-pill {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 2px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--success);
+    background: rgba(61, 191, 120, 0.12);
+    border: 1px solid rgba(61, 191, 120, 0.3);
+    border-radius: 20px;
+    vertical-align: middle;
+}
+
+.date-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+    .date-nav form {
+        display: flex;
+    }
+
+.date-input {
+    background: var(--bg-card);
+    color: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 9px 12px;
+    font-family: inherit;
+    font-size: 14px;
+    color-scheme: dark;
+}
+
+    .date-input:focus {
+        outline: none;
+        border-color: var(--gold);
+    }
+
+.nav-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 40px;
+    height: 40px;
+    padding: 0 12px;
+    background: var(--bg-card);
+    color: var(--muted-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+    .nav-pill:hover {
+        color: var(--bg-base);
+        background: var(--gold);
+        border-color: var(--gold);
+    }
+
+/* --- Trend badge colours --- */
+.summary-card .card-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.trend-up {
+    color: var(--success) !important;
+    font-weight: 700 !important;
+}
+
+.trend-down {
+    color: var(--danger) !important;
+    font-weight: 700 !important;
+}
+
+.positive-highlight {
+    color: var(--success);
+    font-weight: 800;
+}
+
+/* --- Quick stat tiles --- */
+.kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 8px;
+}
+
+.kpi-tile {
+    background: var(--bg-card);
+    border: 1px solid var(--border-sub);
+    border-radius: 14px;
+    padding: 16px 20px;
+}
+
+.kpi-label {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 4px;
+}
+
+.kpi-value {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--cream);
+}
+
+.kpi-negative {
+    color: var(--danger);
+}
+
+/* --- Rank + share-of-sales columns --- */
+.th-rank, .td-rank {
+    width: 44px;
+    text-align: center !important;
+}
+
+.td-rank {
+    color: var(--gold);
+    font-weight: 800;
+}
+
+.th-share {
+    min-width: 160px;
+    text-align: left;
+}
+
+.share-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 160px;
+}
+
+.share-bar {
+    flex: 1;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.share-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold), var(--gold-light));
+    border-radius: 10px;
+}
+
+.share-text {
+    width: 44px;
+    text-align: right;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted-2);
+}
+
+/* --- Table totals row --- */
+.recent-sales-table tfoot td {
+    padding: 14px 18px;
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--cream);
+    background: var(--bg-card-2);
+    border-top: 1.5px solid var(--border);
+    white-space: nowrap;
+}
+
+/* --- Footnote --- */
+.report-footnote {
+    margin-top: 24px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--muted);
+}
+
+/* --- Responsive --- */
+@media (max-width: 1024px) {
+    .kpi-row {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .summary-card {
+        flex-wrap: wrap;
+    }
+
+        .summary-card .trend-badge {
+            margin-left: 0 !important;
+            max-width: none !important;
+            text-align: left !important;
+        }
+}
+
+/* --- Print: clean black-on-white page, no sidebar or buttons --- */
+@media print {
+    :root {
+        --bg-base: #ffffff;
+        --bg-surface: #ffffff;
+        --bg-card: #ffffff;
+        --bg-card-2: #f3f3f3;
+        --cream: #111111;
+        --muted: #555555;
+        --muted-2: #333333;
+        --gold: #7a5c00;
+        --gold-light: #7a5c00;
+        --border: #cccccc;
+        --border-sub: #dddddd;
+        --success: #1a7f4b;
+        --danger: #b3261e;
+        --orange-brand: #b34700;
+    }
+
+    .sidebar, .sidebar-overlay, .mobile-header, .no-print {
+        display: none !important;
+    }
+
+    body, .main-content {
+        background: #fff !important;
+    }
+
+    .main-content {
+        padding: 0 !important;
+        overflow: visible !important;
+    }
+
+    .summary-card, .recent-sales-card, .kpi-tile {
+        box-shadow: none !important;
+        break-inside: avoid;
+    }
+
+    .slide-up {
+        animation: none !important;
+    }
+
+    .qty-badge-sold, .qty-badge-bought {
+        border-color: #bbb !important;
+    }
+
+    .recent-sales-table th, .recent-sales-table td {
+        white-space: normal !important;
+    }
+
+    .share-bar {
+        border: 1px solid #ccc;
+        background: #fff;
+    }
+
+    .share-fill {
+        background: #7a5c00 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}

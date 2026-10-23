@@ -326,13 +326,13 @@
         }
 
         // --- 4. Route Reloading Event Listener ---
-        const timeframeSelect = document.getElementById('analyticsTimeframe');
-        if (timeframeSelect) {
-        timeframeSelect.addEventListener('change', function() {
-        window.location.href = `/${'@homeController'}/Analytics?timeframe=` + this.value;
-        });
-        }
-        });
+             const timeframeSelect = document.getElementById('analyticsTimeframe');
+            if (timeframeSelect) {
+                timeframeSelect.addEventListener('change', function() {
+                    // Analytics lives in AdminController for both Admin and Manager roles
+                    window.location.href = '/Admin/Analytics?timeframe=' + encodeURIComponent(this.value);
+                });
+            }
 
         // Safe toggle logic for mobile sidebar
         function toggleSidebar() {
