@@ -552,12 +552,15 @@ namespace SaleSync.Controllers
             // Lets a brand-new category (one with no items yet) show up as a card.
             ViewBag.Categories = _categoryService.GetMenuCategoryNames();
 
+            // Archived categories are hidden, including the built-in default cards.
+            ViewBag.ArchivedCategories = _categoryService.GetArchivedCategoryNames();
+
             return View(menuList);
         }
 
         [Authorize(Roles = "Admin,Manager")]
         [HttpPost]
-        public IActionResult AddCategory([FromBody] AddCategoryRequest model)
+        public IActionResult AddCategory([FromBody] CategoryRequest model)
         {
             var name = model?.CategoryName?.Trim();
 
@@ -574,12 +577,72 @@ namespace SaleSync.Controllers
                 if (result == CategoryAddResult.AlreadyExists)
                     return Conflict("That category already exists.");
 
+                if (result == CategoryAddResult.ExistsInArchive)
+                    return Conflict("That category is in the Archive. Restore it from the Archive page instead.");
+
                 return Ok(new { success = true, categoryName = name });
             }
             catch (SqlException ex)
             {
                 // Admin/Manager only, so returning the real database message is fine and makes problems easy to spot.
                 return StatusCode(500, "Database error while adding the category: " + ex.Message);
+            }
+        }
+
+        // Soft delete: the category and its menu items are flagged as archived, nothing is deleted.
+        [Authorize(Roles = "Admin,Manager")]
+        [HttpPost]
+        public IActionResult ArchiveCategory([FromBody] CategoryRequest model)
+        {
+            int currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+            var name = model?.CategoryName?.Trim();
+
+            if (string.IsNullOrWhiteSpace(name))
+                return BadRequest("Category name is required.");
+
+            try
+            {
+                var result = _categoryService.ArchiveCategory(name);
+
+                if (result.AlreadyArchived)
+                    return Conflict("That category is already archived.");
+
+                LogActivity(
+                    userId: currentUserId,
+                    action: "Category Archived",
+                    details: $"Archived Category: {result.CategoryName} ({result.ItemsArchived} menu item(s) archived with it)");
+
+                return Ok(new { success = true, categoryName = result.CategoryName, itemsArchived = result.ItemsArchived });
+            }
+            catch (SqlException ex)
+            {
+                return StatusCode(500, "Database error while archiving the category: " + ex.Message);
+            }
+        }
+
+        [Authorize(Roles = "Admin,Manager")]
+        [HttpPost]
+        public IActionResult RestoreCategory([FromBody] int categoryId)
+        {
+            int currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+
+            try
+            {
+                var result = _categoryService.RestoreCategory(categoryId);
+
+                if (!result.Found)
+                    return NotFound("That archived category was not found.");
+
+                LogActivity(
+                    userId: currentUserId,
+                    action: "Category Restored",
+                    details: $"Restored Category: {result.CategoryName} ({result.ItemsRestored} menu item(s) restored with it)");
+
+                return Ok(new { success = true, categoryName = result.CategoryName, itemsRestored = result.ItemsRestored });
+            }
+            catch (SqlException ex)
+            {
+                return StatusCode(500, "Database error while restoring the category: " + ex.Message);
             }
         }
 
@@ -1744,6 +1807,8 @@ namespace SaleSync.Controllers
                 }
             }
 
+            viewModel.ArchivedCategories = _categoryService.GetArchivedCategories();
+
             return View(viewModel);
         }
 
@@ -1758,8 +1823,27 @@ namespace SaleSync.Controllers
                 conn.Open();
                 try
                 {
-   
-                    string restoreSql = "UPDATE products SET is_archived = 0 WHERE product_id = @id";
+
+                    // An item can't come back while its category is still archived, because the
+                    // category's card is hidden. Restore the category first.
+                    string archivedCategorySql = @"
+                        SELECT c.category_name
+                        FROM products p
+                        JOIN categories c ON p.category_id = c.category_id
+                        WHERE p.product_id = @id AND c.is_archived = 1";
+
+                    using (SqlCommand checkCmd = new SqlCommand(archivedCategorySql, conn))
+                    {
+                        checkCmd.Parameters.AddWithValue("@id", productId);
+                        var archivedCategoryName = checkCmd.ExecuteScalar()?.ToString();
+
+                        if (archivedCategoryName != null)
+                        {
+                            return BadRequest(new { message = $"Restore the category \"{archivedCategoryName}\" first, then restore this item." });
+                        }
+                    }
+
+                    string restoreSql = "UPDATE products SET is_archived = 0, archived_by_category = 0 WHERE product_id = @id";
                     using (SqlCommand cmd = new SqlCommand(restoreSql, conn))
                     {
                         cmd.Parameters.AddWithValue("@id", productId);
