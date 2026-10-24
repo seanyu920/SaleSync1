@@ -1942,3 +1942,26 @@ body {
         color: var(--danger);
         border-color: var(--danger);
     }
+
+.eod-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    padding: 8px 16px;
+    background: var(--gold-glow);
+    color: var(--gold);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: 'Outfit', sans-serif;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+    .eod-btn:hover {
+        border-color: var(--gold);
+        color: var(--gold-light);
+    }
