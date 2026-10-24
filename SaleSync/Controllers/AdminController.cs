@@ -1543,7 +1543,6 @@ namespace SaleSync.Controllers
                 }
             }
         }
-        // Full history of every transaction (reached from "View All" on the dashboard)
         [Authorize(Roles = "Admin,Manager")]
         [HttpGet]
         public IActionResult DailyReport(DateTime? date)
@@ -1683,6 +1682,142 @@ namespace SaleSync.Controllers
             }
 
             return View(report);
+        }
+
+        [Authorize(Roles = "Admin,Manager")]
+        [HttpGet]
+        public IActionResult TransactionHistory(string? q, string? status, string? method, DateTime? from, DateTime? to, int page = 1)
+        {
+            const int pageSize = 25;
+            if (page < 1) page = 1;
+
+            var model = new TransactionHistoryViewModel
+            {
+                Search = q?.Trim(),
+                Status = status,
+                Method = method,
+                From = from?.Date,
+                To = to?.Date,
+                PageSize = pageSize
+            };
+
+            // Build the WHERE clause. Every value goes in as a parameter.
+            var where = new List<string>();
+            var args = new List<KeyValuePair<string, object>>();
+
+            if (!string.IsNullOrWhiteSpace(model.Search))
+            {
+                where.Add("(s.customer_name LIKE @q OR CAST(s.sale_id AS VARCHAR(20)) LIKE @q)");
+                args.Add(new KeyValuePair<string, object>("@q", "%" + model.Search + "%"));
+            }
+
+            if (status == "Completed")
+                where.Add("s.status = 'Completed'");
+            else if (status == "Cancelled")
+                where.Add("s.status IN ('Cancelled', 'Voided')");
+            else if (status == "Pending")
+                where.Add("(s.status IS NULL OR s.status NOT IN ('Completed', 'Cancelled', 'Voided'))");
+
+            if (!string.IsNullOrWhiteSpace(method))
+            {
+                where.Add("ISNULL(NULLIF(LTRIM(RTRIM(s.payment_method)), ''), 'Cash') = @method");
+                args.Add(new KeyValuePair<string, object>("@method", method));
+            }
+
+            if (model.From.HasValue)
+            {
+                where.Add("s.sale_date >= @from");
+                args.Add(new KeyValuePair<string, object>("@from", model.From.Value));
+            }
+
+            if (model.To.HasValue)
+            {
+                where.Add("s.sale_date < @toExclusive");
+                args.Add(new KeyValuePair<string, object>("@toExclusive", model.To.Value.AddDays(1)));
+            }
+
+            string whereSql = where.Count > 0 ? "WHERE " + string.Join(" AND ", where) : "";
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+
+                SqlCommand Cmd(string sql)
+                {
+                    var c = new SqlCommand(sql, conn);
+                    foreach (var a in args) c.Parameters.AddWithValue(a.Key, a.Value);
+                    return c;
+                }
+
+                // 1) How many rows match, and what the completed ones add up to
+                using (var cmd = Cmd($@"
+                    SELECT COUNT(*) AS Cnt,
+                           ISNULL(SUM(CASE WHEN s.status = 'Completed' THEN s.total_amount ELSE 0 END), 0) AS CompletedTotal
+                    FROM sales s
+                    {whereSql}"))
+                using (var r = cmd.ExecuteReader())
+                {
+                    if (r.Read())
+                    {
+                        model.TotalCount = Convert.ToInt32(r["Cnt"]);
+                        model.CompletedTotal = Convert.ToDecimal(r["CompletedTotal"]);
+                    }
+                }
+
+                // Never land past the last page
+                if (page > model.TotalPages) page = model.TotalPages;
+                model.Page = page;
+
+                // 2) One page of transactions, newest first
+                using (var cmd = Cmd($@"
+                    SELECT s.sale_id, s.sale_date, s.total_amount, s.status, u.username,
+                           s.customer_name, s.order_type, s.payment_method,
+                           (SELECT STRING_AGG(CAST(si.quantity AS VARCHAR) + 'x ' + p.product_name, ', ')
+                            FROM sale_items si JOIN products p ON si.product_id = p.product_id
+                            WHERE si.sale_id = s.sale_id) AS ItemsSummary
+                    FROM sales s
+                    LEFT JOIN users u ON s.user_id = u.user_id
+                    {whereSql}
+                    ORDER BY s.sale_date DESC, s.sale_id DESC
+                    OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY"))
+                {
+                    cmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
+                    cmd.Parameters.AddWithValue("@pageSize", pageSize);
+
+                    using (var r = cmd.ExecuteReader())
+                    {
+                        while (r.Read())
+                        {
+                            string? rawMethod = r["payment_method"]?.ToString();
+                            model.Sales.Add(new SaleHistoryItem
+                            {
+                                SaleId = Convert.ToInt32(r["sale_id"]),
+                                SaleDate = Convert.ToDateTime(r["sale_date"]),
+                                TotalAmount = r["total_amount"] is DBNull ? 0m : Convert.ToDecimal(r["total_amount"]),
+                                Status = r["status"]?.ToString() ?? "Pending",
+                                CashierName = r["username"]?.ToString() ?? "Online",
+                                CustomerName = r["customer_name"]?.ToString(),
+                                OrderType = r["order_type"]?.ToString(),
+                                PaymentMethod = string.IsNullOrWhiteSpace(rawMethod) ? "Cash" : rawMethod.Trim(),
+                                ItemsSummary = r["ItemsSummary"]?.ToString() ?? "No items"
+                            });
+                        }
+                    }
+                }
+
+                // 3) Payment methods that exist, for the filter dropdown
+                using (var cmd = new SqlCommand(@"
+                    SELECT DISTINCT ISNULL(NULLIF(LTRIM(RTRIM(payment_method)), ''), 'Cash') AS Method
+                    FROM sales
+                    ORDER BY Method", conn))
+                using (var r = cmd.ExecuteReader())
+                {
+                    while (r.Read())
+                        model.PaymentMethods.Add(r["Method"].ToString());
+                }
+            }
+
+            return View(model);
         }
 
 
