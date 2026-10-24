@@ -1,0 +1,304 @@
+﻿@model SaleSync.Models.TransactionHistoryViewModel
+@{
+    Layout = null;
+    bool isManager = User.IsInRole("Manager");
+    string homeController = isManager ? "Manager" : "Admin";
+    string currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+}
+@inject SaleSync.Services.StoreSettingsService StoreSettings
+@{
+    var store = StoreSettings.GetSettings();
+    int firstShown = Model.TotalCount == 0 ? 0 : ((Model.Page - 1) * Model.PageSize) + 1;
+    int lastShown = Math.Min(Model.Page * Model.PageSize, Model.TotalCount);
+
+
+    string PageUrl(int p) => Url.Action("TransactionHistory", "Admin", new
+    {
+        q = Model.Search,
+        status = Model.Status,
+        method = Model.Method,
+        from = Model.From?.ToString("yyyy-MM-dd"),
+        to = Model.To?.ToString("yyyy-MM-dd"),
+        page = p
+    });
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Transaction History - @store.StoreName</title>
+    <link rel="stylesheet" href="~/css/AdminDashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/TransactionHistory.css" asp-append-version="true" />
+    <partial name="_ThemeStyles" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="icon" type="image/jpeg" href="~/images/CaferoLogo.jpg" asp-append-version="true" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+
+        <aside class="sidebar">
+            <div>
+                <div class="logo-section">
+                    <div class="logo-title">@store.StoreName</div>
+                    <div class="logo-subtitle">@store.StoreTagline</div>
+                </div>
+
+                <div class="profile-section">
+                    <div class="profile-circle">👤</div>
+                    <div>
+                        <h2 class="admin-name">@(User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? User.Identity?.Name ?? "User")</h2>
+                        <div class="admin-role">@(User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "User")</div>
+                    </div>
+                </div>
+
+                <nav class="sidebar-menu">
+                    <a href="/@homeController/Dashboard" class="menu-btn @(currentAction == "Dashboard" ? "active" : "")">Dashboard</a>
+                    <a href="/Admin/QueueOrder" class="menu-btn">Queue</a>
+                    <a href="/Promotions" class="menu-btn">Promotions</a>
+
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a href="/Admin/ActivityLog" class="menu-btn">Activity Log</a>
+                    }
+
+                    <a href="/Admin/Analytics" class="menu-btn">Analytics</a>
+                    <a href="/Admin/Products" class="menu-btn">Products</a>
+                    <a href="/Admin/Inventory" class="menu-btn">Inventory</a>
+
+                    <a href="/Admin/ArchivedProducts" class="menu-btn">Archived</a>
+
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a href="/Admin/ManageAccounts" class="menu-btn">Accounts</a>
+                    }
+                    <a href="/Admin/WebCustomization" class="menu-btn">Customization</a>
+                </nav>
+            </div>
+
+            <div class="logout-section">
+                <form method="post" action="/Home/Logout" id="logoutForm">
+                    <button type="button" class="menu-btn logout-btn" onclick="confirmLogout()">
+                        Log Out
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+        <div class="mobile-header">
+            <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Open menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="mobile-brand">@store.StoreName</div>
+        </div>
+
+        <main class="main-content slide-up">
+
+        
+            <div class="th-toolbar">
+                <div class="page-header">
+                    <h1 class="greeting-title">Transaction History</h1>
+                    <p class="greeting-subtitle">Every sale on record, newest first.</p>
+                </div>
+
+                <div class="th-links">
+                    <a class="th-pill" href="/@homeController/Dashboard"><i class="fas fa-arrow-left"></i> Dashboard</a>
+                    <a class="th-pill" href="/Admin/DailyReport"><i class="fas fa-file-invoice-dollar"></i> End of Day Report</a>
+                </div>
+            </div>
+
+            <form method="get" action="/Admin/TransactionHistory" class="th-filters">
+                <div class="th-field th-field-grow">
+                    <label for="thSearch">Search</label>
+                    <input type="text" id="thSearch" name="q" value="@Model.Search" placeholder="Transaction ID or customer name" autocomplete="off" />
+                </div>
+
+                <div class="th-field">
+                    <label for="thStatus">Status</label>
+                    <select id="thStatus" name="status">
+                        <option value="">All</option>
+                        <option value="Completed" selected="@(Model.Status == "Completed")">Completed</option>
+                        <option value="Pending" selected="@(Model.Status == "Pending")">Pending</option>
+                        <option value="Cancelled" selected="@(Model.Status == "Cancelled")">Cancelled</option>
+                    </select>
+                </div>
+
+                <div class="th-field">
+                    <label for="thMethod">Payment</label>
+                    <select id="thMethod" name="method">
+                        <option value="">All</option>
+                        @foreach (var m in Model.PaymentMethods)
+                        {
+                            <option value="@m" selected="@(Model.Method == m)">@m</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="th-field">
+                    <label for="thFrom">From</label>
+                    <input type="date" id="thFrom" name="from" value="@(Model.From?.ToString("yyyy-MM-dd"))" max="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                </div>
+
+                <div class="th-field">
+                    <label for="thTo">To</label>
+                    <input type="date" id="thTo" name="to" value="@(Model.To?.ToString("yyyy-MM-dd"))" max="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                </div>
+
+                <div class="th-actions">
+                    <button type="submit" class="th-btn th-btn-primary"><i class="fas fa-filter"></i> Apply</button>
+                    @if (Model.HasFilters)
+                    {
+                        <a href="/Admin/TransactionHistory" class="th-btn">Clear</a>
+                    }
+                </div>
+            </form>
+
+            
+            <div class="pos-card-wrapper th-card">
+                <div class="pos-card-header">
+                    <div class="pos-card-title"><i class="fas fa-history"></i> All Transactions</div>
+                    <div class="th-summary">
+                        <span>@Model.TotalCount.ToString("N0") @(Model.TotalCount == 1 ? "transaction" : "transactions")</span>
+                        <span class="th-summary-sep">·</span>
+                        <span>Completed: <strong>₱@Model.CompletedTotal.ToString("N2")</strong></span>
+                    </div>
+                </div>
+
+                <div class="th-table-wrap">
+                    <table class="pos-table th-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Customer</th>
+                                <th>Items</th>
+                                <th>Type</th>
+                                <th>Cashier</th>
+                                <th>Method</th>
+                                <th>Status</th>
+                                <th class="text-right">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Sales.Any())
+                            {
+                                @foreach (var sale in Model.Sales)
+                                {
+                                    <tr>
+                                        <td class="sale-id">#@sale.SaleId</td>
+                                        <td>@sale.SaleDate.ToString("MMM dd, yyyy")</td>
+                                        <td class="text-muted">@sale.SaleDate.ToString("hh:mm tt")</td>
+                                        <td>@(string.IsNullOrWhiteSpace(sale.CustomerName) ? "Walk-in" : sale.CustomerName)</td>
+                                        <td class="th-items" title="@sale.ItemsSummary">@sale.ItemsSummary</td>
+                                        <td>@(sale.OrderType ?? "-")</td>
+                                        <td>@sale.CashierName</td>
+                                        <td>@sale.PaymentMethod</td>
+                                        <td>
+                                            @if (sale.Status == "Completed")
+                                            {
+                                                <span class="badge badge-success">Completed</span>
+                                            }
+                                            else if (sale.Status == "Cancelled" || sale.Status == "Voided")
+                                            {
+                                                <span class="badge badge-danger">Cancelled</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge badge-warning">Pending</span>
+                                            }
+                                        </td>
+                                        <td class="text-right th-total">₱@sale.TotalAmount.ToString("N2")</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="10" class="text-muted th-empty">
+                                        @(Model.HasFilters ? "No transactions match your filters." : "No transactions yet.")
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                @if (Model.TotalCount > 0)
+                {
+                    <div class="th-pager">
+                        <span class="th-pager-info">Showing @firstShown–@lastShown of @Model.TotalCount.ToString("N0")</span>
+
+                        @if (Model.TotalPages > 1)
+                        {
+                            <div class="th-pager-nav">
+                                @if (Model.Page > 1)
+                                {
+                                    <a class="th-pill" href="@PageUrl(Model.Page - 1)"><i class="fas fa-chevron-left"></i> Prev</a>
+                                }
+                                <span class="th-pager-page">Page @Model.Page of @Model.TotalPages</span>
+                                @if (Model.Page < Model.TotalPages)
+                                {
+                                    <a class="th-pill" href="@PageUrl(Model.Page + 1)">Next <i class="fas fa-chevron-right"></i></a>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </main>
+
+    </div>
+
+    <script>
+            function confirmLogout() {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: 'Are you sure?',
+                        text: "You will be logged out of your session.",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#3085d6',
+                        confirmButtonText: 'Yes, log out',
+                        cancelButtonText: 'Cancel'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            document.getElementById('logoutForm').submit();
+                        }
+                    });
+                } else {
+                    if (confirm("Are you sure you want to log out?")) {
+                        document.getElementById('logoutForm').submit();
+                    }
+                }
+            }
+
+           
+            function toggleSidebar() {
+                const sidebar = document.querySelector('.sidebar');
+                const overlay = document.querySelector('.sidebar-overlay');
+                if (sidebar) sidebar.classList.toggle('mobile-open');
+                if (overlay) overlay.classList.toggle('mobile-open');
+            }
+
+        
+            document.addEventListener('click', function (event) {
+                const sidebar = document.querySelector('.sidebar');
+                const hamburger = document.querySelector('.hamburger-btn');
+                const overlay = document.querySelector('.sidebar-overlay');
+
+                if (sidebar && hamburger &&
+                    sidebar.classList.contains('mobile-open') &&
+                    !sidebar.contains(event.target) &&
+                    !hamburger.contains(event.target)) {
+                    sidebar.classList.remove('mobile-open');
+                    if (overlay) overlay.classList.remove('mobile-open');
+                }
+            });
+    </script>
+</body>
+</html>
