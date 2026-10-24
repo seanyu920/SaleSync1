@@ -1,0 +1,241 @@
+﻿/* ==========================================================================
+   TRANSACTION HISTORY PAGE
+   Loaded after AdminDashboard.css, so it reuses its theme variables,
+   .pos-card-wrapper, .pos-table and .badge styles.
+   ========================================================================== */
+
+/* --- Header row: title on the left, shortcut links on the right --- */
+.th-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 22px;
+}
+
+    .th-toolbar .page-header {
+        margin-bottom: 0;
+    }
+
+.th-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.th-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: transparent;
+    color: var(--gold);
+    text-decoration: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: 'Outfit', sans-serif;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+    .th-pill:hover {
+        background: var(--gold-glow);
+        border-color: var(--gold);
+        color: var(--gold-light);
+    }
+
+/* --- Filter bar --- */
+.th-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-sub);
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+}
+
+.th-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 130px;
+}
+
+.th-field-grow {
+    flex: 1 1 220px;
+}
+
+.th-field label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+.th-field input,
+.th-field select {
+    background: var(--bg-surface);
+    color: var(--cream);
+    border: 1px solid var(--border-sub);
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 14px;
+    font-family: 'Outfit', sans-serif;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+    .th-field input:focus,
+    .th-field select:focus {
+        border-color: var(--gold);
+    }
+
+.th-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.th-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 16px;
+    background: transparent;
+    color: var(--muted-2);
+    border: 1px solid var(--border-sub);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: 'Outfit', sans-serif;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+    .th-btn:hover {
+        border-color: var(--gold);
+        color: var(--gold);
+    }
+
+.th-btn-primary {
+    background: var(--gold);
+    color: #1a1208;
+    border-color: var(--gold);
+}
+
+    .th-btn-primary:hover {
+        background: var(--gold-light);
+        border-color: var(--gold-light);
+        color: #1a1208;
+    }
+
+/* --- Results card --- */
+.th-card .pos-card-header {
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.th-summary {
+    font-size: 13px;
+    color: var(--muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+    .th-summary strong {
+        color: var(--gold);
+    }
+
+.th-summary-sep {
+    opacity: 0.5;
+}
+
+/* The dashboard's .table-responsive is capped at 220px tall, so this page
+   uses its own wrapper that scrolls sideways only. */
+.th-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.th-table {
+    min-width: 900px;
+}
+
+    .th-table .th-items {
+        max-width: 240px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .th-table .th-total {
+        font-weight: 700;
+        color: var(--cream);
+    }
+
+    .th-table .th-empty {
+        text-align: center;
+        padding: 28px 16px;
+    }
+
+.th-table-wrap::-webkit-scrollbar {
+    height: 6px;
+}
+
+.th-table-wrap::-webkit-scrollbar-track {
+    background: var(--bg-surface);
+    border-radius: 4px;
+}
+
+.th-table-wrap::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+}
+
+    .th-table-wrap::-webkit-scrollbar-thumb:hover {
+        background: var(--gold);
+    }
+
+/* --- Pagination --- */
+.th-pager {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border-sub);
+}
+
+.th-pager-info,
+.th-pager-page {
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.th-pager-nav {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+@media (max-width: 768px) {
+    .th-field,
+    .th-field-grow {
+        flex: 1 1 100%;
+    }
+
+    .th-actions {
+        width: 100%;
+    }
+}
