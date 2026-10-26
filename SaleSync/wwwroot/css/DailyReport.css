@@ -208,6 +208,7 @@ body {
    ========================================================================== */
 .main-content {
     flex: 1;
+    min-width: 0;
     padding: 36px 40px;
     overflow-y: auto;
     background: var(--bg-base);
@@ -243,13 +244,157 @@ body {
 }
 
 /* ==========================================================================
+   BACK TO DASHBOARD LINK
+   ========================================================================== */
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 18px;
+    padding: 8px 16px;
+    background: var(--bg-surface);
+    color: var(--cream);
+    border: 1px solid var(--border-sub);
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: 'Outfit', sans-serif;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+    .back-link i {
+        font-size: 12px;
+        color: var(--gold);
+        transition: transform 0.2s ease, color 0.2s ease;
+    }
+
+    .back-link:hover {
+        background: var(--gold);
+        color: var(--bg-base);
+        border-color: var(--gold);
+        transform: translateY(-1px);
+    }
+
+        .back-link:hover i {
+            color: var(--bg-base);
+            transform: translateX(-3px);
+        }
+
+/* ==========================================================================
+   REPORT TOOLBAR (title on the left, date controls on the right)
+   ========================================================================== */
+.report-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+    .report-toolbar .page-header {
+        margin-bottom: 0;
+    }
+
+.live-pill {
+    display: inline-block;
+    margin-left: 10px;
+    padding: 2px 10px;
+    border-radius: 20px;
+    background: var(--gold-glow);
+    color: var(--gold-light);
+    border: 1px solid var(--border);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    vertical-align: middle;
+}
+
+.date-nav {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+    .date-nav form {
+        display: flex;
+        margin: 0;
+    }
+
+.nav-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 40px;
+    min-width: 40px;
+    padding: 0 14px;
+    background: var(--bg-surface);
+    color: var(--cream);
+    border: 1px solid var(--border-sub);
+    border-radius: 10px;
+    font-size: 13.5px;
+    font-weight: 700;
+    font-family: 'Outfit', sans-serif;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+    .nav-pill i {
+        font-size: 12px;
+        color: var(--gold);
+        transition: color 0.2s ease;
+    }
+
+    .nav-pill:hover {
+        background: var(--gold);
+        color: var(--bg-base);
+        border-color: var(--gold);
+        transform: translateY(-1px);
+    }
+
+        .nav-pill:hover i {
+            color: var(--bg-base);
+        }
+
+.nav-pill-text {
+    padding: 0 18px;
+}
+
+.date-input {
+    height: 40px;
+    padding: 0 14px;
+    background: var(--bg-surface);
+    color: var(--cream);
+    border: 1px solid var(--border-sub);
+    border-radius: 10px;
+    font-size: 13.5px;
+    font-weight: 600;
+    font-family: 'Outfit', sans-serif;
+    outline: none;
+    cursor: pointer;
+    color-scheme: dark; /* makes the calendar icon and popup dark */
+    transition: all 0.2s ease;
+}
+
+    .date-input:hover,
+    .date-input:focus {
+        border-color: var(--gold);
+        background: var(--bg-card-2);
+    }
+
+/* ==========================================================================
    SUMMARY DASHBOARD CARDS
    ========================================================================== */
 .summary-dashboard {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 20px;
-    margin-bottom: 35px;
+    margin-bottom: 20px;
 }
 
 .summary-card {
@@ -267,6 +412,10 @@ body {
     .summary-card:hover {
         transform: translateY(-2px);
         box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55);
+    }
+
+    .summary-card .card-body {
+        min-width: 0;
     }
 
 .card-icon-box {
@@ -311,6 +460,28 @@ body {
         margin-left: auto;
         font-weight: 500;
     }
+
+/* Up / down versus the previous day */
+.summary-card .trend-badge.trend-up,
+.summary-card .trend-badge.trend-down {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.summary-card .trend-badge.trend-up {
+    background: rgba(61, 191, 120, 0.12);
+    color: var(--success);
+    border: 1px solid rgba(61, 191, 120, 0.25);
+}
+
+.summary-card .trend-badge.trend-down {
+    background: rgba(224, 85, 85, 0.12);
+    color: var(--danger);
+    border: 1px solid rgba(224, 85, 85, 0.25);
+}
 
 /* Cost of Goods Card */
 .cogs-card {
@@ -388,6 +559,51 @@ body {
         font-weight: 700;
         margin-left: auto;
         letter-spacing: 0.3px;
+        white-space: nowrap;
+    }
+
+/* ==========================================================================
+   QUICK STATS ROW
+   ========================================================================== */
+.kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 8px;
+}
+
+.kpi-tile {
+    background: var(--bg-card);
+    border: 1px solid var(--border-sub);
+    border-radius: 14px;
+    padding: 18px 22px;
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.2);
+    transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+    .kpi-tile:hover {
+        border-color: var(--border);
+        transform: translateY(-2px);
+    }
+
+.kpi-label {
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-bottom: 4px;
+}
+
+.kpi-value {
+    color: var(--cream);
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+}
+
+    .kpi-value.kpi-negative {
+        color: var(--danger);
     }
 
 /* ==========================================================================
@@ -402,8 +618,12 @@ body {
     margin-top: 24px;
 }
 
+.products-sold-card {
+    border-top: 3px solid var(--gold);
+}
+
 .inventory-spend-card {
-    border-top: 4px solid var(--orange-brand);
+    border-top: 3px solid var(--danger);
 }
 
 .card-header-flex {
@@ -427,7 +647,12 @@ body {
 }
 
 .total-spend-highlight {
-    color: #e05555;
+    color: var(--danger);
+    font-weight: 800;
+}
+
+.positive-highlight {
+    color: var(--success);
     font-weight: 800;
 }
 
@@ -451,6 +676,7 @@ body {
         text-transform: uppercase;
         letter-spacing: 1.5px;
         padding: 14px 18px;
+        text-align: left; /* headers now line up with their cells */
         border-bottom: 1.5px solid var(--border);
         white-space: nowrap;
     }
@@ -472,6 +698,10 @@ body {
             background: rgba(255, 255, 255, 0.02);
         }
 
+        .recent-sales-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
 .row-alternate {
     background: rgba(201, 168, 76, 0.015);
 }
@@ -482,6 +712,21 @@ body {
 
 .th-right, .td-right {
     text-align: right !important;
+}
+
+.th-rank {
+    width: 56px;
+    text-align: center !important;
+}
+
+.td-rank {
+    text-align: center;
+    color: var(--muted);
+    font-weight: 700;
+}
+
+.th-share {
+    width: 220px;
 }
 
 .td-bold {
@@ -499,7 +744,7 @@ body {
 }
 
 .cost-value {
-    color: #e05555 !important;
+    color: var(--danger) !important;
 }
 
 .no-data-cell {
@@ -512,27 +757,82 @@ body {
     white-space: normal !important;
 }
 
+/* --- SHARE BARS --- */
+.share-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.share-bar {
+    flex: 1;
+    height: 8px;
+    min-width: 80px;
+    background: var(--border-sub);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.share-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold), var(--gold-light));
+    border-radius: 10px;
+    transition: width 0.4s ease;
+}
+
+.share-text {
+    min-width: 44px;
+    text-align: right;
+    color: var(--cream);
+    font-size: 12.5px;
+    font-weight: 700;
+}
+
+/* --- TOTAL ROWS --- */
+.total-row td {
+    background: var(--bg-card-2);
+    color: var(--gold-light);
+    font-weight: 800;
+    font-size: 14px;
+    padding: 14px 18px;
+    border-top: 1.5px solid var(--border);
+    border-bottom: none;
+}
+
 /* --- BADGES --- */
 .qty-badge-sold {
-    background: rgba(244, 106, 5, 0.12);
-    color: var(--orange-brand);
+    background: var(--gold-glow);
+    color: var(--gold-light);
     padding: 5px 14px;
     border-radius: 20px;
     font-weight: 800;
     font-size: 12px;
     display: inline-block;
-    border: 1px solid rgba(244, 106, 5, 0.2);
+    border: 1px solid var(--border);
 }
 
 .qty-badge-bought {
     background: rgba(224, 85, 85, 0.12);
-    color: #e05555;
+    color: var(--danger);
     padding: 5px 14px;
     border-radius: 20px;
     font-weight: 800;
     font-size: 12px;
     display: inline-block;
     border: 1px solid rgba(224, 85, 85, 0.2);
+}
+
+/* --- FOOTNOTE --- */
+.report-footnote {
+    margin-top: 24px;
+    padding: 14px 18px;
+    color: var(--muted);
+    font-size: 12.5px;
+    line-height: 1.6;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-sub);
+    border-left: 3px solid var(--gold);
+    border-radius: 10px;
 }
 
 /* --- ANIMATION --- */
@@ -555,6 +855,12 @@ body {
 /* ==========================================================================
    MOBILE & RESPONSIVE OVERRIDES
    ========================================================================== */
+@media (max-width: 1200px) {
+    .kpi-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
 @media (max-width: 1024px) {
     .dashboard-container {
         display: block;
@@ -640,15 +946,34 @@ body {
         padding: 20px 16px;
     }
 
+    .report-toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
     .summary-dashboard {
         grid-template-columns: 1fr;
         gap: 14px;
-        margin-bottom: 24px;
+        margin-bottom: 14px;
     }
 
     .summary-card {
         padding: 18px;
         gap: 14px;
+        flex-wrap: wrap;
+    }
+
+    .kpi-row {
+        gap: 14px;
+    }
+
+    .kpi-tile {
+        padding: 14px 16px;
+    }
+
+    .kpi-value {
+        font-size: 18px;
     }
 
     .greeting-title {
@@ -669,5 +994,64 @@ body {
 @media (min-width: 1025px) {
     .mobile-header, .sidebar-overlay {
         display: none !important;
+    }
+}
+
+/* ==========================================================================
+   PRINT — clean paper copy (hides the sidebar and the date controls)
+   ========================================================================== */
+@media print {
+    .sidebar,
+    .sidebar-overlay,
+    .mobile-header,
+    .no-print {
+        display: none !important;
+    }
+
+    body,
+    .main-content {
+        background: #fff !important;
+        color: #111 !important;
+    }
+
+    .main-content {
+        padding: 0 !important;
+        overflow: visible !important;
+    }
+
+    .summary-card,
+    .kpi-tile,
+    .recent-sales-card,
+    .report-footnote {
+        background: #fff !important;
+        box-shadow: none !important;
+        border: 1px solid #ccc !important;
+        break-inside: avoid;
+    }
+
+    .greeting-title,
+    .widget-title,
+    .card-value,
+    .profit-value,
+    .kpi-value,
+    .td-bold,
+    .td-price,
+    .share-text {
+        color: #111 !important;
+    }
+
+    .greeting-subtitle,
+    .widget-subtitle,
+    .card-label,
+    .kpi-label,
+    .recent-sales-table td,
+    .report-footnote {
+        color: #444 !important;
+    }
+
+    .recent-sales-table th,
+    .total-row td {
+        background: #f1f1f1 !important;
+        color: #111 !important;
     }
 }

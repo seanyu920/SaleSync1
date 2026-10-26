@@ -413,6 +413,38 @@ select.filter-input {
 }
 
 /* ==========================================================================
+   "VIEW DATA CHANGES" BUTTON (NEW)
+   ========================================================================== */
+.btn-mini {
+    display: inline-flex;
+    align-items: center;
+    margin-top: 8px;
+    padding: 5px 12px;
+    background: transparent;
+    color: var(--gold);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'Outfit', sans-serif;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+    .btn-mini:hover {
+        background: var(--gold);
+        color: var(--bg-base);
+        border-color: var(--gold);
+        transform: translateY(-1px);
+    }
+
+    .btn-mini:active {
+        transform: translateY(0);
+    }
+
+/* ==========================================================================
    PILL BADGES
    ========================================================================== */
 .badge-update,
@@ -537,6 +569,7 @@ select.filter-input {
 .slide-up {
     animation: slideUp 0.3s ease-out;
 }
+
 @media (max-width: 1024px) {
     .dashboard-container {
         display: block;
@@ -623,4 +656,3 @@ select.filter-input {
         display: none !important;
     }
 }
-
