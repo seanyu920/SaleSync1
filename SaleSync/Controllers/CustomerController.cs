@@ -171,16 +171,53 @@ namespace SaleSync.Controllers
                             totalAmount += item.Quantity * item.Price;
                         }
 
+                        // ── Promo: re-check on the server, then redeem ──
+                        decimal discountAmount = 0m;
+                        string promoCode = request.PromoCode?.Trim().ToUpperInvariant();
+
+                        if (!string.IsNullOrWhiteSpace(promoCode))
+                        {
+                            PromoCheck promo = CheckPromo(conn, transaction, promoCode, totalAmount);
+
+                            if (!promo.Ok)
+                            {
+                                transaction.Rollback();
+                                return BadRequest(new { message = promo.Error });
+                            }
+
+                            const string redeemSql = @"
+                                UPDATE promotions
+                                SET current_usage = current_usage + 1
+                                WHERE promotion_id = @PromotionId
+                                  AND (max_usage = 0 OR current_usage < max_usage)";
+
+                            using (SqlCommand redeemCmd = new SqlCommand(redeemSql, conn, transaction))
+                            {
+                                redeemCmd.Parameters.AddWithValue("@PromotionId", promo.Id);
+
+                                if (redeemCmd.ExecuteNonQuery() == 0)
+                                {
+                                    transaction.Rollback();
+                                    return BadRequest(new { message = "This promotion was just claimed by another order. Please remove it and try again." });
+                                }
+                            }
+
+                            discountAmount = promo.Discount;
+                        }
+
+                        decimal finalAmount = Math.Max(0m, totalAmount - discountAmount);
 
                         string insertSale = @"
-                            INSERT INTO sales (sale_date, total_amount, status, customer_name, order_type, payment_method, delivery_address, pickup_datetime, user_id) 
+                            INSERT INTO sales (sale_date, total_amount, discount, final_amount, status, customer_name, order_type, payment_method, delivery_address, pickup_datetime, user_id) 
                             OUTPUT INSERTED.sale_id
-                            VALUES (GETDATE(), @total, 'Pending', @custName, @orderType, @paymentMethod, @address, @pickupTime, @userId)";
+                            VALUES (GETDATE(), @total, @discount, @final, 'Pending', @custName, @orderType, @paymentMethod, @address, @pickupTime, @userId)";
 
                         int newSaleId;
                         using (SqlCommand cmd = new SqlCommand(insertSale, conn, transaction))
                         {
                             cmd.Parameters.AddWithValue("@total", totalAmount);
+                            cmd.Parameters.AddWithValue("@discount", discountAmount);
+                            cmd.Parameters.AddWithValue("@final", finalAmount);
                             cmd.Parameters.AddWithValue("@custName", customerName);
                             cmd.Parameters.AddWithValue("@orderType", request.OrderType ?? "Pick-up");
                             cmd.Parameters.AddWithValue("@paymentMethod", request.PaymentMethod ?? "Cash");
@@ -190,7 +227,6 @@ namespace SaleSync.Controllers
 
                             newSaleId = (int)cmd.ExecuteScalar();
                         }
-
 
                         string insertItem = @"
                             INSERT INTO sale_items (sale_id, product_id, quantity, price, subtotal, size, special_instructions) 
@@ -205,8 +241,6 @@ namespace SaleSync.Controllers
                                 cmd.Parameters.AddWithValue("@qty", item.Quantity);
                                 cmd.Parameters.AddWithValue("@price", item.Price);
                                 cmd.Parameters.AddWithValue("@sub", item.Quantity * item.Price);
-
-
                                 cmd.Parameters.AddWithValue("@size", string.IsNullOrEmpty(item.Size) ? "Regular" : item.Size);
                                 cmd.Parameters.AddWithValue("@instructions", string.IsNullOrEmpty(item.SpecialInstructions) ? (object)DBNull.Value : item.SpecialInstructions);
 
@@ -215,13 +249,147 @@ namespace SaleSync.Controllers
                         }
 
                         transaction.Commit();
-                        return Ok(new { message = "Order sent to the kitchen!", orderId = newSaleId });
+                        return Ok(new
+                        {
+                            message = "Order sent to the kitchen!",
+                            orderId = newSaleId,
+                            discountApplied = discountAmount,
+                            finalAmount = finalAmount
+                        });
                     }
                     catch (Exception ex)
                     {
                         transaction.Rollback();
                         return BadRequest(new { message = "Failed to process order: " + ex.Message });
                     }
+                }
+            }
+        }
+
+        // Customer-side promo check (reads the same `promotions` table the admin tab writes to)
+        [HttpPost]
+        public IActionResult ValidatePromo([FromBody] CustomerPromoRequest request)
+        {
+            string code = request?.PromoCode?.Trim().ToUpperInvariant() ?? "";
+
+            if (string.IsNullOrWhiteSpace(code))
+                return BadRequest(new { success = false, message = "Please enter a promo code." });
+
+            decimal orderTotal = Math.Round(request.TotalAmount, 2);
+
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(connectionString))
+                {
+                    conn.Open();
+
+                    PromoCheck promo = CheckPromo(conn, null, code, orderTotal);
+
+                    if (!promo.Ok)
+                        return BadRequest(new { success = false, message = promo.Error });
+
+                    return Ok(new
+                    {
+                        success = true,
+                        message = "Promotion is valid.",
+                        promotionName = promo.Name,
+                        promoCode = promo.Code,
+                        isPercentage = promo.IsPercentage,
+                        discountValue = promo.Value,
+                        minimumOrder = promo.MinimumOrder,
+                        discountAmount = promo.Discount
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("CUSTOMER PROMO VALIDATION ERROR: " + ex);
+                return StatusCode(500, new { success = false, message = "Unable to validate promotion." });
+            }
+        }
+
+        private class PromoCheck
+        {
+            public bool Ok;
+            public string Error = "";
+            public int Id;
+            public string Name = "";
+            public string Code = "";
+            public bool IsPercentage;
+            public decimal Value;
+            public decimal MinimumOrder;
+            public decimal Discount;
+        }
+
+        private PromoCheck CheckPromo(SqlConnection conn, SqlTransaction tx, string code, decimal orderTotal)
+        {
+            // Lock the row only when we're inside the checkout transaction
+            string lockHint = tx != null ? "WITH (UPDLOCK, ROWLOCK)" : "";
+
+            string sql = $@"
+                SELECT promotion_id, promotion_name, promo_code, discount_type, discount_value,
+                       minimum_order, start_date, end_date, max_usage, current_usage, is_active
+                FROM promotions {lockHint}
+                WHERE UPPER(LTRIM(RTRIM(CAST(promo_code AS NVARCHAR(100))))) = @PromoCode";
+
+            using (SqlCommand cmd = new SqlCommand(sql, conn, tx))
+            {
+                cmd.Parameters.Add("@PromoCode", System.Data.SqlDbType.NVarChar, 100).Value = code;
+
+                using (SqlDataReader r = cmd.ExecuteReader())
+                {
+                    if (!r.Read())
+                        return new PromoCheck { Error = "Promo code not found." };
+
+                    string discountType = r["discount_type"]?.ToString()?.Trim().ToLowerInvariant() ?? "";
+                    bool isPercentage = discountType is "0" or "percentage" or "percent" or "percentage discount";
+
+                    var p = new PromoCheck
+                    {
+                        Id = Convert.ToInt32(r["promotion_id"]),
+                        Name = r["promotion_name"]?.ToString()?.Trim() ?? "Promotion",
+                        Code = r["promo_code"]?.ToString()?.Trim() ?? code,
+                        IsPercentage = isPercentage,
+                        Value = r["discount_value"] != DBNull.Value ? Convert.ToDecimal(r["discount_value"]) : 0m,
+                        MinimumOrder = r["minimum_order"] != DBNull.Value ? Convert.ToDecimal(r["minimum_order"]) : 0m
+                    };
+
+                    DateTime startDate = r["start_date"] != DBNull.Value ? Convert.ToDateTime(r["start_date"]) : DateTime.MinValue;
+                    DateTime endDate = r["end_date"] != DBNull.Value ? Convert.ToDateTime(r["end_date"]) : DateTime.MaxValue;
+                    int maxUsage = r["max_usage"] != DBNull.Value ? Convert.ToInt32(r["max_usage"]) : 0;
+                    int currentUsage = r["current_usage"] != DBNull.Value ? Convert.ToInt32(r["current_usage"]) : 0;
+                    bool isActive = r["is_active"] != DBNull.Value && Convert.ToBoolean(r["is_active"]);
+
+                    // Same Philippine clock the Promotions tab uses
+                    DateTime now = SaleSync.Services.StoreSettingsService.GetStoreNow();
+
+                    if (!isActive)
+                    { p.Error = "This promotion is currently inactive."; return p; }
+
+                    if (now < startDate)
+                    { p.Error = $"This promotion starts on {startDate:MMM dd, yyyy hh:mm tt}."; return p; }
+
+                    if (now > endDate)
+                    { p.Error = $"This promotion expired on {endDate:MMM dd, yyyy hh:mm tt}."; return p; }
+
+                    if (maxUsage > 0 && currentUsage >= maxUsage)
+                    { p.Error = "This promotion has reached its maximum usage limit."; return p; }
+
+                    if (orderTotal < p.MinimumOrder)
+                    { p.Error = $"Minimum order of ₱{p.MinimumOrder:N2} is required for this promotion."; return p; }
+
+                    if (p.Value <= 0)
+                    { p.Error = "This promotion has an invalid discount value."; return p; }
+
+                    decimal discount = isPercentage
+                        ? orderTotal * (Math.Min(p.Value, 100m) / 100m)
+                        : p.Value;
+
+                    if (discount > orderTotal) discount = orderTotal;
+
+                    p.Discount = Math.Round(discount, 2, MidpointRounding.AwayFromZero);
+                    p.Ok = true;
+                    return p;
                 }
             }
         }
@@ -533,7 +701,14 @@ namespace SaleSync.Controllers
         public string PaymentMethod { get; set; }
         public string DeliveryAddress { get; set; }
         public DateTime? PickupTime { get; set; }
+        public string PromoCode { get; set; }
         public List<OnlineOrderItemRequest> Items { get; set; }
+    }
+
+    public class CustomerPromoRequest
+    {
+        public string PromoCode { get; set; }
+        public decimal TotalAmount { get; set; }
     }
 
     public class OnlineOrderItemRequest
@@ -558,4 +733,5 @@ namespace SaleSync.Controllers
         public string ContactNumber { get; set; }
         public string ProfilePicture { get; set; }
     }
+
 }
