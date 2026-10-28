@@ -8,15 +8,30 @@
 .th-toolbar {
     display: flex;
     flex-wrap: wrap;
-    align-items: flex-start;
+    align-items: flex-end;
     justify-content: space-between;
     gap: 14px;
-    margin-bottom: 22px;
+    margin-bottom: 24px;
 }
 
     .th-toolbar .page-header {
         margin-bottom: 0;
     }
+
+/* These two were missing from AdminDashboard.css, which is why the
+   subtitle showed up in plain white */
+.greeting-title {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--cream);
+    letter-spacing: -0.3px;
+    margin-bottom: 4px;
+}
+
+.greeting-subtitle {
+    color: var(--muted);
+    font-size: 14px;
+}
 
 .th-links {
     display: flex;
@@ -28,12 +43,13 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 14px;
-    background: transparent;
-    color: var(--gold);
+    height: 40px;
+    padding: 0 16px;
+    background: var(--bg-surface);
+    color: var(--cream);
     text-decoration: none;
-    border: 1px solid var(--border);
-    border-radius: 8px;
+    border: 1px solid var(--border-sub);
+    border-radius: 10px;
     font-size: 13px;
     font-weight: 700;
     font-family: 'Outfit', sans-serif;
@@ -42,11 +58,22 @@
     transition: all 0.2s ease;
 }
 
-    .th-pill:hover {
-        background: var(--gold-glow);
-        border-color: var(--gold);
-        color: var(--gold-light);
+    .th-pill i {
+        font-size: 12px;
+        color: var(--gold);
+        transition: color 0.2s ease;
     }
+
+    .th-pill:hover {
+        background: var(--gold);
+        border-color: var(--gold);
+        color: var(--bg-base);
+        transform: translateY(-1px);
+    }
+
+        .th-pill:hover i {
+            color: var(--bg-base);
+        }
 
 /* --- Filter bar --- */
 .th-filters {
@@ -57,15 +84,16 @@
     background: var(--bg-card);
     border: 1px solid var(--border-sub);
     border-radius: 14px;
-    padding: 18px 20px;
-    margin-bottom: 20px;
+    padding: 20px 22px;
+    margin-bottom: 22px;
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.2);
 }
 
 .th-field {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    min-width: 130px;
+    gap: 7px;
+    min-width: 140px;
 }
 
 .th-field-grow {
@@ -73,29 +101,75 @@
 }
 
 .th-field label {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 1px;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--gold);
 }
 
 .th-field input,
 .th-field select {
+    height: 42px;
     background: var(--bg-surface);
     color: var(--cream);
     border: 1px solid var(--border-sub);
-    border-radius: 8px;
-    padding: 9px 12px;
+    border-radius: 10px;
+    padding: 0 14px;
     font-size: 14px;
+    font-weight: 600;
     font-family: 'Outfit', sans-serif;
     outline: none;
-    transition: border-color 0.2s ease;
+    transition: all 0.2s ease;
 }
+
+    .th-field input::placeholder {
+        color: var(--muted);
+        font-weight: 400;
+    }
+
+    .th-field input:hover,
+    .th-field select:hover {
+        border-color: var(--border);
+    }
 
     .th-field input:focus,
     .th-field select:focus {
         border-color: var(--gold);
+        background: var(--bg-card-2);
+        box-shadow: 0 0 0 3px var(--gold-glow);
+    }
+
+    /* Date boxes: dark calendar popup and icon */
+    .th-field input[type="date"] {
+        color-scheme: dark;
+        cursor: pointer;
+    }
+
+        .th-field input[type="date"]::-webkit-calendar-picker-indicator {
+            opacity: 0.6;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+
+            .th-field input[type="date"]::-webkit-calendar-picker-indicator:hover {
+                opacity: 1;
+            }
+
+/* Dropdowns: custom gold chevron instead of the browser arrow */
+.th-field select {
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    padding-right: 38px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23C9A84C' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+}
+
+    .th-field select option {
+        background: var(--bg-card);
+        color: var(--cream);
     }
 
 .th-actions {
@@ -106,13 +180,15 @@
 .th-btn {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
-    padding: 9px 16px;
+    height: 42px;
+    padding: 0 20px;
     background: transparent;
     color: var(--muted-2);
     border: 1px solid var(--border-sub);
-    border-radius: 8px;
-    font-size: 13px;
+    border-radius: 10px;
+    font-size: 13.5px;
     font-weight: 700;
     font-family: 'Outfit', sans-serif;
     text-decoration: none;
@@ -127,37 +203,67 @@
 
 .th-btn-primary {
     background: var(--gold);
-    color: #1a1208;
+    color: var(--bg-base);
     border-color: var(--gold);
+    font-weight: 800;
 }
 
     .th-btn-primary:hover {
         background: var(--gold-light);
         border-color: var(--gold-light);
-        color: #1a1208;
+        color: var(--bg-base);
+        transform: translateY(-1px);
     }
 
 /* --- Results card --- */
-.th-card .pos-card-header {
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px;
+.th-card {
+    border-top: 3px solid var(--gold);
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.25);
+    padding: 26px;
 }
+
+    .th-card .pos-card-header {
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 18px;
+        padding-bottom: 16px;
+    }
+
+    .th-card .pos-card-title {
+        font-size: 18px;
+        font-weight: 800;
+        letter-spacing: -0.2px;
+    }
+
+        .th-card .pos-card-title i {
+            color: var(--gold);
+        }
 
 .th-summary {
-    font-size: 13px;
-    color: var(--muted);
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: 8px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--muted-2);
 }
 
+    .th-summary > span:not(.th-summary-sep) {
+        padding: 5px 12px;
+        background: var(--bg-surface);
+        border: 1px solid var(--border-sub);
+        border-radius: 20px;
+    }
+
     .th-summary strong {
-        color: var(--gold);
+        color: var(--gold-light);
+        font-weight: 800;
     }
 
 .th-summary-sep {
-    opacity: 0.5;
+    display: none;
 }
 
 /* The dashboard's .table-responsive is capped at 220px tall, so this page
@@ -171,21 +277,97 @@
     min-width: 900px;
 }
 
+    /* Header row */
+    .th-table thead th {
+        background: var(--bg-card-2);
+        color: var(--gold);
+        font-size: 10.5px;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+        padding: 14px 14px;
+        border-bottom: 1.5px solid var(--border);
+    }
+
+        .th-table thead th:first-child {
+            border-top-left-radius: 10px;
+        }
+
+        .th-table thead th:last-child {
+            border-top-right-radius: 10px;
+        }
+
+    /* Body rows */
+    .th-table td {
+        padding: 14px;
+        font-size: 13.5px;
+        color: var(--muted-2);
+        border-bottom: 1px solid var(--border-sub);
+    }
+
+    .th-table tbody tr {
+        transition: background 0.2s ease;
+    }
+
+        .th-table tbody tr:nth-child(even) {
+            background: rgba(201, 168, 76, 0.02);
+        }
+
+        .th-table tbody tr:hover {
+            background: rgba(201, 168, 76, 0.06);
+        }
+
+            .th-table tbody tr:hover td:first-child {
+                box-shadow: inset 3px 0 0 var(--gold);
+            }
+
+        .th-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+    .th-table .sale-id {
+        font-weight: 800;
+        color: var(--gold);
+        letter-spacing: 0.3px;
+    }
+
     .th-table .th-items {
-        max-width: 240px;
+        max-width: 260px;
         overflow: hidden;
         text-overflow: ellipsis;
+        color: var(--cream);
     }
 
     .th-table .th-total {
-        font-weight: 700;
-        color: var(--cream);
+        font-weight: 800;
+        color: var(--gold-light);
     }
 
     .th-table .th-empty {
         text-align: center;
-        padding: 28px 16px;
+        padding: 48px 16px;
+        font-style: italic;
+        color: var(--muted);
     }
+
+    /* Status badges: rounded pills with a small dot */
+    .th-table .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 10.5px;
+        font-weight: 800;
+        letter-spacing: 0.8px;
+    }
+
+        .th-table .badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
 
 .th-table-wrap::-webkit-scrollbar {
     height: 6px;
@@ -212,15 +394,24 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    margin-top: 16px;
-    padding-top: 14px;
+    margin-top: 18px;
+    padding-top: 16px;
     border-top: 1px solid var(--border-sub);
 }
 
-.th-pager-info,
-.th-pager-page {
+.th-pager-info {
     font-size: 13px;
     color: var(--muted);
+}
+
+.th-pager-page {
+    padding: 6px 14px;
+    background: var(--gold-glow);
+    color: var(--gold-light);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 12.5px;
+    font-weight: 700;
 }
 
 .th-pager-nav {
@@ -229,7 +420,20 @@
     gap: 12px;
 }
 
+.th-pager .th-pill {
+    height: 36px;
+    padding: 0 14px;
+}
+
 @media (max-width: 768px) {
+    .th-toolbar {
+        align-items: flex-start;
+    }
+
+    .th-filters {
+        padding: 16px;
+    }
+
     .th-field,
     .th-field-grow {
         flex: 1 1 100%;
@@ -237,5 +441,13 @@
 
     .th-actions {
         width: 100%;
+    }
+
+        .th-actions .th-btn {
+            flex: 1;
+        }
+
+    .th-card {
+        padding: 18px;
     }
 }
