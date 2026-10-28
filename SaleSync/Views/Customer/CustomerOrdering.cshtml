@@ -2230,16 +2230,11 @@
         // NOTE: this only controls what the customer sees. The server must
         // re-check the code (sent as PromoCode) before actually discounting.
 
-        const promoCodes = {
-            WEEKEND20: { type: 'percent', value: 20, category: 'coffee', label: '20% off coffee drinks' },
-            ICEDLATTE: { type: 'flat', value: 20, nameContains: 'iced latte', label: '₱20 off iced latte' },
-            WELCOME10: { type: 'percent', value: 10, firstOrderOnly: true, label: '10% off your first order' }
-        };
-
-        const hasPastOrders =
+         const hasPastOrders =
             @Html.Raw(Json.Serialize(Model?.OrderHistory != null && Model.OrderHistory.Any()));
 
         let appliedPromoCode = null;
+        let appliedPromo = null;   // { isPercentage, value, minimumOrder }
 
         function setPromoMessage(text, kind) {
 
@@ -2258,37 +2253,24 @@
             el.style.display = 'block';
         }
 
+        function getCartTotal() {
+            return customerCart.reduce((s, i) => s + i.qty * i.price, 0);
+        }
+
         // How much the currently applied promo takes off the current cart.
         function calculatePromoDiscount() {
 
-            if (!appliedPromoCode) return 0;
+            if (!appliedPromoCode || !appliedPromo) return 0;
 
-            const promo = promoCodes[appliedPromoCode];
+            const total = getCartTotal();
 
-            if (!promo) return 0;
+            if (total <= 0 || total < appliedPromo.minimumOrder) return 0;
 
-            let eligible = 0;
+            const raw = appliedPromo.isPercentage
+                ? total * (Math.min(appliedPromo.value, 100) / 100)
+                : appliedPromo.value;
 
-            customerCart.forEach(item => {
-
-                const categoryOk =
-                    !promo.category ||
-                    (item.category || '').includes(promo.category);
-
-                const nameOk =
-                    !promo.nameContains ||
-                    (item.name || '').toLowerCase().includes(promo.nameContains);
-
-                if (categoryOk && nameOk) {
-                    eligible += item.qty * item.price;
-                }
-            });
-
-            if (eligible <= 0) return 0;
-
-            return promo.type === 'percent'
-                ? eligible * (promo.value / 100)
-                : Math.min(promo.value, eligible);
+            return Math.round(Math.min(raw, total) * 100) / 100;
         }
 
         function syncPromoControls() {
@@ -2323,9 +2305,10 @@
             }
         }
 
-        function applyPromo() {
+        async function applyPromo() {
 
             const input = document.getElementById('customerPromoCode');
+            const btn = document.getElementById('applyPromoBtn');
 
             const code = (input.value || '').trim().toUpperCase();
 
@@ -2334,39 +2317,55 @@
                 return;
             }
 
-            const promo = promoCodes[code];
-
-            if (!promo) {
-                setPromoMessage('Invalid promo code.', 'error');
-                return;
-            }
-
             if (customerCart.length === 0) {
                 setPromoMessage('Add items to your cart before applying a code.', 'error');
                 return;
             }
 
-            if (promo.firstOrderOnly && hasPastOrders) {
-                setPromoMessage('This code is only for your first order.', 'error');
-                return;
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/Customer/ValidatePromo', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        PromoCode: code,
+                        TotalAmount: getCartTotal()
+                    })
+                });
+
+                const data = await response.json().catch(() => ({}));
+
+                if (!response.ok || !data.success) {
+                    setPromoMessage(data.message || 'Invalid promo code.', 'error');
+                    return;
+                }
+
+                appliedPromoCode = data.promoCode || code;
+
+                appliedPromo = {
+                    isPercentage: data.isPercentage,
+                    value: data.discountValue,
+                    minimumOrder: data.minimumOrder || 0
+                };
+
+                setPromoMessage('Promo applied: ' + data.promotionName, 'success');
+
+                renderCustomerCart();
             }
-
-            appliedPromoCode = code;
-
-            if (calculatePromoDiscount() <= 0) {
-                appliedPromoCode = null;
-                setPromoMessage('Your cart has no items eligible for this code.', 'error');
-                return;
+            catch (err) {
+                console.error(err);
+                setPromoMessage('Could not check the promo code. Please try again.', 'error');
             }
-
-            setPromoMessage('Promo applied: ' + promo.label, 'success');
-
-            renderCustomerCart();
+            finally {
+                btn.disabled = false;
+            }
         }
 
         function clearPromo() {
 
             appliedPromoCode = null;
+            appliedPromo = null;
 
             const input = document.getElementById('customerPromoCode');
 
@@ -2475,8 +2474,8 @@
 
                 clearPromo();
 
-                setPromoMessage(
-                    'Promo removed: no eligible items left in your cart.',
+                                setPromoMessage(
+                    'Promo removed: your cart no longer meets this promo\'s requirements.',
                     'error'
                 );
 
