@@ -1839,14 +1839,21 @@ body {
     border-bottom: 1px solid var(--border-sub);
 }
 
+/* Payment Breakdown card alignment: full width, lines up with the cards above */
 .bottom-single-column {
-    display: flex;
-    justify-content: center;
+    display: block;
+    width: 100%;
+    margin-bottom: 24px;
 }
 
     .bottom-single-column .pos-card-wrapper {
         width: 100%;
-        max-width: 420px;
+        max-width: none;
+    }
+
+    /* Keep the donut and its legend neatly centered inside the wider card */
+    .bottom-single-column .payment-chart-canvas-wrapper {
+        margin: 0 auto;
     }
 
 @media (max-width: 1024px) {
