@@ -656,3 +656,234 @@ select.filter-input {
         display: none !important;
     }
 }
+
+/* =========================================================
+   DATA AUDIT MODAL — REDESIGNED
+   Cleaner layout, readable table, balanced spacing
+   ========================================================= */
+
+/* Main popup */
+.swal2-popup {
+    width: min(760px, 92vw) !important;
+    max-width: 760px !important;
+    padding: 28px 32px 24px !important;
+    border-radius: 18px !important;
+    background: #1c241c !important;
+    border: 1px solid rgba(201, 168, 76, 0.25) !important;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55) !important;
+    font-family: 'Outfit', sans-serif !important;
+    color: #f2ede4 !important;
+}
+
+/* Popup title */
+.swal2-title {
+    color: #f2ede4 !important;
+    font-size: 23px !important;
+    font-weight: 900 !important;
+    letter-spacing: -0.5px !important;
+    margin: 0 0 18px !important;
+    padding: 0 !important;
+}
+
+/* Popup content */
+.swal2-html-container {
+    color: rgba(242, 237, 228, 0.8) !important;
+    font-size: 13px !important;
+    line-height: 1.6 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow-x: auto !important;
+}
+
+    /* Data Audit table */
+    .swal2-html-container table {
+        width: 100% !important;
+        min-width: 400px !important;
+        border-collapse: separate !important;
+        border-spacing: 0 !important;
+        table-layout: auto !important;
+        margin: 8px 0 4px !important;
+        background: #141a14 !important;
+        border: 1px solid rgba(255, 255, 255, 0.07) !important;
+        border-radius: 12px !important;
+        overflow: hidden !important;
+    }
+
+        /* Table headings */
+        .swal2-html-container table thead th,
+        .swal2-html-container table th {
+            background: #252f24 !important;
+            color: #c9a84c !important;
+            font-size: 12px !important;
+            font-weight: 800 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+            padding: 14px 16px !important;
+            text-align: left !important;
+            white-space: nowrap !important;
+            border-bottom: 1px solid rgba(201, 168, 76, 0.2) !important;
+        }
+
+        /* Table cells */
+        .swal2-html-container table td {
+            color: #f2ede4 !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
+            padding: 12px 16px !important;
+            text-align: left !important;
+            vertical-align: middle !important;
+            overflow-wrap: anywhere !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+        }
+
+        /* Alternating rows */
+        .swal2-html-container table tbody tr:nth-child(even) {
+            background: #1c241c !important;
+        }
+
+        .swal2-html-container table tbody tr:nth-child(odd) {
+            background: #171e17 !important;
+        }
+
+        /* Remove the last row's bottom border */
+        .swal2-html-container table tbody tr:last-child td {
+            border-bottom: none !important;
+        }
+
+        /* Field names */
+        .swal2-html-container table td:first-child {
+            color: rgba(242, 237, 228, 0.75) !important;
+            font-weight: 700 !important;
+            white-space: nowrap !important;
+        }
+
+        /* Old values */
+        .swal2-html-container table td:nth-child(2) {
+            color: rgba(242, 237, 228, 0.7) !important;
+        }
+
+        /* New values */
+        .swal2-html-container table td:nth-child(3) {
+            color: #ddb95e !important;
+            font-weight: 700 !important;
+        }
+
+        /* Empty values such as None */
+        .swal2-html-container table td em {
+            color: rgba(242, 237, 228, 0.4) !important;
+        }
+
+/* Popup action area */
+.swal2-actions {
+    gap: 12px !important;
+    margin: 22px 0 0 !important;
+}
+
+/* OK button */
+.swal2-confirm {
+    min-width: 90px !important;
+    min-height: 42px !important;
+    padding: 11px 28px !important;
+    border: none !important;
+    border-radius: 9px !important;
+    background: #c9a84c !important;
+    color: #0d110d !important;
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 900 !important;
+    box-shadow: none !important;
+    transition: background 0.2s ease, transform 0.2s ease !important;
+}
+
+    .swal2-confirm:hover {
+        background: #ddb95e !important;
+        transform: translateY(-1px);
+    }
+
+    /* Remove default focus outline and use a gold ring */
+    .swal2-confirm:focus-visible {
+        outline: 2px solid #f2ede4 !important;
+        outline-offset: 3px !important;
+        box-shadow: none !important;
+    }
+
+/* Mobile layout */
+@media (max-width: 600px) {
+    .swal2-popup {
+        width: 94vw !important;
+        padding: 22px 14px 18px !important;
+    }
+
+    .swal2-title {
+        font-size: 20px !important;
+        margin-bottom: 14px !important;
+    }
+
+    .swal2-html-container table th,
+    .swal2-html-container table td {
+        padding: 10px 9px !important;
+        font-size: 11px !important;
+    }
+
+    .swal2-actions {
+        margin-top: 18px !important;
+    }
+}
+
+    /* Activity Log: Show More / Show Less */
+
+    #activityLogTable tbody tr.activity-hidden {
+        display: none !important;
+    }
+
+    .activity-pagination {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        padding: 20px 12px;
+        margin-top: 4px;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .activity-count {
+        color: rgba(242, 237, 228, 0.55);
+        font-size: 12px;
+        text-align: center;
+    }
+
+    .show-more-activities {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-width: 150px;
+        min-height: 42px;
+        padding: 11px 22px;
+        background: #c9a84c;
+        color: #0d110d;
+        border: none;
+        border-radius: 9px;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: background 0.2s ease, transform 0.2s ease;
+    }
+
+        .show-more-activities:hover {
+            background: #ddb95e;
+            transform: translateY(-1px);
+        }
+
+        .show-more-activities:focus-visible {
+            outline: 2px solid #f2ede4;
+            outline-offset: 3px;
+        }
+
+        .show-more-activities:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
