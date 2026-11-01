@@ -1,41 +1,38 @@
-﻿
-/* ==========================================================================
-   CAFÈRO POS & DASHBOARD — THE VAULT
-   ARCHIVE MODULE SUB-VIEW RULES
+﻿/* ==========================================================================
+   CAFÈRO POS & DASHBOARD — ARCHIVE PAGE
+   Loaded after AdminDashboard.css and Products.css, which already provide the
+   sidebar, mobile header, page header, .table-card and .item-table styles.
+   This file only adds what is specific to the Archive page.
+
+   Colors use the theme variables (--gold, --bg-card, ...) so the page follows
+   the colors chosen in Web Customization (see Views/Shared/_ThemeStyles).
    ========================================================================== */
 
 /* ==========================================================================
-   LAYOUT HELPERS
+   PAGE HEADER & SECTION TITLES
    ========================================================================== */
 
-.hidden-view {
-    display: none !important;
+.page-header .widget-subtitle {
+    max-width: 640px;
+    margin-top: 2px;
+}
+
+.section-divider-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gold);
+    margin: 0 0 14px;
+    letter-spacing: -0.2px;
 }
 
 /* ==========================================================================
-   MAIN CONTENT
-   ========================================================================== */
-
-.main-content {
-    animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-/* ==========================================================================
-   TABLE CONTAINER & RESPONSIVENESS
+   TABLE CONTAINER
    ========================================================================== */
 
 .table-card {
-    background: var(--bg-card, #1C241C);
-    border-radius: 14px;
-    padding: 20px;
-    border: 1px solid var(--border-sub, rgba(255, 255, 255, 0.06));
-    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.2);
     width: 100%;
     margin-bottom: 30px;
-    box-sizing: border-box;
 }
-
-/* Smooth horizontal scrolling */
 
 .table-responsive {
     width: 100%;
@@ -43,8 +40,6 @@
     -webkit-overflow-scrolling: touch;
     border-radius: 8px;
 }
-
-    /* Custom subtle scrollbar */
 
     .table-responsive::-webkit-scrollbar {
         height: 6px;
@@ -56,7 +51,7 @@
     }
 
     .table-responsive::-webkit-scrollbar-thumb {
-        background: var(--border, rgba(201, 168, 76, 0.3));
+        background: var(--border);
         border-radius: 10px;
     }
 
@@ -64,372 +59,320 @@
    TABLE
    ========================================================================== */
 
-.recent-sales-table,
 .item-table {
-    width: 100%;
-    border-collapse: separate;
+    min-width: 640px;
+    border-collapse: separate; /* keeps cell borders intact for the sticky Action column on mobile */
     border-spacing: 0;
-    min-width: 600px;
-    table-layout: auto;
 }
 
-    /* Table headers */
-
-    .recent-sales-table thead,
-    .item-table thead {
-        background: var(--bg-card-2, #212B21) !important;
-    }
-
-    .recent-sales-table th,
-    .item-table th {
-        background: var(--bg-card-2, #212B21) !important;
-        color: var(--gold, #C9A84C);
-        font-size: 11px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 1.5px;
-        padding: 14px 16px;
-        text-align: left;
-        border-bottom: 1px solid var(--border, rgba(201, 168, 76, 0.18));
-        white-space: nowrap;
-    }
-
-    /* Table cells */
-
-    .recent-sales-table td,
+    .item-table th,
     .item-table td {
-        padding: 14px 16px;
-        font-size: 13.5px;
-        color: var(--muted-2, rgba(242, 237, 228, 0.75));
-        border-bottom: 1px solid var(--border-sub, rgba(255, 255, 255, 0.06));
-        vertical-align: middle;
         white-space: nowrap;
     }
 
-    /* Table rows */
-
-    .recent-sales-table tbody tr,
-    .item-table tbody tr {
-        transition: background-color 0.2s ease, border-color 0.2s ease;
+    .item-table th.col-id {
+        width: 80px;
     }
 
-        /* Hover */
+    .item-table th.col-action,
+    .item-table td.col-action {
+        width: 140px;
+        text-align: center;
+    }
 
-        .recent-sales-table tbody tr:hover,
-        .item-table tbody tr:hover {
-            background: rgba(201, 168, 76, 0.03) !important;
-        }
-
-        /* Last row */
-
-        .recent-sales-table tbody tr:last-child td,
-        .item-table tbody tr:last-child td {
-            border-bottom: 1px solid var(--border-sub, rgba(255, 255, 255, 0.06));
-        }
+    .item-table tbody tr:last-child td {
+        border-bottom: none;
+    }
 
 /* ==========================================================================
-   ACTION BUTTON GROUP
+   CELL CONTENT
    ========================================================================== */
 
-.action-btn-group {
-    display: flex;
-    gap: 8px;
-    justify-content: flex-start;
-    align-items: center;
+.archive-id {
+    color: var(--gold);
+    font-weight: 700;
 }
 
-/* ==========================================================================
-   TEXT UTILITIES
-   ========================================================================== */
-
-.text-danger {
-    color: var(--danger, #e05555) !important;
-    font-weight: 600;
+.archive-chip {
     display: inline-block;
-    margin-top: 6px;
-}
-
-/* ==========================================================================
-   ARCHIVE PAGE HEADER
-   ========================================================================== */
-
-.page-header {
-    margin-bottom: 20px;
-    align-items: flex-end;
-}
-
-.greeting-title {
-    font-size: 22px;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-}
-
-.greeting-subtitle {
-    color: var(--muted, rgba(242, 237, 228, 0.5));
-    margin-top: 5px;
-}
-
-/* ==========================================================================
-   SECTION TITLES
-   ========================================================================== */
-
-.section-divider-title {
-    font-size: 18px;
+    background: var(--bg-surface);
+    color: var(--muted-2);
+    border: 1px solid var(--border-sub);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
     font-weight: 700;
-    color: var(--gold, #C9A84C);
-    margin-bottom: 15px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
 }
 
-/* ==========================================================================
-   ARCHIVE ACTION ROW
-   ========================================================================== */
-
-.archive-actions-row {
-    display: flex;
-    justify-content: flex-start;
-    margin-bottom: 25px;
+.archive-name {
+    color: var(--cream);
+    font-weight: 600;
 }
 
-/* ==========================================================================
-   PREMIUM BACK BUTTON
-   ========================================================================== */
-
-.action-link-btn {
-    background: var(--bg-surface, #141A14);
-    color: var(--cream, #F2EDE4);
-    border: 1px solid var(--border-sub, rgba(255, 255, 255, 0.06));
-    padding: 10px 18px;
-    border-radius: 8px;
-    text-decoration: none;
+.archive-price {
+    color: var(--gold-light);
     font-weight: 700;
-    font-size: 13px;
-    letter-spacing: 0.3px;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-    .action-link-btn i {
-        font-size: 12px;
-        transition: transform 0.2s ease;
-    }
-
-    .action-link-btn:hover {
-        background: var(--bg-card-2, #212B21);
-        color: var(--gold, #C9A84C);
-        border-color: var(--border, rgba(201, 168, 76, 0.18));
-    }
-
-        .action-link-btn:hover i {
-            transform: translateX(-3px);
-        }
-
-    .action-link-btn:active {
-        transform: scale(0.97);
-    }
-
-/* ==========================================================================
-   PRODUCT TEXT
-   ========================================================================== */
-
-.product-muted-text {
-    color: var(--muted, rgba(242, 237, 228, 0.5));
+.archive-strong {
+    color: var(--cream);
+    font-weight: 600;
 }
 
-/* ==========================================================================
-   ARCHIVED STATUS BADGE
-   ========================================================================== */
+/* Status badge — same shape as .status-badge in Products.css */
 
 .status-badge-archived {
-    background: rgba(224, 85, 85, 0.15);
-    color: var(--danger, #e05555);
-    border: 1px solid rgba(224, 85, 85, 0.3);
+    display: inline-block;
+    background: rgba(224, 85, 85, 0.12);
+    color: var(--danger);
+    border: 1px solid rgba(224, 85, 85, 0.25);
     padding: 4px 10px;
     border-radius: 6px;
     font-size: 11px;
     font-weight: 800;
-    display: inline-block;
 }
+
+/* ==========================================================================
+   EMPTY STATE
+   ========================================================================== */
+
+.item-table td.archive-empty {
+    text-align: center;
+    padding: 44px 16px;
+    color: var(--muted);
+    font-size: 14px;
+    white-space: normal;
+}
+
+    .archive-empty i {
+        display: block;
+        font-size: 26px;
+        color: var(--gold);
+        opacity: 0.55;
+        margin-bottom: 10px;
+    }
 
 /* ==========================================================================
    RESTORE BUTTON
-   Cafèro dark green + gold theme
+   Outlined gold, fills solid gold on hover (same hover as the hamburger button
+   and .btn-back-category elsewhere in the app).
    ========================================================================== */
 
 .restore-btn {
-    appearance: none !important;
-    -webkit-appearance: none !important;
-    background: rgba(201, 168, 76, 0.10) !important;
-    color: var(--gold, #C9A84C) !important;
-    border: 1px solid rgba(201, 168, 76, 0.55) !important;
-    border-radius: 8px !important;
-    padding: 9px 18px !important;
-    font-family: 'Outfit', 'Segoe UI', sans-serif !important;
-    font-size: 12px !important;
-    font-weight: 800 !important;
-    letter-spacing: 0.3px !important;
-    line-height: 1.4 !important;
-    text-align: center !important;
-    text-decoration: none !important;
-    text-transform: none !important;
-    cursor: pointer !important;
-    white-space: nowrap !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    min-width: 86px !important;
-    min-height: 36px !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12) !important;
-    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 104px;
+    min-height: 36px;
+    padding: 8px 16px;
+    background: rgba(201, 168, 76, 0.12);
+    background: color-mix(in srgb, var(--gold) 12%, transparent);
+    color: var(--gold);
+    border: 1px solid rgba(201, 168, 76, 0.45);
+    border: 1px solid color-mix(in srgb, var(--gold) 45%, transparent);
+    border-radius: 8px;
+    font-family: 'Outfit', 'Segoe UI', sans-serif;
+    font-size: 12.5px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    line-height: 1.4;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
-    /* Hover */
-
-    .restore-btn:hover {
-        background: var(--gold, #C9A84C) !important;
-        color: var(--bg-base, #0D110D) !important;
-        border-color: var(--gold, #C9A84C) !important;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(201, 168, 76, 0.2) !important;
+    .restore-btn i {
+        font-size: 11px;
+        transition: transform 0.25s ease;
     }
 
-    /* Click */
+    .restore-btn:hover {
+        background: var(--gold);
+        color: var(--bg-base);
+        border-color: var(--gold);
+        transform: translateY(-1px);
+    }
+
+        .restore-btn:hover i {
+            transform: rotate(-45deg);
+        }
 
     .restore-btn:active {
         transform: translateY(0);
-        box-shadow: none !important;
     }
-
-    /* Keyboard focus */
 
     .restore-btn:focus-visible {
-        outline: 2px solid var(--cream, #F2EDE4) !important;
+        outline: 2px solid var(--cream);
         outline-offset: 3px;
-        box-shadow: 0 0 0 4px rgba(201, 168, 76, 0.18) !important;
     }
-
-    /* Disabled state */
 
     .restore-btn:disabled {
-        opacity: 0.45 !important;
-        cursor: not-allowed !important;
-        transform: none !important;
-        box-shadow: none !important;
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
     }
 
 /* ==========================================================================
-   PAGE ANIMATION
+   SWEETALERT2 DIALOGS
+   Dark card + gold confirm button, same look as the Activity Log dialogs.
    ========================================================================== */
 
-.slide-up {
-    animation: slideUp 0.3s ease-out;
+.swal2-popup {
+    width: min(440px, 92vw) !important;
+    padding: 2.2rem 2rem 1.8rem !important;
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5) !important;
+    font-family: 'Outfit', 'Segoe UI', sans-serif !important;
 }
 
+.swal2-title {
+    color: var(--cream) !important;
+    font-size: 1.4rem !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.3px !important;
+}
+
+.swal2-html-container {
+    color: var(--muted-2) !important;
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+    margin-top: 8px !important;
+}
+
+.swal2-actions {
+    gap: 10px !important;
+    margin-top: 24px !important;
+}
+
+.swal2-styled.swal2-confirm {
+    background: var(--gold) !important;
+    color: var(--bg-base) !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 11px 26px !important;
+    font-family: 'Outfit', 'Segoe UI', sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 800 !important;
+    box-shadow: none !important;
+    transition: background 0.2s ease, transform 0.2s ease !important;
+}
+
+    .swal2-styled.swal2-confirm:hover {
+        background: var(--gold-light) !important;
+        transform: translateY(-1px);
+    }
+
+.swal2-styled.swal2-cancel {
+    background: var(--bg-surface) !important;
+    color: var(--cream) !important;
+    border: 1px solid var(--border-sub) !important;
+    border-radius: 8px !important;
+    padding: 11px 24px !important;
+    font-family: 'Outfit', 'Segoe UI', sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    box-shadow: none !important;
+    transition: background 0.2s ease, border-color 0.2s ease !important;
+}
+
+    .swal2-styled.swal2-cancel:hover {
+        background: var(--bg-card-2) !important;
+        border-color: var(--border) !important;
+    }
+
+.swal2-styled:focus-visible {
+    outline: 2px solid var(--cream) !important;
+    outline-offset: 3px !important;
+    box-shadow: none !important;
+}
+
+/* Icons */
+
+.swal2-icon.swal2-warning,
+.swal2-icon.swal2-question {
+    border-color: var(--gold) !important;
+    color: var(--gold) !important;
+}
+
+.swal2-icon.swal2-success {
+    border-color: var(--success) !important;
+    color: var(--success) !important;
+}
+
+    .swal2-icon.swal2-success [class^='swal2-success-line'] {
+        background-color: var(--success) !important;
+    }
+
+    .swal2-icon.swal2-success .swal2-success-ring {
+        border-color: rgba(61, 191, 120, 0.3) !important;
+    }
+
+    /* These pieces mask the ring while it animates, so they must match the card */
+
+    .swal2-icon.swal2-success [class^='swal2-success-circular-line'],
+    .swal2-icon.swal2-success .swal2-success-fix {
+        background: var(--bg-card) !important;
+    }
+
+.swal2-icon.swal2-error {
+    border-color: var(--danger) !important;
+    color: var(--danger) !important;
+}
+
+    .swal2-icon.swal2-error [class^='swal2-x-mark-line'] {
+        background-color: var(--danger) !important;
+    }
+
 /* ==========================================================================
-   MEDIA QUERIES & MOBILE BREAKPOINTS
+   MOBILE
    ========================================================================== */
 
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
 
-    .dashboard-container {
-        display: block;
+    /* The tables scroll sideways on a phone. Pin the Action column to the right
+       edge so the Restore button is always reachable without scrolling. */
+
+    .item-table th.col-action,
+    .item-table td.col-action {
+        position: sticky;
+        right: 0;
+        z-index: 1;
+        width: auto;
+        padding-left: 12px;
+        padding-right: 12px;
+        background: var(--bg-card);
+        box-shadow: -10px 0 12px -8px rgba(0, 0, 0, 0.5);
     }
 
-    /* Sidebar */
-
-    .sidebar {
-        position: fixed;
-        left: -255px;
-        top: 0;
-        z-index: 1001;
-        transition: left 0.3s ease;
-        height: 100vh;
-        box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
+    .item-table th.col-action {
+        background: var(--bg-card-2);
     }
 
-        .sidebar.mobile-open {
-            left: 0;
-        }
-
-    /* Overlay */
-
-    .sidebar-overlay {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.7);
-        z-index: 1000;
-        backdrop-filter: blur(4px);
+    .restore-btn {
+        min-width: 0;
+        padding: 8px 12px;
     }
 
-        .sidebar-overlay.mobile-open {
-            display: block;
-        }
+    /* Keep the empty-state message inside the visible area */
 
-    /* Mobile Header */
-
-    .mobile-header {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        padding: 20px;
-        background: var(--bg-base, #0D110D);
-        border-bottom: 1px solid var(--border-sub, rgba(255, 255, 255, 0.06));
-        margin-bottom: 20px;
-    }
-
-    /* Hamburger */
-
-    .hamburger-btn {
-        background: var(--bg-surface, #141A14);
-        border: 1px solid var(--border, rgba(201, 168, 76, 0.18));
-        color: var(--gold, #C9A84C);
-        width: 44px;
-        height: 44px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        font-size: 18px;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-    }
-
-        .hamburger-btn:hover {
-            background: var(--gold, #C9A84C);
-            color: var(--bg-base, #0D110D);
-            border-color: var(--gold, #C9A84C);
-            transform: translateY(-2px);
-        }
-
-    /* Mobile Brand */
-
-    .mobile-brand {
-        font-size: 20px;
-        font-weight: 800;
-        color: var(--cream, #F2EDE4);
-        letter-spacing: -0.5px;
+    .item-table td.archive-empty {
+        text-align: left;
+        padding: 28px 16px;
     }
 }
 
-/* ==========================================================================
-   DESKTOP
-   ========================================================================== */
+@media (max-width: 600px) {
 
-@media (min-width: 1025px) {
+    .table-card {
+        padding: 16px;
+    }
 
-    .mobile-header,
-    .sidebar-overlay {
-        display: none !important;
+    .section-divider-title {
+        font-size: 16px;
     }
 }
