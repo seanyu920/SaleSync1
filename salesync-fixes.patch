@@ -1,0 +1,1587 @@
+diff --git a/SaleSync/Controllers/AdminController.cs b/SaleSync/Controllers/AdminController.cs
+index 7aadb2e..63ebb6f 100644
+--- a/SaleSync/Controllers/AdminController.cs
++++ b/SaleSync/Controllers/AdminController.cs
+@@ -327,10 +327,46 @@ namespace SaleSync.Controllers
+ 
+         [Authorize(Roles = "Admin,Manager")]
+         [HttpGet]
+-        public IActionResult Analytics(string timeframe = "week")
++        public IActionResult Analytics(string timeframe = "week", DateTime? startDate = null, DateTime? endDate = null)
+         {
+             var model = new AnalyticsViewModel { SelectedTimeframe = timeframe.ToLower() };
+ 
++            // Custom range needs both dates. Without them, fall back to the default week view.
++            DateTime rangeStart = default;
++            DateTime rangeEnd = default;
++
++            if (model.SelectedTimeframe == "custom")
++            {
++                if (startDate.HasValue && endDate.HasValue)
++                {
++                    // Keep dates inside what SQL Server's datetime can store
++                    var sqlMin = new DateTime(1753, 1, 1);
++                    var sqlMax = new DateTime(9998, 12, 31);
++
++                    rangeStart = startDate.Value.Date;
++                    rangeEnd = endDate.Value.Date;
++
++                    if (rangeStart < sqlMin) rangeStart = sqlMin;
++                    if (rangeStart > sqlMax) rangeStart = sqlMax;
++                    if (rangeEnd < sqlMin) rangeEnd = sqlMin;
++                    if (rangeEnd > sqlMax) rangeEnd = sqlMax;
++
++                    // Be forgiving if they come in the wrong way round
++                    if (rangeStart > rangeEnd)
++                    {
++                        var swap = rangeStart;
++                        rangeStart = rangeEnd;
++                        rangeEnd = swap;
++                    }
++
++                    model.StartDate = rangeStart;
++                    model.EndDate = rangeEnd;
++                }
++                else
++                {
++                    model.SelectedTimeframe = "week";
++                }
++            }
+ 
+             string dateCondition = "CAST(s.sale_date AS DATE) = CAST(GETDATE() AS DATE)";
+             string salesGroupQuery = "";
+@@ -367,6 +403,46 @@ namespace SaleSync.Controllers
+                 ORDER BY MONTH(sale_date) ASC;";
+                     break;
+ 
++                case "custom":
++                    // @rangeStart and @rangeEndExclusive are supplied by AnalyticsCommand() below.
++                    // The end date is inclusive, so the query stops at midnight of the following day.
++                    dateCondition = "s.sale_date >= @rangeStart AND s.sale_date < @rangeEndExclusive";
++
++                    int daysInRange = (rangeEnd - rangeStart).Days + 1;
++
++                    if (daysInRange == 1)
++                    {
++                        // A single day: same minute-by-minute view as "today"
++                        salesGroupQuery = $@"
++                SELECT FORMAT(sale_date, 'hh:mm tt') AS Label, SUM(final_amount) AS Total
++                FROM dbo.sales s
++                WHERE {dateCondition}
++                GROUP BY FORMAT(sale_date, 'hh:mm tt'), DATEPART(hour, sale_date), DATEPART(minute, sale_date)
++                ORDER BY DATEPART(hour, sale_date), DATEPART(minute, sale_date) ASC;";
++                    }
++                    else if (daysInRange <= 62)
++                    {
++                        // Up to about two months: one point per day
++                        salesGroupQuery = $@"
++                SELECT FORMAT(sale_date, 'MMM dd') AS Label, SUM(final_amount) AS Total
++                FROM dbo.sales s
++                WHERE {dateCondition}
++                GROUP BY FORMAT(sale_date, 'MMM dd'), CAST(sale_date AS DATE)
++                ORDER BY CAST(sale_date AS DATE) ASC;";
++                    }
++                    else
++                    {
++                        // Longer ranges: one point per month. The year is part of the label so
++                        // the same month in two different years doesn't get merged together.
++                        salesGroupQuery = $@"
++                SELECT FORMAT(sale_date, 'MMM yyyy') AS Label, SUM(final_amount) AS Total
++                FROM dbo.sales s
++                WHERE {dateCondition}
++                GROUP BY FORMAT(sale_date, 'MMM yyyy'), YEAR(sale_date), MONTH(sale_date)
++                ORDER BY YEAR(sale_date), MONTH(sale_date) ASC;";
++                    }
++                    break;
++
+                 case "week":
+                 default:
+                     model.SelectedTimeframe = "week";
+@@ -384,6 +460,19 @@ namespace SaleSync.Controllers
+             {
+                 conn.Open();
+ 
++                // Every analytics query goes through here. Only a custom range needs parameters.
++                SqlCommand AnalyticsCommand(string sql)
++                {
++                    var command = new SqlCommand(sql, conn);
++
++                    if (model.SelectedTimeframe == "custom")
++                    {
++                        command.Parameters.AddWithValue("@rangeStart", rangeStart);
++                        command.Parameters.AddWithValue("@rangeEndExclusive", rangeEnd.AddDays(1));
++                    }
++
++                    return command;
++                }
+ 
+                 string summarySql = $@"
+             SELECT 
+@@ -393,7 +482,7 @@ namespace SaleSync.Controllers
+             FROM dbo.sales s
+             WHERE {dateCondition};";
+ 
+-                using (SqlCommand cmd = new SqlCommand(summarySql, conn))
++                using (SqlCommand cmd = AnalyticsCommand(summarySql))
+                 using (SqlDataReader reader = cmd.ExecuteReader())
+                 {
+                     if (reader.Read())
+@@ -404,7 +493,7 @@ namespace SaleSync.Controllers
+                     }
+                 }
+ 
+-                using (SqlCommand cmd = new SqlCommand(salesGroupQuery, conn))
++                using (SqlCommand cmd = AnalyticsCommand(salesGroupQuery))
+                 using (SqlDataReader reader = cmd.ExecuteReader())
+                 {
+                     while (reader.Read())
+@@ -424,7 +513,7 @@ namespace SaleSync.Controllers
+             GROUP BY DATEPART(HOUR, s.sale_date), FORMAT(s.sale_date, 'hh tt')
+             ORDER BY RawHour ASC;";
+ 
+-                using (SqlCommand cmd = new SqlCommand(peakHoursSql, conn))
++                using (SqlCommand cmd = AnalyticsCommand(peakHoursSql))
+                 using (SqlDataReader reader = cmd.ExecuteReader())
+                 {
+                     while (reader.Read())
+@@ -444,7 +533,7 @@ namespace SaleSync.Controllers
+             GROUP BY p.product_name
+             ORDER BY TotalQty DESC;";
+ 
+-                using (SqlCommand cmd = new SqlCommand(bestSellersSql, conn))
++                using (SqlCommand cmd = AnalyticsCommand(bestSellersSql))
+                 using (SqlDataReader reader = cmd.ExecuteReader())
+                 {
+                     while (reader.Read())
+@@ -464,7 +553,7 @@ namespace SaleSync.Controllers
+             WHERE {dateCondition}
+             GROUP BY s.payment_method;";
+ 
+-                using (SqlCommand cmd = new SqlCommand(paymentSql, conn))
++                using (SqlCommand cmd = AnalyticsCommand(paymentSql))
+                 using (SqlDataReader reader = cmd.ExecuteReader())
+                 {
+                     while (reader.Read())
+diff --git a/SaleSync/Models/AnalyticsViewModel.cs b/SaleSync/Models/AnalyticsViewModel.cs
+index 7b0a704..8d23221 100644
+--- a/SaleSync/Models/AnalyticsViewModel.cs
++++ b/SaleSync/Models/AnalyticsViewModel.cs
+@@ -6,6 +6,10 @@ namespace SaleSync.Models
+     {
+         public string SelectedTimeframe { get; set; }
+ 
++        // Only set when SelectedTimeframe is "custom" (both inclusive, time part is midnight)
++        public DateTime? StartDate { get; set; }
++        public DateTime? EndDate { get; set; }
++
+         // KPI Summary Cards
+         public decimal TotalRevenue { get; set; }
+         public int TotalTransactions { get; set; }
+diff --git a/SaleSync/Views/Admin/Analytics.cshtml b/SaleSync/Views/Admin/Analytics.cshtml
+index f346613..11bb0ff 100644
+--- a/SaleSync/Views/Admin/Analytics.cshtml
++++ b/SaleSync/Views/Admin/Analytics.cshtml
+@@ -225,6 +225,14 @@
+                         Deep dive into your sales and performance metrics.
+                     </p>
+ 
++                    @if (Model.SelectedTimeframe == "custom" && Model.StartDate.HasValue && Model.EndDate.HasValue)
++                    {
++                        <p class="range-note">
++                            <i class="fas fa-calendar-alt"></i>
++                            Showing @Model.StartDate.Value.ToString("MMM dd, yyyy") – @Model.EndDate.Value.ToString("MMM dd, yyyy")
++                        </p>
++                    }
++
+                 </div>
+ 
+ 
+@@ -277,7 +285,9 @@
+                             </label>
+ 
+                             <input type="date"
+-                                   id="startDate" />
++                                   id="startDate"
++                                   value="@(Model.StartDate?.ToString("yyyy-MM-dd"))"
++                                   max="@DateTime.Today.ToString("yyyy-MM-dd")" />
+ 
+                         </div>
+ 
+@@ -289,7 +299,9 @@
+                             </label>
+ 
+                             <input type="date"
+-                                   id="endDate" />
++                                   id="endDate"
++                                   value="@(Model.EndDate?.ToString("yyyy-MM-dd"))"
++                                   max="@DateTime.Today.ToString("yyyy-MM-dd")" />
+ 
+                         </div>
+ 
+diff --git a/SaleSync/Views/Admin/TransactionHistory.cshtml b/SaleSync/Views/Admin/TransactionHistory.cshtml
+index f1398bc..4fca6b9 100644
+--- a/SaleSync/Views/Admin/TransactionHistory.cshtml
++++ b/SaleSync/Views/Admin/TransactionHistory.cshtml
+@@ -21,6 +21,17 @@
+         to = Model.To?.ToString("yyyy-MM-dd"),
+         page = p
+     });
++
++    // --- Used only by the printed page header ---
++    var activeFilters = new List<string>();
++    if (!string.IsNullOrWhiteSpace(Model.Search)) activeFilters.Add("Search: \"" + Model.Search + "\"");
++    if (!string.IsNullOrWhiteSpace(Model.Status)) activeFilters.Add("Status: " + Model.Status);
++    if (!string.IsNullOrWhiteSpace(Model.Method)) activeFilters.Add("Payment: " + Model.Method);
++    if (Model.From.HasValue) activeFilters.Add("From: " + Model.From.Value.ToString("MMM dd, yyyy"));
++    if (Model.To.HasValue) activeFilters.Add("To: " + Model.To.Value.ToString("MMM dd, yyyy"));
++
++    decimal pageCompletedTotal = Model.Sales.Where(s => s.Status == "Completed").Sum(s => s.TotalAmount);
++    string printedBy = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? User.Identity?.Name ?? "User";
+ }
+ <!DOCTYPE html>
+ <html lang="en">
+@@ -97,8 +108,20 @@
+ 
+         <main class="main-content slide-up">
+ 
+-        
+-            <div class="th-toolbar">
++            @* Printed page header: hidden on screen, only shows on paper *@
++            <div class="th-print-header">
++                <div class="th-print-store">@store.StoreName</div>
++                <div class="th-print-title">Transaction History</div>
++                <div class="th-print-meta">
++                    <div><strong>Filters applied:</strong> @(activeFilters.Count > 0 ? string.Join("  |  ", activeFilters) : "None (all transactions)")</div>
++                    <div><strong>Page:</strong> @Model.Page of @Model.TotalPages  ·  Showing @firstShown–@lastShown of @Model.TotalCount.ToString("N0")</div>
++                    <div><strong>On this page:</strong> @Model.Sales.Count @(Model.Sales.Count == 1 ? "transaction" : "transactions")  ·  Completed: ₱@pageCompletedTotal.ToString("N2")</div>
++                    <div><strong>All matching filters:</strong> @Model.TotalCount.ToString("N0") @(Model.TotalCount == 1 ? "transaction" : "transactions")  ·  Completed: ₱@Model.CompletedTotal.ToString("N2")</div>
++                    <div><strong>Printed:</strong> <span id="thPrintedAt">@DateTime.Now.ToString("MMM dd, yyyy hh:mm tt")</span> by @printedBy</div>
++                </div>
++            </div>
++
++            <div class="th-toolbar no-print">
+                 <div class="page-header">
+                     <h1 class="greeting-title">Transaction History</h1>
+                     <p class="greeting-subtitle">Every sale on record, newest first.</p>
+@@ -107,10 +130,11 @@
+                 <div class="th-links">
+                     <a class="th-pill" href="/@homeController/Dashboard"><i class="fas fa-arrow-left"></i> Dashboard</a>
+                     <a class="th-pill" href="/Admin/DailyReport"><i class="fas fa-file-invoice-dollar"></i> End of Day Report</a>
++                    <button type="button" class="th-pill" id="thPrintBtn" title="Print the transactions on this page, with the filters currently applied"><i class="fas fa-print"></i> Print Page</button>
+                 </div>
+             </div>
+ 
+-            <form method="get" action="/Admin/TransactionHistory" class="th-filters">
++            <form method="get" action="/Admin/TransactionHistory" class="th-filters no-print">
+                 <div class="th-field th-field-grow">
+                     <label for="thSearch">Search</label>
+                     <input type="text" id="thSearch" name="q" value="@Model.Search" placeholder="Transaction ID or customer name" autocomplete="off" />
+@@ -158,7 +182,7 @@
+ 
+             
+             <div class="pos-card-wrapper th-card">
+-                <div class="pos-card-header">
++                <div class="pos-card-header no-print">
+                     <div class="pos-card-title"><i class="fas fa-history"></i> All Transactions</div>
+                     <div class="th-summary">
+                         <span>@Model.TotalCount.ToString("N0") @(Model.TotalCount == 1 ? "transaction" : "transactions")</span>
+@@ -229,7 +253,7 @@
+ 
+                 @if (Model.TotalCount > 0)
+                 {
+-                    <div class="th-pager">
++                    <div class="th-pager no-print">
+                         <span class="th-pager-info">Showing @firstShown–@lastShown of @Model.TotalCount.ToString("N0")</span>
+ 
+                         @if (Model.TotalPages > 1)
+@@ -299,6 +323,65 @@
+                     if (overlay) overlay.classList.remove('mobile-open');
+                 }
+             });
++
++            // ---- Print this page (current page of results + the filters that are applied) ----
++
++            // True when the filter boxes differ from what the table below was loaded with.
++            function filtersChanged() {
++                const form = document.querySelector('.th-filters');
++                if (!form) return false;
++
++                const fields = form.querySelectorAll('input[name], select[name]');
++                for (let i = 0; i < fields.length; i++) {
++                    const el = fields[i];
++
++                    if (el.tagName === 'SELECT') {
++                        let original = el.options.length ? el.options[0].value : '';
++                        for (let j = 0; j < el.options.length; j++) {
++                            if (el.options[j].defaultSelected) { original = el.options[j].value; break; }
++                        }
++                        if (el.value !== original) return true;
++                    } else if (el.value !== el.defaultValue) {
++                        return true;
++                    }
++                }
++                return false;
++            }
++
++            const printBtn = document.getElementById('thPrintBtn');
++            if (printBtn) {
++                printBtn.addEventListener('click', function () {
++                    if (!filtersChanged()) {
++                        window.print();
++                        return;
++                    }
++
++                    if (typeof Swal === 'undefined') {
++                        alert("You changed the filters but haven't clicked Apply yet. Click Apply first, then print.");
++                        return;
++                    }
++
++                    Swal.fire({
++                        icon: 'info',
++                        title: 'Filters not applied yet',
++                        text: "You changed the filters but haven't clicked Apply. Printing now only includes the filters that are currently applied.",
++                        showCancelButton: true,
++                        confirmButtonColor: '#C9A84C',
++                        confirmButtonText: 'Print anyway',
++                        cancelButtonText: 'Go back'
++                    }).then(function (result) {
++                        if (result.isConfirmed) window.print();
++                    });
++                });
++            }
++
++            // Stamp the real print time (also covers Ctrl+P / the browser's own print menu)
++            window.addEventListener('beforeprint', function () {
++                const stamp = document.getElementById('thPrintedAt');
++                if (stamp) {
++                    stamp.textContent = new Date().toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' });
++                }
++            });
+     </script>
+ </body>
+ </html>
+\ No newline at end of file
+diff --git a/SaleSync/wwwroot/css/ActivityLog.css b/SaleSync/wwwroot/css/ActivityLog.css
+index c3f337a..1dadd75 100644
+--- a/SaleSync/wwwroot/css/ActivityLog.css
++++ b/SaleSync/wwwroot/css/ActivityLog.css
+@@ -59,6 +59,8 @@ body {
+     height: 100vh;
+     border-right: 1px solid var(--border-sub);
+     flex-shrink: 0;
++    overflow-y: auto;
++    overflow-x: hidden;
+ }
+ 
+ /* Logo block */
+@@ -887,3 +889,95 @@ select.filter-input {
+             cursor: not-allowed;
+             transform: none;
+         }
++
++
++/* ==========================================================================
++   SIDEBAR: SHORT-WINDOW FIX
++   On a short window the sidebar used to be cut off at the bottom with no way
++   to reach the lower buttons. It now scrolls, and the spacing tightens first
++   so most of the time everything still fits without scrolling.
++   ========================================================================== */
++.sidebar {
++    scrollbar-width: thin;
++    scrollbar-color: var(--border) transparent;
++}
++
++    .sidebar::-webkit-scrollbar {
++        width: 6px;
++    }
++
++    .sidebar::-webkit-scrollbar-track {
++        background: transparent;
++    }
++
++    .sidebar::-webkit-scrollbar-thumb {
++        background: var(--border);
++        border-radius: 3px;
++    }
++
++@media (min-width: 1025px) and (max-height: 880px) {
++    .sidebar {
++        padding: 22px 18px;
++    }
++
++        .sidebar .logo-section {
++            margin-bottom: 16px;
++            padding-bottom: 12px;
++        }
++
++        .sidebar .profile-section {
++            margin-bottom: 18px;
++            padding-bottom: 14px;
++        }
++
++        .sidebar .sidebar-menu {
++            gap: 4px;
++        }
++
++        .sidebar .menu-btn {
++            padding: 9px 14px;
++            font-size: 14px;
++        }
++
++        .sidebar .logout-section {
++            padding-top: 14px;
++        }
++}
++
++@media (min-width: 1025px) and (max-height: 700px) {
++    .sidebar {
++        padding: 14px 16px;
++    }
++
++        .sidebar .logo-section {
++            margin-bottom: 10px;
++            padding-bottom: 8px;
++        }
++
++        .sidebar .logo-title {
++            font-size: 19px;
++        }
++
++        .sidebar .profile-section {
++            margin-bottom: 10px;
++            padding-bottom: 10px;
++        }
++
++        .sidebar .profile-circle {
++            width: 34px;
++            height: 34px;
++        }
++
++        .sidebar .sidebar-menu {
++            gap: 2px;
++        }
++
++        .sidebar .menu-btn {
++            padding: 7px 12px;
++            font-size: 13.5px;
++        }
++
++        .sidebar .logout-section {
++            padding-top: 10px;
++        }
++}
+diff --git a/SaleSync/wwwroot/css/AdminDashboard.css b/SaleSync/wwwroot/css/AdminDashboard.css
+index 7127e84..a3748c8 100644
+--- a/SaleSync/wwwroot/css/AdminDashboard.css
++++ b/SaleSync/wwwroot/css/AdminDashboard.css
+@@ -68,6 +68,8 @@ body {
+     height: 100vh;
+     border-right: 1px solid var(--border-sub);
+     flex-shrink: 0;
++    overflow-y: auto;
++    overflow-x: hidden;
+ }
+ 
+ .logo-section {
+@@ -1972,3 +1974,95 @@ body {
+         border-color: var(--gold);
+         color: var(--gold-light);
+     }
++
++
++/* ==========================================================================
++   SIDEBAR: SHORT-WINDOW FIX
++   On a short window the sidebar used to be cut off at the bottom with no way
++   to reach the lower buttons. It now scrolls, and the spacing tightens first
++   so most of the time everything still fits without scrolling.
++   ========================================================================== */
++.sidebar {
++    scrollbar-width: thin;
++    scrollbar-color: var(--border) transparent;
++}
++
++    .sidebar::-webkit-scrollbar {
++        width: 6px;
++    }
++
++    .sidebar::-webkit-scrollbar-track {
++        background: transparent;
++    }
++
++    .sidebar::-webkit-scrollbar-thumb {
++        background: var(--border);
++        border-radius: 3px;
++    }
++
++@media (min-width: 1025px) and (max-height: 880px) {
++    .sidebar {
++        padding: 22px 18px;
++    }
++
++        .sidebar .logo-section {
++            margin-bottom: 16px;
++            padding-bottom: 12px;
++        }
++
++        .sidebar .profile-section {
++            margin-bottom: 18px;
++            padding-bottom: 14px;
++        }
++
++        .sidebar .sidebar-menu {
++            gap: 4px;
++        }
++
++        .sidebar .menu-btn {
++            padding: 9px 14px;
++            font-size: 14px;
++        }
++
++        .sidebar .logout-section {
++            padding-top: 14px;
++        }
++}
++
++@media (min-width: 1025px) and (max-height: 700px) {
++    .sidebar {
++        padding: 14px 16px;
++    }
++
++        .sidebar .logo-section {
++            margin-bottom: 10px;
++            padding-bottom: 8px;
++        }
++
++        .sidebar .logo-title {
++            font-size: 19px;
++        }
++
++        .sidebar .profile-section {
++            margin-bottom: 10px;
++            padding-bottom: 10px;
++        }
++
++        .sidebar .profile-circle {
++            width: 34px;
++            height: 34px;
++        }
++
++        .sidebar .sidebar-menu {
++            gap: 2px;
++        }
++
++        .sidebar .menu-btn {
++            padding: 7px 12px;
++            font-size: 13.5px;
++        }
++
++        .sidebar .logout-section {
++            padding-top: 10px;
++        }
++}
+diff --git a/SaleSync/wwwroot/css/Analytics.css b/SaleSync/wwwroot/css/Analytics.css
+index 385db83..e3860eb 100644
+--- a/SaleSync/wwwroot/css/Analytics.css
++++ b/SaleSync/wwwroot/css/Analytics.css
+@@ -78,6 +78,8 @@ body {
+     height: 100vh;
+     border-right: 1px solid var(--border-sub);
+     flex-shrink: 0;
++    overflow-y: auto;
++    overflow-x: hidden;
+ }
+ 
+ 
+@@ -364,6 +366,20 @@ body {
+ }
+ 
+ 
++/* Shows which dates are being displayed once a custom range is applied */
++.range-note {
++    margin-top: 6px;
++    font-size: 13px;
++    font-weight: 600;
++    color: var(--gold-light);
++}
++
++    .range-note i {
++        margin-right: 6px;
++        color: var(--gold);
++    }
++
++
+ .date-field {
+     display: flex;
+     flex-direction: column;
+@@ -1063,3 +1079,95 @@ body {
+     }
+ }
+ 
++
++
++/* ==========================================================================
++   SIDEBAR: SHORT-WINDOW FIX
++   On a short window the sidebar used to be cut off at the bottom with no way
++   to reach the lower buttons. It now scrolls, and the spacing tightens first
++   so most of the time everything still fits without scrolling.
++   ========================================================================== */
++.sidebar {
++    scrollbar-width: thin;
++    scrollbar-color: var(--border) transparent;
++}
++
++    .sidebar::-webkit-scrollbar {
++        width: 6px;
++    }
++
++    .sidebar::-webkit-scrollbar-track {
++        background: transparent;
++    }
++
++    .sidebar::-webkit-scrollbar-thumb {
++        background: var(--border);
++        border-radius: 3px;
++    }
++
++@media (min-width: 1025px) and (max-height: 880px) {
++    .sidebar {
++        padding: 22px 18px;
++    }
++
++        .sidebar .logo-section {
++            margin-bottom: 16px;
++            padding-bottom: 12px;
++        }
++
++        .sidebar .profile-section {
++            margin-bottom: 18px;
++            padding-bottom: 14px;
++        }
++
++        .sidebar .sidebar-menu {
++            gap: 4px;
++        }
++
++        .sidebar .menu-btn {
++            padding: 9px 14px;
++            font-size: 14px;
++        }
++
++        .sidebar .logout-section {
++            padding-top: 14px;
++        }
++}
++
++@media (min-width: 1025px) and (max-height: 700px) {
++    .sidebar {
++        padding: 14px 16px;
++    }
++
++        .sidebar .logo-section {
++            margin-bottom: 10px;
++            padding-bottom: 8px;
++        }
++
++        .sidebar .logo-title {
++            font-size: 19px;
++        }
++
++        .sidebar .profile-section {
++            margin-bottom: 10px;
++            padding-bottom: 10px;
++        }
++
++        .sidebar .profile-circle {
++            width: 34px;
++            height: 34px;
++        }
++
++        .sidebar .sidebar-menu {
++            gap: 2px;
++        }
++
++        .sidebar .menu-btn {
++            padding: 7px 12px;
++            font-size: 13.5px;
++        }
++
++        .sidebar .logout-section {
++            padding-top: 10px;
++        }
++}
+diff --git a/SaleSync/wwwroot/css/CashierDashboard.css b/SaleSync/wwwroot/css/CashierDashboard.css
+index 333017b..a1d1113 100644
+--- a/SaleSync/wwwroot/css/CashierDashboard.css
++++ b/SaleSync/wwwroot/css/CashierDashboard.css
+@@ -71,6 +71,8 @@ body {
+     height: 100vh;
+     border-right: 1px solid var(--border-sub);
+     flex-shrink: 0;
++    overflow-y: auto;
++    overflow-x: hidden;
+ }
+ 
+ .logo-section {
+@@ -2240,3 +2242,95 @@ body {
+         gap: 16px;
+     }
+ }
++
++
++/* ==========================================================================
++   SIDEBAR: SHORT-WINDOW FIX
++   On a short window the sidebar used to be cut off at the bottom with no way
++   to reach the lower buttons. It now scrolls, and the spacing tightens first
++   so most of the time everything still fits without scrolling.
++   ========================================================================== */
++.sidebar {
++    scrollbar-width: thin;
++    scrollbar-color: var(--border) transparent;
++}
++
++    .sidebar::-webkit-scrollbar {
++        width: 6px;
++    }
++
++    .sidebar::-webkit-scrollbar-track {
++        background: transparent;
++    }
++
++    .sidebar::-webkit-scrollbar-thumb {
++        background: var(--border);
++        border-radius: 3px;
++    }
++
++@media (min-width: 1025px) and (max-height: 880px) {
++    .sidebar {
++        padding: 22px 18px;
++    }
++
++        .sidebar .logo-section {
++            margin-bottom: 16px;
++            padding-bottom: 12px;
++        }
++
++        .sidebar .profile-section {
++            margin-bottom: 18px;
++            padding-bottom: 14px;
++        }
++
++        .sidebar .sidebar-menu {
++            gap: 4px;
++        }
++
++        .sidebar .menu-btn {
++            padding: 9px 14px;
++            font-size: 14px;
++        }
++
++        .sidebar .logout-section {
++            padding-top: 14px;
++        }
++}
++
++@media (min-width: 1025px) and (max-height: 700px) {
++    .sidebar {
++        padding: 14px 16px;
++    }
++
++        .sidebar .logo-section {
++            margin-bottom: 10px;
++            padding-bottom: 8px;
++        }
++
++        .sidebar .logo-title {
++            font-size: 19px;
++        }
++
++        .sidebar .profile-section {
++            margin-bottom: 10px;
++            padding-bottom: 10px;
++        }
++
++        .sidebar .profile-circle {
++            width: 34px;
++            height: 34px;
++        }
++
++        .sidebar .sidebar-menu {
++            gap: 2px;
++        }
++
++        .sidebar .menu-btn {
++            padding: 7px 12px;
++            font-size: 13.5px;
++        }
++
++        .sidebar .logout-section {
++            padding-top: 10px;
++        }
++}
+diff --git a/SaleSync/wwwroot/css/CashierMenu.css b/SaleSync/wwwroot/css/CashierMenu.css
+index c2b3d79..449ffcf 100644
+--- a/SaleSync/wwwroot/css/CashierMenu.css
++++ b/SaleSync/wwwroot/css/CashierMenu.css
+@@ -60,6 +60,8 @@ body {
+     height: 100vh;
+     border-right: 1px solid var(--border-sub);
+     flex-shrink: 0;
++    overflow-y: auto;
++    overflow-x: hidden;
+ }
+ 
+ /* Logo block */
+@@ -1420,3 +1422,95 @@ body {
+         border-color: var(--border);
+         background: rgba(255,255,255,0.03);
+     }
++
++
++/* ==========================================================================
++   SIDEBAR: SHORT-WINDOW FIX
++   On a short window the sidebar used to be cut off at the bottom with no way
++   to reach the lower buttons. It now scrolls, and the spacing tightens first
++   so most of the time everything still fits without scrolling.
++   ========================================================================== */
++.sidebar {
++    scrollbar-width: thin;
++    scrollbar-color: var(--border) transparent;
++}
++
++    .sidebar::-webkit-scrollbar {
++        width: 6px;
++    }
++
++    .sidebar::-webkit-scrollbar-track {
++        background: transparent;
++    }
++
++    .sidebar::-webkit-scrollbar-thumb {
++        background: var(--border);
++        border-radius: 3px;
++    }
++
++@media (min-width: 1025px) and (max-height: 880px) {
++    .sidebar {
++        padding: 22px 18px;
++    }
++
++        .sidebar .logo-section {
++            margin-bottom: 16px;
++            padding-bottom: 12px;
++        }
++
++        .sidebar .profile-section {
++            margin-bottom: 18px;
++            padding-bottom: 14px;
++        }
++
++        .sidebar .sidebar-menu {
++            gap: 4px;
++        }
++
++        .sidebar .menu-btn {
++            padding: 9px 14px;
++            font-size: 14px;
++        }
++
++        .sidebar .logout-section {
++            padding-top: 14px;
++        }
++}
++
++@media (min-width: 1025px) and (max-height: 700px) {
++    .sidebar {
++        padding: 14px 16px;
++    }
++
++        .sidebar .logo-section {
++            margin-bottom: 10px;
++            padding-bottom: 8px;
++        }
++
++        .sidebar .logo-title {
++            font-size: 19px;
++        }
++
++        .sidebar .profile-section {
++            margin-bottom: 10px;
++            padding-bottom: 10px;
++        }
++
++        .sidebar .profile-circle {
++            width: 34px;
++            height: 34px;
++        }
++
++        .sidebar .sidebar-menu {
++            gap: 2px;
++        }
++
++        .sidebar .menu-btn {
++            padding: 7px 12px;
++            font-size: 13.5px;
++        }
++
++        .sidebar .logout-section {
++            padding-top: 10px;
++        }
++}
+diff --git a/SaleSync/wwwroot/css/DailyReport.css b/SaleSync/wwwroot/css/DailyReport.css
+index c006e39..8143ccb 100644
+--- a/SaleSync/wwwroot/css/DailyReport.css
++++ b/SaleSync/wwwroot/css/DailyReport.css
+@@ -57,6 +57,8 @@ body {
+     height: 100vh;
+     border-right: 1px solid var(--border-sub);
+     flex-shrink: 0;
++    overflow-y: auto;
++    overflow-x: hidden;
+ }
+ 
+ /* Logo block */
+@@ -1055,3 +1057,95 @@ body {
+         color: #111 !important;
+     }
+ }
++
++
++/* ==========================================================================
++   SIDEBAR: SHORT-WINDOW FIX
++   On a short window the sidebar used to be cut off at the bottom with no way
++   to reach the lower buttons. It now scrolls, and the spacing tightens first
++   so most of the time everything still fits without scrolling.
++   ========================================================================== */
++.sidebar {
++    scrollbar-width: thin;
++    scrollbar-color: var(--border) transparent;
++}
++
++    .sidebar::-webkit-scrollbar {
++        width: 6px;
++    }
++
++    .sidebar::-webkit-scrollbar-track {
++        background: transparent;
++    }
++
++    .sidebar::-webkit-scrollbar-thumb {
++        background: var(--border);
++        border-radius: 3px;
++    }
++
++@media (min-width: 1025px) and (max-height: 880px) {
++    .sidebar {
++        padding: 22px 18px;
++    }
++
++        .sidebar .logo-section {
++            margin-bottom: 16px;
++            padding-bottom: 12px;
++        }
++
++        .sidebar .profile-section {
++            margin-bottom: 18px;
++            padding-bottom: 14px;
++        }
++
++        .sidebar .sidebar-menu {
++            gap: 4px;
++        }
++
++        .sidebar .menu-btn {
++            padding: 9px 14px;
++            font-size: 14px;
++        }
++
++        .sidebar .logout-section {
++            padding-top: 14px;
++        }
++}
++
++@media (min-width: 1025px) and (max-height: 700px) {
++    .sidebar {
++        padding: 14px 16px;
++    }
++
++        .sidebar .logo-section {
++            margin-bottom: 10px;
++            padding-bottom: 8px;
++        }
++
++        .sidebar .logo-title {
++            font-size: 19px;
++        }
++
++        .sidebar .profile-section {
++            margin-bottom: 10px;
++            padding-bottom: 10px;
++        }
++
++        .sidebar .profile-circle {
++            width: 34px;
++            height: 34px;
++        }
++
++        .sidebar .sidebar-menu {
++            gap: 2px;
++        }
++
++        .sidebar .menu-btn {
++            padding: 7px 12px;
++            font-size: 13.5px;
++        }
++
++        .sidebar .logout-section {
++            padding-top: 10px;
++        }
++}
+diff --git a/SaleSync/wwwroot/css/Inventory.css b/SaleSync/wwwroot/css/Inventory.css
+index de2d4dc..8c7817d 100644
+--- a/SaleSync/wwwroot/css/Inventory.css
++++ b/SaleSync/wwwroot/css/Inventory.css
+@@ -56,6 +56,8 @@ body {
+     height: 100vh;
+     border-right: 1px solid var(--border-sub);
+     flex-shrink: 0;
++    overflow-y: auto;
++    overflow-x: hidden;
+ }
+ 
+ /* Logo block */
+@@ -697,4 +699,96 @@ body {
+     .mobile-header, .sidebar-overlay {
+         display: none !important;
+     }
+-}
+\ No newline at end of file
++}
++
++
++/* ==========================================================================
++   SIDEBAR: SHORT-WINDOW FIX
++   On a short window the sidebar used to be cut off at the bottom with no way
++   to reach the lower buttons. It now scrolls, and the spacing tightens first
++   so most of the time everything still fits without scrolling.
++   ========================================================================== */
++.sidebar {
++    scrollbar-width: thin;
++    scrollbar-color: var(--border) transparent;
++}
++
++    .sidebar::-webkit-scrollbar {
++        width: 6px;
++    }
++
++    .sidebar::-webkit-scrollbar-track {
++        background: transparent;
++    }
++
++    .sidebar::-webkit-scrollbar-thumb {
++        background: var(--border);
++        border-radius: 3px;
++    }
++
++@media (min-width: 1025px) and (max-height: 880px) {
++    .sidebar {
++        padding: 22px 18px;
++    }
++
++        .sidebar .logo-section {
++            margin-bottom: 16px;
++            padding-bottom: 12px;
++        }
++
++        .sidebar .profile-section {
++            margin-bottom: 18px;
++            padding-bottom: 14px;
++        }
++
++        .sidebar .sidebar-menu {
++            gap: 4px;
++        }
++
++        .sidebar .menu-btn {
++            padding: 9px 14px;
++            font-size: 14px;
++        }
++
++        .sidebar .logout-section {
++            padding-top: 14px;
++        }
++}
++
++@media (min-width: 1025px) and (max-height: 700px) {
++    .sidebar {
++        padding: 14px 16px;
++    }
++
++        .sidebar .logo-section {
++            margin-bottom: 10px;
++            padding-bottom: 8px;
++        }
++
++        .sidebar .logo-title {
++            font-size: 19px;
++        }
++
++        .sidebar .profile-section {
++            margin-bottom: 10px;
++            padding-bottom: 10px;
++        }
++
++        .sidebar .profile-circle {
++            width: 34px;
++            height: 34px;
++        }
++
++        .sidebar .sidebar-menu {
++            gap: 2px;
++        }
++
++        .sidebar .menu-btn {
++            padding: 7px 12px;
++            font-size: 13.5px;
++        }
++
++        .sidebar .logout-section {
++            padding-top: 10px;
++        }
++}
+diff --git a/SaleSync/wwwroot/css/ManageAccounts.css b/SaleSync/wwwroot/css/ManageAccounts.css
+index 7698f7b..bf536b3 100644
+--- a/SaleSync/wwwroot/css/ManageAccounts.css
++++ b/SaleSync/wwwroot/css/ManageAccounts.css
+@@ -59,6 +59,8 @@ body {
+     height: 100vh;
+     border-right: 1px solid var(--border-sub);
+     flex-shrink: 0;
++    overflow-y: auto;
++    overflow-x: hidden;
+ }
+ 
+ /* Logo block */
+@@ -740,4 +742,96 @@ body {
+     .mobile-header, .sidebar-overlay {
+         display: none !important;
+     }
+-}
+\ No newline at end of file
++}
++
++
++/* ==========================================================================
++   SIDEBAR: SHORT-WINDOW FIX
++   On a short window the sidebar used to be cut off at the bottom with no way
++   to reach the lower buttons. It now scrolls, and the spacing tightens first
++   so most of the time everything still fits without scrolling.
++   ========================================================================== */
++.sidebar {
++    scrollbar-width: thin;
++    scrollbar-color: var(--border) transparent;
++}
++
++    .sidebar::-webkit-scrollbar {
++        width: 6px;
++    }
++
++    .sidebar::-webkit-scrollbar-track {
++        background: transparent;
++    }
++
++    .sidebar::-webkit-scrollbar-thumb {
++        background: var(--border);
++        border-radius: 3px;
++    }
++
++@media (min-width: 1025px) and (max-height: 880px) {
++    .sidebar {
++        padding: 22px 18px;
++    }
++
++        .sidebar .logo-section {
++            margin-bottom: 16px;
++            padding-bottom: 12px;
++        }
++
++        .sidebar .profile-section {
++            margin-bottom: 18px;
++            padding-bottom: 14px;
++        }
++
++        .sidebar .sidebar-menu {
++            gap: 4px;
++        }
++
++        .sidebar .menu-btn {
++            padding: 9px 14px;
++            font-size: 14px;
++        }
++
++        .sidebar .logout-section {
++            padding-top: 14px;
++        }
++}
++
++@media (min-width: 1025px) and (max-height: 700px) {
++    .sidebar {
++        padding: 14px 16px;
++    }
++
++        .sidebar .logo-section {
++            margin-bottom: 10px;
++            padding-bottom: 8px;
++        }
++
++        .sidebar .logo-title {
++            font-size: 19px;
++        }
++
++        .sidebar .profile-section {
++            margin-bottom: 10px;
++            padding-bottom: 10px;
++        }
++
++        .sidebar .profile-circle {
++            width: 34px;
++            height: 34px;
++        }
++
++        .sidebar .sidebar-menu {
++            gap: 2px;
++        }
++
++        .sidebar .menu-btn {
++            padding: 7px 12px;
++            font-size: 13.5px;
++        }
++
++        .sidebar .logout-section {
++            padding-top: 10px;
++        }
++}
+diff --git a/SaleSync/wwwroot/css/Products.css b/SaleSync/wwwroot/css/Products.css
+index e31c72c..5f6593e 100644
+--- a/SaleSync/wwwroot/css/Products.css
++++ b/SaleSync/wwwroot/css/Products.css
+@@ -56,6 +56,8 @@ body {
+     height: 100vh;
+     border-right: 1px solid var(--border-sub);
+     flex-shrink: 0;
++    overflow-y: auto;
++    overflow-x: hidden;
+ }
+ 
+ /* Logo block */
+@@ -759,3 +761,95 @@ body {
+         display: none !important;
+     }
+ }
++
++
++/* ==========================================================================
++   SIDEBAR: SHORT-WINDOW FIX
++   On a short window the sidebar used to be cut off at the bottom with no way
++   to reach the lower buttons. It now scrolls, and the spacing tightens first
++   so most of the time everything still fits without scrolling.
++   ========================================================================== */
++.sidebar {
++    scrollbar-width: thin;
++    scrollbar-color: var(--border) transparent;
++}
++
++    .sidebar::-webkit-scrollbar {
++        width: 6px;
++    }
++
++    .sidebar::-webkit-scrollbar-track {
++        background: transparent;
++    }
++
++    .sidebar::-webkit-scrollbar-thumb {
++        background: var(--border);
++        border-radius: 3px;
++    }
++
++@media (min-width: 1025px) and (max-height: 880px) {
++    .sidebar {
++        padding: 22px 18px;
++    }
++
++        .sidebar .logo-section {
++            margin-bottom: 16px;
++            padding-bottom: 12px;
++        }
++
++        .sidebar .profile-section {
++            margin-bottom: 18px;
++            padding-bottom: 14px;
++        }
++
++        .sidebar .sidebar-menu {
++            gap: 4px;
++        }
++
++        .sidebar .menu-btn {
++            padding: 9px 14px;
++            font-size: 14px;
++        }
++
++        .sidebar .logout-section {
++            padding-top: 14px;
++        }
++}
++
++@media (min-width: 1025px) and (max-height: 700px) {
++    .sidebar {
++        padding: 14px 16px;
++    }
++
++        .sidebar .logo-section {
++            margin-bottom: 10px;
++            padding-bottom: 8px;
++        }
++
++        .sidebar .logo-title {
++            font-size: 19px;
++        }
++
++        .sidebar .profile-section {
++            margin-bottom: 10px;
++            padding-bottom: 10px;
++        }
++
++        .sidebar .profile-circle {
++            width: 34px;
++            height: 34px;
++        }
++
++        .sidebar .sidebar-menu {
++            gap: 2px;
++        }
++
++        .sidebar .menu-btn {
++            padding: 7px 12px;
++            font-size: 13.5px;
++        }
++
++        .sidebar .logout-section {
++            padding-top: 10px;
++        }
++}
+diff --git a/SaleSync/wwwroot/css/TransactionHistory.css b/SaleSync/wwwroot/css/TransactionHistory.css
+index 7aacafa..3bceacd 100644
+--- a/SaleSync/wwwroot/css/TransactionHistory.css
++++ b/SaleSync/wwwroot/css/TransactionHistory.css
+@@ -451,3 +451,211 @@
+         padding: 18px;
+     }
+ }
++
++/* ==========================================================================
++   PRINT — prints exactly what is on screen: the current page of results,
++   with the applied filters listed in a header. Sidebar, filter form,
++   buttons and pager are left off the paper.
++   ========================================================================== */
++
++/* The printed header only exists on paper */
++.th-print-header {
++    display: none;
++}
++
++/* Landscape so all 10 columns fit comfortably */
++@page {
++    size: landscape;
++    margin: 12mm;
++}
++
++@media print {
++    /* Light theme for paper (the dashboard is dark, which would print as light text on white) */
++    :root {
++        --bg-base: #ffffff;
++        --bg-surface: #ffffff;
++        --bg-card: #ffffff;
++        --bg-card-2: #f1f1f1;
++        --cream: #111111;
++        --muted: #555555;
++        --muted-2: #222222;
++        --gold: #6b5000;
++        --gold-light: #6b5000;
++        --border: #bbbbbb;
++        --border-sub: #d5d5d5;
++        --success: #1a7f4b;
++        --danger: #b3261e;
++    }
++
++    html,
++    body {
++        background: #fff !important;
++        color: #111 !important;
++    }
++
++    .sidebar,
++    .sidebar-overlay,
++    .mobile-header,
++    .no-print {
++        display: none !important;
++    }
++
++    .dashboard-container {
++        display: block;
++        min-height: 0;
++    }
++
++    .main-content {
++        padding: 0 !important;
++        overflow: visible !important;
++        background: #fff !important;
++    }
++
++    /* The page-load animation starts at opacity 0 and could print half-faded */
++    .slide-up {
++        animation: none !important;
++        opacity: 1 !important;
++        transform: none !important;
++    }
++
++    /* --- Printed header --- */
++    .th-print-header {
++        display: block;
++        margin-bottom: 14px;
++        padding-bottom: 10px;
++        border-bottom: 2px solid #111;
++    }
++
++    .th-print-store {
++        font-size: 11px;
++        font-weight: 700;
++        letter-spacing: 1.5px;
++        text-transform: uppercase;
++        color: #555;
++    }
++
++    .th-print-title {
++        margin: 2px 0 8px;
++        font-size: 22px;
++        font-weight: 800;
++        color: #111;
++    }
++
++    .th-print-meta {
++        font-size: 11.5px;
++        line-height: 1.6;
++        color: #222;
++    }
++
++        .th-print-meta strong {
++            color: #000;
++        }
++
++    /* --- Results card: plain, no frame --- */
++    .th-card {
++        background: #fff !important;
++        border: none !important;
++        box-shadow: none !important;
++        padding: 0 !important;
++        overflow: visible !important;
++    }
++
++    .th-table-wrap {
++        overflow: visible !important;
++    }
++
++    .th-table {
++        width: 100%;
++        min-width: 0 !important;
++        table-layout: auto;
++    }
++
++        /* Header row repeats at the top of every printed sheet */
++        .th-table thead {
++            display: table-header-group;
++        }
++
++            .th-table thead th {
++                position: static;
++                background: #eeeeee !important;
++                color: #111 !important;
++                font-size: 9px;
++                letter-spacing: 0.6px;
++                padding: 6px;
++                white-space: normal;
++                border-bottom: 1.5px solid #000;
++                border-radius: 0 !important;
++                -webkit-print-color-adjust: exact;
++                print-color-adjust: exact;
++            }
++
++        .th-table td {
++            padding: 5px 6px;
++            font-size: 10px;
++            color: #111 !important;
++            white-space: normal;
++            border-bottom: 1px solid #cccccc;
++        }
++
++        /* Short columns stay on one line; only Customer and Items wrap */
++        .th-table td:nth-child(1),
++        .th-table td:nth-child(2),
++        .th-table td:nth-child(3),
++        .th-table td:nth-child(6),
++        .th-table td:nth-child(7),
++        .th-table td:nth-child(8),
++        .th-table td:nth-child(9),
++        .th-table td:nth-child(10) {
++            white-space: nowrap;
++        }
++
++        /* Don't split a row across two sheets */
++        .th-table tbody tr {
++            break-inside: avoid;
++            page-break-inside: avoid;
++            background: #fff !important;
++        }
++
++            .th-table tbody tr:nth-child(even) {
++                background: #fafafa !important;
++            }
++
++        .th-table .sale-id,
++        .th-table .th-total {
++            color: #000 !important;
++        }
++
++        .th-table .text-muted {
++            color: #444 !important;
++        }
++
++        /* Item lists wrap in full instead of being cut off with "..." */
++        .th-table .th-items {
++            max-width: none;
++            overflow: visible;
++            text-overflow: clip;
++            color: #111 !important;
++        }
++
++        /* Status: outlined text, readable even on a black-and-white printer */
++        .th-table .badge {
++            background: transparent !important;
++            padding: 1px 7px;
++            font-size: 9px;
++        }
++
++        .th-table .badge-success {
++            color: #1a7f4b !important;
++            border-color: #1a7f4b !important;
++        }
++
++        .th-table .badge-danger {
++            color: #b3261e !important;
++            border-color: #b3261e !important;
++        }
++
++        .th-table .badge-warning {
++            color: #8a5a00 !important;
++            border-color: #8a5a00 !important;
++        }
++}
