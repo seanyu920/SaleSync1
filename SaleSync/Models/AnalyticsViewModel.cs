@@ -6,6 +6,10 @@ namespace SaleSync.Models
     {
         public string SelectedTimeframe { get; set; }
 
+        // Only set when SelectedTimeframe is "custom" (both inclusive, time part is midnight)
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+
         // KPI Summary Cards
         public decimal TotalRevenue { get; set; }
         public int TotalTransactions { get; set; }
