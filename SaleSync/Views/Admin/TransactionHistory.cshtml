@@ -21,6 +21,17 @@
         to = Model.To?.ToString("yyyy-MM-dd"),
         page = p
     });
+
+    // --- Used only by the printed page header ---
+    var activeFilters = new List<string>();
+    if (!string.IsNullOrWhiteSpace(Model.Search)) activeFilters.Add("Search: \"" + Model.Search + "\"");
+    if (!string.IsNullOrWhiteSpace(Model.Status)) activeFilters.Add("Status: " + Model.Status);
+    if (!string.IsNullOrWhiteSpace(Model.Method)) activeFilters.Add("Payment: " + Model.Method);
+    if (Model.From.HasValue) activeFilters.Add("From: " + Model.From.Value.ToString("MMM dd, yyyy"));
+    if (Model.To.HasValue) activeFilters.Add("To: " + Model.To.Value.ToString("MMM dd, yyyy"));
+
+    decimal pageCompletedTotal = Model.Sales.Where(s => s.Status == "Completed").Sum(s => s.TotalAmount);
+    string printedBy = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? User.Identity?.Name ?? "User";
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -97,8 +108,20 @@
 
         <main class="main-content slide-up">
 
-        
-            <div class="th-toolbar">
+            @* Printed page header: hidden on screen, only shows on paper *@
+            <div class="th-print-header">
+                <div class="th-print-store">@store.StoreName</div>
+                <div class="th-print-title">Transaction History</div>
+                <div class="th-print-meta">
+                    <div><strong>Filters applied:</strong> @(activeFilters.Count > 0 ? string.Join("  |  ", activeFilters) : "None (all transactions)")</div>
+                    <div><strong>Page:</strong> @Model.Page of @Model.TotalPages  ·  Showing @firstShown–@lastShown of @Model.TotalCount.ToString("N0")</div>
+                    <div><strong>On this page:</strong> @Model.Sales.Count @(Model.Sales.Count == 1 ? "transaction" : "transactions")  ·  Completed: ₱@pageCompletedTotal.ToString("N2")</div>
+                    <div><strong>All matching filters:</strong> @Model.TotalCount.ToString("N0") @(Model.TotalCount == 1 ? "transaction" : "transactions")  ·  Completed: ₱@Model.CompletedTotal.ToString("N2")</div>
+                    <div><strong>Printed:</strong> <span id="thPrintedAt">@DateTime.Now.ToString("MMM dd, yyyy hh:mm tt")</span> by @printedBy</div>
+                </div>
+            </div>
+
+            <div class="th-toolbar no-print">
                 <div class="page-header">
                     <h1 class="greeting-title">Transaction History</h1>
                     <p class="greeting-subtitle">Every sale on record, newest first.</p>
@@ -107,10 +130,11 @@
                 <div class="th-links">
                     <a class="th-pill" href="/@homeController/Dashboard"><i class="fas fa-arrow-left"></i> Dashboard</a>
                     <a class="th-pill" href="/Admin/DailyReport"><i class="fas fa-file-invoice-dollar"></i> End of Day Report</a>
+                    <button type="button" class="th-pill" id="thPrintBtn" title="Print the transactions on this page, with the filters currently applied"><i class="fas fa-print"></i> Print Page</button>
                 </div>
             </div>
 
-            <form method="get" action="/Admin/TransactionHistory" class="th-filters">
+            <form method="get" action="/Admin/TransactionHistory" class="th-filters no-print">
                 <div class="th-field th-field-grow">
                     <label for="thSearch">Search</label>
                     <input type="text" id="thSearch" name="q" value="@Model.Search" placeholder="Transaction ID or customer name" autocomplete="off" />
@@ -158,7 +182,7 @@
 
             
             <div class="pos-card-wrapper th-card">
-                <div class="pos-card-header">
+                <div class="pos-card-header no-print">
                     <div class="pos-card-title"><i class="fas fa-history"></i> All Transactions</div>
                     <div class="th-summary">
                         <span>@Model.TotalCount.ToString("N0") @(Model.TotalCount == 1 ? "transaction" : "transactions")</span>
@@ -229,7 +253,7 @@
 
                 @if (Model.TotalCount > 0)
                 {
-                    <div class="th-pager">
+                    <div class="th-pager no-print">
                         <span class="th-pager-info">Showing @firstShown–@lastShown of @Model.TotalCount.ToString("N0")</span>
 
                         @if (Model.TotalPages > 1)
@@ -297,6 +321,65 @@
                     !hamburger.contains(event.target)) {
                     sidebar.classList.remove('mobile-open');
                     if (overlay) overlay.classList.remove('mobile-open');
+                }
+            });
+
+            // ---- Print this page (current page of results + the filters that are applied) ----
+
+            // True when the filter boxes differ from what the table below was loaded with.
+            function filtersChanged() {
+                const form = document.querySelector('.th-filters');
+                if (!form) return false;
+
+                const fields = form.querySelectorAll('input[name], select[name]');
+                for (let i = 0; i < fields.length; i++) {
+                    const el = fields[i];
+
+                    if (el.tagName === 'SELECT') {
+                        let original = el.options.length ? el.options[0].value : '';
+                        for (let j = 0; j < el.options.length; j++) {
+                            if (el.options[j].defaultSelected) { original = el.options[j].value; break; }
+                        }
+                        if (el.value !== original) return true;
+                    } else if (el.value !== el.defaultValue) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            const printBtn = document.getElementById('thPrintBtn');
+            if (printBtn) {
+                printBtn.addEventListener('click', function () {
+                    if (!filtersChanged()) {
+                        window.print();
+                        return;
+                    }
+
+                    if (typeof Swal === 'undefined') {
+                        alert("You changed the filters but haven't clicked Apply yet. Click Apply first, then print.");
+                        return;
+                    }
+
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Filters not applied yet',
+                        text: "You changed the filters but haven't clicked Apply. Printing now only includes the filters that are currently applied.",
+                        showCancelButton: true,
+                        confirmButtonColor: '#C9A84C',
+                        confirmButtonText: 'Print anyway',
+                        cancelButtonText: 'Go back'
+                    }).then(function (result) {
+                        if (result.isConfirmed) window.print();
+                    });
+                });
+            }
+
+            // Stamp the real print time (also covers Ctrl+P / the browser's own print menu)
+            window.addEventListener('beforeprint', function () {
+                const stamp = document.getElementById('thPrintedAt');
+                if (stamp) {
+                    stamp.textContent = new Date().toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' });
                 }
             });
     </script>

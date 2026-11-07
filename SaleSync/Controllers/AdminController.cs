@@ -327,10 +327,46 @@ namespace SaleSync.Controllers
 
         [Authorize(Roles = "Admin,Manager")]
         [HttpGet]
-        public IActionResult Analytics(string timeframe = "week")
+        public IActionResult Analytics(string timeframe = "week", DateTime? startDate = null, DateTime? endDate = null)
         {
             var model = new AnalyticsViewModel { SelectedTimeframe = timeframe.ToLower() };
 
+            // Custom range needs both dates. Without them, fall back to the default week view.
+            DateTime rangeStart = default;
+            DateTime rangeEnd = default;
+
+            if (model.SelectedTimeframe == "custom")
+            {
+                if (startDate.HasValue && endDate.HasValue)
+                {
+                    // Keep dates inside what SQL Server's datetime can store
+                    var sqlMin = new DateTime(1753, 1, 1);
+                    var sqlMax = new DateTime(9998, 12, 31);
+
+                    rangeStart = startDate.Value.Date;
+                    rangeEnd = endDate.Value.Date;
+
+                    if (rangeStart < sqlMin) rangeStart = sqlMin;
+                    if (rangeStart > sqlMax) rangeStart = sqlMax;
+                    if (rangeEnd < sqlMin) rangeEnd = sqlMin;
+                    if (rangeEnd > sqlMax) rangeEnd = sqlMax;
+
+                    // Be forgiving if they come in the wrong way round
+                    if (rangeStart > rangeEnd)
+                    {
+                        var swap = rangeStart;
+                        rangeStart = rangeEnd;
+                        rangeEnd = swap;
+                    }
+
+                    model.StartDate = rangeStart;
+                    model.EndDate = rangeEnd;
+                }
+                else
+                {
+                    model.SelectedTimeframe = "week";
+                }
+            }
 
             string dateCondition = "CAST(s.sale_date AS DATE) = CAST(GETDATE() AS DATE)";
             string salesGroupQuery = "";
@@ -367,6 +403,46 @@ namespace SaleSync.Controllers
                 ORDER BY MONTH(sale_date) ASC;";
                     break;
 
+                case "custom":
+                    // @rangeStart and @rangeEndExclusive are supplied by AnalyticsCommand() below.
+                    // The end date is inclusive, so the query stops at midnight of the following day.
+                    dateCondition = "s.sale_date >= @rangeStart AND s.sale_date < @rangeEndExclusive";
+
+                    int daysInRange = (rangeEnd - rangeStart).Days + 1;
+
+                    if (daysInRange == 1)
+                    {
+                        // A single day: same minute-by-minute view as "today"
+                        salesGroupQuery = $@"
+                SELECT FORMAT(sale_date, 'hh:mm tt') AS Label, SUM(final_amount) AS Total
+                FROM dbo.sales s
+                WHERE {dateCondition}
+                GROUP BY FORMAT(sale_date, 'hh:mm tt'), DATEPART(hour, sale_date), DATEPART(minute, sale_date)
+                ORDER BY DATEPART(hour, sale_date), DATEPART(minute, sale_date) ASC;";
+                    }
+                    else if (daysInRange <= 62)
+                    {
+                        // Up to about two months: one point per day
+                        salesGroupQuery = $@"
+                SELECT FORMAT(sale_date, 'MMM dd') AS Label, SUM(final_amount) AS Total
+                FROM dbo.sales s
+                WHERE {dateCondition}
+                GROUP BY FORMAT(sale_date, 'MMM dd'), CAST(sale_date AS DATE)
+                ORDER BY CAST(sale_date AS DATE) ASC;";
+                    }
+                    else
+                    {
+                        // Longer ranges: one point per month. The year is part of the label so
+                        // the same month in two different years doesn't get merged together.
+                        salesGroupQuery = $@"
+                SELECT FORMAT(sale_date, 'MMM yyyy') AS Label, SUM(final_amount) AS Total
+                FROM dbo.sales s
+                WHERE {dateCondition}
+                GROUP BY FORMAT(sale_date, 'MMM yyyy'), YEAR(sale_date), MONTH(sale_date)
+                ORDER BY YEAR(sale_date), MONTH(sale_date) ASC;";
+                    }
+                    break;
+
                 case "week":
                 default:
                     model.SelectedTimeframe = "week";
@@ -384,6 +460,19 @@ namespace SaleSync.Controllers
             {
                 conn.Open();
 
+                // Every analytics query goes through here. Only a custom range needs parameters.
+                SqlCommand AnalyticsCommand(string sql)
+                {
+                    var command = new SqlCommand(sql, conn);
+
+                    if (model.SelectedTimeframe == "custom")
+                    {
+                        command.Parameters.AddWithValue("@rangeStart", rangeStart);
+                        command.Parameters.AddWithValue("@rangeEndExclusive", rangeEnd.AddDays(1));
+                    }
+
+                    return command;
+                }
 
                 string summarySql = $@"
             SELECT 
@@ -393,7 +482,7 @@ namespace SaleSync.Controllers
             FROM dbo.sales s
             WHERE {dateCondition};";
 
-                using (SqlCommand cmd = new SqlCommand(summarySql, conn))
+                using (SqlCommand cmd = AnalyticsCommand(summarySql))
                 using (SqlDataReader reader = cmd.ExecuteReader())
                 {
                     if (reader.Read())
@@ -404,7 +493,7 @@ namespace SaleSync.Controllers
                     }
                 }
 
-                using (SqlCommand cmd = new SqlCommand(salesGroupQuery, conn))
+                using (SqlCommand cmd = AnalyticsCommand(salesGroupQuery))
                 using (SqlDataReader reader = cmd.ExecuteReader())
                 {
                     while (reader.Read())
@@ -424,7 +513,7 @@ namespace SaleSync.Controllers
             GROUP BY DATEPART(HOUR, s.sale_date), FORMAT(s.sale_date, 'hh tt')
             ORDER BY RawHour ASC;";
 
-                using (SqlCommand cmd = new SqlCommand(peakHoursSql, conn))
+                using (SqlCommand cmd = AnalyticsCommand(peakHoursSql))
                 using (SqlDataReader reader = cmd.ExecuteReader())
                 {
                     while (reader.Read())
@@ -444,7 +533,7 @@ namespace SaleSync.Controllers
             GROUP BY p.product_name
             ORDER BY TotalQty DESC;";
 
-                using (SqlCommand cmd = new SqlCommand(bestSellersSql, conn))
+                using (SqlCommand cmd = AnalyticsCommand(bestSellersSql))
                 using (SqlDataReader reader = cmd.ExecuteReader())
                 {
                     while (reader.Read())
@@ -464,7 +553,7 @@ namespace SaleSync.Controllers
             WHERE {dateCondition}
             GROUP BY s.payment_method;";
 
-                using (SqlCommand cmd = new SqlCommand(paymentSql, conn))
+                using (SqlCommand cmd = AnalyticsCommand(paymentSql))
                 using (SqlDataReader reader = cmd.ExecuteReader())
                 {
                     while (reader.Read())

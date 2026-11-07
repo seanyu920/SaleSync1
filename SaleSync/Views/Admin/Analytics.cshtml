@@ -225,6 +225,14 @@
                         Deep dive into your sales and performance metrics.
                     </p>
 
+                    @if (Model.SelectedTimeframe == "custom" && Model.StartDate.HasValue && Model.EndDate.HasValue)
+                    {
+                        <p class="range-note">
+                            <i class="fas fa-calendar-alt"></i>
+                            Showing @Model.StartDate.Value.ToString("MMM dd, yyyy") – @Model.EndDate.Value.ToString("MMM dd, yyyy")
+                        </p>
+                    }
+
                 </div>
 
 
@@ -277,7 +285,9 @@
                             </label>
 
                             <input type="date"
-                                   id="startDate" />
+                                   id="startDate"
+                                   value="@(Model.StartDate?.ToString("yyyy-MM-dd"))"
+                                   max="@DateTime.Today.ToString("yyyy-MM-dd")" />
 
                         </div>
 
@@ -289,7 +299,9 @@
                             </label>
 
                             <input type="date"
-                                   id="endDate" />
+                                   id="endDate"
+                                   value="@(Model.EndDate?.ToString("yyyy-MM-dd"))"
+                                   max="@DateTime.Today.ToString("yyyy-MM-dd")" />
 
                         </div>
 

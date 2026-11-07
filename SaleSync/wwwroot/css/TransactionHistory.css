@@ -451,3 +451,211 @@
         padding: 18px;
     }
 }
+
+/* ==========================================================================
+   PRINT — prints exactly what is on screen: the current page of results,
+   with the applied filters listed in a header. Sidebar, filter form,
+   buttons and pager are left off the paper.
+   ========================================================================== */
+
+/* The printed header only exists on paper */
+.th-print-header {
+    display: none;
+}
+
+/* Landscape so all 10 columns fit comfortably */
+@page {
+    size: landscape;
+    margin: 12mm;
+}
+
+@media print {
+    /* Light theme for paper (the dashboard is dark, which would print as light text on white) */
+    :root {
+        --bg-base: #ffffff;
+        --bg-surface: #ffffff;
+        --bg-card: #ffffff;
+        --bg-card-2: #f1f1f1;
+        --cream: #111111;
+        --muted: #555555;
+        --muted-2: #222222;
+        --gold: #6b5000;
+        --gold-light: #6b5000;
+        --border: #bbbbbb;
+        --border-sub: #d5d5d5;
+        --success: #1a7f4b;
+        --danger: #b3261e;
+    }
+
+    html,
+    body {
+        background: #fff !important;
+        color: #111 !important;
+    }
+
+    .sidebar,
+    .sidebar-overlay,
+    .mobile-header,
+    .no-print {
+        display: none !important;
+    }
+
+    .dashboard-container {
+        display: block;
+        min-height: 0;
+    }
+
+    .main-content {
+        padding: 0 !important;
+        overflow: visible !important;
+        background: #fff !important;
+    }
+
+    /* The page-load animation starts at opacity 0 and could print half-faded */
+    .slide-up {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
+
+    /* --- Printed header --- */
+    .th-print-header {
+        display: block;
+        margin-bottom: 14px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #111;
+    }
+
+    .th-print-store {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: #555;
+    }
+
+    .th-print-title {
+        margin: 2px 0 8px;
+        font-size: 22px;
+        font-weight: 800;
+        color: #111;
+    }
+
+    .th-print-meta {
+        font-size: 11.5px;
+        line-height: 1.6;
+        color: #222;
+    }
+
+        .th-print-meta strong {
+            color: #000;
+        }
+
+    /* --- Results card: plain, no frame --- */
+    .th-card {
+        background: #fff !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        overflow: visible !important;
+    }
+
+    .th-table-wrap {
+        overflow: visible !important;
+    }
+
+    .th-table {
+        width: 100%;
+        min-width: 0 !important;
+        table-layout: auto;
+    }
+
+        /* Header row repeats at the top of every printed sheet */
+        .th-table thead {
+            display: table-header-group;
+        }
+
+            .th-table thead th {
+                position: static;
+                background: #eeeeee !important;
+                color: #111 !important;
+                font-size: 9px;
+                letter-spacing: 0.6px;
+                padding: 6px;
+                white-space: normal;
+                border-bottom: 1.5px solid #000;
+                border-radius: 0 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+        .th-table td {
+            padding: 5px 6px;
+            font-size: 10px;
+            color: #111 !important;
+            white-space: normal;
+            border-bottom: 1px solid #cccccc;
+        }
+
+        /* Short columns stay on one line; only Customer and Items wrap */
+        .th-table td:nth-child(1),
+        .th-table td:nth-child(2),
+        .th-table td:nth-child(3),
+        .th-table td:nth-child(6),
+        .th-table td:nth-child(7),
+        .th-table td:nth-child(8),
+        .th-table td:nth-child(9),
+        .th-table td:nth-child(10) {
+            white-space: nowrap;
+        }
+
+        /* Don't split a row across two sheets */
+        .th-table tbody tr {
+            break-inside: avoid;
+            page-break-inside: avoid;
+            background: #fff !important;
+        }
+
+            .th-table tbody tr:nth-child(even) {
+                background: #fafafa !important;
+            }
+
+        .th-table .sale-id,
+        .th-table .th-total {
+            color: #000 !important;
+        }
+
+        .th-table .text-muted {
+            color: #444 !important;
+        }
+
+        /* Item lists wrap in full instead of being cut off with "..." */
+        .th-table .th-items {
+            max-width: none;
+            overflow: visible;
+            text-overflow: clip;
+            color: #111 !important;
+        }
+
+        /* Status: outlined text, readable even on a black-and-white printer */
+        .th-table .badge {
+            background: transparent !important;
+            padding: 1px 7px;
+            font-size: 9px;
+        }
+
+        .th-table .badge-success {
+            color: #1a7f4b !important;
+            border-color: #1a7f4b !important;
+        }
+
+        .th-table .badge-danger {
+            color: #b3261e !important;
+            border-color: #b3261e !important;
+        }
+
+        .th-table .badge-warning {
+            color: #8a5a00 !important;
+            border-color: #8a5a00 !important;
+        }
+}

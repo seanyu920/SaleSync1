@@ -78,6 +78,8 @@ body {
     height: 100vh;
     border-right: 1px solid var(--border-sub);
     flex-shrink: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 
@@ -362,6 +364,20 @@ body {
     border-radius: 10px;
     white-space: nowrap;
 }
+
+
+/* Shows which dates are being displayed once a custom range is applied */
+.range-note {
+    margin-top: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gold-light);
+}
+
+    .range-note i {
+        margin-right: 6px;
+        color: var(--gold);
+    }
 
 
 .date-field {
@@ -1063,3 +1079,95 @@ body {
     }
 }
 
+
+
+/* ==========================================================================
+   SIDEBAR: SHORT-WINDOW FIX
+   On a short window the sidebar used to be cut off at the bottom with no way
+   to reach the lower buttons. It now scrolls, and the spacing tightens first
+   so most of the time everything still fits without scrolling.
+   ========================================================================== */
+.sidebar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+}
+
+    .sidebar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .sidebar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 3px;
+    }
+
+@media (min-width: 1025px) and (max-height: 880px) {
+    .sidebar {
+        padding: 22px 18px;
+    }
+
+        .sidebar .logo-section {
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+        }
+
+        .sidebar .profile-section {
+            margin-bottom: 18px;
+            padding-bottom: 14px;
+        }
+
+        .sidebar .sidebar-menu {
+            gap: 4px;
+        }
+
+        .sidebar .menu-btn {
+            padding: 9px 14px;
+            font-size: 14px;
+        }
+
+        .sidebar .logout-section {
+            padding-top: 14px;
+        }
+}
+
+@media (min-width: 1025px) and (max-height: 700px) {
+    .sidebar {
+        padding: 14px 16px;
+    }
+
+        .sidebar .logo-section {
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+        }
+
+        .sidebar .logo-title {
+            font-size: 19px;
+        }
+
+        .sidebar .profile-section {
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+        }
+
+        .sidebar .profile-circle {
+            width: 34px;
+            height: 34px;
+        }
+
+        .sidebar .sidebar-menu {
+            gap: 2px;
+        }
+
+        .sidebar .menu-btn {
+            padding: 7px 12px;
+            font-size: 13.5px;
+        }
+
+        .sidebar .logout-section {
+            padding-top: 10px;
+        }
+}
