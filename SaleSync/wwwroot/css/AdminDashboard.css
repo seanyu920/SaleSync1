@@ -2066,3 +2066,236 @@ body {
             padding-top: 10px;
         }
 }
+/* ==========================================================================
+   PANELS FIX: themed scrollbars, mobile sheets, no overlap
+   ========================================================================== */
+
+            /* ---- Themed scrollbars (everywhere) ---- */
+            :root {
+                color-scheme: dark;
+            }
+
+            * {
+                scrollbar-width: thin;
+                scrollbar-color: rgba(201, 168, 76, 0.4) transparent;
+            }
+
+                *::-webkit-scrollbar {
+                    width: 8px;
+                    height: 8px;
+                }
+
+                *::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+
+                *::-webkit-scrollbar-thumb {
+                    background: rgba(201, 168, 76, 0.35);
+                    border-radius: 999px;
+                    border: 2px solid transparent;
+                    background-clip: padding-box;
+                }
+
+                    *::-webkit-scrollbar-thumb:hover {
+                        background: var(--gold);
+                        background-clip: padding-box;
+                    }
+
+                *::-webkit-scrollbar-button {
+                    display: none;
+                }
+
+                *::-webkit-scrollbar-corner {
+                    background: transparent;
+                }
+
+            /* ---- Chat: stop long text and the footer from overflowing ---- */
+            .support-conversation,
+            .chat-dropdown-body {
+                min-width: 0;
+            }
+
+            .chat-bubble {
+                overflow-wrap: anywhere;
+                word-break: break-word;
+            }
+
+            #chatInput {
+                min-width: 0;
+            }
+
+            .chat-send-btn {
+                flex-shrink: 0;
+                white-space: nowrap;
+            }
+
+            /* Close button inside the notification panel (mobile only) */
+            .notif-close {
+                display: none;
+                font-size: 14px;
+            }
+
+            /* ---- Tablet + mobile: both panels become sheets ---- */
+            @media (max-width: 1024px) {
+                /* Remove the stacking trap so the bell panel can sit above everything */
+                .top-navbar {
+                    z-index: auto;
+                }
+
+                .notif-close {
+                    display: inline-block;
+                }
+
+                .notif-dropdown {
+                    position: fixed !important;
+                    top: 12px !important;
+                    left: 12px !important;
+                    right: 12px !important;
+                    width: auto !important;
+                    max-width: none !important;
+                    max-height: calc(100dvh - 24px) !important;
+                    z-index: 2100 !important;
+                }
+
+                .chat-dropdown {
+                    position: fixed !important;
+                    top: 12px !important;
+                    left: 12px !important;
+                    right: 12px !important;
+                    bottom: 12px !important;
+                    width: auto !important;
+                    height: auto !important;
+                    max-width: none !important;
+                    margin: 0 !important;
+                    z-index: 2100 !important;
+                }
+            }
+
+            /* ---- Phones: contacts become a strip above the conversation ---- */
+            @media (max-width: 700px) {
+                .support-inbox {
+                    flex-direction: column;
+                }
+
+                .support-contacts {
+                    width: 100%;
+                    flex-shrink: 0;
+                    display: flex;
+                    gap: 6px;
+                    padding: 8px;
+                    overflow-x: auto;
+                    overflow-y: hidden;
+                    border-right: 0;
+                    border-bottom: 1px solid var(--border-sub);
+                }
+
+                .support-contact {
+                    flex: 0 0 auto;
+                    width: auto;
+                    min-width: 96px;
+                    max-width: 160px;
+                    margin: 0;
+                    padding: 8px 12px;
+                    border: 1px solid var(--border-sub);
+                }
+
+                    .support-contact.active {
+                        border-color: var(--gold);
+                    }
+
+                    /* Keep the chips compact: hide role + preview line */
+                    .support-contact small,
+                    .support-contact > span:last-child {
+                        display: none;
+                    }
+
+                .support-conversation {
+                    flex: 1;
+                    min-height: 0;
+                }
+
+                .chat-dropdown-body {
+                    padding: 12px;
+                }
+            }
+                    /* Chat icon badge: show a number, same look as the bell */
+                    .nav-chat-icon .chat-badge {
+                        top: -8px;
+                        right: -10px;
+                        width: auto;
+                        min-width: 16px;
+                        height: 16px;
+                        padding: 0 4px;
+                        font-size: 10px;
+                        font-weight: 700;
+                        line-height: 16px;
+                        text-align: center;
+                        color: #fff;
+                        background: var(--danger);
+                        border-radius: 999px;
+                    }
+
+            /* ==========================================================================
+               NOTIFICATIONS POPUP: same look and behavior as the Support Inbox
+               ========================================================================== */
+            .notif-dropdown {
+                display: none;
+                position: fixed;
+                top: 76px;
+                right: 28px;
+                left: auto;
+                width: min(420px, calc(100vw - 32px));
+                height: auto;
+                max-height: min(540px, calc(100vh - 110px));
+                padding: 0;
+                overflow: hidden;
+                flex-direction: column;
+                background: var(--bg-base);
+                border: 1px solid var(--border);
+                border-radius: 14px;
+                box-shadow: 0 20px 50px rgba(0, 0, 0, .5);
+                z-index: 2100;
+            }
+
+                .notif-dropdown.open {
+                    display: flex;
+                }
+
+            .notif-toolbar {
+                display: flex;
+                justify-content: flex-end;
+                gap: 16px;
+                padding: 8px 16px;
+                background: var(--bg-surface);
+                border-bottom: 1px solid var(--border-sub);
+            }
+
+            .notif-dropdown .notification-list {
+                flex: 1;
+                min-height: 0;
+                overflow-y: auto;
+                padding: 14px 16px;
+                background: var(--bg-base);
+            }
+
+                /* Empty state, centered */
+                .notif-dropdown .notification-list .notification-item:only-child:not(.unread) .notification-info {
+                    width: 100%;
+                    padding: 24px 0;
+                    text-align: center;
+                }
+
+            /* Phones and tablets: full sheet, same as the chat */
+            @media (max-width: 1024px) {
+                .notif-dropdown {
+                    top: 12px !important;
+                    left: 12px !important;
+                    right: 12px !important;
+                    bottom: 12px !important;
+                    width: auto !important;
+                    max-width: none !important;
+                    max-height: none !important;
+                    height: auto !important;
+                    z-index: 2100 !important;
+                }
+            }

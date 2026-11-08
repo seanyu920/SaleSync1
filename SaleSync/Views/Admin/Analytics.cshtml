@@ -869,79 +869,63 @@
             }
 
 
-            // ------------------------------------------------------
+                        // ------------------------------------------------------
             // PAYMENT CHART
             // ------------------------------------------------------
+
+            // Fixed color per payment method, so "Cash" is always the same color
+            // no matter what order the data comes back in.
+            const paymentColorMap = {
+                'cash':  '#C9A84C',   // gold (your main brand color)
+                'gcash': '#4FA37A',   // sage green (matches your green theme)
+                'card':  '#F2EDE4',   // cream
+                'maya':  '#C0724A'    // warm copper
+            };
+
+            // Used for any method not listed above
+            const paymentFallbackColors = ['#8FB8A3', '#A18232', '#7A8F7A', '#D8C9A3'];
+
+            const paymentColors = paymentLabels.map(function (label, i) {
+                return paymentColorMap[String(label).toLowerCase().trim()]
+                    || paymentFallbackColors[i % paymentFallbackColors.length];
+            });
 
             const paymentCanvas =
                 document.getElementById('paymentChart');
 
+            if (paymentCanvas && paymentLabels.length > 0) {
 
-            if (
-                paymentCanvas &&
-                paymentLabels.length > 0
-            ) {
-
-                const paymentCtx =
-                    paymentCanvas.getContext('2d');
-
+                const paymentCtx = paymentCanvas.getContext('2d');
 
                 new Chart(paymentCtx, {
 
                     type: 'doughnut',
 
                     data: {
-
                         labels: paymentLabels,
-
                         datasets: [{
-
                             data: paymentValues,
-
-                            backgroundColor: [
-                                '#C9A84C',
-                                '#DDB95E',
-                                '#A18232',
-                                '#E7CB7C'
-                            ],
-
-                            borderWidth: 0
-
+                            backgroundColor: paymentColors,
+                            borderColor: '#1C241C',   // same as card background, separates slices
+                            borderWidth: 3
                         }]
-
                     },
 
                     options: {
-
                         responsive: true,
-
                         maintainAspectRatio: false,
-
                         plugins: {
-
                             legend: {
-
                                 position: 'bottom',
-
                                 labels: {
-
-                                    color:
-                                        'rgba(242, 237, 228, 0.8)',
-
+                                    color: 'rgba(242, 237, 228, 0.8)',
                                     padding: 10,
-
                                     boxWidth: 12
-
                                 }
-
                             }
-
                         },
-
                         cutout: '73%'
-
                     }
-
                 });
 
             }
