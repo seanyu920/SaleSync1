@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="icon" type="image/png" href="images/CaferoLogo.jpg">
+    <link rel="icon" type="image/png" href="/images/CaferoLogo.jpg">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link rel="stylesheet" href="~/css/HomePage.css" asp-append-version="true" />
 </head>
@@ -30,7 +30,9 @@
                 <a href="#about" onclick="closeNav()">About</a>
                 <a href="#menu" onclick="closeNav()">Menu</a>
                 <a href="#contact" onclick="closeNav()">Contact</a>
-                
+                <a asp-controller="Home" asp-action="Login" class="nav-login-link">
+                    <i class="fas fa-user"></i> Log In
+                </a>
             </nav>
         </div>
 
@@ -55,9 +57,6 @@
                 <a href="/Home/Login" class="hero-btn">Order Now</a>
                 <a href="#menu" class="hero-btn btn-outline">Explore Menu</a>
             </div>
-            <div class="hero-stats">
-
-</div>
         </div>
 
         <div class="hero-specialty-container">
@@ -696,7 +695,7 @@
             }
 
             function closeNav() {
-                if (window.innerWidth <= 768) {
+                if (window.innerWidth <= 900) {
                     document.getElementById('navContainer').classList.remove('active');
                     document.getElementById('hamburger').classList.remove('active');
                 }

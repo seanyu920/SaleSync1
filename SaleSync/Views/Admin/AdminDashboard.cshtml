@@ -98,23 +98,6 @@
                     <div class="notification-bell" id="notifBell" onclick="toggleNotifDropdown(event)" title="View notifications">
                         <i class="fas fa-bell"></i>
                         <span class="bell-badge" id="bellBadge" style="display:none;"></span>
-
-                        <div class="notif-dropdown" id="notifDropdown" onclick="event.stopPropagation()">
-                            <div class="notif-dropdown-title">
-                                <span>Live Notifications</span>
-                                <span class="notif-header-actions">
-                                    <button type="button" class="notif-link-btn" id="notifMarkAll" onclick="markAllNotifsRead()">Mark all read</button>
-                                    <button type="button" class="notif-link-btn danger" id="notifClearAll" onclick="clearAllNotifs()">Clear all</button>
-                                </span>
-                            </div>
-                            <div class="notification-list" id="notificationList">
-                                <div class="notification-item">
-                                    <div class="notification-info">
-                                        <p>No new orders right now.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                     <div class="nav-chat-icon" onclick="toggleChat()" id="chatTrigger" title="Open customer support inbox">
                         <i class="fas fa-comments"></i>
@@ -349,6 +332,25 @@
 
         </main>
     </div>
+    <!-- Live Notifications Popup -->
+    <div class="notif-dropdown" id="notifDropdown" onclick="event.stopPropagation()">
+        <div class="support-header">
+            <div><span class="chat-status-dot"></span><strong>Live Notifications</strong><small>New online orders</small></div>
+            <button type="button" class="support-close" onclick="closePanels()" title="Close"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="notif-toolbar" id="notifToolbar">
+            <button type="button" class="notif-link-btn" id="notifMarkAll" onclick="markAllNotifsRead()">Mark all read</button>
+            <button type="button" class="notif-link-btn danger" id="notifClearAll" onclick="clearAllNotifs()">Clear all</button>
+        </div>
+        <div class="notification-list" id="notificationList">
+            <div class="notification-item">
+                <div class="notification-info">
+                    <p>No new orders right now.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Customer Support Inbox Popup -->
     <div class="chat-dropdown" id="chatDropdown">
         @Html.AntiForgeryToken()
@@ -384,39 +386,73 @@
                 });
             }
 
-            // ── Notification Bell Dropdown ──
+            // ── Panels: only one open at a time (Notifications / Support Inbox) ──
+            function closeNotif() { document.getElementById('notifDropdown').classList.remove('open'); }
+            function closeChat()  { document.getElementById('chatDropdown').classList.remove('open'); }
+            function closePanels() { closeNotif(); closeChat(); }
+
             function toggleNotifDropdown(event) {
                 event.stopPropagation();
-                document.getElementById('notifDropdown').classList.toggle('open');
+                const dd = document.getElementById('notifDropdown');
+                const willOpen = !dd.classList.contains('open');
+                closePanels();
+                if (willOpen) dd.classList.add('open');
             }
 
-            document.addEventListener('click', function(e) {
-                const dropdown = document.getElementById('notifDropdown');
-                const bell = document.getElementById('notifBell');
-                if (dropdown && dropdown.classList.contains('open') && !bell.contains(e.target)) {
-                    dropdown.classList.remove('open');
+            function toggleChat() {
+                const popup = document.getElementById('chatDropdown');
+                const willOpen = !popup.classList.contains('open');
+                closePanels();
+                if (willOpen) {
+                    popup.classList.add('open');
+                    loadChatContacts();
                 }
+            }
+
+            // Click outside closes whichever panel is open
+            document.addEventListener('click', function (e) {
+                const notif = document.getElementById('notifDropdown');
+                const bell = document.getElementById('notifBell');
+                const chat = document.getElementById('chatDropdown');
+                const trigger = document.getElementById('chatTrigger');
+
+                if (notif.classList.contains('open') && !bell.contains(e.target)) closeNotif();
+                if (chat.classList.contains('open') && !chat.contains(e.target) && !trigger.contains(e.target)) closeChat();
             });
+
+            document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closePanels(); });
 
             // ── Support Inbox Popup Logic ──
             let chatConn;
             let currentChatWith = null;
             const chatCurrentUser = "@(User.FindFirst("Username")?.Value ?? "")";
 
-            function toggleChat() {
-                const popup = document.getElementById("chatDropdown");
-                popup.classList.toggle("open");
-                if (popup.classList.contains("open")) {
-                    document.getElementById("chatBadge").style.display = "none";
-                    loadChatContacts();
+            // ── Chat unread badge (shows a number, like the bell) ──
+            function applyChatBadge(contacts) {
+                const popupOpen = document.getElementById('chatDropdown').classList.contains('open');
+                const total = (contacts || []).reduce((sum, c) => {
+                    // Don't count the conversation that is currently open on screen
+                    if (popupOpen && c.username === currentChatWith) return sum;
+                    return sum + Number(c.unreadCount || 0);
+                }, 0);
+                const badge = document.getElementById('chatBadge');
+                if (!badge) return;
+                if (total > 0) {
+                    badge.textContent = total > 99 ? '99+' : total;
+                    badge.style.display = 'block';
+                } else {
+                    badge.textContent = '';
+                    badge.style.display = 'none';
                 }
             }
 
-            document.addEventListener("click", event => {
-                const popup = document.getElementById("chatDropdown");
-                const trigger = document.getElementById("chatTrigger");
-                if (popup.classList.contains("open") && !popup.contains(event.target) && !trigger.contains(event.target)) popup.classList.remove("open");
-            });
+            async function refreshChatUnread() {
+                try {
+                    const response = await fetch('/Chat/GetContacts');
+                    if (!response.ok) return;
+                    applyChatBadge(await response.json());
+                } catch (error) { console.error('Could not refresh chat badge:', error); }
+            }
 
             function handleChatKey(event) { if (event.key === "Enter") sendChatMessage(); }
             function sendChatMessage() {
@@ -432,6 +468,7 @@
                     const response = await fetch("/Chat/GetContacts");
                     if (!response.ok) return;
                     const contacts = await response.json();
+                    applyChatBadge(contacts);
                     list.innerHTML = "";
                     if (!contacts.length) { list.innerHTML = '<div class="system-message">No customer conversations yet.</div>'; return; }
                     contacts.forEach(contact => {
@@ -540,6 +577,7 @@
                 const hasItems = visible.length > 0;
                 document.getElementById('notifMarkAll').style.display = unreadCount > 0 ? '' : 'none';
                 document.getElementById('notifClearAll').style.display = hasItems ? '' : 'none';
+                document.getElementById('notifToolbar').style.display = hasItems ? '' : 'none';
 
                 if (!hasItems) {
                     list.innerHTML = `
@@ -663,9 +701,27 @@
 
                 let paymentLabels = @Html.Raw(Json.Serialize(Model.PaymentLabels));
                 let paymentValues = @Html.Raw(Json.Serialize(Model.PaymentValues));
-                const paymentPalette = ['#D4AF37', '#2ECC71', '#F39C12', '#3498DB', '#9B59B6', '#E74C3C'];
-                let paymentColors = paymentLabels.map((_, i) => paymentPalette[i % paymentPalette.length]);
-                if (!paymentValues.length) {
+
+                // Fixed color per payment method (same colors as the Analytics page),
+                // so "Cash" is always the same color no matter the order of the data.
+                const paymentColorMap = {
+                    'cash':  '#C9A84C',   // gold
+                    'gcash': '#4FA37A',   // sage green
+                    'card':  '#F2EDE4',   // cream
+                    'maya':  '#C0724A'    // warm copper
+                };
+
+                // Used for any method not listed above
+                const paymentFallbackColors = ['#8FB8A3', '#A18232', '#7A8F7A', '#D8C9A3'];
+
+                let paymentColors = paymentLabels.map((label, i) =>
+                    paymentColorMap[String(label).toLowerCase().trim()]
+                    || paymentFallbackColors[i % paymentFallbackColors.length]
+                );
+
+                const hasPaymentData = paymentValues.length > 0;
+
+                if (!hasPaymentData) {
                     // No completed sales in the past 7 days: draw one neutral ring instead of fake data.
                     paymentLabels = ['No sales yet'];
                     paymentValues = [1];
@@ -680,13 +736,24 @@
                         datasets: [{
                             data: paymentValues,
                             backgroundColor: paymentColors,
-                            borderWidth: 0
+                            borderColor: '#1C241C',   // card background, separates the slices
+                            borderWidth: hasPaymentData ? 3 : 0
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: { legend: { position: 'right' } },
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    color: 'rgba(242, 237, 228, 0.8)',
+                                    padding: 12,
+                                    boxWidth: 12
+                                }
+                            },
+                            tooltip: { enabled: hasPaymentData }
+                        },
                         cutout: '72%'
                     }
                 });
@@ -714,22 +781,26 @@
                     .catch(err => console.error("SignalR Startup Error:", err));
 
                 chatConn.on("ReceiveMessage", function(sender, receiver, message, time) {
+                    var popupOpen = document.getElementById("chatDropdown").classList.contains("open");
                     var belongs = currentChatWith && (sender === currentChatWith || receiver === currentChatWith);
                     if (belongs) {
                         var ph = document.getElementById("chatMessages").querySelector('.system-message');
                         if (ph) ph.remove();
                         renderChatMessage(sender, message, time);
                     }
-                    if (sender !== chatCurrentUser && !belongs) {
-                        var dd = document.getElementById("chatDropdown");
-                        if (!dd.classList.contains("open")) {
-                            document.getElementById("chatBadge").style.display = "block";
-                        }
+                    if (sender !== chatCurrentUser) {
+                        // Popup open: refresh the contact list (also updates the badge).
+                        // Popup closed: just refresh the badge count.
+                        if (popupOpen) loadChatContacts(); else refreshChatUnread();
                     }
                 });
 
                 checkForNewOrders();
                 setInterval(checkForNewOrders, 15000);
+
+                // Load the unread chat count on page load, and re-check every 30s as a safety net
+                refreshChatUnread();
+                setInterval(refreshChatUnread, 30000);
             });
 
             function toggleSidebar() {
