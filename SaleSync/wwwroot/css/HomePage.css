@@ -2949,23 +2949,71 @@ textarea {
         }
 }
 
-    .nav-login-link {
+
+/* =========================================================
+   FIX 1 — FIT ANY SCREEN (hero no longer uses fixed vh heights)
+   Keep this block BELOW all media queries so it overrides them.
+   ========================================================= */
+
+.hero-section {
+    min-height: 100vh;
+    min-height: 100svh;
+    justify-content: flex-start;
+}
+
+.hero-content {
+    flex: 1 0 auto;
+    min-height: 0;
+    padding-top: clamp(96px, 14vh, 140px);
+    padding-bottom: clamp(20px, 4vh, 40px);
+}
+
+.hero-specialty-container {
+    flex: 0 0 auto;
+    transform: none;
+    margin-top: 10px;
+    padding-bottom: clamp(40px, 8vh, 80px);
+}
+
+/* Short laptop screens: tighten the hero instead of overflowing */
+@media (max-height: 760px) and (min-width: 901px) {
+    .hero-content h1 {
+        font-size: clamp(36px, 5.6vh, 60px);
+        margin-bottom: 18px;
+    }
+
+    .hero-content > p {
+        margin-bottom: 22px;
+    }
+
+    .hero-badge {
+        margin-bottom: 18px;
+    }
+}
+
+
+/* =========================================================
+   FIX 2 — LOG IN LINK INSIDE THE HAMBURGER MENU
+   ========================================================= */
+
+.nav-menu a.nav-login-link {
+    display: none;
+}
+
+@media (max-width: 900px) {
+
+    .top-bar-right .login-btn {
         display: none;
     }
 
-    @media (max-width: 768px) {
-        .top-bar-right .login-btn {
-            display: none;
-        }
-
-        .nav-login-link {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 6px;
-            padding-top: 14px;
-            border-top: 1px solid rgba(255,255,255,0.08);
-            color: #C9A84C;
-            font-weight: 800;
-        }
+    .nav-menu a.nav-login-link {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 6px;
+        padding-top: 14px;
+        border-top: 1px solid rgba(255,255,255,.08);
+        color: var(--gold-light);
+        font-weight: 800;
     }
+}
