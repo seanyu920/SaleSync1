@@ -49,6 +49,8 @@
         : null;
 }
 
+@inject SaleSync.Services.ProductOptionsService ProductOptions
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1758,56 +1760,37 @@
         }
 
         // ── ADD-ONS ───────────────────────────────────────────────────────────────
-        // Category-specific so a rice meal never shows drink add-ons like
-        // "Oat Milk", and a coffee never shows "Extra Rice". Categories here
-        // match the "data-category" values built in the Razor loop above
-        // (lowercased, spaces stripped).
+        // Add-ons and the "sugar level required" flag are set per item by an
+        // Admin/Manager on the Products page (stored in the database). An item
+        // with no add-ons shows no Add-ons section at all.
+        // Key = "<category lowercase, no spaces>|<item name lowercase>".
 
-        const addonsByCategory = {
-            coffee: ['Extra Sugar', 'Oat Milk', 'Extra Ice'],
-            milktea: ['Extra Pearls', 'Extra Ice'],
-            fruittea: ['Extra Sugar', 'Extra Ice'],
-            ricemeal: ['Extra Rice'],
-            'snacks&pasta': ['Extra Sauce', 'Extra Cheese'],
-            'bread&pastry': []
-        };
+        const PRODUCT_OPTIONS = @Html.Raw(Json.Serialize(ProductOptions.GetOptionsMap()));
 
-        // Add-ons for one specific product. If the product name contains the
-        // "match" text, this list is used instead of the category list.
-        const addonsByItem = [
-            { match: 'flavored fries', addons: ['Barbeque', 'Cheese', 'Sour Cream'] },
-            { match: 'siomai', addons: [] }
-        ];
+        // No groups of add-ons that exclude each other any more (kept so
+        // onAddonToggle below keeps working).
+        const exclusiveAddonGroups = {};
 
-        // Add-ons that cannot be ticked together (per category).
-        const exclusiveAddonGroups = {
-            coffee: [['Extra Ice'], ['Extra Sugar']],
-            milktea: [['Extra Ice']],
-            fruittea: [['Extra Ice'], ['Extra Sugar']]
-        };
+        const SUGAR_LEVELS = ['25%', '50%', '75%', '100%'];
 
-        // Sugar level is a choice of its own (pick one), not an add-on.
-        const sugarLevelsByCategory = {
-            milktea: ['25%', '50%', '75%', '100%']
-        };
+        function getProductOptions(category, itemName) {
 
-        function getSugarLevelsForItem(category, itemName) {
-            return sugarLevelsByCategory[category] || [];
+            const key =
+                String(category || '').replace(/\s+/g, '').toLowerCase() +
+                '|' +
+                String(itemName || '').trim().toLowerCase();
+
+            return PRODUCT_OPTIONS[key] || { requiresSugarLevel: false, addons: [] };
         }
 
-        function getAddonsForCategory(category) {
-            return addonsByCategory[category] || [];
+        function getSugarLevelsForItem(category, itemName) {
+            return getProductOptions(category, itemName).requiresSugarLevel
+                ? SUGAR_LEVELS
+                : [];
         }
 
         function getAddonsForItem(category, itemName) {
-
-            const name = (itemName || '').toLowerCase();
-
-            const override = addonsByItem.find(rule => name.includes(rule.match));
-
-            return override
-                ? override.addons
-                : getAddonsForCategory(category);
+            return getProductOptions(category, itemName).addons || [];
         }
 
         // When one add-on of an exclusive group is ticked, untick the others.
@@ -2004,8 +1987,8 @@
                 addonsList.innerHTML =
                     addonOptions.map(label => `
                         <label class="addon-check">
-                            <input type="checkbox" name="modalAddon" value="${label}" data-cat="${escapeHTML(activeCategory)}" onchange="onAddonToggle(this)">
-                            ${label}
+                            <input type="checkbox" name="modalAddon" value="${escapeHTML(label)}" data-cat="${escapeHTML(activeCategory)}" onchange="onAddonToggle(this)">
+                            ${escapeHTML(label)}
                         </label>
                     `).join('');
 
@@ -2604,8 +2587,8 @@
 
                     return `
                         <label class="addon-check">
-                            <input type="checkbox" class="cart-edit-addon" value="${label}" data-cat="${escapeHTML(item.category || '')}" onchange="onAddonToggle(this)" ${checked}>
-                            ${label}
+                            <input type="checkbox" class="cart-edit-addon" value="${escapeHTML(label)}" data-cat="${escapeHTML(item.category || '')}" onchange="onAddonToggle(this)" ${checked}>
+                            ${escapeHTML(label)}
                         </label>
                     `;
 

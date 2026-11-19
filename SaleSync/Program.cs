@@ -17,6 +17,8 @@ builder.Services.AddScoped<SaleSync.Services.InventoryDeductionService>();
 
 builder.Services.AddScoped<SaleSync.Services.CategoryService>();
 
+builder.Services.AddScoped<SaleSync.Services.ProductOptionsService>();
+
 builder.Services.AddSignalR(options =>
 {
     options.EnableDetailedErrors = true; 
