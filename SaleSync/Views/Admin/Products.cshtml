@@ -287,7 +287,212 @@
     </div>
 
 
+    <div id="addonsModal" class="modal-overlay">
+
+        <div class="auth-modal"
+             style="width: 480px; max-width: 90%; text-align: left; padding: 28px;">
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <h2 id="addonsItemName"
+                    class="widget-title"
+                    style="font-size: 18px; font-weight: 800;">
+                    Add-ons
+                </h2>
+
+                <button onclick="closeAddons()" class="close-btn">
+                    &times;
+                </button>
+            </div>
+
+            <p style="color: var(--muted); font-size: 12px; margin: 0 0 16px 0;">
+                Customers only see the add-ons listed here. An item with no add-ons shows none.
+            </p>
+
+            <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 18px; font-size: 14px; cursor: pointer;">
+                <input type="checkbox" id="addonsRequireSugar" style="width: 18px; height: 18px; margin: 0;">
+                Require a sugar level (25% / 50% / 75% / 100%)
+            </label>
+
+            <div class="form-group"
+                 style="display: flex; gap: 10px; margin-bottom: 16px;">
+
+                <input type="text"
+                       id="addonNameInput"
+                       maxlength="50"
+                       placeholder="e.g. Extra Pearls"
+                       style="flex: 1; margin: 0;"
+                       onkeydown="if (event.key === 'Enter') { event.preventDefault(); addAddonToUI(); }">
+
+                <button type="button"
+                        onclick="addAddonToUI()"
+                        class="btn-primary"
+                        style="padding: 0 16px; border-radius: 10px;">
+                    Add
+                </button>
+            </div>
+
+            <div class="table-card"
+                 style="padding: 16px; border-radius: 12px; min-height: 120px; margin-bottom: 20px; background: var(--bg-surface);">
+
+                <h4 style="margin-top: 0; color: var(--gold); font-size: 11px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700;">
+                    Add-ons for this item
+                </h4>
+
+                <ul id="addonsList"
+                    style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column;">
+                </ul>
+
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+
+                <button type="button"
+                        onclick="saveAddonsToDB()"
+                        class="auth-btn">
+                    Save Add-ons
+                </button>
+
+                <span onclick="closeAddons()"
+                      class="modal-cancel"
+                      style="text-align: center; margin-top: 5px;">
+                    Cancel
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
     <script>
+
+            // ===== ADD-ONS / SUGAR LEVEL (per item) =====
+
+            let currentAddonProductId = null;
+            let currentAddonList = [];
+
+            function escapeAddonHtml(s) {
+                return String(s).replace(/[&<>"']/g, c => ({
+                    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+                }[c]));
+            }
+
+            async function openAddons(productId, productName) {
+
+                currentAddonProductId = productId;
+                currentAddonList = [];
+
+                document.getElementById('addonsItemName').innerText =
+                    productName + " Add-ons";
+
+                document.getElementById('addonNameInput').value = '';
+                document.getElementById('addonsRequireSugar').checked = false;
+
+                try {
+
+                    const res = await fetch(`/Admin/GetProductOptions?productId=${productId}`);
+
+                    if (!res.ok) throw new Error('Request failed');
+
+                    const data = await res.json();
+
+                    currentAddonList = data.addons || [];
+                    document.getElementById('addonsRequireSugar').checked = !!data.requiresSugarLevel;
+
+                } catch (err) {
+
+                    Swal.fire('Error', 'Could not load the add-ons for this item.', 'error');
+                    return;
+                }
+
+                renderAddonList();
+
+                document.getElementById('addonsModal').style.display = 'flex';
+            }
+
+            function closeAddons() {
+                document.getElementById('addonsModal').style.display = 'none';
+            }
+
+            function renderAddonList() {
+
+                const list = document.getElementById('addonsList');
+
+                if (currentAddonList.length === 0) {
+                    list.innerHTML = `<li style="color: var(--muted); font-size: 13px;">No add-ons yet.</li>`;
+                    return;
+                }
+
+                list.innerHTML = currentAddonList.map((name, i) => `
+                    <li style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.06); font-size:14px;">
+                        <span>${escapeAddonHtml(name)}</span>
+                        <button type="button" onclick="removeAddonFromUI(${i})"
+                                style="background:none; border:none; color:#ff6b6b; cursor:pointer; font-size:18px; line-height:1;">&times;</button>
+                    </li>
+                `).join('');
+            }
+
+            function addAddonToUI() {
+
+                const input = document.getElementById('addonNameInput');
+                const name = input.value.trim();
+
+                if (!name) return;
+
+                if (currentAddonList.some(a => a.toLowerCase() === name.toLowerCase())) {
+                    input.value = '';
+                    return;
+                }
+
+                if (currentAddonList.length >= 20) {
+                    Swal.fire('Limit reached', 'An item can have up to 20 add-ons.', 'info');
+                    return;
+                }
+
+                currentAddonList.push(name);
+                input.value = '';
+                input.focus();
+                renderAddonList();
+            }
+
+            function removeAddonFromUI(index) {
+                currentAddonList.splice(index, 1);
+                renderAddonList();
+            }
+
+            async function saveAddonsToDB() {
+
+                // Add whatever is still typed in the box so it isn't lost.
+                addAddonToUI();
+
+                try {
+
+                    const res = await fetch('/Admin/SaveProductOptions', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            ProductId: currentAddonProductId,
+                            RequiresSugarLevel: document.getElementById('addonsRequireSugar').checked,
+                            Addons: currentAddonList
+                        })
+                    });
+
+                    if (!res.ok) {
+                        const err = await res.json().catch(() => ({}));
+                        throw new Error(err.message || 'Save failed');
+                    }
+
+                    closeAddons();
+
+                    Swal.fire('Saved', 'Add-ons updated for this item (and its other sizes).', 'success');
+
+                } catch (err) {
+
+                    Swal.fire('Error', err.message, 'error');
+                }
+            }
+
 
             function confirmLogout() {
 
@@ -422,6 +627,16 @@
                                     </button>
 
                                 </div>
+
+
+                                <button type="button"
+                                        class="btn-secondary"
+                                        style="width: 100%; padding: 8px; font-size: 12px; border-radius: 6px; text-align: center; justify-content: center;"
+                                        onclick="event.stopPropagation(); openAddons(${item.id}, '${item.name.replace(/'/g, "\\'")}');">
+
+                                    Add-ons &amp; Sugar Level
+
+                                </button>
 
 
                                 <div style="display: flex; gap: 8px; margin-top: 4px;">

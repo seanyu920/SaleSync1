@@ -15,6 +15,19 @@
         public string PaymentMethod { get; set; }
         public string DeliveryAddress { get; set; }
         public DateTime? PickupTime { get; set; }
+
+        // Item-by-item lines (size, sugar level, add-ons, notes) shown on the queue cards.
+        public List<QueueLineItem> Items { get; set; } = new List<QueueLineItem>();
+    }
+
+    public class QueueLineItem
+    {
+        public int Quantity { get; set; }
+        public string Name { get; set; }
+        public string Size { get; set; }
+
+        // What the customer/cashier typed or picked: sugar level, add-ons, special instructions.
+        public string Notes { get; set; }
     }
 
     public class CashierDashboardViewModel

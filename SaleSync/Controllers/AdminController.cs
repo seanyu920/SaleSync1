@@ -24,10 +24,12 @@ namespace SaleSync.Controllers
         private readonly StoreSettingsService _storeSettingsService;
         private readonly InventoryDeductionService _inventoryDeductionService;
         private readonly CategoryService _categoryService;
+        private readonly ProductOptionsService _productOptionsService;
         private readonly string connectionString;
 
-        public AdminController(IConfiguration configuration, IWebHostEnvironment webHostEnvironment, StoreSettingsService storeSettingsService, InventoryDeductionService inventoryDeductionService, CategoryService categoryService)
+        public AdminController(IConfiguration configuration, IWebHostEnvironment webHostEnvironment, StoreSettingsService storeSettingsService, InventoryDeductionService inventoryDeductionService, CategoryService categoryService, ProductOptionsService productOptionsService)
         {
+            _productOptionsService = productOptionsService;
             _configuration = configuration;
             _webHostEnvironment = webHostEnvironment;
             _storeSettingsService = storeSettingsService;
@@ -164,6 +166,38 @@ namespace SaleSync.Controllers
                         }
                     }
                 }
+
+                // Each order's items with size, sugar level, add-ons and special instructions,
+                // so the kitchen can see them without opening Details.
+                if (queueItems.Count > 0)
+                {
+                    string linesSql = @"
+                        SELECT si.sale_id, si.quantity, p.product_name, si.size, si.special_instructions
+                        FROM sale_items si
+                        JOIN products p ON si.product_id = p.product_id
+                        JOIN sales s ON s.sale_id = si.sale_id
+                        WHERE s.status IN ('Pending', 'Preparing', 'Processing')
+                        ORDER BY si.sale_id";
+
+                    var bySale = queueItems.ToDictionary(q => q.SaleId);
+
+                    using (SqlCommand cmd = new SqlCommand(linesSql, conn))
+                    using (SqlDataReader r = cmd.ExecuteReader())
+                    {
+                        while (r.Read())
+                        {
+                            if (!bySale.TryGetValue(Convert.ToInt32(r["sale_id"]), out var order)) continue;
+
+                            order.Items.Add(new QueueLineItem
+                            {
+                                Quantity = Convert.ToInt32(r["quantity"]),
+                                Name = r["product_name"].ToString(),
+                                Size = r["size"]?.ToString(),
+                                Notes = r["special_instructions"]?.ToString()
+                            });
+                        }
+                    }
+                }
             }
 
             return View(queueItems);
@@ -234,19 +268,29 @@ namespace SaleSync.Controllers
         [HttpGet]
         public IActionResult GetOrderDetails(int saleId)
         {
-            var result = new { items = new List<string>(), ingredients = new List<string>() };
+            var result = new { items = new List<object>(), ingredients = new List<string>() };
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
-                string itemSql = @"             SELECT si.quantity, p.product_name              FROM sale_items si              JOIN products p ON si.product_id = p.product_id              WHERE si.sale_id = @id";
+                string itemSql = @"             SELECT si.quantity, p.product_name, si.size, si.special_instructions              FROM sale_items si              JOIN products p ON si.product_id = p.product_id              WHERE si.sale_id = @id";
 
                 using (SqlCommand cmd = new SqlCommand(itemSql, conn))
                 {
                     cmd.Parameters.AddWithValue("@id", saleId);
                     using (SqlDataReader r = cmd.ExecuteReader())
                     {
-                        while (r.Read()) result.items.Add($"{r["quantity"]}x {r["product_name"]}");
+                        while (r.Read())
+                        {
+                            string size = r["size"]?.ToString();
+                            string sizeLabel = (string.IsNullOrWhiteSpace(size) || size == "Regular") ? "" : $" ({size})";
+
+                            result.items.Add(new
+                            {
+                                name = $"{r["quantity"]}x {r["product_name"]}{sizeLabel}",
+                                notes = r["special_instructions"] == DBNull.Value ? null : r["special_instructions"].ToString()
+                            });
+                        }
                     }
                 }
 
@@ -651,6 +695,56 @@ namespace SaleSync.Controllers
             ViewBag.ArchivedCategories = _categoryService.GetArchivedCategoryNames();
 
             return View(menuList);
+        }
+
+        // ADD-ONS / SUGAR LEVEL (per menu item)
+
+        [Authorize(Roles = "Admin,Manager")]
+        [HttpGet]
+        public IActionResult GetProductOptions(int productId)
+        {
+            try
+            {
+                var opts = _productOptionsService.GetOptions(productId);
+                return Json(new { requiresSugarLevel = opts.RequiresSugarLevel, addons = opts.Addons });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Could not load add-ons: " + ex.Message });
+            }
+        }
+
+        [Authorize(Roles = "Admin,Manager")]
+        [HttpPost]
+        public IActionResult SaveProductOptions([FromBody] SaveProductOptionsRequest request)
+        {
+            if (request == null || request.ProductId <= 0)
+                return BadRequest(new { message = "Invalid item." });
+
+            try
+            {
+                int updated = _productOptionsService.SaveOptions(request.ProductId, request.RequiresSugarLevel, request.Addons);
+
+                if (updated == 0)
+                    return NotFound(new { message = "Item not found." });
+
+                try
+                {
+                    int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+                    LogActivity(userId, "Update Add-ons",
+                        $"Updated add-ons for product #{request.ProductId} ({(request.Addons?.Count ?? 0)} add-on(s), sugar level required: {request.RequiresSugarLevel}).");
+                }
+                catch
+                {
+                    // The add-ons are already saved; a failed activity-log entry must not report a failure.
+                }
+
+                return Ok(new { message = "Add-ons saved." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Could not save add-ons: " + ex.Message });
+            }
         }
 
         [Authorize(Roles = "Admin,Manager")]
