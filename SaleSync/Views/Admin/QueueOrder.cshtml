@@ -211,6 +211,28 @@
                                      <span class="meta-tag"><i class="fas fa-clock"></i> Pick-up: @order.PickupTime.Value.ToString("MMM d, hh:mm tt")</span>
                                         }
                                    </div>
+
+                                @if (order.Items != null && order.Items.Count > 0)
+                                {
+                                    <ul class="queue-items">
+                                        @foreach (var line in order.Items)
+                                        {
+                                            <li>
+                                                <span class="qi-name">
+                                                    @line.Quantity&times; @line.Name
+                                                    @if (!string.IsNullOrWhiteSpace(line.Size) && line.Size != "Regular")
+                                                    {
+                                                        <span class="qi-size">@line.Size</span>
+                                                    }
+                                                </span>
+                                                @if (!string.IsNullOrWhiteSpace(line.Notes))
+                                                {
+                                                    <span class="qi-notes"><i class="fas fa-sticky-note"></i> @line.Notes</span>
+                                                }
+                                            </li>
+                                        }
+                                    </ul>
+                                }
                             </div>
 
                             <div class="card-actions">
@@ -440,18 +462,22 @@
         itemsList.innerHTML = '';
         ingList.innerHTML = '';
 
+        function escapeQueueHtml(s) {
+        return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
         if (data.items && data.items.length > 0) {
         let runningTotal = 0;
         data.items.forEach(i => {
         const label = typeof i === 'string' ? i : i.name;
         const note = (typeof i === 'object' && i.notes) ? i.notes : null;
         const subtotal = (typeof i === 'object' && typeof i.subtotal === 'number') ? i.subtotal : null;
-        const noteHtml = note ? `<div style="font-size:12px; color:#C9A84C; margin:2px 0 8px 24px;">📝 ${note}</div>` : '';
+        const noteHtml = note ? `<div style="font-size:12px; color:#C9A84C; margin:2px 0 8px 24px;">📝 ${escapeQueueHtml(note)}</div>` : '';
         const priceHtml = subtotal !== null ? `<span style="float:right; color:#C9A84C; font-weight:600;">₱${subtotal.toFixed(2)}</span>` : '';
 
         if (subtotal !== null) runningTotal += subtotal;
 
-        itemsList.innerHTML += `<li><i class="fas fa-shopping-basket" style="color:#888e8a; margin-right:8px;"></i> ${label}${priceHtml}</li>${noteHtml}`;
+        itemsList.innerHTML += `<li><i class="fas fa-shopping-basket" style="color:#888e8a; margin-right:8px;"></i> ${escapeQueueHtml(label)}${priceHtml}</li>${noteHtml}`;
         });
 
         if (runningTotal > 0) {

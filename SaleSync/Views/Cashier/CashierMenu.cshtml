@@ -23,6 +23,7 @@
 }
 @inject SaleSync.Services.StoreSettingsService StoreSettings
 @inject SaleSync.Services.CategoryService CategoryData
+@inject SaleSync.Services.ProductOptionsService ProductOptions
 @{
     var store = StoreSettings.GetSettings();
 
@@ -624,16 +625,28 @@
             <div class="receipt-header-print">
 
                 <h2>
-                    CAFÉRO
+                    @store.StoreName.ToUpper()
                 </h2>
 
-                <p>
-                    Coffee & Pastries
-                </p>
+                @if (!string.IsNullOrWhiteSpace(store.StoreTagline))
+                {
+                    <p>@store.StoreTagline</p>
+                }
 
-                <p>
-                    Taytay, Rizal
-                </p>
+                @if (!string.IsNullOrWhiteSpace(store.BusinessAddress))
+                {
+                    <p>@store.BusinessAddress</p>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(store.ContactNumber))
+                {
+                    <p>Tel: @store.ContactNumber</p>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(store.TaxIdNumber))
+                {
+                    <p>TIN: @store.TaxIdNumber</p>
+                }
 
             </div>
 
@@ -724,7 +737,7 @@
             <div class="receipt-row">
 
                 <span>
-                    VAT (12%):
+                    VAT (@(store.VatRate.ToString("0.##"))%):
                 </span>
 
                 <span id="receiptVat"></span>
@@ -773,13 +786,20 @@
 
             <div class="receipt-footer-print">
 
-                <p>
-                    Thank you for your purchase!
-                </p>
+                @if (!string.IsNullOrWhiteSpace(store.ReceiptFooter))
+                {
+                    <p>@store.ReceiptFooter</p>
+                }
+                else
+                {
+                    <p>
+                        Thank you for your purchase!
+                    </p>
 
-                <p>
-                    Please come again.
-                </p>
+                    <p>
+                        Please come again.
+                    </p>
+                }
 
             </div>
 
@@ -901,58 +921,42 @@
 
         /* =====================================================
            ADD-ONS (same as the customer side)
-           Category-specific so a rice meal never shows drink
-           add-ons like "Oat Milk", and a coffee never shows
-           "Extra Rice". Keys must match currentCategory exactly
-           (uppercase, same spacing as used by openSubMenu()).
+           Set per item by an Admin/Manager on the Products page
+           (stored in the database). An item with no add-ons shows
+           no Add-ons section.
+           Key = "<category lowercase, no spaces>|<item name lowercase>"
         ===================================================== */
 
-        const addonsByCategory = {
-            "COFFEE": ["Extra Sugar", "Oat Milk", "Extra Ice"],
-            "MILKTEA": ["Extra Pearls", "Extra Ice"],
-            "FRUIT TEA": ["Extra Sugar", "Extra Ice"],
-            "RICE MEAL": ["Extra Rice"],
-            "SNACKS & PASTA": ["Extra Sauce", "Extra Cheese"],
-            "BREAD & PASTRY": []
-        };
+        const PRODUCT_OPTIONS = @Html.Raw(Json.Serialize(ProductOptions.GetOptionsMap()));
 
-        // Add-ons for one specific product. If the product name contains the
-        // "match" text, this list is used instead of the category list.
-        const addonsByItem = [
-            { match: 'flavored fries', addons: ['Barbeque', 'Cheese', 'Sour Cream'] },
-            { match: 'siomai', addons: [] }
-        ];
+        // No groups of add-ons that exclude each other any more (kept so
+        // onAddonToggle below keeps working).
+        const exclusiveAddonGroups = {};
 
-        // Add-ons that cannot be ticked together (per category).
-        const exclusiveAddonGroups = {
-            "COFFEE": [['Extra Ice'], ['Extra Sugar']],
-            "MILKTEA": [['Extra Ice']],
-            "FRUIT TEA": [['Extra Ice'], ['Extra Sugar']]
-        };
+        const SUGAR_LEVELS = ['25%', '50%', '75%', '100%'];
 
-        // Sugar level is a choice of its own (pick one), not an add-on.
-        // It is REQUIRED for the categories listed here.
-        const sugarLevelsByCategory = {
-            "MILKTEA": ['25%', '50%', '75%', '100%']
-        };
+        function getProductOptions(category, itemName) {
 
-        function getSugarLevelsForItem(category, itemName) {
-            return sugarLevelsByCategory[category] || [];
+            const cat =
+                String(category || '').replace(/\s+/g, '').toLowerCase();
+
+            const name =
+                String(itemName || '').trim().toLowerCase();
+
+            // menuData strips a trailing " - Regular", the database name may still have it.
+            return PRODUCT_OPTIONS[cat + '|' + name] ||
+                   PRODUCT_OPTIONS[cat + '|' + name + ' - regular'] ||
+                   { requiresSugarLevel: false, addons: [] };
         }
 
-        function getAddonsForCategory(category) {
-            return addonsByCategory[category] || [];
+        function getSugarLevelsForItem(category, itemName) {
+            return getProductOptions(category, itemName).requiresSugarLevel
+                ? SUGAR_LEVELS
+                : [];
         }
 
         function getAddonsForItem(category, itemName) {
-
-            const name = (itemName || '').toLowerCase();
-
-            const override = addonsByItem.find(rule => name.includes(rule.match));
-
-            return override
-                ? override.addons
-                : getAddonsForCategory(category);
+            return getProductOptions(category, itemName).addons || [];
         }
 
         // When one add-on of an exclusive group is ticked, untick the others.
@@ -1005,6 +1009,10 @@
         /* =====================================================
            CART / ORDER STATE
         ===================================================== */
+
+        // Receipt settings come from Web Customization (store settings).
+        const RECEIPT_CURRENCY = @Html.Raw(Json.Serialize(string.IsNullOrEmpty(store.CurrencySymbol) ? "₱" : store.CurrencySymbol));
+        const RECEIPT_VAT_RATE = @store.VatRate.ToString(System.Globalization.CultureInfo.InvariantCulture);
 
         let cart =
             JSON.parse(localStorage.getItem('syncScaleCart')) || [];
@@ -1281,8 +1289,8 @@
                 addonsList.innerHTML =
                     addonOptions.map(label => `
                         <label class="addon-check">
-                            <input type="checkbox" name="modalAddon" value="${label}" data-cat="${escapeHtml(currentCategory)}" onchange="onAddonToggle(this)">
-                            ${label}
+                            <input type="checkbox" name="modalAddon" value="${escapeHtml(label)}" data-cat="${escapeHtml(currentCategory)}" onchange="onAddonToggle(this)">
+                            ${escapeHtml(label)}
                         </label>
                     `).join('');
 
@@ -1789,8 +1797,8 @@
 
                     return `
                         <label class="addon-check">
-                            <input type="checkbox" class="order-edit-addon" value="${label}" data-cat="${escapeHtml(item.category || '')}" onchange="onAddonToggle(this)" ${checked}>
-                            ${label}
+                            <input type="checkbox" class="order-edit-addon" value="${escapeHtml(label)}" data-cat="${escapeHtml(item.category || '')}" onchange="onAddonToggle(this)" ${checked}>
+                            ${escapeHtml(label)}
                         </label>
                     `;
 
@@ -2565,7 +2573,7 @@
                             text-align:right;
                             vertical-align:top;
                         ">
-                            ₱${sub.toFixed(2)}
+                            ${RECEIPT_CURRENCY}${sub.toFixed(2)}
                         </td>
 
                     </tr>
@@ -2595,14 +2603,14 @@
              */
 
             const vatableSales =
-                finalTotal / 1.12;
+                finalTotal / (1 + RECEIPT_VAT_RATE / 100);
 
             const vatAmount =
                 finalTotal - vatableSales;
 
 
             document.getElementById("receiptSubtotal").innerText =
-                "₱" +
+                RECEIPT_CURRENCY +
                 subtotal.toFixed(2);
 
 
@@ -2615,7 +2623,7 @@
                     "flex";
 
                 document.getElementById("receiptDiscount").innerText =
-                    "-₱" +
+                    "-" + RECEIPT_CURRENCY +
                     appliedPromoDiscount.toFixed(2);
 
             }
@@ -2628,16 +2636,16 @@
 
 
             document.getElementById("receiptVat").innerText =
-                "₱" +
+                RECEIPT_CURRENCY +
                 vatAmount.toFixed(2);
 
             document.getElementById("receiptTotal").innerText =
-                "₱" +
+                RECEIPT_CURRENCY +
                 finalTotal.toFixed(2);
 
             // Amount paid by the customer (entered at the register)
             document.getElementById("receiptTendered").innerText =
-                "₱" +
+                RECEIPT_CURRENCY +
                 amountPaid.toFixed(2);
 
 
@@ -2645,7 +2653,7 @@
                 amountPaid - finalTotal;
 
             document.getElementById("receiptChange").innerText =
-                "₱" +
+                RECEIPT_CURRENCY +
                 (
                     change > 0
                         ? change.toFixed(2)
