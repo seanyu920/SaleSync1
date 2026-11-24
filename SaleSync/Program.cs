@@ -13,6 +13,8 @@ builder.Services.AddControllersWithViews()
 builder.Services.AddScoped<SaleSync.Services.StoreSettingsService>();
 
 
+builder.Services.AddScoped<SaleSync.Services.InventoryMovementService>();
+
 builder.Services.AddScoped<SaleSync.Services.InventoryDeductionService>();
 
 builder.Services.AddScoped<SaleSync.Services.CategoryService>();
@@ -43,6 +45,15 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     });
 
 var app = builder.Build();
+
+// Create the stock movement table (inventory_movements) up front if it is missing.
+// If the database can't be reached here, it is simply tried again the first time it is needed.
+using (var startupScope = app.Services.CreateScope())
+{
+    startupScope.ServiceProvider
+        .GetRequiredService<SaleSync.Services.InventoryMovementService>()
+        .EnsureSchema();
+}
 
 
 if (!app.Environment.IsDevelopment())
