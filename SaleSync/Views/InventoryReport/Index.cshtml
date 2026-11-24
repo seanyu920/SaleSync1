@@ -9,6 +9,7 @@
             case "Initial Stock": return "type-initial";
             case "Sale Usage": return "type-sale";
             case "Adjustment Out": return "type-adjustment";
+            case "Detail Edit": return "type-edit";
             default: return "type-other";
         }
     }
@@ -179,6 +180,7 @@
                         <option value="restock" selected="@(Model.Type == "restock")">Restocked</option>
                         <option value="initial" selected="@(Model.Type == "initial")">New items (starting stock)</option>
                         <option value="adjustment" selected="@(Model.Type == "adjustment")">Reduced by hand</option>
+                        <option value="edit" selected="@(Model.Type == "edit")">Detail edits (price, supplier, dates)</option>
                     </select>
                 </div>
 
@@ -257,7 +259,8 @@
                     <div class="kpi-label">Activity</div>
                     <div class="kpi-value">@Model.MovementCount <span class="kpi-unit">movement@(Model.MovementCount == 1 ? "" : "s")</span></div>
                     <div class="kpi-sub">
-                        @Model.ItemsAffected item@(Model.ItemsAffected == 1 ? "" : "s") affected
+                        @Model.ItemsAffected item@(Model.ItemsAffected == 1 ? "" : "s") affected<br />
+                        @Model.DetailEditCount detail edit@(Model.DetailEditCount == 1 ? "" : "s") (no stock moved)
                         @if (!string.IsNullOrEmpty(Model.TopUsedItem))
                         {
                             <br /><span>Biggest outflow: <strong>@Model.TopUsedItem</strong> (@money(Model.TopUsedItemValue))</span>
@@ -489,7 +492,16 @@
                                     </td>
                                     <td><strong>@m.ItemName</strong></td>
                                     <td><span class="type-badge @TypeClass(m.MovementType)">@m.MovementType</span></td>
-                                    <td class="num @(m.IsIn ? "qty-in" : "qty-out")">@signedQty(m.QuantityChange) @m.Unit</td>
+                                    <td class="num @(m.IsEdit ? "" : (m.IsIn ? "qty-in" : "qty-out"))">
+                                        @if (m.IsEdit)
+                                        {
+                                            <span class="muted-small">no stock moved</span>
+                                        }
+                                        else
+                                        {
+                                            <text>@signedQty(m.QuantityChange) @m.Unit</text>
+                                        }
+                                    </td>
                                     <td class="num">
                                         @if (m.QuantityBefore.HasValue && m.QuantityAfter.HasValue)
                                         {
