@@ -32,6 +32,9 @@ namespace SaleSync.Models
 
         public bool IsIn => QuantityChange > 0;
 
+        /// <summary>True for a detail-only edit (no stock moved).</summary>
+        public bool IsEdit => QuantityChange == 0;
+
         /// <summary>Readable reference such as "Order #ORD-42"; empty when there is none.</summary>
         public string ReferenceLabel
         {
@@ -101,7 +104,7 @@ namespace SaleSync.Models
         /// <summary>Last day to include (the whole day is included).</summary>
         public DateTime To { get; set; }
 
-        /// <summary>"all", "in", "out", "restock", "initial", "sale" or "adjustment".</summary>
+        /// <summary>"all", "in", "out", "restock", "initial", "sale", "adjustment" or "edit".</summary>
         public string Type { get; set; } = "all";
 
         public int? ProductId { get; set; }
@@ -133,6 +136,9 @@ namespace SaleSync.Models
         public int RestockCount { get; set; }
         public int SaleUsageCount { get; set; }
         public int ManualOutCount { get; set; }
+
+        /// <summary>Edits that changed details (price, supplier, dates...) but not the quantity.</summary>
+        public int DetailEditCount { get; set; }
 
         /// <summary>Value of what was used for sales, and what was reduced by hand.</summary>
         public decimal SaleUsageValue { get; set; }

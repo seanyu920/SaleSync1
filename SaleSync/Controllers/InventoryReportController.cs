@@ -16,7 +16,7 @@ namespace SaleSync.Controllers
     [Authorize(Roles = "Admin,Manager")]
     public class InventoryReportController : Controller
     {
-        private static readonly string[] AllowedTypes = { "all", "in", "out", "restock", "initial", "sale", "adjustment" };
+        private static readonly string[] AllowedTypes = { "all", "in", "out", "restock", "initial", "sale", "adjustment", "edit" };
 
         private readonly InventoryMovementService _movements;
         private readonly StoreSettingsService _storeSettings;
@@ -57,7 +57,7 @@ namespace SaleSync.Controllers
                 sb.Append(Csv(r.Date.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture))).Append(',');
                 sb.Append(Csv(r.ItemName)).Append(',');
                 sb.Append(Csv(r.MovementType)).Append(',');
-                sb.Append(r.IsIn ? "In" : "Out").Append(',');
+                sb.Append(r.IsEdit ? "Edit" : (r.IsIn ? "In" : "Out")).Append(',');
                 sb.Append(Num(r.QuantityChange)).Append(',');
                 sb.Append(Csv(r.Unit)).Append(',');
                 sb.Append(Num(r.QuantityBefore)).Append(',');
