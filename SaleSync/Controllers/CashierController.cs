@@ -1007,6 +1007,13 @@ namespace SaleSync.Controllers
                         }
                     }
 
+                    int? staffId =
+                        int.TryParse(
+                            User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value,
+                            out int parsedStaffId)
+                            ? parsedStaffId
+                            : (int?)null;
+
                     foreach (var item in itemsList)
                     {
                         _inventoryDeductionService
@@ -1014,7 +1021,9 @@ namespace SaleSync.Controllers
                                 conn,
                                 transaction,
                                 item.pId,
-                                item.qty);
+                                item.qty,
+                                request.SaleId,
+                                staffId);
                     }
                 }
 

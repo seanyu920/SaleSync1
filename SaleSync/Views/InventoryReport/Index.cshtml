@@ -1,0 +1,644 @@
+@model SaleSync.Models.InventoryReportViewModel
+@inject SaleSync.Services.StoreSettingsService StoreSettings
+@functions {
+    static string TypeClass(string type)
+    {
+        switch (type)
+        {
+            case "Restock": return "type-restock";
+            case "Initial Stock": return "type-initial";
+            case "Sale Usage": return "type-sale";
+            case "Adjustment Out": return "type-adjustment";
+            default: return "type-other";
+        }
+    }
+
+    static string AlertClass(string kind)
+    {
+        switch (kind)
+        {
+            case "Out of stock": return "alert-out";
+            case "Expired": return "alert-expired";
+            case "Low stock": return "alert-low";
+            default: return "alert-soon";
+        }
+    }
+}
+@{
+    Layout = null;
+
+    bool isManager = User.IsInRole("Manager");
+    string homeController = isManager ? "Manager" : "Admin";
+
+    var store = StoreSettings.GetSettings();
+    string cur = string.IsNullOrWhiteSpace(store.CurrencySymbol) ? "PHP " : store.CurrencySymbol;
+
+    Func<decimal, string> money = v => cur + v.ToString("N2");
+    Func<decimal, string> qty = v => v.ToString("0.##");
+    Func<decimal, string> signedQty = v => (v > 0 ? "+" : "") + v.ToString("0.##");
+
+    string fromText = Model.From.ToString("MMM d, yyyy");
+    string toText = Model.To.ToString("MMM d, yyyy");
+    string periodText = Model.From.Date == Model.To.Date ? fromText : fromText + " - " + toText;
+
+    string exportUrl = "/InventoryReport/ExportCsv"
+        + "?range=" + Uri.EscapeDataString(Model.Range)
+        + "&from=" + Model.From.ToString("yyyy-MM-dd")
+        + "&to=" + Model.To.ToString("yyyy-MM-dd")
+        + "&type=" + Uri.EscapeDataString(Model.Type)
+        + (Model.ProductId.HasValue ? "&productId=" + Model.ProductId.Value : "");
+
+    var chartLabels = Model.DailyPoints.Select(p => p.Day.ToString("MMM d")).ToList();
+    var chartIn = Model.DailyPoints.Select(p => p.ValueIn).ToList();
+    var chartOut = Model.DailyPoints.Select(p => p.ValueOut).ToList();
+    bool hasChartData = Model.DailyPoints.Any(p => p.ValueIn > 0 || p.ValueOut > 0);
+
+    bool showCoverageNote = !Model.LedgerUnavailable
+        && (!Model.LiveTrackingSince.HasValue || Model.From.Date < Model.LiveTrackingSince.Value.Date);
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Inventory Stock Report - Cafero</title>
+    <link rel="stylesheet" href="~/css/Inventory.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/InventoryReport.css" asp-append-version="true" />
+    <partial name="_ThemeStyles" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="icon" type="image/jpeg" href="~/images/CaferoLogo.jpg" asp-append-version="true" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+
+        <aside class="sidebar">
+            <div>
+                <div class="logo-section">
+                    <div class="logo-title">@store.StoreName</div>
+                    <div class="logo-subtitle">@store.StoreTagline</div>
+                </div>
+
+                <div class="profile-section">
+                    <div class="profile-circle">&#128100;</div>
+                    <div>
+                        <h2 class="admin-name">@(User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? User.Identity?.Name ?? "User")</h2>
+                        <div class="admin-role">@(User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? User.FindFirst("Role")?.Value ?? "User")</div>
+                    </div>
+                </div>
+
+                <nav class="sidebar-menu">
+                    <a href="/@homeController/Dashboard" class="menu-btn">Dashboard</a>
+                    <a href="/Admin/QueueOrder" class="menu-btn">Queue</a>
+                    <a href="/Promotions" class="menu-btn">Promotions</a>
+
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a href="/Admin/ActivityLog" class="menu-btn">Activity Log</a>
+                    }
+
+                    <a href="/Admin/Analytics" class="menu-btn">Analytics</a>
+                    <a href="/Admin/Products" class="menu-btn">Products</a>
+                    <a href="/Admin/Inventory" class="menu-btn active">Inventory</a>
+                    <a href="/Admin/ArchivedProducts" class="menu-btn">Archived</a>
+
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a href="/Admin/ManageAccounts" class="menu-btn">Accounts</a>
+                    }
+
+                    <a href="/Admin/WebCustomization" class="menu-btn">Customization</a>
+                </nav>
+            </div>
+
+            <div class="logout-section">
+                <form method="post" action="/Home/Logout" id="logoutForm">
+                    <button type="button" class="menu-btn logout-btn" onclick="confirmLogout()">
+                        Log Out
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+        <div class="mobile-header">
+            <button class="hamburger-btn" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="mobile-brand">Cafero</div>
+        </div>
+
+        <main class="main-content slide-up">
+
+            <div class="page-header report-header">
+                <div>
+                    <h1 class="greeting-title">Inventory Stock Report</h1>
+                    <p class="greeting-subtitle">Everything taken out of and put into stock: when, how much, what it was worth, and who did it.</p>
+                </div>
+
+                <div class="report-actions no-print">
+                    <a href="/Admin/Inventory" class="report-btn"><i class="fas fa-arrow-left"></i> Inventory</a>
+                    <a href="@exportUrl" class="report-btn"><i class="fas fa-file-csv"></i> Export CSV</a>
+                    <button type="button" class="report-btn" onclick="window.print()"><i class="fas fa-print"></i> Print</button>
+                </div>
+            </div>
+
+            <!-- FILTERS -->
+            <form method="get" action="/InventoryReport" class="report-filters no-print" id="filterForm">
+                <div class="filter-field">
+                    <label for="rangeSelect">Period</label>
+                    <select name="range" id="rangeSelect" class="filter-select">
+                        <option value="today" selected="@(Model.Range == "today")">Today</option>
+                        <option value="7d" selected="@(Model.Range == "7d")">Last 7 days</option>
+                        <option value="30d" selected="@(Model.Range == "30d")">Last 30 days</option>
+                        <option value="month" selected="@(Model.Range == "month")">This month</option>
+                        <option value="custom" selected="@(Model.Range == "custom")">Custom range</option>
+                    </select>
+                </div>
+
+                <div class="filter-field custom-dates" id="customDates" style="display:@(Model.Range == "custom" ? "flex" : "none")">
+                    <div>
+                        <label for="fromDate">From</label>
+                        <input type="date" name="from" id="fromDate" class="search-input date-input" value="@Model.From.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div>
+                        <label for="toDate">To</label>
+                        <input type="date" name="to" id="toDate" class="search-input date-input" value="@Model.To.ToString("yyyy-MM-dd")" />
+                    </div>
+                </div>
+
+                <div class="filter-field">
+                    <label for="typeSelect">Movement</label>
+                    <select name="type" id="typeSelect" class="filter-select">
+                        <option value="all" selected="@(Model.Type == "all")">All movements</option>
+                        <option value="in" selected="@(Model.Type == "in")">Stock in only</option>
+                        <option value="out" selected="@(Model.Type == "out")">Stock out only</option>
+                        <option value="sale" selected="@(Model.Type == "sale")">Used in orders</option>
+                        <option value="restock" selected="@(Model.Type == "restock")">Restocked</option>
+                        <option value="initial" selected="@(Model.Type == "initial")">New items (starting stock)</option>
+                        <option value="adjustment" selected="@(Model.Type == "adjustment")">Reduced by hand</option>
+                    </select>
+                </div>
+
+                <div class="filter-field">
+                    <label for="itemSelect">Item</label>
+                    <select name="productId" id="itemSelect" class="filter-select">
+                        <option value="">All items</option>
+                        @foreach (var opt in Model.ItemOptions)
+                        {
+                            <option value="@opt.ProductId" selected="@(Model.ProductId == opt.ProductId)">@opt.ItemName</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="filter-field filter-buttons">
+                    <button type="submit" class="report-btn report-btn-primary">Apply</button>
+                    <a href="/InventoryReport" class="report-btn">Reset</a>
+                </div>
+            </form>
+
+            <div class="period-label">Showing <strong>@periodText</strong></div>
+
+            @if (Model.LedgerUnavailable)
+            {
+                <div class="notice notice-danger">
+                    <strong>The stock movement log is not available.</strong>
+                    The table that stores movements could not be created or reached, so nothing is being recorded.
+                    Check that the database user is allowed to create tables, then reload this page.
+                </div>
+            }
+            else if (showCoverageNote)
+            {
+                <div class="notice notice-info">
+                    @if (!Model.LiveTrackingSince.HasValue)
+                    {
+                        <span>
+                            <strong>Tracking has just started.</strong>
+                            From now on every restock, manual change and completed order is recorded here.
+                            Earlier restocks were copied in from your purchase history. Stock that went out before today was never recorded, so it cannot be shown.
+                        </span>
+                    }
+                    else
+                    {
+                        <span>
+                            <strong>Stock going out has only been tracked since @Model.LiveTrackingSince.Value.ToString("MMM d, yyyy").</strong>
+                            Days before that only show restocks copied in from your purchase history.
+                        </span>
+                    }
+                </div>
+            }
+
+            <!-- KPI CARDS -->
+            <div class="kpi-grid">
+                <div class="kpi-card kpi-in">
+                    <div class="kpi-label">Stock in</div>
+                    <div class="kpi-value">@money(Model.TotalValueIn)</div>
+                    <div class="kpi-sub">@Model.RestockCount restock@(Model.RestockCount == 1 ? "" : "s") / new item@(Model.RestockCount == 1 ? "" : "s")</div>
+                </div>
+
+                <div class="kpi-card kpi-out">
+                    <div class="kpi-label">Stock out</div>
+                    <div class="kpi-value">@money(Model.TotalValueOut)</div>
+                    <div class="kpi-sub">
+                        @Model.SaleUsageCount used in orders (@money(Model.SaleUsageValue))<br />
+                        @Model.ManualOutCount reduced by hand (@money(Model.ManualOutValue))
+                    </div>
+                </div>
+
+                <div class="kpi-card @(Model.NetValueChange >= 0 ? "kpi-in" : "kpi-out")">
+                    <div class="kpi-label">Net change in stock value</div>
+                    <div class="kpi-value">@(Model.NetValueChange >= 0 ? "+" : "-")@money(Math.Abs(Model.NetValueChange))</div>
+                    <div class="kpi-sub">Value added minus value taken out</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-label">Activity</div>
+                    <div class="kpi-value">@Model.MovementCount <span class="kpi-unit">movement@(Model.MovementCount == 1 ? "" : "s")</span></div>
+                    <div class="kpi-sub">
+                        @Model.ItemsAffected item@(Model.ItemsAffected == 1 ? "" : "s") affected
+                        @if (!string.IsNullOrEmpty(Model.TopUsedItem))
+                        {
+                            <br /><span>Biggest outflow: <strong>@Model.TopUsedItem</strong> (@money(Model.TopUsedItemValue))</span>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- CHART -->
+            <div class="table-card chart-card">
+                <h2 class="widget-title">Stock value in vs. out, per day</h2>
+                @if (hasChartData)
+                {
+                    <div class="chart-box"><canvas id="flowChart"></canvas></div>
+                }
+                else
+                {
+                    <div class="empty-note">No stock movements in this period.</div>
+                }
+            </div>
+
+            <!-- NEEDS ATTENTION -->
+            <div class="table-card">
+                <h2 class="widget-title">
+                    Needs attention right now
+                    <span class="widget-hint">live stock, not limited to the period above (low stock = @Model.LowStockThreshold or less)</span>
+                </h2>
+
+                @if (Model.Alerts.Count == 0)
+                {
+                    <div class="empty-note">Nothing needs attention. Every item is stocked and in date.</div>
+                }
+                else
+                {
+                    <div class="table-wrap">
+                        <table class="report-table">
+                            <thead>
+                                <tr>
+                                    <th>Issue</th>
+                                    <th>Item</th>
+                                    <th>In stock</th>
+                                    <th>Expiry</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var a in Model.Alerts)
+                                {
+                                    <tr>
+                                        <td><span class="alert-badge @AlertClass(a.Kind)">@a.Kind</span></td>
+                                        <td><strong>@a.ItemName</strong></td>
+                                        <td>@qty(a.Quantity) @a.Unit</td>
+                                        <td>
+                                            @if (a.ExpirationDate.HasValue)
+                                            {
+                                                <span>@a.ExpirationDate.Value.ToString("MMM d, yyyy")</span>
+                                                <span class="muted-small">
+                                                    @if (a.DaysToExpiry < 0)
+                                                    {
+                                                        <text>(expired @(Math.Abs(a.DaysToExpiry.Value)) day@(Math.Abs(a.DaysToExpiry.Value) == 1 ? "" : "s") ago)</text>
+                                                    }
+                                                    else if (a.DaysToExpiry == 0)
+                                                    {
+                                                        <text>(expires today)</text>
+                                                    }
+                                                    else
+                                                    {
+                                                        <text>(in @a.DaysToExpiry day@(a.DaysToExpiry == 1 ? "" : "s"))</text>
+                                                    }
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="muted-small">-</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+
+            <!-- PER-ITEM SUMMARY -->
+            <div class="table-card">
+                <div class="card-head">
+                    <h2 class="widget-title">By item</h2>
+                    <input type="text" id="summarySearch" class="search-input no-print" placeholder="Search items..." onkeyup="filterRows('summarySearch', '.summary-row', 'summaryEmpty')" />
+                </div>
+
+                @if (Model.IdleItemCount > 0)
+                {
+                    <p class="table-note">@Model.IdleItemCount item@(Model.IdleItemCount == 1 ? " has" : "s have") no movement in this period.</p>
+                }
+
+                <div class="table-wrap">
+                    <table class="report-table">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Category</th>
+                                <th class="num">In</th>
+                                <th class="num">Out</th>
+                                <th class="num">Net</th>
+                                <th class="num">Value in</th>
+                                <th class="num">Value out</th>
+                                <th class="num">In stock now</th>
+                                <th class="num">Avg used / day</th>
+                                <th class="num">Est. days left</th>
+                                <th>Last movement</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.ItemSummaries.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="11" class="empty-cell">No stock movements match these filters.</td>
+                                </tr>
+                            }
+
+                            @foreach (var s in Model.ItemSummaries)
+                            {
+                                <tr class="summary-row @(s.MovementCount == 0 ? "row-idle" : "")">
+                                    <td><strong>@s.ItemName</strong></td>
+                                    <td>@s.Category</td>
+                                    <td class="num qty-in">@(s.QtyIn > 0 ? "+" + qty(s.QtyIn) + " " + s.Unit : "-")</td>
+                                    <td class="num qty-out">@(s.QtyOut > 0 ? "-" + qty(s.QtyOut) + " " + s.Unit : "-")</td>
+                                    <td class="num">@(s.MovementCount == 0 ? "-" : signedQty(s.NetChange) + " " + s.Unit)</td>
+                                    <td class="num">@(s.ValueIn > 0 ? money(s.ValueIn) : "-")</td>
+                                    <td class="num">@(s.ValueOut > 0 ? money(s.ValueOut) : "-")</td>
+                                    <td class="num">
+                                        @if (s.CurrentStock.HasValue)
+                                        {
+                                            <span>@qty(s.CurrentStock.Value) @s.Unit</span>
+                                            if (s.StockLevel == "Out")
+                                            {
+                                                <span class="stock-badge badge-low">Out</span>
+                                            }
+                                            else if (s.StockLevel == "Low")
+                                            {
+                                                <span class="stock-badge badge-medium">Low</span>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="muted-small">archived</span>
+                                        }
+                                    </td>
+                                    <td class="num">@(s.AvgDailyUse > 0 ? s.AvgDailyUse.ToString("0.##") + " " + s.Unit : "-")</td>
+                                    <td class="num">
+                                        @if (s.DaysLeft.HasValue)
+                                        {
+                                            if (s.DaysLeft.Value <= 0)
+                                            {
+                                                <span class="days-left days-urgent">Out</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="days-left @(s.DaysLeft.Value <= 7 ? "days-urgent" : "")">~@s.DaysLeft.Value.ToString("0.#") days</span>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="muted-small">-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (s.LastMovement.HasValue)
+                                        {
+                                            @s.LastMovement.Value.ToString("MMM d, yyyy")
+                                        }
+                                        else
+                                        {
+                                            <span class="muted-small">-</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+
+                            <tr id="summaryEmpty" style="display:none;">
+                                <td colspan="11" class="empty-cell">No matching items.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="table-note">Quantities are in each item's stock unit. "Est. days left" uses the average amount used in orders per day since order tracking began.</p>
+            </div>
+
+            <!-- MOVEMENT LOG -->
+            <div class="table-card">
+                <div class="card-head">
+                    <h2 class="widget-title">Movement log</h2>
+                    <input type="text" id="logSearch" class="search-input no-print" placeholder="Search item, order, person, note..." onkeyup="filterRows('logSearch', '.log-row', 'logEmpty')" />
+                </div>
+
+                @if (Model.MovementsTruncated)
+                {
+                    <p class="table-note">Showing the latest @Model.Movements.Count.ToString("N0") of @Model.TotalMatchingMovements.ToString("N0") movements. Narrow the filters, or use Export CSV to get all of them.</p>
+                }
+
+                <div class="table-wrap">
+                    <table class="report-table log-table">
+                        <thead>
+                            <tr>
+                                <th>When</th>
+                                <th>Item</th>
+                                <th>Type</th>
+                                <th class="num">Quantity</th>
+                                <th class="num">Stock before &rarr; after</th>
+                                <th class="num">Value</th>
+                                <th>Details</th>
+                                <th>Done by</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Movements.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="8" class="empty-cell">No stock movements match these filters.</td>
+                                </tr>
+                            }
+
+                            @foreach (var m in Model.Movements)
+                            {
+                                <tr class="log-row">
+                                    <td class="nowrap">
+                                        @m.Date.ToString("MMM d, yyyy")
+                                        <div class="muted-small">@m.Date.ToString("hh:mm tt")</div>
+                                    </td>
+                                    <td><strong>@m.ItemName</strong></td>
+                                    <td><span class="type-badge @TypeClass(m.MovementType)">@m.MovementType</span></td>
+                                    <td class="num @(m.IsIn ? "qty-in" : "qty-out")">@signedQty(m.QuantityChange) @m.Unit</td>
+                                    <td class="num">
+                                        @if (m.QuantityBefore.HasValue && m.QuantityAfter.HasValue)
+                                        {
+                                            <span>@qty(m.QuantityBefore.Value) &rarr; @qty(m.QuantityAfter.Value)</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="muted-small">-</span>
+                                        }
+                                    </td>
+                                    <td class="num">@(m.TotalValue.HasValue ? money(m.TotalValue.Value) : "-")</td>
+                                    <td class="details-cell">
+                                        @if (!string.IsNullOrEmpty(m.ReferenceLabel))
+                                        {
+                                            <div><strong>@m.ReferenceLabel</strong></div>
+                                        }
+                                        @if (!string.IsNullOrEmpty(m.Notes))
+                                        {
+                                            <div>@m.Notes</div>
+                                        }
+                                        @if (!string.IsNullOrEmpty(m.Supplier))
+                                        {
+                                            <div class="muted-small">Supplier: @m.Supplier</div>
+                                        }
+                                        @if (m.UnitCost.HasValue)
+                                        {
+                                            <div class="muted-small">@money(m.UnitCost.Value) per @(string.IsNullOrEmpty(m.Unit) ? "unit" : m.Unit)</div>
+                                        }
+                                    </td>
+                                    <td class="nowrap">@m.PerformedBy</td>
+                                </tr>
+                            }
+
+                            <tr id="logEmpty" style="display:none;">
+                                <td colspan="8" class="empty-cell">No matching movements.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        function confirmLogout() {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You will be logged out of your session.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, log out',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('logoutForm').submit();
+                }
+            });
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            if (sidebar) sidebar.classList.toggle('mobile-open');
+            if (overlay) overlay.classList.toggle('mobile-open');
+        }
+
+        // Period picker: presets reload straight away, "Custom range" reveals the date boxes first.
+        (function () {
+            const rangeSelect = document.getElementById('rangeSelect');
+            const customDates = document.getElementById('customDates');
+            const form = document.getElementById('filterForm');
+
+            rangeSelect.addEventListener('change', function () {
+                if (rangeSelect.value === 'custom') {
+                    customDates.style.display = 'flex';
+                } else {
+                    form.submit();
+                }
+            });
+
+            ['typeSelect', 'itemSelect'].forEach(function (id) {
+                document.getElementById(id).addEventListener('change', function () {
+                    if (rangeSelect.value !== 'custom') form.submit();
+                });
+            });
+        })();
+
+        // Simple text filter for the two tables
+        function filterRows(inputId, rowSelector, emptyRowId) {
+            const term = document.getElementById(inputId).value.toLowerCase().trim();
+            const rows = document.querySelectorAll(rowSelector);
+            let visible = 0;
+
+            rows.forEach(function (row) {
+                const show = row.textContent.toLowerCase().includes(term);
+                row.style.display = show ? '' : 'none';
+                if (show) visible++;
+            });
+
+            const emptyRow = document.getElementById(emptyRowId);
+            if (emptyRow) emptyRow.style.display = (rows.length > 0 && visible === 0) ? '' : 'none';
+        }
+
+        @if (hasChartData)
+        {
+            <text>
+            (function () {
+                const labels = @Html.Raw(Json.Serialize(chartLabels));
+                const valuesIn = @Html.Raw(Json.Serialize(chartIn));
+                const valuesOut = @Html.Raw(Json.Serialize(chartOut));
+                const currency = @Html.Raw(Json.Serialize(cur));
+
+                Chart.defaults.color = 'rgba(242, 237, 228, 0.6)';
+                Chart.defaults.font.family = "'Outfit', 'Segoe UI', sans-serif";
+
+                new Chart(document.getElementById('flowChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            { label: 'Stock in', data: valuesIn, backgroundColor: '#3dbf78', borderRadius: 4 },
+                            { label: 'Stock out', data: valuesOut, backgroundColor: '#e05555', borderRadius: 4 }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom' },
+                            tooltip: {
+                                callbacks: {
+                                    label: function (ctx) {
+                                        return ctx.dataset.label + ': ' + currency + Number(ctx.parsed.y).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { grid: { display: false } },
+                            y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.06)' } }
+                        }
+                    }
+                });
+            })();
+            </text>
+        }
+    </script>
+</body>
+</html>

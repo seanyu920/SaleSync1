@@ -25,11 +25,13 @@ namespace SaleSync.Controllers
         private readonly InventoryDeductionService _inventoryDeductionService;
         private readonly CategoryService _categoryService;
         private readonly ProductOptionsService _productOptionsService;
+        private readonly InventoryMovementService _inventoryMovementService;
         private readonly string connectionString;
 
-        public AdminController(IConfiguration configuration, IWebHostEnvironment webHostEnvironment, StoreSettingsService storeSettingsService, InventoryDeductionService inventoryDeductionService, CategoryService categoryService, ProductOptionsService productOptionsService)
+        public AdminController(IConfiguration configuration, IWebHostEnvironment webHostEnvironment, StoreSettingsService storeSettingsService, InventoryDeductionService inventoryDeductionService, CategoryService categoryService, ProductOptionsService productOptionsService, InventoryMovementService inventoryMovementService)
         {
             _productOptionsService = productOptionsService;
+            _inventoryMovementService = inventoryMovementService;
             _configuration = configuration;
             _webHostEnvironment = webHostEnvironment;
             _storeSettingsService = storeSettingsService;
@@ -246,9 +248,11 @@ namespace SaleSync.Controllers
                                 }
                             }
 
+                            int? staffId = int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int parsedStaffId) ? parsedStaffId : (int?)null;
+
                             foreach (var item in itemsList)
                             {
-                                _inventoryDeductionService.DeductIngredients(conn, transaction, item.pId, item.qty);
+                                _inventoryDeductionService.DeductIngredients(conn, transaction, item.pId, item.qty, request.SaleId, staffId);
                             }
                         }
 
@@ -1039,6 +1043,20 @@ namespace SaleSync.Controllers
                     }
                 }
 
+                // Stock movement ledger: logs a Restock (quantity went up) or an Adjustment Out (lowered by hand)
+                if (oldItem != null)
+                {
+                    _inventoryMovementService.RecordManualChange(
+                        model.ProductId,
+                        oldItem.ItemName ?? "Unnamed Item",
+                        model.Unit ?? "pcs",
+                        Convert.ToDecimal(oldItem.Quantity),
+                        Convert.ToDecimal(model.Quantity),
+                        model.PurchasePrice,
+                        model.StockSupplier,
+                        currentUserId);
+                }
+
                 LogActivity(currentUserId, "Inventory Updated", $"Updated stock/details for {oldItem?.ItemName ?? "Item"}", oldData: oldItem, newData: model);
             }
             return RedirectToAction("Inventory");
@@ -1097,6 +1115,18 @@ namespace SaleSync.Controllers
                         logCmd.Parameters.AddWithValue("@cost", totalCost);
                         logCmd.ExecuteNonQuery();
                     }
+                }
+
+                // Stock movement ledger: the starting quantity of the new item
+                if (model.Quantity > 0)
+                {
+                    _inventoryMovementService.RecordInitialStock(
+                        itemName,
+                        model.Unit ?? "pcs",
+                        Convert.ToDecimal(model.Quantity),
+                        model.PurchasePrice,
+                        model.StockSupplier,
+                        currentUserId);
                 }
 
                 LogActivity(currentUserId, "Inventory Created", $"Added new ingredient: {itemName}", newData: model);

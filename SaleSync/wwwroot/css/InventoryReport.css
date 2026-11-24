@@ -1,0 +1,522 @@
+/* ==========================================================================
+   INVENTORY STOCK REPORT
+   Sits on top of Inventory.css (sidebar, cards, base table wrapper, badges).
+   ========================================================================== */
+
+/* ---- Page header + buttons ---- */
+.report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 22px;
+}
+
+.report-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.report-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg-surface);
+    color: var(--cream);
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+    .report-btn:hover {
+        background: var(--bg-card-2);
+        border-color: var(--gold);
+        color: var(--gold-light);
+    }
+
+.report-btn-primary {
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    color: var(--bg-base);
+    border-color: transparent;
+}
+
+    .report-btn-primary:hover {
+        background: linear-gradient(135deg, var(--gold-light), var(--gold));
+        color: var(--bg-base);
+    }
+
+/* ---- Filters ---- */
+.report-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-sub);
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 14px;
+}
+
+.filter-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+    .filter-field label {
+        font-size: 10.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        color: var(--gold);
+    }
+
+.custom-dates {
+    flex-direction: row;
+    gap: 12px;
+}
+
+    .custom-dates > div {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+.date-input {
+    width: 160px;
+    color-scheme: dark;
+}
+
+.filter-buttons {
+    flex-direction: row;
+    gap: 10px;
+    margin-left: auto;
+}
+
+.period-label {
+    color: var(--muted-2);
+    font-size: 13px;
+    margin-bottom: 16px;
+}
+
+    .period-label strong {
+        color: var(--cream);
+    }
+
+/* ---- Notices ---- */
+.notice {
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.notice-info {
+    background: var(--gold-glow);
+    border: 1px solid var(--border);
+    color: var(--muted-2);
+}
+
+    .notice-info strong {
+        color: var(--gold-light);
+    }
+
+.notice-danger {
+    background: rgba(224, 85, 85, 0.1);
+    border: 1px solid rgba(224, 85, 85, 0.3);
+    color: var(--muted-2);
+}
+
+    .notice-danger strong {
+        color: var(--danger);
+    }
+
+/* ---- KPI cards ---- */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.kpi-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-sub);
+    border-top: 3px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 22px;
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.2);
+}
+
+    .kpi-card.kpi-in {
+        border-top-color: var(--success);
+    }
+
+    .kpi-card.kpi-out {
+        border-top-color: var(--danger);
+    }
+
+.kpi-label {
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.4px;
+    color: var(--muted);
+    margin-bottom: 8px;
+}
+
+.kpi-value {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--cream);
+    line-height: 1.2;
+}
+
+.kpi-in .kpi-value {
+    color: var(--success);
+}
+
+.kpi-out .kpi-value {
+    color: var(--danger);
+}
+
+.kpi-unit {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0;
+}
+
+.kpi-sub {
+    margin-top: 8px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--muted);
+}
+
+    .kpi-sub strong {
+        color: var(--muted-2);
+    }
+
+/* ---- Chart ---- */
+.chart-box {
+    position: relative;
+    height: 280px;
+}
+
+/* ---- Card extras ---- */
+.card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+    .card-head .widget-title {
+        margin-bottom: 0;
+    }
+
+    .card-head .search-input {
+        width: 300px;
+        max-width: 100%;
+    }
+
+.widget-hint {
+    display: block;
+    margin-top: 4px;
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: 0;
+    color: var(--muted);
+}
+
+.table-note {
+    font-size: 12px;
+    color: var(--muted);
+    margin: 0 0 12px 0;
+}
+
+.table-wrap + .table-note {
+    margin: 12px 0 0 0;
+}
+
+.empty-note,
+.empty-cell {
+    text-align: center;
+    padding: 24px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.muted-small {
+    font-size: 11.5px;
+    color: var(--muted);
+    font-weight: 500;
+}
+
+.nowrap {
+    white-space: nowrap;
+}
+
+/* ---- Report tables ---- */
+.report-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    min-width: 900px;
+}
+
+    .report-table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        background: var(--bg-card-2);
+        color: var(--gold);
+        font-size: 10.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1.3px;
+        padding: 13px 14px;
+        text-align: left;
+        white-space: nowrap;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .report-table tbody td {
+        padding: 12px 14px;
+        font-size: 13.5px;
+        color: var(--muted-2);
+        border-bottom: 1px solid var(--border-sub);
+        vertical-align: top;
+    }
+
+    .report-table tbody tr:hover td {
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .report-table .num {
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    .report-table strong {
+        color: var(--cream);
+    }
+
+.log-table {
+    min-width: 1000px;
+}
+
+.details-cell {
+    min-width: 220px;
+    line-height: 1.5;
+}
+
+.row-idle td {
+    opacity: 0.55;
+}
+
+.qty-in {
+    color: var(--success);
+    font-weight: 700;
+}
+
+.qty-out {
+    color: var(--danger);
+    font-weight: 700;
+}
+
+.report-table .stock-badge {
+    min-width: 0;
+    margin-left: 6px;
+    padding: 2px 8px;
+}
+
+.days-left {
+    font-weight: 700;
+    color: var(--muted-2);
+}
+
+.days-urgent {
+    color: var(--danger);
+}
+
+/* ---- Badges ---- */
+.type-badge,
+.alert-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    white-space: nowrap;
+}
+
+.type-restock {
+    background: rgba(61, 191, 120, 0.12);
+    color: var(--success);
+    border: 1px solid rgba(61, 191, 120, 0.25);
+}
+
+.type-initial {
+    background: rgba(45, 106, 79, 0.3);
+    color: #7ee0a8;
+    border: 1px solid rgba(126, 224, 168, 0.25);
+}
+
+.type-sale {
+    background: var(--gold-glow);
+    color: var(--gold-light);
+    border: 1px solid var(--border);
+}
+
+.type-adjustment {
+    background: rgba(224, 85, 85, 0.12);
+    color: var(--danger);
+    border: 1px solid rgba(224, 85, 85, 0.25);
+}
+
+.type-other {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--muted-2);
+    border: 1px solid var(--border-sub);
+}
+
+.alert-out,
+.alert-expired {
+    background: rgba(224, 85, 85, 0.12);
+    color: var(--danger);
+    border: 1px solid rgba(224, 85, 85, 0.25);
+}
+
+.alert-low,
+.alert-soon {
+    background: rgba(214, 158, 46, 0.14);
+    color: var(--warning);
+    border: 1px solid rgba(214, 158, 46, 0.3);
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 1200px) {
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 700px) {
+    .kpi-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .main-content {
+        padding: 22px 16px;
+    }
+
+    .filter-buttons {
+        margin-left: 0;
+    }
+
+    .card-head .search-input {
+        width: 100%;
+    }
+}
+
+/* ---- Print: plain white page, tables only ---- */
+@media print {
+    body {
+        background: #fff !important;
+        color: #000 !important;
+    }
+
+    .sidebar,
+    .sidebar-overlay,
+    .mobile-header,
+    .no-print,
+    .chart-card {
+        display: none !important;
+    }
+
+    .dashboard-container {
+        display: block !important;
+    }
+
+    .main-content {
+        padding: 0 !important;
+        background: #fff !important;
+        animation: none !important;
+    }
+
+    .greeting-title,
+    .widget-title,
+    .report-table strong,
+    .period-label strong {
+        color: #000 !important;
+    }
+
+    .greeting-subtitle,
+    .period-label,
+    .kpi-label,
+    .kpi-sub,
+    .table-note,
+    .muted-small {
+        color: #333 !important;
+    }
+
+    .table-card,
+    .kpi-card,
+    .table-wrap {
+        background: #fff !important;
+        box-shadow: none !important;
+        border: 1px solid #bbb !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    .kpi-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .kpi-value,
+    .kpi-in .kpi-value,
+    .kpi-out .kpi-value {
+        color: #000 !important;
+    }
+
+    .report-table {
+        min-width: 0;
+    }
+
+        .report-table thead th {
+            position: static;
+            background: #eee !important;
+            color: #000 !important;
+        }
+
+        .report-table tbody td {
+            color: #000 !important;
+            border-bottom: 1px solid #ccc !important;
+        }
+
+    .qty-in,
+    .qty-out,
+    .type-badge,
+    .alert-badge {
+        color: #000 !important;
+        background: none !important;
+    }
+}
