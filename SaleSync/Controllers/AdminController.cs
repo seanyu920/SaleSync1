@@ -966,12 +966,22 @@ namespace SaleSync.Controllers
         {
             int currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
 
+            // Every change to an existing item needs a reason. This is checked here on the server too,
+            // so it cannot be skipped by posting the form directly.
+            string reason = (model.ChangeReason ?? "").Trim();
+            if (reason.Length < 5)
+            {
+                TempData["ErrorMessage"] = "Please enter a reason (at least 5 characters) for changing this item. Nothing was saved.";
+                return RedirectToAction("Inventory");
+            }
+            if (reason.Length > 250) reason = reason.Substring(0, 250);
+
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
 
                 InventoryItems oldItem = null;
-                string getOldSql = "SELECT product_name, stock_quantity, cost_price, unit, recipe_unit, conversion_factor FROM products WHERE product_id = @id";
+                string getOldSql = "SELECT product_name, stock_quantity, cost_price, unit, recipe_unit, conversion_factor, stock_supplier, date_acquired, expiration_date FROM products WHERE product_id = @id";
                 using (SqlCommand cmd = new SqlCommand(getOldSql, conn))
                 {
                     cmd.Parameters.AddWithValue("@id", model.ProductId);
@@ -1003,13 +1013,69 @@ namespace SaleSync.Controllers
 
                                 ConversionFactor = r["conversion_factor"] != DBNull.Value
         ? Convert.ToDouble(r["conversion_factor"])
-        : 1
+        : 1,
+
+                                StockSupplier = r["stock_supplier"] != DBNull.Value
+        ? r["stock_supplier"].ToString()
+        : "",
+
+                                DateAcquired = r["date_acquired"] != DBNull.Value
+        ? Convert.ToDateTime(r["date_acquired"]).ToString("yyyy-MM-dd")
+        : "",
+
+                                ExpirationDate = r["expiration_date"] != DBNull.Value
+        ? Convert.ToDateTime(r["expiration_date"]).ToString("yyyy-MM-dd")
+        : ""
                             };
                         }
                     }
                 }
 
-                double currentStock = oldItem?.Quantity ?? 0;
+                if (oldItem == null)
+                {
+                    TempData["ErrorMessage"] = "That item could not be found. It may have been archived.";
+                    return RedirectToAction("Inventory");
+                }
+
+                // Work out exactly what is being changed, so it can be saved with the reason.
+                bool Differs(string a, string b) =>
+                    !string.Equals((a ?? "").Trim(), (b ?? "").Trim(), StringComparison.OrdinalIgnoreCase);
+
+                string NormDate(string s) =>
+                    DateTime.TryParse(s, out DateTime parsedDate) ? parsedDate.ToString("yyyy-MM-dd") : "";
+
+                bool quantityChanged = Math.Round(model.Quantity - oldItem.Quantity, 4) != 0;
+                var changes = new List<string>();
+
+                if (Math.Abs(oldItem.PurchasePrice - model.PurchasePrice) > 0.0001m)
+                    changes.Add($"Price {oldItem.PurchasePrice:0.00} -> {model.PurchasePrice:0.00}");
+
+                if (Differs(oldItem.Unit, model.Unit ?? "pcs"))
+                    changes.Add($"Unit {oldItem.Unit} -> {model.Unit ?? "pcs"}");
+
+                if (Differs(oldItem.RecipeUnit, model.RecipeUnit))
+                    changes.Add($"Recipe unit '{oldItem.RecipeUnit}' -> '{model.RecipeUnit}'");
+
+                double newConversion = model.ConversionFactor > 0 ? model.ConversionFactor : 1;
+                if (Math.Abs(oldItem.ConversionFactor - newConversion) > 0.000000001)
+                    changes.Add($"Conversion {oldItem.ConversionFactor:0.####} -> {newConversion:0.####}");
+
+                if (Differs(oldItem.StockSupplier, model.StockSupplier))
+                    changes.Add($"Supplier '{oldItem.StockSupplier}' -> '{model.StockSupplier}'");
+
+                if (NormDate(oldItem.DateAcquired) != NormDate(model.DateAcquired))
+                    changes.Add($"Date acquired {NormDate(oldItem.DateAcquired)} -> {NormDate(model.DateAcquired)}");
+
+                if (NormDate(oldItem.ExpirationDate) != NormDate(model.ExpirationDate))
+                    changes.Add($"Expiry {NormDate(oldItem.ExpirationDate)} -> {NormDate(model.ExpirationDate)}");
+
+                if (!quantityChanged && changes.Count == 0)
+                {
+                    TempData["SuccessMessage"] = "No changes to save.";
+                    return RedirectToAction("Inventory");
+                }
+
+                double currentStock = oldItem.Quantity;
                 double addedQuantity = model.Quantity - currentStock;
 
                 string sql = @"UPDATE products SET stock_quantity = @qty, cost_price = @price, unit = @unit, 
@@ -1043,21 +1109,21 @@ namespace SaleSync.Controllers
                     }
                 }
 
-                // Stock movement ledger: logs a Restock (quantity went up) or an Adjustment Out (lowered by hand)
-                if (oldItem != null)
-                {
-                    _inventoryMovementService.RecordManualChange(
-                        model.ProductId,
-                        oldItem.ItemName ?? "Unnamed Item",
-                        model.Unit ?? "pcs",
-                        Convert.ToDecimal(oldItem.Quantity),
-                        Convert.ToDecimal(model.Quantity),
-                        model.PurchasePrice,
-                        model.StockSupplier,
-                        currentUserId);
-                }
+                // Stock movement ledger: saves the change with the reason and who made it
+                _inventoryMovementService.RecordManualChange(
+                    model.ProductId,
+                    oldItem.ItemName ?? "Unnamed Item",
+                    model.Unit ?? "pcs",
+                    Convert.ToDecimal(oldItem.Quantity),
+                    Convert.ToDecimal(model.Quantity),
+                    model.PurchasePrice,
+                    model.StockSupplier,
+                    currentUserId,
+                    reason,
+                    string.Join("; ", changes));
 
-                LogActivity(currentUserId, "Inventory Updated", $"Updated stock/details for {oldItem?.ItemName ?? "Item"}", oldData: oldItem, newData: model);
+                LogActivity(currentUserId, "Inventory Updated", $"Updated stock/details for {oldItem.ItemName ?? "Item"}. Reason: {reason}", oldData: oldItem, newData: model);
+                TempData["SuccessMessage"] = $"{oldItem.ItemName} updated.";
             }
             return RedirectToAction("Inventory");
         }

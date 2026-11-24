@@ -391,6 +391,12 @@
     border: 1px solid rgba(224, 85, 85, 0.25);
 }
 
+.type-edit {
+    background: rgba(100, 149, 237, 0.14);
+    color: #8fb4f5;
+    border: 1px solid rgba(100, 149, 237, 0.3);
+}
+
 .type-other {
     background: rgba(255, 255, 255, 0.06);
     color: var(--muted-2);

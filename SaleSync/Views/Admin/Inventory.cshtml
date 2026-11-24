@@ -111,6 +111,7 @@
 
                     <form id="inventoryForm" method="post">
                         <input type="hidden" name="ProductId" id="ProductId" />
+                        <input type="hidden" name="ChangeReason" id="ChangeReason" />
 
                         <div class="form-grid">
 
@@ -595,6 +596,9 @@
 
         let isSubmitting = false;
 
+        // The quantity the selected item had when it was clicked, so the reason popup can show what is changing.
+        let originalQuantity = null;
+
 
         function normalizeDateForInput(value) {
 
@@ -773,6 +777,14 @@
             ).value =
                 row.dataset.conversionFactor || "1";
 
+
+            originalQuantity =
+                parseFloat(row.dataset.quantity);
+
+            document.getElementById(
+                "ChangeReason"
+            ).value = "";
+
         }
 
 
@@ -870,18 +882,69 @@
             }
 
 
+            // Show what is changing in the quantity (if anything) above the reason box.
+            const newQuantity =
+                parseFloat(
+                    document.querySelector(
+                        'input[name="Quantity"]'
+                    ).value
+                );
+
+            let quantityLine = "";
+
+            if (
+                originalQuantity !== null &&
+                !Number.isNaN(originalQuantity) &&
+                !Number.isNaN(newQuantity) &&
+                originalQuantity !== newQuantity
+            ) {
+
+                const diff =
+                    Math.round((newQuantity - originalQuantity) * 10000) / 10000;
+
+                quantityLine =
+                    `<p style="margin:0 0 10px 0;"><b>Stock quantity:</b> ${originalQuantity} &rarr; ${newQuantity} ` +
+                    `(${diff > 0 ? "+" : ""}${diff})</p>`;
+
+            }
+
+
             Swal.fire({
 
-                title: 'Update Item?',
-                text:
-                    "Save changes to this inventory item?",
+                title: 'Reason for this change',
+                html:
+                    quantityLine +
+                    '<p style="margin:0;">Everything you change must have a reason. ' +
+                    'It is saved in the Stock Report together with your name.</p>',
+                input: 'textarea',
+                inputPlaceholder:
+                    'e.g. Counted the shelf and 2 kg of coffee beans were missing',
+                inputAttributes: {
+                    maxlength: 250,
+                    'aria-label': 'Reason for this change'
+                },
                 icon: 'question',
                 showCancelButton: true,
-                confirmButtonText: 'Yes, update it!'
+                confirmButtonText: 'Save change',
+                inputValidator: (value) => {
+
+                    if (!value || value.trim().length < 5) {
+                        return 'Please type a reason (at least 5 characters).';
+                    }
+
+                    return null;
+
+                }
 
             }).then((result) => {
 
                 if (result.isConfirmed) {
+
+                    document.getElementById(
+                        "ChangeReason"
+                    ).value =
+                        result.value.trim();
+
 
                     isSubmitting = true;
 

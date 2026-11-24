@@ -16,6 +16,7 @@ namespace SaleSync.Services
         public const string Restock = "Restock";               // stock added to an existing item
         public const string SaleUsage = "Sale Usage";          // ingredients used when an order is completed
         public const string AdjustmentOut = "Adjustment Out";  // stock reduced by hand on the Inventory page
+        public const string DetailEdit = "Detail Edit";        // price, supplier, dates etc. changed with no change in quantity
     }
 
     /// <summary>Everything stored about a single stock movement.</summary>
@@ -213,15 +214,24 @@ namespace SaleSync.Services
         }
 
         /// <summary>
-        /// Called after an item is edited on the Inventory page. Logs a Restock when the quantity went
-        /// up and an Adjustment Out when it was lowered by hand. Does nothing if the quantity did not change.
+        /// Called after an item is edited on the Inventory page. Every edit is logged together with the
+        /// reason the person typed and who made it:
+        ///  - quantity went up   -> Restock
+        ///  - quantity went down -> Adjustment Out
+        ///  - quantity unchanged but other details changed (price, supplier, dates...) -> Detail Edit
+        /// Does nothing if neither the quantity nor any detail changed.
         /// </summary>
+        /// <param name="reason">What the person typed in the "reason" box.</param>
+        /// <param name="changeSummary">Short text of the other fields that changed, e.g. "Price 10.00 -> 12.00". May be empty.</param>
         public void RecordManualChange(int productId, string itemName, string? unit,
                                        decimal quantityBefore, decimal quantityAfter,
-                                       decimal unitCost, string? supplier, int userId)
+                                       decimal unitCost, string? supplier, int userId,
+                                       string reason, string changeSummary)
         {
             decimal delta = Math.Round(quantityAfter - quantityBefore, 4);
-            if (delta == 0) return;
+            bool hasDetailChanges = !string.IsNullOrWhiteSpace(changeSummary);
+
+            if (delta == 0 && !hasDetailChanges) return;
             if (!EnsureSchema()) return;
 
             try
@@ -229,22 +239,29 @@ namespace SaleSync.Services
                 using var conn = new SqlConnection(_connectionString);
                 conn.Open();
 
-                bool isIn = delta > 0;
+                string notes = "Reason: " + (string.IsNullOrWhiteSpace(reason) ? "(none given)" : reason.Trim());
+                if (hasDetailChanges) notes += " | Changed: " + changeSummary;
+
+                string type;
+                if (delta > 0) type = MovementTypes.Restock;
+                else if (delta < 0) type = MovementTypes.AdjustmentOut;
+                else type = MovementTypes.DetailEdit;
+
                 Record(conn, null, new InventoryMovementEntry
                 {
                     ProductId = productId,
                     ItemName = itemName,
                     Unit = unit,
-                    MovementType = isIn ? MovementTypes.Restock : MovementTypes.AdjustmentOut,
+                    MovementType = type,
                     QuantityChange = delta,
                     QuantityBefore = quantityBefore,
                     QuantityAfter = quantityAfter,
                     UnitCost = unitCost,
-                    TotalValue = Math.Round(Math.Abs(delta) * unitCost, 2),
+                    TotalValue = delta == 0 ? (decimal?)null : Math.Round(Math.Abs(delta) * unitCost, 2),
                     Supplier = supplier,
                     ReferenceType = "Manual",
                     UserId = userId,
-                    Notes = isIn ? "Stock added on the Inventory page" : "Stock reduced by hand on the Inventory page"
+                    Notes = notes
                 });
             }
             catch (Exception ex)
@@ -318,6 +335,7 @@ namespace SaleSync.Services
                 case "initial": return (0, MovementTypes.InitialStock);
                 case "sale": return (0, MovementTypes.SaleUsage);
                 case "adjustment": return (0, MovementTypes.AdjustmentOut);
+                case "edit": return (0, MovementTypes.DetailEdit);
                 default: return (0, null);
             }
         }
@@ -722,6 +740,9 @@ namespace SaleSync.Services
                     case MovementTypes.AdjustmentOut:
                         vm.ManualOutCount += cnt;
                         vm.ManualOutValue += val;
+                        break;
+                    case MovementTypes.DetailEdit:
+                        vm.DetailEditCount += cnt;
                         break;
                 }
             }
