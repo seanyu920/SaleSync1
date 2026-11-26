@@ -8,8 +8,12 @@
     bool isAdminOrManager = User.IsInRole("Admin") || User.IsInRole("Manager");
 }
 @inject SaleSync.Services.StoreSettingsService StoreSettings
+@inject SaleSync.Services.PaymentVerificationService PaymentVerification
 @{
     var store = StoreSettings.GetSettings();
+
+    // GCash / Maya orders whose receipt still has to be checked by staff.
+    var awaitingPayments = PaymentVerification.GetAwaiting();
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -22,6 +26,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link rel="stylesheet" href="~/css/AdminDashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/QueueOrder.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/PaymentVerification.css" asp-append-version="true" />
     <partial name="_ThemeStyles" />
     <link rel="icon" type="image/jpeg" href="~/images/CaferoLogo.jpg" asp-append-version="true" />
     <!-- SweetAlert2 Library for Elegant Dark-Themed Popups -->
@@ -139,10 +144,68 @@
                     <p>Orders sorted oldest to newest. Complete orders to trigger automated ingredient level deductions.</p>
                 </div>
                 <div class="queue-stats">
+                    @if (awaitingPayments.Count > 0)
+                    {
+                        <span class="stat-badge pv-stat-badge">Awaiting payment: @awaitingPayments.Count</span>
+                    }
                     <span class="stat-badge badge-pending">Pending: @Model.Count(o => o.Status == "Pending")</span>
                     <span class="stat-badge badge-preparing">Preparing: @Model.Count(o => o.Status == "Preparing" || o.Status == "Processing")</span>
                 </div>
             </div>
+
+            @if (awaitingPayments.Count > 0)
+            {
+                <section class="pv-panel" id="paymentVerificationPanel">
+                    <div class="pv-header">
+                        <h2>
+                            <i class="fas fa-shield-alt"></i> Payments awaiting verification
+                            <span class="pv-count">@awaitingPayments.Count</span>
+                        </h2>
+                        <p>These GCash / Maya orders are not in the kitchen queue yet. Check each receipt against the café's own account, then confirm or reject it.</p>
+                    </div>
+
+                    <div class="pv-grid">
+                        @foreach (var pay in awaitingPayments)
+                        {
+                            <div class="pv-card" data-proof-id="@pay.ProofId">
+                                <div class="pv-card-top">
+                                    <span class="pv-order-id">#ORD-@pay.SaleId</span>
+                                    <span class="pv-method">@pay.PaymentMethod</span>
+                                </div>
+
+                                <div>
+                                    <div class="pv-customer">@pay.CustomerName</div>
+                                    <div class="pv-sub">@pay.OrderType &middot; sent @pay.SubmittedAt.ToString("MMM d, hh:mm tt")</div>
+                                </div>
+
+                                <div class="pv-items">@pay.ItemsSummary</div>
+
+                                <div class="pv-facts">
+                                    <div class="pv-fact">
+                                        <span>Amount due</span>
+                                        <strong>₱@pay.AmountDue.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)</strong>
+                                    </div>
+                                    <div class="pv-fact">
+                                        <span>Reference no.</span>
+                                        <strong>@pay.DisplayReference</strong>
+                                    </div>
+                                </div>
+
+                                <button type="button" class="pv-review-btn"
+                                        data-proof-id="@pay.ProofId"
+                                        data-sale-id="@pay.SaleId"
+                                        data-method="@pay.PaymentMethod"
+                                        data-customer="@pay.CustomerName"
+                                        data-amount="@pay.AmountDue.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)"
+                                        data-reference="@pay.DisplayReference"
+                                        onclick="openReceiptModal(this)">
+                                    <i class="fas fa-search"></i> Review receipt
+                                </button>
+                            </div>
+                        }
+                    </div>
+                </section>
+            }
 
             @if (Model == null || !Model.Any())
             {
@@ -283,6 +346,49 @@
 
                 <h4 style="margin: 20px 0 10px 0; color: #ffffff;">Deductible Ingredients Profile</h4>
                 <ul id="modalIngredientsList" class="list-group" style="color: #a0a5a1;"></ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- GCash / Maya Receipt Review Modal -->
+    <div id="pvModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 560px; max-height: 92vh; overflow: auto;">
+            <div class="modal-header">
+                <h3 id="pvTitle" style="margin:0; font-weight:700;">Check payment</h3>
+                <button class="modal-close" onclick="closePvModal()">&times;</button>
+            </div>
+            <div class="pv-modal-body">
+                <div class="pv-facts">
+                    <div class="pv-fact">
+                        <span>Amount due</span>
+                        <strong id="pvAmount"></strong>
+                    </div>
+                    <div class="pv-fact">
+                        <span>Reference no.</span>
+                        <strong id="pvRef"></strong>
+                    </div>
+                </div>
+
+                <div class="pv-sub">Customer: <span id="pvCustomer"></span> &middot; Paid via <span id="pvMethod"></span></div>
+
+                <div class="pv-receipt-frame">
+                    <img id="pvImage" alt="Customer payment receipt" />
+                </div>
+
+                <p class="pv-check-note">
+                    Open the caf&eacute;'s own GCash / Maya account and check that a payment with this exact
+                    <strong>amount</strong> and <strong>reference number</strong> was received. Don't rely on the picture
+                    alone &mdash; screenshots can be edited.
+                </p>
+
+                <div class="pv-modal-actions">
+                    <button type="button" id="pvRejectBtn" class="pv-reject-btn" onclick="pvReject()">
+                        <i class="fas fa-times"></i> Reject
+                    </button>
+                    <button type="button" id="pvConfirmBtn" class="pv-confirm-btn" onclick="pvConfirm()">
+                        <i class="fas fa-check"></i> Payment received
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -581,6 +687,152 @@
         });
         }
         }
+
+        // ── GCash / Maya receipt checking ──────────────────────────────────────────
+        const pvUrls = {
+            receipt: '@Url.Action("Receipt", "PaymentVerification")',
+            confirm: '@Url.Action("Confirm", "PaymentVerification")',
+            reject: '@Url.Action("Reject", "PaymentVerification")',
+            count: '@Url.Action("Count", "PaymentVerification")'
+        };
+        const pvInitialCount = @awaitingPayments.Count;
+        let pvCurrent = null;
+
+        function openReceiptModal(btn) {
+            const d = btn.dataset;
+            pvCurrent = { proofId: parseInt(d.proofId, 10), saleId: d.saleId };
+
+            document.getElementById('pvTitle').textContent = 'Check payment: #ORD-' + d.saleId;
+            document.getElementById('pvAmount').textContent = '₱' + Number(d.amount).toFixed(2);
+            document.getElementById('pvRef').textContent = d.reference;
+            document.getElementById('pvCustomer').textContent = d.customer;
+            document.getElementById('pvMethod').textContent = d.method;
+            document.getElementById('pvImage').src = pvUrls.receipt + '?id=' + encodeURIComponent(d.proofId);
+            document.getElementById('pvConfirmBtn').disabled = false;
+            document.getElementById('pvRejectBtn').disabled = false;
+            document.getElementById('pvModal').style.display = 'flex';
+        }
+
+        function closePvModal() {
+            document.getElementById('pvModal').style.display = 'none';
+            document.getElementById('pvImage').removeAttribute('src');
+            pvCurrent = null;
+        }
+
+        async function pvConfirm() {
+            if (!pvCurrent) return;
+
+            const answer = await Swal.fire({
+                title: 'Payment received?',
+                text: 'Order #ORD-' + pvCurrent.saleId + ' will go to the kitchen queue.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#2eb872',
+                cancelButtonColor: '#5a5e5b',
+                confirmButtonText: 'Yes, I checked it',
+                cancelButtonText: 'Not yet',
+                background: '#1e201f',
+                color: '#ffffff'
+            });
+
+            if (!answer.isConfirmed) return;
+            await pvSend(pvUrls.confirm, { proofId: pvCurrent.proofId });
+        }
+
+        async function pvReject() {
+            if (!pvCurrent) return;
+
+            const answer = await Swal.fire({
+                title: 'Reject this payment?',
+                text: 'Order #ORD-' + pvCurrent.saleId + ' will be cancelled.',
+                icon: 'warning',
+                input: 'text',
+                inputLabel: 'Reason (the customer will see this)',
+                inputPlaceholder: 'e.g. Amount does not match / reference number not found',
+                showCancelButton: true,
+                confirmButtonColor: '#c94a4a',
+                cancelButtonColor: '#5a5e5b',
+                confirmButtonText: 'Reject & cancel order',
+                background: '#1e201f',
+                color: '#ffffff',
+                inputValidator: function (value) {
+                    if (!value || value.trim().length < 3) return 'Please type a short reason.';
+                    return null;
+                }
+            });
+
+            if (!answer.isConfirmed) return;
+            await pvSend(pvUrls.reject, { proofId: pvCurrent.proofId, reason: answer.value.trim() });
+        }
+
+        async function pvSend(url, body) {
+            const confirmBtn = document.getElementById('pvConfirmBtn');
+            const rejectBtn = document.getElementById('pvRejectBtn');
+            confirmBtn.disabled = true;
+            rejectBtn.disabled = true;
+
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+
+                let data = {};
+                try { data = await res.json(); } catch (e) { }
+
+                if (res.ok) {
+                    closePvModal();
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Done',
+                        text: data.message || 'Saved.',
+                        background: '#1e201f',
+                        color: '#ffffff',
+                        timer: 1600,
+                        showConfirmButton: false
+                    });
+                    location.reload();
+                } else {
+                    confirmBtn.disabled = false;
+                    rejectBtn.disabled = false;
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Could not save',
+                        text: data.message || 'Something went wrong. Please try again.',
+                        background: '#1e201f',
+                        color: '#ffffff',
+                        confirmButtonColor: '#dc3545'
+                    });
+                }
+            } catch (err) {
+                confirmBtn.disabled = false;
+                rejectBtn.disabled = false;
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Network Error',
+                    text: 'Could not reach the server.',
+                    background: '#1e201f',
+                    color: '#ffffff',
+                    confirmButtonColor: '#dc3545'
+                });
+            }
+        }
+
+        // Every 20 seconds, look for new (or already handled) receipts and refresh the page.
+        // It never refreshes while a receipt window or popup is open.
+        setInterval(async function () {
+            try {
+                if (document.getElementById('pvModal').style.display === 'flex') return;
+                if (typeof Swal !== 'undefined' && Swal.isVisible()) return;
+
+                const res = await fetch(pvUrls.count, { cache: 'no-store' });
+                if (!res.ok) return;
+
+                const data = await res.json();
+                if (data.awaiting !== pvInitialCount) location.reload();
+            } catch (e) { }
+        }, 20000);
 
         function closeModal(modalId) {
         document.getElementById(modalId).style.display = 'none';

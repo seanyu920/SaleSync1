@@ -19,6 +19,8 @@ builder.Services.AddScoped<SaleSync.Services.InventoryDeductionService>();
 
 builder.Services.AddScoped<SaleSync.Services.CategoryService>();
 
+builder.Services.AddScoped<SaleSync.Services.PaymentVerificationService>();
+
 builder.Services.AddScoped<SaleSync.Services.ProductOptionsService>();
 
 builder.Services.AddSignalR(options =>
@@ -52,6 +54,11 @@ using (var startupScope = app.Services.CreateScope())
 {
     startupScope.ServiceProvider
         .GetRequiredService<SaleSync.Services.InventoryMovementService>()
+        .EnsureSchema();
+
+    // Same idea for the GCash / Maya receipt table (payment_proofs).
+    startupScope.ServiceProvider
+        .GetRequiredService<SaleSync.Services.PaymentVerificationService>()
         .EnsureSchema();
 }
 

@@ -59,6 +59,7 @@
     <title>Order Now | @storeSettings.StoreName</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="~/css/CustomerOrdering.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/PaymentVerification.css" asp-append-version="true" />
     <link rel="icon" type="image/jpeg" href="~/images/CaferoLogo.jpg" asp-append-version="true" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -356,6 +357,7 @@
                         @{
                             var activeStatuses = new List<string>
                             {
+                                "Awaiting Verification",
                                 "Pending",
                                 "Preparing",
                                 "Ready",
@@ -425,6 +427,12 @@
                                                order.Status == "On the Way")
                                                 ? "Ready for pickup!"
                                                 : "Est. 15–20 mins";
+                                }
+
+                                if (order.Status == "Awaiting Verification")
+                                {
+                                    step = 0;
+                                    eta = "Payment receipt under review. We'll start your order once it's confirmed.";
                                 }
 
                                 <div class="track-card">
@@ -508,6 +516,13 @@
                                         <div class="history-time">
                                             @order.SaleDate.ToString("MMM dd, hh:mm tt")
                                         </div>
+
+                                        @if (!string.IsNullOrWhiteSpace(order.PaymentNote))
+                                        {
+                                            <div class="history-reject-note">
+                                                Payment not accepted: @order.PaymentNote
+                                            </div>
+                                        }
 
                                     </div>
 
@@ -953,9 +968,27 @@
                     <input type="text"
                            id="customerPaymentReference"
                            class="cart-select"
-                           placeholder="e.g. GCash/Maya reference no." />
+                           placeholder="e.g. 1234 567 890123" />
                     <p class="qr-hint">
-                        Enter the reference number from your GCash/Maya payment confirmation. Staff will verify this against your order.
+                        Copy the reference number from your GCash/Maya receipt (GCash numbers have 13 digits).
+                    </p>
+                </div>
+
+                <div class="addr-field-group">
+                    <label class="addr-label" for="customerPaymentReceipt">
+                        Receipt Screenshot
+                    </label>
+                    <input type="file"
+                           id="customerPaymentReceipt"
+                           class="cart-select"
+                           accept="image/*"
+                           onchange="previewPaymentReceipt(this)" />
+                    <img id="paymentReceiptPreview"
+                         class="receipt-preview"
+                         alt="Receipt preview"
+                         style="display:none;" />
+                    <p class="qr-hint">
+                        Attach a clear screenshot or photo of your receipt. Staff check it against the caf&eacute;'s account, then your order goes to the kitchen.
                     </p>
                 </div>
 
@@ -1611,6 +1644,145 @@
                 if (refField) {
                     refField.value = '';
                 }
+
+                clearPaymentReceipt();
+            }
+        }
+
+        // ── RECEIPT PICKER (GCash / Maya) ──────────────────────────────────────────────────
+
+        // The receipt picture the customer picked (shrunk first if it was big).
+        let paymentReceiptBlob = null;
+
+        function clearPaymentReceipt() {
+
+            paymentReceiptBlob = null;
+
+            const input =
+                document.getElementById('customerPaymentReceipt');
+
+            if (input) {
+                input.value = '';
+            }
+
+            const preview =
+                document.getElementById('paymentReceiptPreview');
+
+            if (preview) {
+                preview.style.display = 'none';
+                preview.removeAttribute('src');
+            }
+        }
+
+        // Shrinks big phone photos (longest side 1600px, JPEG) so they upload fast
+        // and stay under the 5 MB limit. Resolves to null if the browser can't read the picture.
+        function shrinkReceiptImage(file) {
+
+            return new Promise(resolve => {
+
+                const url = URL.createObjectURL(file);
+                const img = new Image();
+
+                img.onload = () => {
+
+                    try {
+
+                        const maxSide = 1600;
+
+                        const scale =
+                            Math.min(1, maxSide / Math.max(img.width, img.height));
+
+                        const canvas = document.createElement('canvas');
+                        canvas.width = Math.round(img.width * scale);
+                        canvas.height = Math.round(img.height * scale);
+
+                        const ctx = canvas.getContext('2d');
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                        canvas.toBlob(blob => {
+                            URL.revokeObjectURL(url);
+                            resolve(blob || file);
+                        }, 'image/jpeg', 0.85);
+
+                    } catch (e) {
+
+                        URL.revokeObjectURL(url);
+                        resolve(file);
+                    }
+                };
+
+                img.onerror = () => {
+                    URL.revokeObjectURL(url);
+                    resolve(null);
+                };
+
+                img.src = url;
+            });
+        }
+
+        async function previewPaymentReceipt(input) {
+
+            paymentReceiptBlob = null;
+
+            const preview =
+                document.getElementById('paymentReceiptPreview');
+
+            if (preview) {
+                preview.style.display = 'none';
+            }
+
+            const file =
+                input.files && input.files[0];
+
+            if (!file) {
+                return;
+            }
+
+            if (!file.type.startsWith('image/')) {
+
+                Swal.fire(
+                    'Not a Picture',
+                    'Please choose a screenshot or photo of your receipt (JPG, PNG or WebP).',
+                    'warning'
+                );
+
+                input.value = '';
+                return;
+            }
+
+            const blob = await shrinkReceiptImage(file);
+
+            if (!blob) {
+
+                Swal.fire(
+                    'Cannot Read That Picture',
+                    'Please choose a different image.',
+                    'warning'
+                );
+
+                input.value = '';
+                return;
+            }
+
+            if (blob.size > 5 * 1024 * 1024) {
+
+                Swal.fire(
+                    'Picture Too Large',
+                    'Please choose a picture under 5 MB.',
+                    'warning'
+                );
+
+                input.value = '';
+                return;
+            }
+
+            paymentReceiptBlob = blob;
+
+            if (preview) {
+                preview.src = URL.createObjectURL(blob);
+                preview.style.display = 'block';
             }
         }
 
@@ -2809,6 +2981,37 @@
                 return;
             }
 
+            if (isOnlinePayment) {
+
+                const referenceDigits =
+                    paymentReference.replace(/[\s-]/g, '');
+
+                if (
+                    paymentMethod === 'GCash' &&
+                    !/^\d{13}$/.test(referenceDigits)
+                ) {
+
+                    Swal.fire(
+                        'Check Reference Number',
+                        'A GCash reference number has 13 digits. Please copy it from your receipt (it may look like 1234 567 890123).',
+                        'warning'
+                    );
+
+                    return;
+                }
+
+                if (!paymentReceiptBlob) {
+
+                    Swal.fire(
+                        'Missing Receipt',
+                        `Please attach a screenshot or photo of your ${paymentMethod} receipt before sending your order.`,
+                        'warning'
+                    );
+
+                    return;
+                }
+            }
+
             const contactNumber =
                 document.getElementById('customerContactNumber')?.value.trim() || '';
 
@@ -3000,24 +3203,50 @@
 
             try {
 
-                const response =
-                    await fetch(
-                        '/Customer/PlaceOnlineOrder',
-                        {
-                            method:
-                                'POST',
+                let response;
 
-                            headers: {
-                                'Content-Type':
-                                    'application/json'
-                            },
+                if (isOnlinePayment) {
 
-                            body:
-                                JSON.stringify(
-                                    payload
-                                )
-                        }
-                    );
+                    // GCash / Maya: the order, reference number and receipt picture go up together.
+                    const formData = new FormData();
+
+                    formData.append('payload', JSON.stringify(payload));
+                    formData.append('paymentReference', paymentReference);
+                    formData.append('receipt', paymentReceiptBlob, 'receipt.jpg');
+
+                    response =
+                        await fetch(
+                            '/Customer/PlaceOnlineOrderWithReceipt',
+                            {
+                                method:
+                                    'POST',
+
+                                body:
+                                    formData
+                            }
+                        );
+                }
+                else {
+
+                    response =
+                        await fetch(
+                            '/Customer/PlaceOnlineOrder',
+                            {
+                                method:
+                                    'POST',
+
+                                headers: {
+                                    'Content-Type':
+                                        'application/json'
+                                },
+
+                                body:
+                                    JSON.stringify(
+                                        payload
+                                    )
+                            }
+                        );
+                }
 
                 if (response.ok) {
 
@@ -3025,7 +3254,9 @@
                         await response.json();
 
                     const earned =
-                        Math.floor(
+                        result.requiresVerification
+                            ? 0
+                            : Math.floor(
                             (grandTotal - calculatePromoDiscount()) /
                             10
                         );
@@ -3047,10 +3278,16 @@
                     Swal.fire({
 
                         title:
-                            'Order Received!',
+                            result.requiresVerification
+                                ? 'Order Submitted'
+                                : 'Order Received!',
 
                         html:
-                            `<b>Order #${result.orderId}</b> sent to the kitchen.<br>
+                            result.requiresVerification
+                                ? `<b>Order #${result.orderId}</b> is waiting for payment verification.<br>
+                                                Staff will check your receipt, then send it to the kitchen.<br>
+                                                <small>You can follow it under Active Orders.</small>`
+                                : `<b>Order #${result.orderId}</b> sent to the kitchen.<br>
                                                 Estimated wait: <b>15–20 minutes</b><br>
                                                 <small>+${earned} loyalty points earned!</small>`,
 
