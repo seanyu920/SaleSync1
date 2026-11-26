@@ -28,5 +28,7 @@ namespace SaleSync.Models
         public decimal TotalAmount { get; set; }
         public string Status { get; set; } 
         public string OrderType { get; set; } 
+        // Why the cashier rejected the GCash/Maya receipt (only set for those orders).
+        public string? PaymentNote { get; set; }
     }
 }

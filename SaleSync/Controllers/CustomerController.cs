@@ -21,6 +21,7 @@ namespace SaleSync.Controllers
         private readonly IConfiguration _configuration;
         private readonly SaleSync.Services.StoreSettingsService _storeSettingsService;
         private readonly IWebHostEnvironment _env;
+        private readonly SaleSync.Services.PaymentVerificationService _paymentVerification;
         private readonly string connectionString;
 
         
@@ -35,11 +36,13 @@ namespace SaleSync.Controllers
         public CustomerController(
             IConfiguration configuration,
             SaleSync.Services.StoreSettingsService storeSettingsService,
-            IWebHostEnvironment env)
+            IWebHostEnvironment env,
+            SaleSync.Services.PaymentVerificationService paymentVerification)
         {
             _configuration = configuration;
             _storeSettingsService = storeSettingsService;
             _env = env;
+            _paymentVerification = paymentVerification;
             connectionString = _configuration.GetConnectionString("DefaultConnection");
         }
 
@@ -117,6 +120,18 @@ namespace SaleSync.Controllers
             }
 
             
+            // Orders whose GCash/Maya receipt was rejected: show the cashier's reason.
+            if (currentUserId != 0 && dashboardData.OrderHistory.Any(o => o.Status == "Cancelled"))
+            {
+                var rejectionNotes = _paymentVerification.GetRejectionNotes(currentUserId);
+
+                foreach (var order in dashboardData.OrderHistory)
+                {
+                    if (rejectionNotes.TryGetValue(order.SaleId, out var note))
+                        order.PaymentNote = note;
+                }
+            }
+
             if (currentUserId != 0)
             {
                 try
@@ -137,8 +152,80 @@ namespace SaleSync.Controllers
             return View(dashboardData);
         }
 
+        // Cash / Card orders (pay at the counter). GCash and Maya must go through
+        // PlaceOnlineOrderWithReceipt below, so nobody can skip the receipt check by calling this directly.
         [HttpPost]
         public IActionResult PlaceOnlineOrder([FromBody] OnlineOrderRequest request)
+        {
+            if (request != null && SaleSync.Services.PaymentVerificationService.RequiresProof(request.PaymentMethod))
+                return BadRequest(new { message = "GCash and Maya orders need a payment receipt. Please attach it and send your order again." });
+
+            return ProcessOnlineOrder(request, null);
+        }
+
+        // GCash / Maya orders: the order JSON travels in the "payload" field together with the
+        // reference number and the receipt picture. The order is saved as "Awaiting Verification"
+        // and only reaches the kitchen queue after a cashier confirms the receipt.
+        [HttpPost]
+        [RequestSizeLimit(SaleSync.Services.PaymentVerificationService.MaxReceiptBytes + 1048576)]
+        public IActionResult PlaceOnlineOrderWithReceipt([FromForm] string payload, [FromForm] string paymentReference, IFormFile receipt)
+        {
+            OnlineOrderRequest? request;
+
+            try
+            {
+                request = JsonSerializer.Deserialize<OnlineOrderRequest>(
+                    payload ?? "",
+                    new JsonSerializerOptions(JsonSerializerDefaults.Web));
+            }
+            catch (JsonException)
+            {
+                request = null;
+            }
+
+            if (request == null || request.Items == null || request.Items.Count == 0)
+                return BadRequest(new { message = "Your cart is empty." });
+
+            if (!SaleSync.Services.PaymentVerificationService.RequiresProof(request.PaymentMethod))
+                return BadRequest(new { message = "A receipt is only needed for GCash or Maya payments." });
+
+            string method = SaleSync.Services.PaymentVerificationService.CleanMethodName(request.PaymentMethod);
+            string reference = SaleSync.Services.PaymentVerificationService.NormalizeReference(paymentReference);
+
+            string? referenceError = SaleSync.Services.PaymentVerificationService.ValidateReference(method, reference);
+            if (referenceError != null)
+                return BadRequest(new { message = referenceError });
+
+            if (receipt == null || receipt.Length == 0)
+                return BadRequest(new { message = "Please attach a screenshot or photo of your payment receipt." });
+
+            if (receipt.Length > SaleSync.Services.PaymentVerificationService.MaxReceiptBytes)
+                return BadRequest(new { message = "That receipt image is too large. Please use a picture under 5 MB." });
+
+            byte[] bytes;
+            using (var ms = new MemoryStream())
+            {
+                receipt.CopyTo(ms);
+                bytes = ms.ToArray();
+            }
+
+            string? imageType = SaleSync.Services.PaymentVerificationService.DetectImageType(bytes);
+            if (imageType == null)
+                return BadRequest(new { message = "The receipt must be a JPG, PNG or WebP image." });
+
+            var proof = new PaymentProofSubmission
+            {
+                PaymentMethod = method,
+                ReferenceNumber = reference,
+                ImageBytes = bytes,
+                ImageType = imageType,
+                ImageHash = SaleSync.Services.PaymentVerificationService.HashImage(bytes)
+            };
+
+            return ProcessOnlineOrder(request, proof);
+        }
+
+        private IActionResult ProcessOnlineOrder(OnlineOrderRequest? request, PaymentProofSubmission? proof)
         {
             if (request == null || request.Items == null || request.Items.Count == 0)
                 return BadRequest(new { message = "Your cart is empty." });
@@ -165,6 +252,19 @@ namespace SaleSync.Controllers
                 {
                     try
                     {
+                        // GCash / Maya: refuse a reused reference number or receipt image, and cap how many
+                        // unverified orders one customer can have open. Done first, inside the transaction.
+                        if (proof != null)
+                        {
+                            string? proofProblem = _paymentVerification.CheckBeforeSubmit(conn, transaction, currentUserId, proof);
+
+                            if (proofProblem != null)
+                            {
+                                transaction.Rollback();
+                                return BadRequest(new { message = proofProblem });
+                            }
+                        }
+
                         decimal totalAmount = 0;
                         foreach (var item in request.Items)
                         {
@@ -210,7 +310,7 @@ namespace SaleSync.Controllers
                         string insertSale = @"
                             INSERT INTO sales (sale_date, total_amount, discount, final_amount, status, customer_name, order_type, payment_method, delivery_address, pickup_datetime, user_id) 
                             OUTPUT INSERTED.sale_id
-                            VALUES (GETDATE(), @total, @discount, @final, 'Pending', @custName, @orderType, @paymentMethod, @address, @pickupTime, @userId)";
+                            VALUES (GETDATE(), @total, @discount, @final, @status, @custName, @orderType, @paymentMethod, @address, @pickupTime, @userId)";
 
                         int newSaleId;
                         using (SqlCommand cmd = new SqlCommand(insertSale, conn, transaction))
@@ -218,9 +318,12 @@ namespace SaleSync.Controllers
                             cmd.Parameters.AddWithValue("@total", totalAmount);
                             cmd.Parameters.AddWithValue("@discount", discountAmount);
                             cmd.Parameters.AddWithValue("@final", finalAmount);
+                            cmd.Parameters.AddWithValue("@status", proof != null
+                                ? SaleSync.Services.PaymentVerificationService.AwaitingStatus
+                                : "Pending");
                             cmd.Parameters.AddWithValue("@custName", customerName);
                             cmd.Parameters.AddWithValue("@orderType", request.OrderType ?? "Pick-up");
-                            cmd.Parameters.AddWithValue("@paymentMethod", request.PaymentMethod ?? "Cash");
+                            cmd.Parameters.AddWithValue("@paymentMethod", proof != null ? proof.PaymentMethod : (request.PaymentMethod ?? "Cash"));
                             cmd.Parameters.AddWithValue("@address", string.IsNullOrEmpty(request.DeliveryAddress) ? (object)DBNull.Value : request.DeliveryAddress);
                             cmd.Parameters.AddWithValue("@pickupTime", request.PickupTime.HasValue ? (object)request.PickupTime.Value : DBNull.Value);
                             cmd.Parameters.AddWithValue("@userId", currentUserId);
@@ -248,13 +351,19 @@ namespace SaleSync.Controllers
                             }
                         }
 
+                        if (proof != null)
+                            _paymentVerification.SaveProof(conn, transaction, newSaleId, finalAmount, proof);
+
                         transaction.Commit();
                         return Ok(new
                         {
-                            message = "Order sent to the kitchen!",
+                            message = proof != null
+                                ? "Order received. It will go to the kitchen once staff confirm your payment."
+                                : "Order sent to the kitchen!",
                             orderId = newSaleId,
                             discountApplied = discountAmount,
-                            finalAmount = finalAmount
+                            finalAmount = finalAmount,
+                            requiresVerification = proof != null
                         });
                     }
                     catch (Exception ex)
