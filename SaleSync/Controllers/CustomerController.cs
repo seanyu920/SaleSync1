@@ -164,7 +164,7 @@ namespace SaleSync.Controllers
         }
 
         // GCash / Maya orders: the order JSON travels in the "payload" field together with the
-        // reference number and the receipt picture. The order is saved as "Awaiting Verification"
+        // reference number and the receipt picture. The order is saved as "Verifying Payment"
         // and only reaches the kitchen queue after a cashier confirms the receipt.
         [HttpPost]
         [RequestSizeLimit(SaleSync.Services.PaymentVerificationService.MaxReceiptBytes + 1048576)]

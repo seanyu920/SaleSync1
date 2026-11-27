@@ -19,7 +19,7 @@ namespace SaleSync.Services
     ///
     /// How it works:
     ///  1. The customer attaches a receipt photo and types the reference number at checkout.
-    ///  2. The order is saved with status "Awaiting Verification", so it does NOT appear in the
+    ///  2. The order is saved with status "Verifying Payment", so it does NOT appear in the
     ///     kitchen queue yet.
     ///  3. A cashier compares the receipt with the café's own GCash/Maya account and taps
     ///     Confirm (order becomes "Pending" and enters the kitchen queue) or Reject with a reason
@@ -33,7 +33,8 @@ namespace SaleSync.Services
     /// </summary>
     public class PaymentVerificationService
     {
-        public const string AwaitingStatus = "Awaiting Verification";
+        // NOTE: sales.status is only 20 characters wide, so this value must stay at 20 characters or fewer.
+        public const string AwaitingStatus = "Verifying Payment";
         public const string ConfirmedOrderStatus = "Pending";
         public const string RejectedOrderStatus = "Cancelled";
 

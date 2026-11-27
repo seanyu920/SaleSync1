@@ -357,7 +357,7 @@
                         @{
                             var activeStatuses = new List<string>
                             {
-                                "Awaiting Verification",
+                                "Verifying Payment",
                                 "Pending",
                                 "Preparing",
                                 "Ready",
@@ -429,7 +429,7 @@
                                                 : "Est. 15–20 mins";
                                 }
 
-                                if (order.Status == "Awaiting Verification")
+                                if (order.Status == "Verifying Payment")
                                 {
                                     step = 0;
                                     eta = "Payment receipt under review. We'll start your order once it's confirmed.";
